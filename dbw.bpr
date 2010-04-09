@@ -1,0 +1,246 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!-- C++Builder XML Project -->
+<PROJECT>
+  <MACROS>
+    <VERSION value="BCB.05.03"/>
+    <PROJECT value="dbw.exe"/>
+    <OBJFILES value="intermediate\dbw.obj intermediate\datamodule.obj intermediate\about.obj 
+      intermediate\blockmuster_form.obj intermediate\cursordir_form.obj 
+      intermediate\cursorgoto_form.obj intermediate\dbw3_form.obj 
+      intermediate\einstellverh_form.obj intermediate\einzugassistent_form.obj 
+      intermediate\entervv_form.obj intermediate\entwurfsinfo_form.obj 
+      intermediate\envoptions_form.obj intermediate\farbauswahl_form.obj 
+      intermediate\farbauswahl1_form.obj intermediate\farbauswahl2_form.obj 
+      intermediate\farbpalette_form.obj intermediate\farbverlauf_form.obj 
+      intermediate\fixeinzug_form.obj intermediate\importbmp_form.obj 
+      intermediate\loadparts_form.obj intermediate\overview_form.obj 
+      intermediate\pagesetup_form.obj intermediate\printcancel_form.obj 
+      intermediate\printpreview_form.obj intermediate\printselection_form.obj 
+      intermediate\properties_form.obj intermediate\rapport_form.obj 
+      intermediate\selcolor_form.obj intermediate\splash_form.obj 
+      intermediate\steuerung_form.obj intermediate\strggoto_form.obj 
+      intermediate\strginfo_form.obj intermediate\strgoptloom_form.obj 
+      intermediate\strgpatronicindparms_form.obj intermediate\techinfo_form.obj 
+      intermediate\toolpalette_form.obj intermediate\userdef_entername_form.obj 
+      intermediate\userdefselect_form.obj intermediate\xoptions_form.obj 
+      intermediate\assert.obj intermediate\aufknuepfung.obj 
+      intermediate\bereiche.obj intermediate\blockmuster.obj 
+      intermediate\blockmuster_muster.obj intermediate\clear.obj 
+      intermediate\colors.obj intermediate\commandline.obj 
+      intermediate\comutil.obj intermediate\cursor.obj 
+      intermediate\debugchecks.obj intermediate\delete.obj 
+      intermediate\dialogs.obj intermediate\draw.obj intermediate\einzug.obj 
+      intermediate\einzugtrittfolge.obj intermediate\export.obj 
+      intermediate\exportbitmap.obj intermediate\felddef.obj 
+      intermediate\fileformat.obj intermediate\filehandling.obj 
+      intermediate\fileload.obj intermediate\filesave.obj 
+      intermediate\highlight.obj intermediate\hilfslinien.obj 
+      intermediate\idle.obj intermediate\importbmp.obj intermediate\init.obj 
+      intermediate\insert.obj intermediate\insertbindung.obj 
+      intermediate\invalidate.obj intermediate\kbdhandling.obj 
+      intermediate\kbdscroll.obj intermediate\language.obj 
+      intermediate\lang_main.obj intermediate\mousehandling.obj 
+      intermediate\move.obj intermediate\mru.obj intermediate\osversion.obj 
+      intermediate\palette.obj intermediate\popupmenu.obj 
+      intermediate\properties.obj intermediate\print.obj 
+      intermediate\printdraw.obj intermediate\printextent.obj 
+      intermediate\printinit.obj intermediate\printprint.obj 
+      intermediate\range.obj intermediate\rangecolors.obj 
+      intermediate\rapport.obj intermediate\rapportieren.obj 
+      intermediate\recalc.obj intermediate\redraw.obj 
+      intermediate\schlagpatrone.obj intermediate\scrolling.obj 
+      intermediate\selection.obj intermediate\setaufknuepfung.obj 
+      intermediate\setblatteinzug.obj intermediate\setcolors.obj 
+      intermediate\seteinzug.obj intermediate\setfarbe.obj 
+      intermediate\setgewebe.obj intermediate\settings.obj 
+      intermediate\settrittfolge.obj intermediate\statusbar.obj 
+      intermediate\steigung.obj intermediate\steuerung.obj 
+      intermediate\steuerung_draw.obj intermediate\steuerung_kbd.obj 
+      intermediate\steuerung_mouse.obj intermediate\steuerung_popup.obj 
+      intermediate\steuerung_pos.obj intermediate\steuerung_weben.obj 
+      intermediate\toolbar.obj intermediate\tools.obj 
+      intermediate\trittfolge.obj intermediate\undoredo.obj 
+      intermediate\userdef.obj intermediate\utilities.obj 
+      intermediate\zentralsymm.obj intermediate\zoom.obj intermediate\import.obj"/>
+    <RESFILES value="dbw.res intermediate\version.res"/>
+    <IDLFILES value=""/>
+    <DEFFILE value=""/>
+    <RESDEPEN value="$(RESFILES) datamodule.dfm about.dfm blockmuster_form.dfm 
+      cursordir_form.dfm cursorgoto_form.dfm dbw3_form.dfm einstellverh_form.dfm 
+      einzugassistent_form.dfm entervv_form.dfm entwurfsinfo_form.dfm 
+      envoptions_form.dfm farbauswahl_form.dfm farbauswahl1_form.dfm 
+      farbauswahl2_form.dfm farbpalette_form.dfm farbverlauf_form.dfm 
+      fixeinzug_form.dfm importbmp_form.dfm loadparts_form.dfm overview_form.dfm 
+      pagesetup_form.dfm printcancel_form.dfm printpreview_form.dfm 
+      printselection_form.dfm properties_form.dfm rapport_form.dfm 
+      selcolor_form.dfm splash_form.dfm steuerung_form.dfm strggoto_form.dfm 
+      strginfo_form.dfm strgoptloom_form.dfm strgpatronicindparms_form.dfm 
+      techinfo_form.dfm toolpalette_form.dfm userdef_entername_form.dfm 
+      userdefselect_form.dfm xoptions_form.dfm"/>
+    <LIBFILES value=""/>
+    <LIBRARIES value="vcl50.lib"/>
+    <SPARELIBS value="vcl50.lib"/>
+    <PACKAGES value="vclx50.bpi vcl50.bpi vcldb50.bpi vclbde50.bpi vcldbx50.bpi bcbsmp50.bpi 
+      dclocx50.bpi qrpt50.bpi teeui50.bpi teedb50.bpi tee50.bpi ibsmp50.bpi 
+      nmfast50.bpi inetdb50.bpi inet50.bpi"/>
+    <PATHCPP value=".;"/>
+    <PATHPAS value=".;"/>
+    <PATHRC value=".;"/>
+    <PATHASM value=".;"/>
+    <DEBUGLIBPATH value="$(BCB)\lib\debug"/>
+    <RELEASELIBPATH value="$(BCB)\lib\release"/>
+    <LINKER value="ilink32"/>
+    <USERDEFINES value="NDEBUG"/>
+    <SYSDEFINES value="NO_STRICT"/>
+    <MAINSOURCE value="dbw.cpp"/>
+    <INCLUDEPATH value="&quot;C:\Program Files\Winsoft\ComPort\CB5\&quot;;&quot;C:\Program Files\Winsoft\IOPort\CB5\&quot;;c:\programme\Borland\CBuilder5\Projects\;$(BCB)\include;$(BCB)\include\vcl"/>
+    <LIBPATH value="&quot;C:\Program Files\Winsoft\ComPort\CB5\&quot;;&quot;C:\Program Files\Winsoft\IOPort\CB5\&quot;;c:\programme\Borland\CBuilder5\Projects\;$(BCB)\lib\obj;$(BCB)\lib"/>
+    <WARNINGS value="-w-par -w-8027 -w-8026"/>
+    <WARNOPTSTR value=""/>
+  </MACROS>
+  <OPTIONS>
+    <CFLAG1 value="-O2 -H=C:\Users\damian\Temp\vcl35.csm -Hc -Vx -Ve -Tkh30000 -X- -a8 -5 -b- 
+      -k- -vi -c -tW -tWM"/>
+    <CFLAG2 value=""/>
+    <CFLAG3 value=""/>
+    <PFLAGS value="-N2intermediate -N0intermediate -$Y- -$L- -$D- -v -M -JPHNE"/>
+    <RFLAGS value=""/>
+    <AFLAGS value="/mx /w2 /zn"/>
+    <LFLAGS value="-Iintermediate -D&quot;&quot; -aa -Tpe -x -Gn"/>
+    <IFLAGS value=""/>
+  </OPTIONS>
+  <LINKER>
+    <ALLOBJ value="c0w32.obj sysinit.obj $(OBJFILES)"/>
+    <ALLRES value="$(RESFILES)"/>
+    <ALLLIB value="$(LIBFILES) $(LIBRARIES) import32.lib cp32mt.lib"/>
+  </LINKER>
+  <IDEOPTIONS>
+[Version Info]
+IncludeVerInfo=0
+AutoIncBuild=0
+MajorVer=1
+MinorVer=0
+Release=0
+Build=0
+Debug=0
+PreRelease=0
+Special=0
+Private=0
+DLL=0
+Locale=2055
+CodePage=1252
+
+[Version Info Keys]
+CompanyName=
+FileDescription=
+FileVersion=1.0.0.0
+InternalName=
+LegalCopyright=
+LegalTrademarks=
+OriginalFilename=
+ProductName=
+ProductVersion=1.0.0.0
+Comments=
+
+[HistoryLists\hlIncludePath]
+Count=21
+Item0=C:\Program Files\Winsoft\ComPort\CB5\;C:\Program Files\Winsoft\IOPort\CB5\;c:\programme\Borland\CBuilder5\Projects\;$(BCB)\include;$(BCB)\include\vcl
+Item1=C:\Program Files\Winsoft\ComPort\CB5;C:\Program Files\Winsoft\IOPort\CB5;c:\programme\Borland\CBuilder5\Projects\;$(BCB)\include;$(BCB)\include\vcl
+Item2=C:\Program Files\Winsoft\IOPort\CB5;c:\programme\Borland\CBuilder5\Projects\;c:\programme\Erik Salaj\ComPort\CB5\;e:\programme\Erik Salaj\IoPort\CB5\;$(BCB)\include;$(BCB)\include\vcl
+Item3=c:\programme\Borland\CBuilder5\Projects\;c:\programme\Erik Salaj\ComPort\CB5\;e:\programme\Erik Salaj\IoPort\CB5\;$(BCB)\include;$(BCB)\include\vcl
+Item4=e:\programme\Borland\CBuilder5\Projects\;e:\programme\Erik Salaj\ComPort\CB5\;e:\programme\Erik Salaj\IoPort\CB5\;$(BCB)\include;$(BCB)\include\vcl
+Item5=e:\programme\Borland\CBuilder5\Projects\;e:\programme\Erik Salaj\ComPort\CB5\;$(BCB)\include;$(BCB)\include\vcl
+Item6=e:\programme\Borland\CBuilder5\Projects\;e:\programme\Erik Salaj\ComPort\CB5\;$(BCB)\components;$(BCB)\include;$(BCB)\include\vcl
+Item7=e:\programme\Borland\CBuilder5\Projects;e:\programme\Erik Salaj\ComPort\CB5\;$(BCB)\components;$(BCB)\include;$(BCB)\include\vcl
+Item8=e:\programme\Erik Salaj\ComPort\CB5\;$(BCB)\components;$(BCB)\include;$(BCB)\include\vcl
+Item9=e:\programme\Erik Salaj\ComPort\CB5\;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\components
+Item10=e:\programme\Erik Salaj\ComPort\CB5\;e:\programme\borland\cbuilder3\lib\components\ioport\;e:\programme\borland\cbuilder3\projects\;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\lib\components\comport;$(BCB)\ioport
+Item11=e:\programme\Erik Salaj\ComPort\CB5;e:\programme\borland\cbuilder3\lib\components\ioport\;e:\programme\borland\cbuilder3\projects\;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\lib\components\comport;$(BCB)\ioport
+Item12=e:\programme\Erik Salaj\ComPort\CB5;e:\programme\borland\cbuilder3\lib\components\ioport\;e:\programme\borland\cbuilder3\projects\;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\lib\components\comport;$(BCB)\lib\components\ioport
+Item13=e:\programme\borland\cbuilder3\lib\components\ioport;e:\programme\borland\cbuilder3\projects;..\..\..\program files\borland\cbuilder3\projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\lib\components\comport;$(BCB)\lib\components\ioport
+Item14=e:\programme\borland\cbuilder3\lib\components\ioport;e:\programme\borland\cbuilder3\projects;..\..\..\program files\borland\cbuilder3\projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\lib\components\comport
+Item15=e:\programme\borland\cbuilder3\projects;..\..\..\program files\borland\cbuilder3\projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\lib\components\comport
+Item16=..\..\..\program files\borland\cbuilder3\projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\lib\components\comport
+Item17=$(BCB)\include;$(BCB)\include\vcl;$(BCB)\lib\components\comport
+Item18=$(BCB)\include;$(BCB)\include\vcl;$(BCB)\lib\component\comport
+Item19=$(BCB)\include;$(BCB)\include\vcl
+Item20=$(BCB)\include;$(BCB)\include\vcl
+
+[HistoryLists\hlLibraryPath]
+Count=20
+Item0=C:\Program Files\Winsoft\ComPort\CB5\;C:\Program Files\Winsoft\IOPort\CB5\;c:\programme\Borland\CBuilder5\Projects\;$(BCB)\lib\obj;$(BCB)\lib
+Item1=C:\Program Files\Winsoft\ComPort\CB5;C:\Program Files\Winsoft\IOPort\CB5;c:\programme\Borland\CBuilder5\Projects\;$(BCB)\lib\obj;$(BCB)\lib
+Item2=C:\Program Files\Winsoft\IOPort\CB5;c:\programme\Borland\CBuilder5\Projects\;c:\programme\Erik Salaj\ComPort\CB5\;c:\programme\Erik Salaj\IoPort\CB5\;$(BCB)\lib\obj;$(BCB)\lib
+Item3=c:\programme\Borland\CBuilder5\Projects\;c:\programme\Erik Salaj\ComPort\CB5\;c:\programme\Erik Salaj\IoPort\CB5\;$(BCB)\lib\obj;$(BCB)\lib
+Item4=e:\programme\Borland\CBuilder5\Projects\;e:\programme\Erik Salaj\ComPort\CB5\;e:\programme\Erik Salaj\IoPort\CB5\;$(BCB)\lib\obj;$(BCB)\lib
+Item5=e:\programme\Borland\CBuilder5\Projects\;e:\programme\Erik Salaj\ComPort\CB5\;$(BCB)\lib\obj;$(BCB)\lib
+Item6=e:\programme\Borland\CBuilder5\Projects\;e:\programme\Erik Salaj\ComPort\CB5\;$(BCB)\components;$(BCB)\lib\obj;$(BCB)\lib
+Item7=e:\programme\Borland\CBuilder5\Projects;e:\programme\Erik Salaj\ComPort\CB5\;$(BCB)\components;$(BCB)\lib\obj;$(BCB)\lib
+Item8=e:\programme\Erik Salaj\ComPort\CB5\;$(BCB)\components;$(BCB)\lib\obj;$(BCB)\lib
+Item9=e:\programme\Erik Salaj\ComPort\CB5\;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\components
+Item10=e:\programme\Erik Salaj\ComPort\CB5\;e:\programme\borland\cbuilder3\lib\components\ioport\;e:\programme\borland\cbuilder3\projects\;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\lib\components\comport;$(BCB)\ioport
+Item11=e:\programme\Erik Salaj\ComPort\CB5;e:\programme\borland\cbuilder3\lib\components\ioport\;e:\programme\borland\cbuilder3\projects\;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\lib\components\comport;$(BCB)\ioport
+Item12=e:\programme\Erik Salaj\ComPort\CB5;e:\programme\borland\cbuilder3\lib\components\ioport\;e:\programme\borland\cbuilder3\projects\;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\lib\components\comport;$(BCB)\lib\components\ioport
+Item13=e:\programme\borland\cbuilder3\lib\components\ioport;e:\programme\borland\cbuilder3\projects;..\..\..\program files\borland\cbuilder3\projects;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\lib\components\comport;$(BCB)\lib\components\ioport
+Item14=e:\programme\borland\cbuilder3\lib\components\ioport;e:\programme\borland\cbuilder3\projects;..\..\..\program files\borland\cbuilder3\projects;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\lib\components\comport
+Item15=e:\programme\borland\cbuilder3\projects;..\..\..\program files\borland\cbuilder3\projects;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\lib\components\comport
+Item16=..\..\..\program files\borland\cbuilder3\projects;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\lib\components\comport
+Item17=$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\lib\components\comport
+Item18=$(BCB)\lib\obj;$(BCB)\lib
+Item19=$(BCB)\lib\obj;$(BCB)\lib
+
+[HistoryLists\hlDebugSourcePath]
+Count=1
+Item0=$(BCB)\source\vcl
+
+[HistoryLists\hlConditionals]
+Count=16
+Item0=NDEBUG
+Item1=NDEBUG;_DEBUG
+Item2=_DEBUG
+Item3=DEBUGCHECKS
+Item4=DEBUGCHECKS;_DEBUG
+Item5=BETA;NDEBUG
+Item6=DBW3PLUS;DEBUGCHECKS
+Item7=DBW3PLUS;NDEBUG
+Item8=NDEBUG;DBW3DEMO;DBW3PLUS
+Item9=DBW3PLUS,DEBUGCHECKS
+Item10=DBW3PLUS
+Item11=NDEBUG;DBW3PLUS
+Item12=NDEBUG;DBW3DEMO
+Item13=DBW3DEMO;DBW3PLUS
+Item14=NDEBUG;DBW3PLUS;DBW3DEMO
+Item15=DBW3DEMO
+
+[HistoryLists\hlIntOutputDir]
+Count=2
+Item0=intermediate
+Item1=.\intermediate
+
+[HistoryLists\hlRunParameters]
+Count=3
+Item0=e:\bsoft\proj\dbwe\daten\savetest.dbw
+Item1=/p &quot;e:\bsoft\proj\dbwe\daten\doubleface.dbw&quot;
+Item2=&quot;e:\bsoft\proj\dbwe\daten\doubleface.dbw&quot;
+
+[Debugging]
+DebugSourceDirs=$(BCB)\source\vcl
+
+[Parameters]
+RunParams=
+HostApplication=
+RemoteHost=
+RemotePath=
+RemoteDebug=0
+
+[Compiler]
+ShowInfoMsgs=0
+LinkDebugVcl=0
+LinkCGLIB=0
+
+[Language]
+ActiveLang=
+ProjectLang=
+RootDir=
+  </IDEOPTIONS>
+</PROJECT>

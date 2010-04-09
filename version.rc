@@ -1,0 +1,53 @@
+/*  DB-WEAVE textile CAD/CAM software - http://www.brunoldsoftware.ch
+    Copyright (C) 1998  Damian Brunold
+    Copyright (C) 2009  Damian Brunold
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/*-----------------------------------------------------------------*/
+#include "version.h"
+/*-----------------------------------------------------------------*/
+VS_VERSION_INFO VERSIONINFO
+    FILEVERSION ver_major, ver_minor, 0, ver_build
+    PRODUCTVERSION ver_major, ver_minor, 0, ver_build
+    FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+    FILEFLAGS 0x1L
+#else
+    FILEFLAGS 0x0L
+#endif
+    FILEOS 0x40004L
+    FILETYPE 0x2L
+    FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080704b0"
+        BEGIN
+            VALUE "CompanyName", "Brunold Software, http://www.brunoldsoftware.ch\0"
+            VALUE "FileDescription", "DB-WEAVE\0"
+            VALUE "FileVersion", ver_string
+            VALUE "InternalName", "dbw\0"
+            VALUE "LegalCopyright", "Copyright © 1993-2009 Brunold Software, Licensed under GPL 3 or later\0"
+            VALUE "OriginalFilename", "dbw.exe\0"
+            VALUE "ProductName", "DB-WEAVE\0"
+            VALUE "ProductVersion", ver_string
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x807, 1200
+    END
+END
+/*-----------------------------------------------------------------*/
