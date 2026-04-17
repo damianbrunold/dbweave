@@ -73,3 +73,6 @@ void __fastcall TDBWFRM::CalcRapport()        {}
 void __fastcall TDBWFRM::SetModified(bool)    {}
 void __fastcall TDBWFRM::SetCursor(int, int)  {}
 void __fastcall TDBWFRM::SetAppTitle()        {}
+
+void __fastcall TDBWFRM::ClearSelection()                        {}
+void __fastcall TDBWFRM::ResizeSelection(int, int, FELD, bool)   {}

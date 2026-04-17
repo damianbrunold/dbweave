@@ -1,0 +1,524 @@
+/*  DB-WEAVE textile CAD/CAM software - http://www.brunoldsoftware.ch
+    Copyright (C) 1998  Damian Brunold
+    Copyright (C) 2009  Damian Brunold
+    Copyright (C) 2026  Damian Brunold (Qt 6 port)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+*/
+
+/*  Port scope for this slice:
+      * full state management -- position tracking, left/right/up/down
+        movement, shared-coordinate propagation across fields, field-list
+        traversal, locked-mode rapport snap, visibility checks;
+      * STUB rendering (DrawCursor / DeleteCursor / ToggleCursor /
+        DisableCursor / EnableCursor) -- the real bodies need a blinking
+        QTimer, a paint target and access to strongline / hilfslinien /
+        rapport-line drawing that has not landed yet;
+      * STUB editor-op dispatch (Toggle / Set) -- these call into
+        SetGewebe / SetEinzug / SetAufknuepfung etc. that have not
+        landed yet. Guards prevent dereferencing null helpers so the
+        test harness can exercise movement without firing dispatch.
+*/
+
+/*-----------------------------------------------------------------*/
+#include "assert_compat.h"
+#include "cursor.h"
+#include "cursorimpl.h"
+#include "mainwindow.h"
+#include "datamodule.h"
+/*-----------------------------------------------------------------*/
+#define MAXX (fb.pos.width/fb.gw)
+#define MAXY (fb.pos.height/fb.gh)
+/*-----------------------------------------------------------------*/
+CrCursorHandler* __fastcall CrCursorHandler::CreateInstance (TDBWFRM* _frm, TData* _data)
+{
+	CrCursorHandler* p = 0;
+	try {
+		p = new CrCursorHandlerImpl (_frm, _data);
+	} catch (...) {
+	}
+	return p;
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandler::Release (CrCursorHandler* _cursorhandler)
+{
+	delete _cursorhandler;
+}
+/*-----------------------------------------------------------------*/
+__fastcall CrCursorHandlerImpl::CrCursorHandlerImpl (TDBWFRM* _frm, TData* _data)
+: frm(_frm), data(_data)
+{
+	feld = nullptr;
+	locked = false;
+	try {
+		CrFeld* first = new CrFeld (GEWEBE, frm, data, frm->gewebe, sharedcoord, CrShareX1|CrShareY2, 0);
+
+		CrFeld* p = new CrFeld (EINZUG, frm, data, frm->einzug, sharedcoord, CrShareX1|CrShareY1, first);
+		p->prev->next = p;
+
+		p = new CrFeld (TRITTFOLGE, frm, data, frm->trittfolge, sharedcoord, CrShareX2|CrShareY2, p);
+		p->prev->next = p;
+
+		p = new CrFeld (AUFKNUEPFUNG, frm, data, frm->aufknuepfung, sharedcoord, CrShareX2|CrShareY1, p);
+		p->prev->next = p;
+
+		p = new CrFeld (SCHUSSFARBEN, frm, data, frm->schussfarben, sharedcoord, CrShareY2, p);
+		p->prev->next = p;
+
+		p = new CrFeld (KETTFARBEN, frm, data, frm->kettfarben, sharedcoord, CrShareX1, p);
+		p->prev->next = p;
+
+		p = new CrFeld (BLATTEINZUG, frm, data, frm->blatteinzug, sharedcoord, CrShareX1, p);
+		p->prev->next = p;
+
+		first->prev = p;
+		p->next = first;
+
+		feld = first;
+	} catch (...) {
+	}
+}
+/*-----------------------------------------------------------------*/
+__fastcall CrCursorHandlerImpl::~CrCursorHandlerImpl()
+{
+	if (feld) {
+		feld->prev->next = 0;
+		while (feld) {
+			CrFeld* next = feld->next;
+			delete feld;
+			feld = next;
+		}
+	}
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::Init()
+{
+	sharedcoord.Init();
+}
+/*-----------------------------------------------------------------*/
+CrFeld* CrCursorHandlerImpl::GetFeld (FELD _feld)
+{
+	CrFeld* p = feld;
+	int count = 0;
+	while (p) {
+		if (p->feld==_feld) {
+			return p;
+		}
+		p = p->next;
+		++ count;
+		if (count > 100) break; // Notbremse!
+	}
+	// Ungueltiges Feld?!
+	dbw3_assert(false);
+	return NULL;
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::DisableCursor()
+{
+	/*  Real implementation disables the blink QTimer and erases the
+	    cursor rectangle. Neither exists yet. */
+	DeleteCursor();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::EnableCursor()
+{
+	/*  Real implementation draws the cursor rectangle and enables the
+	    blink QTimer. Neither exists yet. */
+	DrawCursor();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::ToggleField (TShiftState _shift)
+{
+	dbw3_assert (feld);
+	if (feld) feld->Toggle (_shift);
+	CheckLocked();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::SetField (bool _set, TShiftState _shift)
+{
+	dbw3_assert (feld);
+	if (feld) feld->Set (_set, _shift);
+	CheckLocked();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::SetCursor (FELD _feld, int _i, int _j, bool _clearselection/*=true*/)
+{
+	DisableCursor();
+	CrFeld* p = GetFeld (_feld);
+	if (p) {
+		p->SetCursor (_i, _j);
+		feld = p;
+	}
+	if (feld) frm->kbd_field = feld->feld;
+	if (_clearselection) frm->ClearSelection();
+	EnableCursor();
+	CheckLocked();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::CheckCursorPos()
+{
+	dbw3_assert(feld);
+	if (feld) feld->CheckCursorPos();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::MoveCursorLeft (int _step, bool _select)
+{
+	dbw3_assert(feld);
+	if (feld) {
+		if (frm->righttoleft && (feld->feld==GEWEBE || feld->feld==EINZUG || feld->feld==KETTFARBEN || feld->feld==BLATTEINZUG))
+			feld->MoveCursorRight (_step, _select);
+		else
+			feld->MoveCursorLeft (_step, _select);
+	}
+	CheckLocked();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::MoveCursorRight (int _step, bool _select)
+{
+	dbw3_assert(feld);
+	if (feld) {
+		if (frm->righttoleft && (feld->feld==GEWEBE || feld->feld==EINZUG || feld->feld==KETTFARBEN || feld->feld==BLATTEINZUG))
+			feld->MoveCursorLeft (_step, _select);
+		else
+			feld->MoveCursorRight (_step, _select);
+	}
+	CheckLocked();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::MoveCursorUp (int _step, bool _select)
+{
+	dbw3_assert(feld);
+	if (feld) {
+		if (frm->toptobottom && (feld->feld==EINZUG || feld->feld==AUFKNUEPFUNG))
+			feld->MoveCursorDown (_step, _select);
+		else
+			feld->MoveCursorUp (_step, _select);
+	}
+	CheckLocked();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::MoveCursorDown (int _step, bool _select)
+{
+	dbw3_assert(feld);
+	if (feld) {
+		if (frm->toptobottom && (feld->feld==EINZUG || feld->feld==AUFKNUEPFUNG))
+			feld->MoveCursorUp (_step, _select);
+		else
+			feld->MoveCursorDown (_step, _select);
+	}
+	CheckLocked();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::CheckLocked()
+{
+	if (locked && feld) {
+		// Position modulo Rapport
+		dbw3_assert(frm);
+		DisableCursor();
+
+		if (feld->feld==GEWEBE || feld->feld==EINZUG) {
+			int rx = frm->rapport.kr.count();
+			if (rx>0) {
+				int x0 = frm->rapport.kr.a;
+				int i = feld->fb.kbd.i+frm->scroll_x1;
+				int ii = i-x0;
+				while (ii<0) ii += rx;
+				int newi = ii%rx + x0;
+				if (newi<frm->scroll_x1) newi = frm->scroll_x1;
+				feld->fb.kbd.i = newi-frm->scroll_x1;
+			}
+		}
+
+		if (feld->feld==GEWEBE || feld->feld==TRITTFOLGE) {
+			int ry = frm->rapport.sr.count();
+			if (ry>0) {
+				int y0 = frm->rapport.sr.a;
+				int j = feld->fb.kbd.j+frm->scroll_y2;
+				int jj = j-y0;
+				while (jj<0) jj += ry;
+				int newj = jj%ry + y0;
+				if (newj<frm->scroll_y2) newj = frm->scroll_y2;
+				feld->fb.kbd.j = newj-frm->scroll_y2;
+			}
+		}
+
+		EnableCursor();
+	}
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::GotoNextField()
+{
+	dbw3_assert(feld);
+	dbw3_assert(frm);
+	if (feld) {
+		DisableCursor();
+		// Funktioniert nur wenn mindestens ein Feld sichtbar ist.
+		int safety = 0;
+		do {
+			feld = feld->next;
+			if (frm->ViewSchlagpatrone && frm->ViewSchlagpatrone->isChecked() && feld->feld==AUFKNUEPFUNG)
+				feld = feld->next;
+			if (++safety > 20) break;   // avoid infinite loop if no field visible
+		} while (!feld->IsVisible());
+		frm->kbd_field = feld->feld;
+		feld->SyncSharedCoord();
+		EnableCursor();
+		frm->ClearSelection();
+		CheckLocked();
+	}
+	dbw3_assert(feld);
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::GotoPrevField()
+{
+	dbw3_assert(feld);
+	dbw3_assert(frm);
+	if (feld) {
+		DisableCursor();
+		int safety = 0;
+		do {
+			feld = feld->prev;
+			if (frm->ViewSchlagpatrone && frm->ViewSchlagpatrone->isChecked() && feld->feld==AUFKNUEPFUNG)
+				feld = feld->prev;
+			if (++safety > 20) break;
+		} while (!feld->IsVisible());
+		frm->kbd_field = feld->feld;
+		feld->SyncSharedCoord();
+		EnableCursor();
+		frm->ClearSelection();
+		CheckLocked();
+	}
+	dbw3_assert(feld);
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::GotoField (FELD _feld)
+{
+	dbw3_assert(feld);
+	dbw3_assert(frm);
+	CrFeld* p = GetFeld (_feld);
+	if (!p || !p->IsVisible()) return;
+	DisableCursor();
+	feld = p;
+	frm->kbd_field = _feld;
+	feld->SyncSharedCoord();
+	EnableCursor();
+	frm->ClearSelection();
+	CheckLocked();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::SetInvisible (FELD _feld)
+{
+	dbw3_assert(feld);
+	if (_feld==feld->feld) GotoNextField();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::DrawCursor()
+{
+	/*  STUB: real body draws the blinking cursor rectangle onto the
+	    canvas. Pending rendering slice. */
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::DeleteCursor()
+{
+	/*  STUB: real body erases the cursor rectangle and restores any
+	    strongline / hilfslinien / rapport-line pixels underneath. */
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::ToggleCursor()
+{
+	/*  STUB: toggles visibility each blink tick. */
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::SetCursorLocked (bool _locked/*=true*/)
+{
+	locked = _locked;
+	if (locked) CheckLocked();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrCursorHandlerImpl::SetCursorDirection (CURSORDIRECTION _cd)
+{
+	CrFeld* current = feld;
+	while (current!=NULL) {
+		current->cursordirection = _cd;
+		current = current->next;
+		if (current==feld) break;
+	}
+}
+/*-----------------------------------------------------------------*/
+CURSORDIRECTION __fastcall CrCursorHandlerImpl::GetCursorDirection()
+{
+	if (feld!=NULL) return feld->cursordirection;
+	else return CD_DEFAULT;
+}
+/*-----------------------------------------------------------------*/
+__fastcall CrFeld::CrFeld (FELD _feld, TDBWFRM* _frm, TData* _data, FeldBase& _fb, CrSharedCoord& _sharedcoord, CrShareFlags _shareflags, CrFeld* _prev)
+: frm(_frm), data(_data), fb(_fb), sharedcoord(_sharedcoord), shareflags(_shareflags), prev(_prev)
+{
+	feld = _feld;
+	cursordirection = CD_DEFAULT;
+	next = 0;
+}
+/*-----------------------------------------------------------------*/
+__fastcall CrFeld::~CrFeld()
+{
+}
+/*-----------------------------------------------------------------*/
+bool __fastcall CrFeld::IsVisible() const
+{
+	return fb.pos.width!=0 && fb.pos.height!=0;
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrFeld::DisableCursor()
+{
+	/*  STUB: legacy cancels the blink timer here. */
+	DeleteCursor();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrFeld::EnableCursor()
+{
+	/*  STUB: legacy restarts the blink timer here. */
+	DrawCursor();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrFeld::Toggle (TShiftState /*_shift*/)
+{
+	/*  STUB: dispatches to SetGewebe / SetEinzug / SetAufknuepfung /
+	    SetTrittfolge / SetBlatteinzug / SetKettfarben /
+	    SetSchussfarben. Those editor operations are not ported yet;
+	    this body will be filled in alongside them.                */
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrFeld::Set (bool /*_set*/, TShiftState /*_shift*/)
+{
+	/*  STUB: same dispatch pattern as Toggle. */
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrFeld::SetCursor (int _i, int _j)
+{
+	if (_i>=fb.ScrollX()+fb.pos.width/fb.gw) _i = fb.ScrollX()+fb.pos.width/fb.gw-1;
+	if (_j>=fb.ScrollY()+fb.pos.height/fb.gh) _j = fb.ScrollY()+fb.pos.height/fb.gh-1;
+
+	fb.kbd.i = _i - fb.ScrollX();
+	fb.kbd.j = _j - fb.ScrollY();
+
+	if (fb.kbd.i<0) fb.kbd.i = 0;
+	if (fb.kbd.j<0) fb.kbd.j = 0;
+
+	UpdateSharedCoord (fb.kbd.i, fb.kbd.j);
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrFeld::CheckCursorPos()
+{
+	int i = fb.kbd.i;
+	int j = fb.kbd.j;
+
+	if (fb.gw>0 && i>=fb.pos.width/fb.gw) i = fb.pos.width/fb.gw-1;
+	if (fb.gh>0 && j>=fb.pos.height/fb.gh) j = fb.pos.height/fb.gh-1;
+
+	if (i<0) i=0;
+	if (j<0) j=0;
+
+	fb.kbd.i = i;
+	fb.kbd.j = j;
+
+	UpdateSharedCoord (fb.kbd.i, fb.kbd.j);
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrFeld::MoveCursorLeft (int _step, bool _select)
+{
+	DisableCursor();
+
+	if (_select) frm->ResizeSelection (fb.kbd.i+fb.ScrollX(), fb.kbd.j+fb.ScrollY(), feld, false);
+
+	fb.kbd.i -= _step;
+	if (fb.kbd.i<0) fb.kbd.i = 0;
+
+	UpdateSharedCoord (fb.kbd.i, fb.kbd.j);
+
+	EnableCursor();
+	if (_select) frm->ResizeSelection (fb.kbd.i+fb.ScrollX(), fb.kbd.j+fb.ScrollY(), feld, false);
+	else frm->ClearSelection();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrFeld::MoveCursorRight (int _step, bool _select)
+{
+	DisableCursor();
+
+	if (_select) frm->ResizeSelection (fb.kbd.i+fb.ScrollX(), fb.kbd.j+fb.ScrollY(), feld, false);
+
+	fb.kbd.i += _step;
+	if (MAXX>0 && fb.kbd.i>=MAXX) fb.kbd.i = MAXX-1;
+
+	UpdateSharedCoord (fb.kbd.i, fb.kbd.j);
+
+	EnableCursor();
+	if (_select) frm->ResizeSelection (fb.kbd.i+fb.ScrollX(), fb.kbd.j+fb.ScrollY(), feld, false);
+	else frm->ClearSelection();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrFeld::MoveCursorUp (int _step, bool _select)
+{
+	DisableCursor();
+
+	if (_select) frm->ResizeSelection (fb.kbd.i+fb.ScrollX(), fb.kbd.j+fb.ScrollY(), feld, false);
+
+	fb.kbd.j += _step;
+	if (MAXY>0 && fb.kbd.j>=MAXY) fb.kbd.j = MAXY-1;
+
+	UpdateSharedCoord (fb.kbd.i, fb.kbd.j);
+
+	EnableCursor();
+	if (_select) frm->ResizeSelection (fb.kbd.i+fb.ScrollX(), fb.kbd.j+fb.ScrollY(), feld, false);
+	else frm->ClearSelection();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrFeld::MoveCursorDown (int _step, bool _select)
+{
+	DisableCursor();
+
+	if (_select) frm->ResizeSelection (fb.kbd.i+fb.ScrollX(), fb.kbd.j+fb.ScrollY(), feld, false);
+
+	fb.kbd.j -= _step;
+	if (fb.kbd.j<0) fb.kbd.j = 0;
+
+	UpdateSharedCoord (fb.kbd.i, fb.kbd.j);
+
+	EnableCursor();
+	if (_select) frm->ResizeSelection (fb.kbd.i+fb.ScrollX(), fb.kbd.j+fb.ScrollY(), feld, false);
+	else frm->ClearSelection();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrFeld::DrawCursor()
+{
+	/*  STUB: rendering slice. */
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrFeld::DeleteCursor()
+{
+	/*  STUB: rendering slice. */
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrFeld::ToggleCursor()
+{
+	/*  STUB: rendering slice. */
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrFeld::UpdateSharedCoord (int _i, int _j)
+{
+	if (shareflags&CrShareX1) sharedcoord.x1 = _i;
+	if (shareflags&CrShareX2) sharedcoord.x2 = _i;
+	if (shareflags&CrShareY1) sharedcoord.y1 = _j;
+	if (shareflags&CrShareY2) sharedcoord.y2 = _j;
+}
+/*-----------------------------------------------------------------*/
+void __fastcall CrFeld::SyncSharedCoord()
+{
+	if (shareflags&CrShareX1) fb.kbd.i = sharedcoord.x1;
+	if (shareflags&CrShareX2) fb.kbd.i = sharedcoord.x2;
+	if (shareflags&CrShareY1) fb.kbd.j = sharedcoord.y1;
+	if (shareflags&CrShareY2) fb.kbd.j = sharedcoord.y2;
+}
+/*-----------------------------------------------------------------*/

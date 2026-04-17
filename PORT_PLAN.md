@@ -443,7 +443,16 @@ To port (in dependency order):
 - [ ] `bereiche` (Range1..9 click handlers), `utilities` (fill-twill /
   swap-side / lancierung), `clear.cpp` TDBWFRM:: methods, `init.cpp`
   TDBWFRM:: methods.
-- [ ] `cursor` (+ `cursorimpl.h`).
+- [x] `cursor` (+ `cursorimpl.h`) — state-management half ported
+  fully (position tracking, move/set, shared coord, field-list
+  traversal, locked-mode rapport snap). Rendering primitives
+  (DrawCursor / DeleteCursor / ToggleCursor / DisableCursor /
+  EnableCursor) and editor-op dispatch (CrFeld::Toggle / ::Set) are
+  stubbed pending the rendering slice and the SetGewebe/SetEinzug/...
+  editor ops respectively. `src/compat/shift_compat.h` added as a
+  TShiftState stand-in. TDBWFRM grew `righttoleft`, `toptobottom`,
+  `kette`, `schuesse`, `rapport`, `currentrange` plus
+  `ClearSelection`/`ResizeSelection` method stubs.
 - [ ] `einzug` (+ `einzugimpl.h`), `einzugtrittfolge`.
 - [ ] `trittfolge`, `aufknuepfung`, `rapport` (+ `rapportimpl.h`),
   `rapportieren`, `schlagpatrone`, `steigung`.

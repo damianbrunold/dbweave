@@ -116,3 +116,9 @@ qt_add_executable(test_undoredo
 )
 target_link_libraries(test_undoredo PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test dbweave_ui)
 add_test(NAME undoredo COMMAND test_undoredo)
+
+qt_add_executable(test_cursor
+    test_cursor.cpp
+)
+target_link_libraries(test_cursor PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test dbweave_ui)
+add_test(NAME cursor COMMAND test_cursor)

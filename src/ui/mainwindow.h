@@ -64,6 +64,19 @@ public:
 	/*  Which field currently owns the keyboard cursor. */
 	FELD kbd_field = GEWEBE;
 
+	/*  Display-orientation flags. Legacy defaults: both false. */
+	bool righttoleft = false;
+	bool toptobottom = false;
+
+	/*  Warp / weft ranges and the pattern rapport. */
+	SZ      kette;
+	SZ      schuesse;
+	RAPPORT rapport;
+
+	/*  Currently selected "range" (1..9 plus AUSHEBUNG/ANBINDUNG/
+	    ABBINDUNG). */
+	int currentrange = 1;
+
 	/*  Menu-action toggles. Allocated but left unchecked and detached
 	    from any menu bar until lang_main.cpp / the menu-port slice
 	    wires them up -- they exist now so ported code (undoredo,
@@ -109,6 +122,10 @@ public:
 	void __fastcall SetModified (bool _modified = true);
 	void __fastcall SetCursor   (int _i, int _j);
 	void __fastcall SetAppTitle ();
+
+	/*  Selection-management stubs (body lands with selection.cpp). */
+	void __fastcall ClearSelection();
+	void __fastcall ResizeSelection (int _i, int _j, FELD _feld, bool _fromMouse);
 };
 
 /*  Matches legacy `extern PACKAGE TDBWFRM *DBWFRM;`. Populated by
