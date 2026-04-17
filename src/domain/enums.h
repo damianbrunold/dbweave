@@ -16,6 +16,23 @@
 // FELD definiert die verschiedenen Felder, die fuer eine vollstaendige
 // Patrone noetig sind. Die Reihenfolge ist relevant: sie bestimmt,
 // die 'Tabreihenfolge' fuer die Tastatureingabe.
+// DARSTELLUNG wird bei den Feldern Einzug, Aufknuepfung und
+// Trittfolge verwendet, um die Symbole zu bestimmen, die fuer die
+// Darstellung eines gefuellten Feldes verwendet werden.
+enum DARSTELLUNG
+{
+	AUSGEFUELLT=0,
+	STRICH,
+	KREUZ,
+	PUNKT,
+	KREIS,
+	STEIGEND,
+	FALLEND,
+	SMALLKREUZ,
+	SMALLKREIS,
+	NUMBER
+};
+/*-----------------------------------------------------------------*/
 enum FELD
 {
 	INVALID,

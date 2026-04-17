@@ -87,3 +87,11 @@ qt_add_executable(test_settings
 )
 target_link_libraries(test_settings PRIVATE Qt6::Core Qt6::Test dbweave_domain)
 add_test(NAME settings COMMAND test_settings)
+
+# ---- Phase 4: rendering tests ---------------------------------------
+
+qt_add_executable(test_draw_cell
+    test_draw_cell.cpp
+)
+target_link_libraries(test_draw_cell PRIVATE Qt6::Core Qt6::Gui Qt6::Test dbweave_ui)
+add_test(NAME draw_cell COMMAND test_draw_cell)

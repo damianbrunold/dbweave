@@ -31,6 +31,9 @@ add_subdirectory(io)
 # Phase 2: pure-domain logic.
 add_subdirectory(domain)
 
+# Phase 4: rendering primitives (no widget dependency yet).
+add_subdirectory(ui)
+
 # Placeholder targets for sub-modules — uncomment as each phase lands.
 # add_subdirectory(ui)
 # add_subdirectory(print)

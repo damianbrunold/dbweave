@@ -365,10 +365,37 @@ With `fileformat` already ported in Phase 2, this phase becomes smaller:
 - [ ] Round-trip test against every file in `samples/`.
 
 ### Phase 4 — Rendering core
-- [ ] `draw`
-- [ ] `highlight`
-- [ ] `hilfslinien` (render side)
-- [ ] Golden-image test.
+
+Triage on first try showed that `draw.cpp` (580 lines) and every other
+Phase-4 candidate is a pile of `TDBWFRM::` methods that reach into the
+main window's instance state (scroll offsets, `righttoleft`,
+`toptobottom`, `Canvas`, etc.). The only truly standalone rendering
+primitives are `PaintCell` / `ClearCell`, which appear as free `inline`
+functions in `legacy/dbw3_form.h`. They are the leaves every higher-
+level Draw* method dispatches to.
+
+- [x] `PaintCell` / `ClearCell` ported as free functions in
+  `src/ui/draw_cell.{h,cpp}`. Signature change (the one deliberate
+  structural change of Phase 4): takes `QPainter&` + `QColor` instead
+  of `TCanvas*` + `TColor`, and the `NUMBER` darstellung accepts the
+  font height as an explicit parameter instead of reading
+  `DBWFRM->currentzoom`. Anti-aliasing is disabled for deterministic
+  output.
+- [x] `DARSTELLUNG` enum moved from `dbw3_base.h` into
+  `src/domain/enums.h` (it is a pure-value enum used both by the
+  domain Feld* types and by the renderer).
+- [x] Golden-pixel tests in `tests/test_draw_cell.cpp` cover
+  `ClearCell` + all nine geometric darstellung variants +
+  `NUMBER` fallback-to-filled-rect (font-rendered path not tested
+  because font rasterisation is not portable enough for exact
+  pixel checks).
+- [ ] Everything else in `draw`, `highlight`, `hilfslinien` remains
+  tangled with `TDBWFRM::` state and moves to Phase 5, where it
+  will be ported against the reconstructed `MainWindow` member
+  variables. A full-pattern golden-image test that renders a loaded
+  `samples/*.dbw` file end-to-end will be written once the
+  document-model types (FeldGewebe etc.) are available from
+  Phase 5.
 
 ### Phase 5 — Main document window
 - [ ] `PatternCanvas : QWidget`
