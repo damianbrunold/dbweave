@@ -16,6 +16,14 @@ add_library(dbweave_ui STATIC
     trittfolge.cpp
     aufknuepfung.cpp
     rapportieren.cpp
+    range.cpp
+    helpers.cpp
+    setblatteinzug.cpp
+    setfarbe.cpp
+    seteinzug.cpp
+    setaufknuepfung.cpp
+    settrittfolge.cpp
+    setgewebe.cpp
 )
 
 target_include_directories(dbweave_ui

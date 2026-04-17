@@ -14,6 +14,7 @@
 #include "rapport.h"
 #include "einzug.h"
 #include "datamodule.h"
+#include "assert_compat.h"
 
 TDBWFRM* DBWFRM = nullptr;
 
@@ -54,6 +55,8 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	ViewSchlagpatrone = mk();
 	ViewEinzug        = mk(/*checked=*/true);
 	ViewTrittfolge    = mk(/*checked=*/true);
+	ViewOnlyGewebe    = mk();
+	GewebeNone        = mk();
 	RappViewRapport   = mk();
 	GewebeFarbeffekt  = mk();
 	GewebeSimulation  = mk();
@@ -90,13 +93,18 @@ void __fastcall TDBWFRM::ReloadLanguage()
 }
 
 void __fastcall TDBWFRM::RecalcGewebe()       {}
-void __fastcall TDBWFRM::CalcRangeKette()     {}
-void __fastcall TDBWFRM::CalcRangeSchuesse()  {}
-void __fastcall TDBWFRM::CalcRange()          {}
 void __fastcall TDBWFRM::SetModified(bool)    {}
 void __fastcall TDBWFRM::SetCursor(int, int)  {}
 void __fastcall TDBWFRM::SetAppTitle()        {}
 void __fastcall TDBWFRM::UpdateStatusBar()    {}
+void __fastcall TDBWFRM::UpdateScrollbars()   {}
+void __fastcall TDBWFRM::InvalidateFeld(const GRIDPOS&) { update(); }
+
+void __fastcall TDBWFRM::RearrangeSchaefte()
+{
+	dbw3_assert(einzughandler);
+	if (einzughandler) einzughandler->Rearrange();
+}
 
 void __fastcall TDBWFRM::CalcRapport()    { if (rapporthandler) rapporthandler->CalcRapport(); }
 void __fastcall TDBWFRM::UpdateRapport()  { if (rapporthandler) rapporthandler->UpdateRapport(); }
@@ -121,6 +129,11 @@ void __fastcall TDBWFRM::_DrawAufknuepfung()                       {}
 void __fastcall TDBWFRM::_DrawSchlagpatrone()                      {}
 void __fastcall TDBWFRM::RecalcFreieSchaefte()                     {}
 void __fastcall TDBWFRM::RecalcFreieTritte()                       {}
+void __fastcall TDBWFRM::ClearGewebe(int, int)                     {}
+void __fastcall TDBWFRM::RedrawGewebe(int, int)                    {}
+void __fastcall TDBWFRM::RedrawAufknuepfung(int, int)              {}
+void __fastcall TDBWFRM::DrawGewebeSchuss(int)                     {}
+void __fastcall TDBWFRM::DeleteGewebeSchuss(int)                   {}
 
 void __fastcall TDBWFRM::ClearSelection()                        {}
 void __fastcall TDBWFRM::ResizeSelection(int, int, FELD, bool)   {}

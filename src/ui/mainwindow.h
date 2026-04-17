@@ -104,6 +104,8 @@ public:
 	QAction* ViewSchlagpatrone = nullptr;
 	QAction* ViewEinzug        = nullptr;
 	QAction* ViewTrittfolge    = nullptr;
+	QAction* ViewOnlyGewebe    = nullptr;
+	QAction* GewebeNone        = nullptr;
 	QAction* RappViewRapport   = nullptr;
 	QAction* GewebeFarbeffekt  = nullptr;
 	QAction* GewebeSimulation  = nullptr;
@@ -195,6 +197,57 @@ public:
 	void __fastcall CopySchussfaden (int _von, int _nach, bool _withcolors);
 	void __fastcall ClearKettfaden   (int _i);
 	void __fastcall ClearSchussfaden (int _j);
+
+	/*  --- Range / emptiness predicates (range.cpp) ------------- */
+	bool __fastcall IsEmptySchuss (int _j);
+	bool __fastcall IsEmptyKette  (int _i);
+	bool __fastcall IsEmptySchussNurGewebe (int _j);
+	bool __fastcall IsEmptyKetteNurGewebe  (int _i);
+	void __fastcall UpdateRange (int _i, int _j, bool _set);
+
+	/*  --- Data-level helpers (formerly spread across dbw3_form.cpp
+	    / range.cpp / setgewebe.cpp / redraw.cpp) ---------------  */
+	void  __fastcall ToggleGewebe       (int _i, int _j);
+	void  __fastcall ToggleAufknuepfung (int _i, int _j);
+	bool  __fastcall IsEmptyEinzug      (int _i);
+	bool  __fastcall IsEmptyTrittfolge  (int _j);
+	void  __fastcall RecalcTrittfolgeEmpty (int _j);
+	bool  __fastcall KettfadenEqual     (int _a, int _b);
+	short __fastcall GetFreeEinzug();
+	short __fastcall GetFreeTritt();
+	void  __fastcall CopyTritt          (int _von, int _nach);
+	void  __fastcall ExtendSchaefte();
+	void  __fastcall ExtendTritte();
+	void  __fastcall _ExtendSchaefte (int _max);
+	void  __fastcall _ExtendTritte   (int _max);
+	void  __fastcall RearrangeSchaefte();
+	void  __fastcall UpdateScrollbars();
+	void  __fastcall InvalidateFeld (const GRIDPOS& _pos);
+
+	/*  --- Redraw primitives stubs (bodies land with rendering). */
+	void  __fastcall ClearGewebe       (int _i, int _j);
+	void  __fastcall RedrawGewebe      (int _i, int _j);
+	void  __fastcall RedrawAufknuepfung (int _i, int _j);
+	void  __fastcall DrawGewebeSchuss  (int _j);
+	void  __fastcall DeleteGewebeSchuss (int _j);
+
+	/*  --- State-apply operations (set*.cpp) ------------------
+	    The public Set* methods wrap the DoSet* primitive with
+	    an undo-snapshot + SetModified + update() repaint. */
+	void __fastcall SetGewebe       (int _i, int _j, bool _set, int _range);
+	void __fastcall DoSetGewebe     (int _i, int _j, bool _set, int _range);
+	void __fastcall SetEinzug       (int _i, int _j);
+	void __fastcall DoSetEinzug     (int _i, int _j);
+	void __fastcall SetAufknuepfung   (int _i, int _j, bool _set, int _range);
+	void __fastcall DoSetAufknuepfung (int _i, int _j, bool _set, int _range);
+	void __fastcall SetTrittfolge   (int _i, int _j, bool _set, int _range);
+	void __fastcall DoSetTrittfolge (int _i, int _j, bool _set, int _range);
+	void __fastcall SetBlatteinzug   (int _i);
+	void __fastcall DoSetBlatteinzug (int _i);
+	void __fastcall SetKettfarben    (int _i);
+	void __fastcall DoSetKettfarben  (int _i);
+	void __fastcall SetSchussfarben  (int _j);
+	void __fastcall DoSetSchussfarben (int _j);
 };
 
 /*  Matches legacy `extern PACKAGE TDBWFRM *DBWFRM;`. Populated by
