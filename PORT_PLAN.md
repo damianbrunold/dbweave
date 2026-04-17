@@ -326,13 +326,13 @@ Settled at the start of Phase 0 on 2026-04-17:
 - [x] First commit (`aa6f237`).
 
 ### Phase 1 — VCL compatibility shim
-- [ ] `src/compat/CMakeLists.txt`
-- [ ] `src/compat/vcl_compat.h` — `AnsiString`, `__fastcall`, `True`/`False`, etc.
-- [ ] `src/compat/colors_compat.h` — `TColor` ↔ `QColor`
-- [ ] `src/compat/tstringlist_compat.h`
-- [ ] `src/compat/tbitmap_compat.h`
-- [ ] `src/compat/registry_compat.h`
-- [ ] Smoke test for the shim.
+- [x] `src/compat/CMakeLists.txt` (INTERFACE library `dbweave_compat`).
+- [x] `src/compat/vcl_compat.h` — `AnsiString`/`String` → `QString`, `__fastcall`/`__published`/`True`/`False` macros.
+- [x] `src/compat/colors_compat.h` — `TColor` ↔ `QColor` with VCL's BBGGRR byte order preserved.
+- [x] `src/compat/tstringlist_compat.h` — `TStringList` wrapper over `QStringList` with `Add`/`Count`/`Clear`/`[]`/`Strings[]`/`LoadFromFile`/`SaveToFile`.
+- [x] `src/compat/tbitmap_compat.h` — `TBitmap` wrapper over `QImage` (sizes + file I/O; pixel drawing deliberately not shimmed).
+- [x] `src/compat/registry_compat.h` — `TRegistry` wrapper over `QSettings` with `OpenKey`/`CloseKey`/`ValueExists`/`ReadInteger`/`WriteInteger`/`ReadString`/`WriteString`.
+- [x] `tests/test_compat.cpp` — five test cases across all shims, all green.
 
 ### Phase 2 — Domain core port
 - [ ] `utilities`

@@ -20,8 +20,10 @@ set_target_properties(dbweave PROPERTIES
     MACOSX_BUNDLE    ON
 )
 
+# Phase 1: VCL -> Qt compatibility shim.
+add_subdirectory(compat)
+
 # Placeholder targets for sub-modules — uncomment as each phase lands.
-# add_subdirectory(compat)
 # add_subdirectory(domain)
 # add_subdirectory(io)
 # add_subdirectory(ui)
