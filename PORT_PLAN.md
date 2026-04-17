@@ -322,8 +322,8 @@ Settled at the start of Phase 0 on 2026-04-17:
 - [x] `tests/CMakeLists.txt` + `tests/test_smoke.cpp` (Qt Test).
 - [x] `.gitignore` and `.clang-format` in place.
 - [x] `CLAUDE.md` updated to document the new layout and Qt build commands.
-- [ ] **Build verification** — requires installing Qt 6 dev packages + CMake on the host; see below.
-- [ ] First commit.
+- [x] **Build verification** — configure + compile + link + ctest all green on Debian 13 / Qt 6.8.2 / CMake 3.31 / Ninja.
+- [x] First commit (`aa6f237`).
 
 ### Phase 1 — VCL compatibility shim
 - [ ] `src/compat/CMakeLists.txt`
