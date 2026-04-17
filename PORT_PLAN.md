@@ -332,31 +332,44 @@ Settled at the start of Phase 0 on 2026-04-17:
 - [x] `src/compat/tstringlist_compat.h` — `TStringList` wrapper over `QStringList` with `Add`/`Count`/`Clear`/`[]`/`Strings[]`/`LoadFromFile`/`SaveToFile`.
 - [x] `src/compat/tbitmap_compat.h` — `TBitmap` wrapper over `QImage` (sizes + file I/O; pixel drawing deliberately not shimmed).
 - [x] `src/compat/registry_compat.h` — `TRegistry` wrapper over `QSettings` with `OpenKey`/`CloseKey`/`ValueExists`/`ReadInteger`/`WriteInteger`/`ReadString`/`WriteString`.
+- [x] `src/compat/assert_compat.h` — `dbw3_assert` → `Q_ASSERT`; `dbw3_trace` → `qDebug()`.
 - [x] `tests/test_compat.cpp` — five test cases across all shims, all green.
 
 ### Phase 2 — Domain core port
-- [ ] `utilities`
-- [ ] `colors`, `rangecolors`, `palette`
-- [ ] `felddef`
-- [ ] `cursor` (+ `cursorimpl.h`)
-- [ ] `einzug` (+ `einzugimpl.h`)
-- [ ] `trittfolge`
-- [ ] `aufknuepfung`
-- [ ] `rapport` (+ `rapportimpl.h`), `rapportieren`
-- [ ] `blockmuster`, `blockmuster_muster`
-- [ ] `zentralsymm`
-- [ ] `hilfslinien`
-- [ ] `schlagpatrone`, `steigung`
-- [ ] `bereiche`
-- [ ] `undoredo`
-- [ ] `settings` (→ `QSettings`)
-- [ ] `language`, `lang_main`, `dbw3_strings.h`
+
+Revised ordering as of commit bringing in `fileformat`: `utilities.cpp`
+is actually a batch of `TDBWFRM::` main-window editor handlers (despite
+the name) and has been moved to Phase 5. `fileformat` moved up from
+Phase 3 because `felddef`'s `Read`/`Write` methods depend on its
+`FfReader`/`FfWriter` classes.
+
+- [x] `colors` (RGB ↔ HSV).
+- [x] `fileformat` (`@dbw3:file` text reader/writer; `FfFile` replaced Win32 `HANDLE` with `std::FILE*`).
+- [ ] `felddef` (depends on `fileformat`).
+- [ ] `dbw3_base.h` foundation types (`PT`, `SZ`, `RANGE`, `RAPPORT`, `FeldBase*`) — depends on `felddef`; struct `Clear` impls live in `bereiche.cpp`.
+- [ ] `bereiche` (provides the virtual `Clear()` bodies for the Feld* hierarchy).
+- [ ] `rangecolors` (depends on `dbw3_base.h`; `InitRangeColors` takes a `TCanvas*` for `GetDeviceCaps` — rewrite against `QScreen`/`QGuiApplication::primaryScreen()`).
+- [ ] `palette`.
+- [ ] `cursor` (+ `cursorimpl.h`).
+- [ ] `einzug` (+ `einzugimpl.h`).
+- [ ] `trittfolge`.
+- [ ] `aufknuepfung`.
+- [ ] `rapport` (+ `rapportimpl.h`), `rapportieren`.
+- [ ] `blockmuster`, `blockmuster_muster`.
+- [ ] `zentralsymm`.
+- [ ] `hilfslinien`.
+- [ ] `schlagpatrone`, `steigung`.
+- [ ] `undoredo`.
+- [ ] `settings` (→ `QSettings`).
+- [ ] `language`, `lang_main`, `dbw3_strings.h`.
 
 ### Phase 3 — File I/O round-trip
-- [ ] `fileformat`
-- [ ] `fileload`, `filesave`, `filehandling`
-- [ ] `loadmap.h`, `loadoptions.h`
-- [ ] `mru`
+
+With `fileformat` already ported in Phase 2, this phase becomes smaller:
+
+- [ ] `fileload`, `filesave`, `filehandling`.
+- [ ] `loadmap.h`, `loadoptions.h`.
+- [ ] `mru`.
 - [ ] Round-trip test against every file in `samples/`.
 
 ### Phase 4 — Rendering core

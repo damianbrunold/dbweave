@@ -19,6 +19,8 @@ Makefile
 moc_*.cpp
 qrc_*.cpp
 ui_*.h
+/.qt/
+CTestTestfile.cmake
 
 # IDEs
 .vscode/

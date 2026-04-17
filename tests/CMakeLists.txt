@@ -28,3 +28,31 @@ target_link_libraries(test_compat
 )
 
 add_test(NAME compat COMMAND test_compat)
+
+# ---- Phase 2: domain unit tests -------------------------------------
+
+qt_add_executable(test_colors
+    test_colors.cpp
+)
+
+target_link_libraries(test_colors
+    PRIVATE
+        Qt6::Core
+        Qt6::Test
+        dbweave_domain
+)
+
+add_test(NAME colors COMMAND test_colors)
+
+qt_add_executable(test_fileformat
+    test_fileformat.cpp
+)
+
+target_link_libraries(test_fileformat
+    PRIVATE
+        Qt6::Core
+        Qt6::Test
+        dbweave_io
+)
+
+add_test(NAME fileformat COMMAND test_fileformat)

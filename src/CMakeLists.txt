@@ -23,9 +23,15 @@ set_target_properties(dbweave PROPERTIES
 # Phase 1: VCL -> Qt compatibility shim.
 add_subdirectory(compat)
 
+# Phase 2 (early): file-format I/O primitives. felddef's Read/Write
+# methods depend on the FfReader/FfWriter defined here, so this module
+# must be built before any domain code that persists to .dbw files.
+add_subdirectory(io)
+
+# Phase 2: pure-domain logic.
+add_subdirectory(domain)
+
 # Placeholder targets for sub-modules — uncomment as each phase lands.
-# add_subdirectory(domain)
-# add_subdirectory(io)
 # add_subdirectory(ui)
 # add_subdirectory(print)
 # if(DBWEAVE_BUILD_LOOM)
