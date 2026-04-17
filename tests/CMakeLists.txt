@@ -104,3 +104,9 @@ qt_add_executable(test_mainwindow_skeleton
 target_link_libraries(test_mainwindow_skeleton
     PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test dbweave_ui)
 add_test(NAME mainwindow_skeleton COMMAND test_mainwindow_skeleton)
+
+qt_add_executable(test_language
+    test_language.cpp
+)
+target_link_libraries(test_language PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test dbweave_ui)
+add_test(NAME language COMMAND test_language)

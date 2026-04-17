@@ -8,6 +8,7 @@ add_library(dbweave_ui STATIC
     mainwindow.cpp
     init.cpp
     clear.cpp
+    language.cpp
 )
 
 target_include_directories(dbweave_ui

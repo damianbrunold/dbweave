@@ -21,3 +21,9 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 }
 
 TDBWFRM::~TDBWFRM() = default;
+
+void __fastcall TDBWFRM::ReloadLanguage()
+{
+	/*  Placeholder until lang_main.cpp is ported -- no menu items
+	    or actions exist yet to receive the captions/hints.       */
+}

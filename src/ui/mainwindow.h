@@ -43,6 +43,11 @@ public:
 	int scroll_x2 = 0;
 	int scroll_y1 = 0;
 	int scroll_y2 = 0;
+
+	/*  Called by SwitchLanguage(). Body is filled in when lang_main.cpp
+	    is ported (that unit is a 673-line blob of LANG_C_H assignments
+	    against menu items and actions that don't exist yet). */
+	void __fastcall ReloadLanguage();
 };
 
 /*  Matches legacy `extern PACKAGE TDBWFRM *DBWFRM;`. Populated by
