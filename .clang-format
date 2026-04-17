@@ -1,0 +1,22 @@
+# Matches the legacy C++Builder style: tabs for indent, brace-on-same-line.
+# The intent is to minimize diff noise when porting legacy/*.cpp to src/.
+# In Phase 12 (cleanup) this will be replaced with a Qt-style profile.
+
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: c++17
+
+UseTab: ForIndentation
+IndentWidth: 4
+TabWidth: 4
+
+BreakBeforeBraces: Attach
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+ColumnLimit: 0
+AccessModifierOffset: -4
+PointerAlignment: Left
+SpaceAfterCStyleCast: false
+SpaceBeforeParens: ControlStatements
