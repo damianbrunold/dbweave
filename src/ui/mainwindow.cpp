@@ -10,6 +10,7 @@
 */
 
 #include "mainwindow.h"
+#include "patterncanvas.h"
 #include "undoredo.h"
 #include "rapport.h"
 #include "einzug.h"
@@ -57,9 +58,11 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	ViewTrittfolge    = mk(/*checked=*/true);
 	ViewOnlyGewebe    = mk();
 	GewebeNone        = mk();
+	GewebeNormal      = mk(/*checked=*/true);
 	RappViewRapport   = mk();
 	GewebeFarbeffekt  = mk();
 	GewebeSimulation  = mk();
+	Inverserepeat     = mk();
 
 	/*  Allocate the per-shaft / per-treadle availability arrays. Both
 	    are initialised to true (all free); RecalcFreieSchaefte() /
@@ -75,6 +78,11 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	undo           = new UrUndo(this);
 	rapporthandler = RpRapport::CreateInstance(this, Data);
 	einzughandler  = EinzugRearrange::CreateInstance(this, Data);
+
+	/*  The pattern canvas is the central widget. Ownership is via Qt
+	    parent-child; Qt will delete it with the window. */
+	pattern_canvas = new PatternCanvas(this, this);
+	setCentralWidget(pattern_canvas);
 }
 
 TDBWFRM::~TDBWFRM()
@@ -114,7 +122,7 @@ bool __fastcall TDBWFRM::IsInRapport(int _i, int _j)
                                           { return rapporthandler ? rapporthandler->IsInRapport(_i, _j) : false; }
 
 void __fastcall TDBWFRM::DrawHilfslinien()                         {}
-void __fastcall TDBWFRM::DrawGewebe(int, int)                      {}
+/*  DrawGewebe body lives in draw.cpp. */
 void __fastcall TDBWFRM::DrawGewebeRahmen(int, int)                {}
 void __fastcall TDBWFRM::DrawEinzug(int, int)                      {}
 void __fastcall TDBWFRM::DrawAufknuepfung(int, int)                {}

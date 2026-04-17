@@ -5,6 +5,7 @@ add_library(dbweave_domain STATIC
     colors.cpp
     felddef.cpp
     palette.cpp
+    rangecolors.cpp
     settings.cpp
     zentralsymm.cpp
 )

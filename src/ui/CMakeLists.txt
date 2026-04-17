@@ -24,6 +24,8 @@ add_library(dbweave_ui STATIC
     setaufknuepfung.cpp
     settrittfolge.cpp
     setgewebe.cpp
+    patterncanvas.cpp
+    draw.cpp
 )
 
 target_include_directories(dbweave_ui

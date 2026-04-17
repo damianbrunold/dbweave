@@ -24,11 +24,14 @@
 #define DBWEAVE_UI_MAINWINDOW_H
 
 #include <QAction>
+#include <QColor>
 #include <QMainWindow>
 
 #include "vcl_compat.h"
 #include "dbw3_base.h"      /* FeldBase hierarchy */
 
+class QPainter;
+class PatternCanvas;
 class UrUndo;
 class RpRapport;
 class EinzugRearrange;
@@ -106,9 +109,31 @@ public:
 	QAction* ViewTrittfolge    = nullptr;
 	QAction* ViewOnlyGewebe    = nullptr;
 	QAction* GewebeNone        = nullptr;
+	QAction* GewebeNormal      = nullptr;
 	QAction* RappViewRapport   = nullptr;
 	QAction* GewebeFarbeffekt  = nullptr;
 	QAction* GewebeSimulation  = nullptr;
+	QAction* Inverserepeat     = nullptr;
+
+	/*  Symbol styles for the three special ranges (AUSHEBUNG,
+	    ANBINDUNG, ABBINDUNG). Legacy DrawGewebeNormal branches on
+	    each of these when painting the corresponding range cells. */
+	DARSTELLUNG darst_aushebung = AUSGEFUELLT;
+	DARSTELLUNG darst_anbindung = AUSGEFUELLT;
+	DARSTELLUNG darst_abbindung = AUSGEFUELLT;
+
+	/*  Strongline colour for the heavy grid lines. */
+	QColor strongclr = QColor(Qt::black);
+
+	/*  Active QPainter during a paintEvent. nullptr outside paint,
+	    so legacy-style "frm->Canvas->..." ports can no-op safely.
+	    Set by PatternCanvas::paintEvent for the duration of the
+	    render, cleared afterwards.                              */
+	QPainter* currentPainter = nullptr;
+
+	/*  The central widget that renders the pattern. Owned via Qt
+	    parent-child ownership -- delete when the mainwindow dies. */
+	PatternCanvas* pattern_canvas = nullptr;
 
 	/*  Per-shaft / per-treadle "unused" flags. Sized to Data->MAXY1 /
 	    Data->MAXX2 and allocated in the ctor. Match the legacy raw

@@ -146,3 +146,9 @@ qt_add_executable(test_setops
 )
 target_link_libraries(test_setops PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test dbweave_ui)
 add_test(NAME setops COMMAND test_setops)
+
+qt_add_executable(test_rendering
+    test_rendering.cpp
+)
+target_link_libraries(test_rendering PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test dbweave_ui)
+add_test(NAME rendering COMMAND test_rendering)
