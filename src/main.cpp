@@ -7,32 +7,33 @@
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <QApplication>
-#include <QMainWindow>
+
+#include "datamodule.h"
+#include "mainwindow.h"
 
 int main (int argc, char* argv[])
 {
-    QApplication app(argc, argv);
+	QApplication app(argc, argv);
 
-    QApplication::setOrganizationName("Brunold Software");
-    QApplication::setOrganizationDomain("brunoldsoftware.ch");
-    QApplication::setApplicationName("DB-WEAVE");
-    QApplication::setApplicationVersion("0.1.0");
+	QApplication::setOrganizationName("Brunold Software");
+	QApplication::setOrganizationDomain("brunoldsoftware.ch");
+	QApplication::setApplicationName("DB-WEAVE");
+	QApplication::setApplicationVersion("0.1.0");
 
-    QMainWindow window;
-    window.setWindowTitle(QStringLiteral("DB-WEAVE"));
-    window.resize(1024, 768);
-    window.show();
+	/*  Reconstruct the legacy VCL form-auto-creation pattern: both
+	    `Data` and `DBWFRM` are globals referenced throughout the
+	    ported editor code. Initialise them once at startup. */
+	Data   = new TData();
+	DBWFRM = new TDBWFRM();
 
-    return app.exec();
+	DBWFRM->show();
+
+	const int rc = app.exec();
+
+	delete DBWFRM; DBWFRM = nullptr;
+	delete Data;   Data   = nullptr;
+	return rc;
 }

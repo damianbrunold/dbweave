@@ -95,3 +95,12 @@ qt_add_executable(test_draw_cell
 )
 target_link_libraries(test_draw_cell PRIVATE Qt6::Core Qt6::Gui Qt6::Test dbweave_ui)
 add_test(NAME draw_cell COMMAND test_draw_cell)
+
+# ---- Phase 5: main-window skeleton ----------------------------------
+
+qt_add_executable(test_mainwindow_skeleton
+    test_mainwindow_skeleton.cpp
+)
+target_link_libraries(test_mainwindow_skeleton
+    PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test dbweave_ui)
+add_test(NAME mainwindow_skeleton COMMAND test_mainwindow_skeleton)

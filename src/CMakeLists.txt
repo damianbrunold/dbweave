@@ -13,6 +13,7 @@ target_link_libraries(dbweave
         Qt6::Gui
         Qt6::Widgets
         Qt6::PrintSupport
+        dbweave_ui
 )
 
 set_target_properties(dbweave PROPERTIES

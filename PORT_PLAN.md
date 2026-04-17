@@ -398,19 +398,66 @@ level Draw* method dispatches to.
   Phase 5.
 
 ### Phase 5 — Main document window
-- [ ] `PatternCanvas : QWidget`
-- [ ] `MainWindow : QMainWindow`
-- [ ] File → Open / Save / Save As / Recent Files
-- [ ] `zoom`, `scrolling`, `kbdscroll`
-- [ ] `redraw`, `invalidate` (collapse into `update()`)
-- [ ] `mousehandling`, `kbdhandling`
-- [ ] `selection`, `range`
-- [ ] `undoredo` menu wiring
-- [ ] `tools`
-- [ ] `move`, `insert`, `insertbindung`, `delete`, `clear`, `recalc`, `idle`
-- [ ] `setaufknuepfung`, `setblatteinzug`, `setcolors`, `seteinzug`, `setfarbe`, `setgewebe`, `settrittfolge`
-- [ ] `toolbar`, `statusbar`, `popupmenu`
-- [ ] `init` → `MainWindow` ctor
+
+This phase has grown to subsume every legacy unit that touches either
+the `TDBWFRM` instance state or the `Data` / `DBWFRM` globals (see
+Phase-2/Phase-3/Phase-4 triage). The port lands the foundation layer
+first so every subsequent slice has a place to plug in.
+
+Landed:
+- [x] `src/ui/dbw3_base.h` — `PT`, `SZ`, `RAPPORT`, `RANGE`, `GRIDPOS`,
+  `GRIDSIZE`, `INPUTPOS`, `Klammer`, `HlineBar` value types plus the
+  full `FeldBase` / `FeldBase2` / `FeldBase3` class hierarchy
+  declarations (`FeldBlatteinzug`, `FeldKettfarben`, `FeldSchussfarben`,
+  `FeldEinzug`, `FeldAufknuepfung`, `FeldTrittfolge`, `FeldGewebe`).
+- [x] `src/ui/datamodule.{h,cpp}` — minimal `TData` with MAXX/Y
+  dimensions, `Palette*`, default colour indices. The VCL dialog grab-
+  bag (`TPrinterSetupDialog` et al.) is not mirrored — replaced by
+  on-demand QDialog calls when those dialogs land in Phase 7.
+- [x] `src/ui/mainwindow.{h,cpp}` — Phase-5 skeleton `class TDBWFRM :
+  public QMainWindow` with the four scroll-offset members. Members and
+  methods are added here as the units that need them are ported.
+- [x] `src/ui/init.cpp` — `FeldBase*` constructors (dimensions +
+  darstellung defaults) and `ScrollX`/`ScrollY` bodies reading
+  `DBWFRM->scroll_{x1,x2,y1,y2}`.
+- [x] `src/ui/clear.cpp` — `FeldBase::Clear` bodies reading `Data->`
+  config (MAXX1, defcolorh, defcolorv).
+- [x] `src/main.cpp` — updated to construct `Data` and `DBWFRM`
+  globals, show the window, and tear both down cleanly on exit.
+- [x] `tests/test_mainwindow_skeleton.cpp` — 8 cases covering TData
+  defaults, TDBWFRM scroll offsets, Feld* construction/Clear
+  semantics (including the blatteinzug "every 4th thread" default
+  pattern), and ScrollX/ScrollY reading mainwindow offsets.
+
+To port (in dependency order):
+- [ ] `language`, `lang_main`, `dbw3_strings.h` — in-house string
+  table needed by dialogs and menus.
+- [ ] `undoredo` — required by almost every editor operation.
+- [ ] `bereiche` (Range1..9 click handlers), `utilities` (fill-twill /
+  swap-side / lancierung), `clear.cpp` TDBWFRM:: methods, `init.cpp`
+  TDBWFRM:: methods.
+- [ ] `cursor` (+ `cursorimpl.h`).
+- [ ] `einzug` (+ `einzugimpl.h`), `einzugtrittfolge`.
+- [ ] `trittfolge`, `aufknuepfung`, `rapport` (+ `rapportimpl.h`),
+  `rapportieren`, `schlagpatrone`, `steigung`.
+- [ ] `blockmuster`, `blockmuster_muster`, `hilfslinien`.
+- [ ] State-apply ops: `setaufknuepfung`, `setblatteinzug`,
+  `setcolors`, `seteinzug`, `setfarbe`, `setgewebe`, `settrittfolge`.
+- [ ] Editing ops: `move`, `insert`, `insertbindung`, `delete`,
+  `recalc`, `idle`.
+- [ ] Rendering: rest of `draw`, `redraw`, `invalidate`, `highlight`,
+  `hilfslinien` (render side).
+- [ ] Viewport: `zoom`, `scrolling`, `kbdscroll`.
+- [ ] Input: `mousehandling`, `kbdhandling`, `selection`, `range`,
+  `tools`.
+- [ ] UI chrome: `toolbar`, `statusbar`, `popupmenu`.
+- [ ] File I/O: `fileload`, `filesave`, `filehandling`, `mru`,
+  `loadoptions`, `commandline`, `debugchecks`.
+- [ ] Misc: `properties`, `osversion`, `exportbitmap`, `export`,
+  `import`, `importbmp`, `userdef`.
+- [ ] `PatternCanvas : QWidget` for the document-area render target
+  (introduced once enough rendering exists to exercise it).
+- [ ] File → Open / Save / Save As / Recent Files menu wiring.
 
 ### Phase 6 — Palettes
 - [ ] `FarbPalette` → `PalettePanel` (`QDockWidget`)
