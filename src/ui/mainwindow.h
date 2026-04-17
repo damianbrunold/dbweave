@@ -257,6 +257,11 @@ public:
 	void  __fastcall DrawGewebeSchuss  (int _j);
 	void  __fastcall DeleteGewebeSchuss (int _j);
 
+	/*  --- Field "Rahmen" (frame + strongline) painters ---------- */
+	void __fastcall DrawEinzugRahmen       (int _i, int _j);
+	void __fastcall DrawAufknuepfungRahmen (int _i, int _j);
+	void __fastcall DrawTrittfolgeRahmen   (int _i, int _j);
+
 	/*  --- State-apply operations (set*.cpp) ------------------
 	    The public Set* methods wrap the DoSet* primitive with
 	    an undo-snapshot + SetModified + update() repaint. */

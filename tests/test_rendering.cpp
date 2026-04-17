@@ -222,6 +222,38 @@ private slots:
 		    (x+5..x+7, y+5..y+6). Check a pixel inside that. */
 		QCOMPARE(img.pixel(85, 85), qRgb(0, 0, 0));
 	}
+
+	void rahmen_paints_cell_border_in_palette_dark()
+	{
+		/*  Every cell has a 1-px top and left border in
+		    palette().color(QPalette::Dark). Pick cell (1, 1) which
+		    lies off any strongline boundary so the border doesn't
+		    get overpainted by the heavier strongline. y_px for cell
+		    j=1 is H - 2*10 = 60. */
+		QImage img = renderCanvas();
+
+		const QColor darkCol = DBWFRM->pattern_canvas->palette().color(QPalette::Dark);
+		/*  Top edge at y=60, x span 10..20. Interior x=15. */
+		QCOMPARE(img.pixelColor(15, 60), darkCol);
+		/*  Left edge at x=10, y span 60..70. Interior y=65. */
+		QCOMPARE(img.pixelColor(10, 65), darkCol);
+	}
+
+	void strongline_draws_at_strongline_x_boundaries()
+	{
+		/*  Default strongline_x is DEFAULT_STRONGLINE = 4. On a
+		    gewebe with 8 columns, at (i + scroll_x1) % 4 == 0 and
+		    i != 0, the Rahmen paints a strongclr vertical line.
+		    That hits i=4 (and i=0 is excluded).
+
+		    strongclr defaults to QColor(Qt::black).
+
+		    Cell (4, 3) at x_px = 4*10 = 40. The strongline runs
+		    down the LEFT edge of cell 4 (non-righttoleft branch).
+		    Check pixel (40, 45). */
+		QImage img = renderCanvas();
+		QCOMPARE(img.pixelColor(40, 45), QColor(Qt::black));
+	}
 };
 
 QTEST_MAIN(TestRendering)

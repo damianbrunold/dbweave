@@ -123,8 +123,7 @@ bool __fastcall TDBWFRM::IsInRapport(int _i, int _j)
 
 void __fastcall TDBWFRM::DrawHilfslinien()                         {}
 /*  DrawGewebe / DrawEinzug / DrawAufknuepfung / DrawTrittfolge
-    bodies live in draw.cpp. */
-void __fastcall TDBWFRM::DrawGewebeRahmen(int, int)                {}
+    and the four *Rahmen painters live in draw.cpp. */
 void __fastcall TDBWFRM::DrawGewebeKette(int)                      {}
 void __fastcall TDBWFRM::DeleteGewebeKette(int)                    {}
 void __fastcall TDBWFRM::_ClearEinzug()                            {}

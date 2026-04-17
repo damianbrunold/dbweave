@@ -237,3 +237,184 @@ void __fastcall TDBWFRM::DrawTrittfolge (int _i, int _j)
 	}
 }
 /*-----------------------------------------------------------------*/
+/*  --- Rahmen (frame + strongline) painters ----------------------
+    Each field's Rahmen draws a one-pixel top+left cell border in
+    QPalette::Dark plus optional heavier strongline_x/y dividers in
+    TDBWFRM::strongclr. These paint one cell at a time, same as the
+    Draw* primitives; PatternCanvas drives the iteration. */
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::DrawEinzugRahmen (int _i, int _j)
+{
+	QPainter* p = currentPainter;
+	if (!p) return;
+
+	int i = _i;
+	if (righttoleft && einzug.gw > 0) {
+		i = einzug.pos.width/einzug.gw - i - 1;
+	}
+	int j = _j;
+	if (toptobottom && einzug.gh > 0) {
+		j = einzug.pos.height/einzug.gh - j - 1;
+	}
+
+	const int x  = einzug.pos.x0 + i*einzug.gw;
+	const int y  = einzug.pos.y0 + einzug.pos.height - (j + 1)*einzug.gh;
+	const int xx = x + einzug.gw;
+	const int yy = y + einzug.gh;
+
+	p->setPen(QPen(palette().color(QPalette::Dark)));
+	p->drawLine(x, y, xx, y);
+	p->drawLine(x, y, x,  yy);
+
+	p->setPen(QPen(strongclr));
+	const int stx = einzug.pos.strongline_x;
+	const int sty = einzug.pos.strongline_y;
+
+	if (stx != 0 && _i > 0) {
+		if (righttoleft) {
+			if (((_i + scroll_x1) % stx) == 0 && _i != 0)
+				p->drawLine(xx, y, xx, yy);
+			if (((_i + 1 + scroll_x1) % stx) == 0 && einzug.gw > 0 && _i + 1 < einzug.pos.width/einzug.gw)
+				p->drawLine(x, y, x, yy);
+		} else {
+			if (((_i + scroll_x1) % stx) == 0 && _i != 0)
+				p->drawLine(x, y, x, yy);
+			if (((_i + 1 + scroll_x1) % stx) == 0 && einzug.gw > 0 && _i + 1 < einzug.pos.width/einzug.gw)
+				p->drawLine(xx, y, xx, yy);
+		}
+	}
+	if (sty != 0 && _j > 0) {
+		if (toptobottom) {
+			if (((_j + scroll_y1 + 1) % sty) == 0 && einzug.gh > 0 && _j + 1 < einzug.pos.height/einzug.gh)
+				p->drawLine(x, yy, xx, yy);
+			if (((_j + scroll_y1) % sty) == 0 && _j != 0)
+				p->drawLine(x, y, xx, y);
+		} else {
+			if (((_j + scroll_y1 + 1) % sty) == 0 && einzug.gh > 0 && _j + 1 < einzug.pos.height/einzug.gh)
+				p->drawLine(x, y, xx, y);
+			if (((_j + scroll_y1) % sty) == 0 && _j != 0)
+				p->drawLine(x, yy, xx, yy);
+		}
+	}
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::DrawAufknuepfungRahmen (int _i, int _j)
+{
+	QPainter* p = currentPainter;
+	if (!p) return;
+
+	int j = _j;
+	if (toptobottom && einzug.gh > 0) {
+		j = einzug.pos.height/einzug.gh - j - 1;
+	}
+
+	const int x  = aufknuepfung.pos.x0 + _i*aufknuepfung.gw;
+	const int y  = aufknuepfung.pos.y0 + aufknuepfung.pos.height - (j + 1)*aufknuepfung.gh;
+	const int xx = x + aufknuepfung.gw;
+	const int yy = y + aufknuepfung.gh;
+
+	p->setPen(QPen(palette().color(QPalette::Dark)));
+	p->drawLine(x, y, xx, y);
+	p->drawLine(x, y, x,  yy);
+
+	p->setPen(QPen(strongclr));
+	const int stx = aufknuepfung.pos.strongline_x;
+	const int sty = aufknuepfung.pos.strongline_y;
+
+	if (stx != 0 && _i > 0) {
+		if (((_i + scroll_x2) % stx) == 0 && _i != 0)
+			p->drawLine(x, y, x, yy);
+		if (((_i + 1 + scroll_x2) % stx) == 0 && aufknuepfung.gw > 0 && _i + 1 < aufknuepfung.pos.width/aufknuepfung.gw)
+			p->drawLine(xx, y, xx, yy);
+	}
+	if (sty != 0 && _j > 0) {
+		if (toptobottom) {
+			if (((_j + scroll_y1 + 1) % sty) == 0 && aufknuepfung.gh > 0 && _j + 1 < aufknuepfung.pos.height/aufknuepfung.gh)
+				p->drawLine(x, yy, xx, yy);
+			if (((_j + scroll_y1) % sty) == 0 && _j != 0)
+				p->drawLine(x, y, xx, y);
+		} else {
+			if (((_j + scroll_y1 + 1) % sty) == 0 && aufknuepfung.gh > 0 && _j + 1 < aufknuepfung.pos.height/aufknuepfung.gh)
+				p->drawLine(x, y, xx, y);
+			if (((_j + scroll_y1) % sty) == 0 && _j != 0)
+				p->drawLine(x, yy, xx, yy);
+		}
+	}
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::DrawTrittfolgeRahmen (int _i, int _j)
+{
+	QPainter* p = currentPainter;
+	if (!p) return;
+
+	const int x  = trittfolge.pos.x0 + _i*trittfolge.gw;
+	const int y  = trittfolge.pos.y0 + trittfolge.pos.height - (_j + 1)*trittfolge.gh;
+	const int xx = x + trittfolge.gw;
+	const int yy = y + trittfolge.gh;
+
+	p->setPen(QPen(palette().color(QPalette::Dark)));
+	p->drawLine(x, y, xx, y);
+	p->drawLine(x, y, x,  yy);
+
+	p->setPen(QPen(strongclr));
+	const int stx = trittfolge.pos.strongline_x;
+	const int sty = trittfolge.pos.strongline_y;
+
+	if (stx != 0 && _i > 0) {
+		if (((_i + scroll_x2) % stx) == 0 && _i != 0)
+			p->drawLine(x, y, x, yy);
+		if (((_i + 1 + scroll_x2) % stx) == 0 && trittfolge.gw > 0 && _i + 1 < trittfolge.pos.width/trittfolge.gw)
+			p->drawLine(xx, y, xx, yy);
+	}
+	if (sty != 0 && _j > 0) {
+		if (((_j + scroll_y2 + 1) % sty) == 0 && trittfolge.gh > 0 && _j + 1 < trittfolge.pos.height/trittfolge.gh)
+			p->drawLine(x, y, xx, y);
+		if (((_j + scroll_y2) % sty) == 0 && _j != 0)
+			p->drawLine(x, yy, xx, yy);
+	}
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::DrawGewebeRahmen (int _i, int _j)
+{
+	QPainter* p = currentPainter;
+	if (!p) return;
+
+	int i = _i;
+	if (righttoleft && gewebe.gw > 0) {
+		i = gewebe.pos.width/gewebe.gw - i - 1;
+	}
+
+	const int x  = gewebe.pos.x0 + i*gewebe.gw;
+	const int y  = gewebe.pos.y0 + gewebe.pos.height - (_j + 1)*gewebe.gh;
+	const int xx = x + gewebe.gw;
+	const int yy = y + gewebe.gh;
+
+	p->setPen(QPen(palette().color(QPalette::Dark)));
+	p->drawLine(x, y, xx, y);
+	p->drawLine(x, y, x,  yy);
+
+	p->setPen(QPen(strongclr));
+	const int stx = gewebe.pos.strongline_x;
+	const int sty = gewebe.pos.strongline_y;
+
+	if (stx != 0) {
+		if (righttoleft) {
+			if (((_i + scroll_x1) % stx) == 0 && _i != 0)
+				p->drawLine(xx, y, xx, yy);
+			if (((_i + 1 + scroll_x1) % stx) == 0 && gewebe.gw > 0 && _i + 1 < gewebe.pos.width/gewebe.gw)
+				p->drawLine(x, y, x, yy);
+		} else {
+			if (((_i + scroll_x1) % stx) == 0 && _i != 0)
+				p->drawLine(x, y, x, yy);
+			if (((_i + 1 + scroll_x1) % stx) == 0 && gewebe.gw > 0 && _i + 1 < gewebe.pos.width/gewebe.gw)
+				p->drawLine(xx, y, xx, yy);
+		}
+	}
+	if (sty != 0) {
+		if (((_j + scroll_y2 + 1) % sty) == 0 && gewebe.gh > 0 && _j + 1 < gewebe.pos.height/gewebe.gh)
+			p->drawLine(x, y, xx, y);
+		if (((_j + scroll_y2) % sty) == 0 && _j != 0)
+			p->drawLine(x, yy, xx, yy);
+	}
+}
+/*-----------------------------------------------------------------*/

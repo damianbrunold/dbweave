@@ -52,25 +52,34 @@ void PatternCanvas::paintEvent (QPaintEvent* /*_e*/)
 	    hilfslinien, rapport lines and the cursor land in later
 	    rendering slices. */
 
-	auto paintField = [this](FeldBase& fb, void (TDBWFRM::*draw)(int, int)) {
+	auto paintField = [this](FeldBase& fb,
+	                         void (TDBWFRM::*draw)  (int, int),
+	                         void (TDBWFRM::*rahmen)(int, int)) {
 		if (fb.gw <= 0 || fb.gh <= 0) return;
 		if (fb.pos.width <= 0 || fb.pos.height <= 0) return;
 		const int cols = fb.pos.width  / fb.gw;
 		const int rows = fb.pos.height / fb.gh;
+		/*  Cells first, Rahmen second so the strongline lines draw
+		    on top of cell fills without getting overwritten. */
 		for (int i = 0; i < cols; i++)
 			for (int j = 0; j < rows; j++)
 				(frm->*draw)(i, j);
+		if (rahmen) {
+			for (int i = 0; i < cols; i++)
+				for (int j = 0; j < rows; j++)
+					(frm->*rahmen)(i, j);
+		}
 	};
 
 	if (frm->ViewEinzug && frm->ViewEinzug->isChecked()) {
-		paintField(frm->einzug,       &TDBWFRM::DrawEinzug);
-		paintField(frm->aufknuepfung, &TDBWFRM::DrawAufknuepfung);
+		paintField(frm->einzug,       &TDBWFRM::DrawEinzug,       &TDBWFRM::DrawEinzugRahmen);
+		paintField(frm->aufknuepfung, &TDBWFRM::DrawAufknuepfung, &TDBWFRM::DrawAufknuepfungRahmen);
 	}
 
 	if (frm->ViewTrittfolge && frm->ViewTrittfolge->isChecked())
-		paintField(frm->trittfolge,   &TDBWFRM::DrawTrittfolge);
+		paintField(frm->trittfolge,   &TDBWFRM::DrawTrittfolge,   &TDBWFRM::DrawTrittfolgeRahmen);
 
-	paintField(frm->gewebe,           &TDBWFRM::DrawGewebe);
+	paintField(frm->gewebe,           &TDBWFRM::DrawGewebe,       &TDBWFRM::DrawGewebeRahmen);
 
 	frm->currentPainter = nullptr;
 }
