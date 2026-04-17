@@ -23,9 +23,13 @@
 #ifndef DBWEAVE_UI_MAINWINDOW_H
 #define DBWEAVE_UI_MAINWINDOW_H
 
+#include <QAction>
 #include <QMainWindow>
 
 #include "vcl_compat.h"
+#include "dbw3_base.h"      /* FeldBase hierarchy */
+
+class UrUndo;
 
 class TDBWFRM : public QMainWindow
 {
@@ -44,10 +48,67 @@ public:
 	int scroll_y1 = 0;
 	int scroll_y2 = 0;
 
+	/*  The seven owned document fields. Legacy TDBWFRM declared these
+	    as by-value members; keeping that shape so the literal
+	    `DBWFRM->einzug.feld.Size()` references in ported code resolve
+	    without change. Defaults come from each struct's constructor
+	    (see src/ui/init.cpp).                                      */
+	FeldEinzug       einzug;
+	FeldAufknuepfung aufknuepfung;
+	FeldTrittfolge   trittfolge;
+	FeldGewebe       gewebe;
+	FeldKettfarben   kettfarben;
+	FeldSchussfarben schussfarben;
+	FeldBlatteinzug  blatteinzug;
+
+	/*  Which field currently owns the keyboard cursor. */
+	FELD kbd_field = GEWEBE;
+
+	/*  Menu-action toggles. Allocated but left unchecked and detached
+	    from any menu bar until lang_main.cpp / the menu-port slice
+	    wires them up -- they exist now so ported code (undoredo,
+	    editor ops) that reads their ->isChecked() / ->setChecked()
+	    compiles. Owned by `this` (parent = QObject), so destroyed
+	    with the window. */
+	QAction* EzMinimalZ      = nullptr;
+	QAction* EzMinimalS      = nullptr;
+	QAction* EzGeradeZ       = nullptr;
+	QAction* EzGeradeS       = nullptr;
+	QAction* EzChorig2       = nullptr;
+	QAction* EzChorig3       = nullptr;
+	QAction* EzBelassen      = nullptr;
+	QAction* EzFixiert       = nullptr;
+
+	QAction* TfMinimalZ      = nullptr;
+	QAction* TfMinimalS      = nullptr;
+	QAction* TfGeradeZ       = nullptr;
+	QAction* TfGeradeS       = nullptr;
+	QAction* TfGesprungen    = nullptr;
+	QAction* TfBelassen      = nullptr;
+
+	QAction* ViewSchlagpatrone = nullptr;
+
+	/*  Undo stack, owned. */
+	UrUndo* undo = nullptr;
+
 	/*  Called by SwitchLanguage(). Body is filled in when lang_main.cpp
 	    is ported (that unit is a 673-line blob of LANG_C_H assignments
 	    against menu items and actions that don't exist yet). */
 	void __fastcall ReloadLanguage();
+
+	/*  Stubs for the recalc / house-keeping methods every editor
+	    operation dispatches through. Bodies land in later slices
+	    alongside the ops that drive them (setgewebe, rapport,
+	    kette/schuesse range management, ...). Defined now so ported
+	    undoredo / editor code links without forward-reference
+	    surgery.                                                    */
+	void __fastcall RecalcGewebe();
+	void __fastcall CalcRangeKette();
+	void __fastcall CalcRangeSchuesse();
+	void __fastcall CalcRapport();
+	void __fastcall SetModified (bool _modified = true);
+	void __fastcall SetCursor   (int _i, int _j);
+	void __fastcall SetAppTitle ();
 };
 
 /*  Matches legacy `extern PACKAGE TDBWFRM *DBWFRM;`. Populated by

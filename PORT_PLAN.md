@@ -430,9 +430,16 @@ Landed:
   pattern), and ScrollX/ScrollY reading mainwindow offsets.
 
 To port (in dependency order):
-- [ ] `language`, `lang_main`, `dbw3_strings.h` — in-house string
-  table needed by dialogs and menus.
-- [ ] `undoredo` — required by almost every editor operation.
+- [x] `language`, `dbw3_strings.h` — in-house string table, UTF-8
+  transcoded. `lang_main.cpp` is deferred until a menu exists to
+  receive the captions.
+- [x] `undoredo` — circular-ring undo/redo of the seven input Feld*
+  containers plus kbd position and einzug/trittfolge style toggles.
+  TDBWFRM expanded with the seven owned Feld* members, fifteen
+  QAction toggles (einzug/trittfolge styles + ViewSchlagpatrone),
+  and stub RecalcGewebe / CalcRangeKette / CalcRangeSchuesse /
+  CalcRapport / SetModified / SetCursor / SetAppTitle methods to
+  satisfy the undo restore path.
 - [ ] `bereiche` (Range1..9 click handlers), `utilities` (fill-twill /
   swap-side / lancierung), `clear.cpp` TDBWFRM:: methods, `init.cpp`
   TDBWFRM:: methods.

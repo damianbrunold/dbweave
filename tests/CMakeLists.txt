@@ -110,3 +110,9 @@ qt_add_executable(test_language
 )
 target_link_libraries(test_language PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test dbweave_ui)
 add_test(NAME language COMMAND test_language)
+
+qt_add_executable(test_undoredo
+    test_undoredo.cpp
+)
+target_link_libraries(test_undoredo PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test dbweave_ui)
+add_test(NAME undoredo COMMAND test_undoredo)
