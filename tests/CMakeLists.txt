@@ -128,3 +128,9 @@ qt_add_executable(test_rapport
 )
 target_link_libraries(test_rapport PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test dbweave_ui)
 add_test(NAME rapport COMMAND test_rapport)
+
+qt_add_executable(test_einzug
+    test_einzug.cpp
+)
+target_link_libraries(test_einzug PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test dbweave_ui)
+add_test(NAME einzug COMMAND test_einzug)

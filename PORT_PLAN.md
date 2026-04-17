@@ -453,7 +453,18 @@ To port (in dependency order):
   TShiftState stand-in. TDBWFRM grew `righttoleft`, `toptobottom`,
   `kette`, `schuesse`, `rapport`, `currentrange` plus
   `ClearSelection`/`ResizeSelection` method stubs.
-- [ ] `einzug` (+ `einzugimpl.h`), `einzugtrittfolge`.
+- [x] `einzug` (+ `einzugimpl.h`) — `EinzugRearrangeImpl` class
+  ported: the eight threading-rearrangement algorithms (NormalZ,
+  NormalS, GeradeZ, GeradeS, Chorig2, Chorig3, Belassen, Rearrange
+  dispatcher) plus every helper (CalcRange, CalcRapportRange,
+  EinzugEqual, SchaefteEqual, MergeSchaefte, SplitSchaft, MoveSchaft,
+  SwitchSchaefte, IsEmptySchaft, IsTotalEmptySchaft,
+  GetFirstNonemptySchaft, EliminateEmptySchaft, three RedrawX
+  routines). Fixiert is stubbed pending the recalc.cpp / RcRecalcAll
+  port. TDBWFRM grew `bool* freieschaefte` / `bool* freietritte`
+  (matching legacy raw-array shape), `ViewEinzug` / `ViewTrittfolge`
+  QActions, and 15 new Draw / Recalc / Clear method stubs.
+- [ ] `einzugtrittfolge`.
 - [x] `rapport` (+ `rapportimpl.h`) — algorithm half fully ported
   (IsInRapport, CalcRapport via CalcKettrapport/CalcSchussrapport,
   EinzugEqual, TrittfolgeEqual). Rendering half (ClearRapport,

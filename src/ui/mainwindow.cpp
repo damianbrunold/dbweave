@@ -12,6 +12,7 @@
 #include "mainwindow.h"
 #include "undoredo.h"
 #include "rapport.h"
+#include "einzug.h"
 #include "datamodule.h"
 
 TDBWFRM* DBWFRM = nullptr;
@@ -51,20 +52,35 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	TfBelassen    = mk(/*checked=*/true);
 
 	ViewSchlagpatrone = mk();
+	ViewEinzug        = mk(/*checked=*/true);
+	ViewTrittfolge    = mk(/*checked=*/true);
 	RappViewRapport   = mk();
 	GewebeFarbeffekt  = mk();
 	GewebeSimulation  = mk();
+
+	/*  Allocate the per-shaft / per-treadle availability arrays. Both
+	    are initialised to true (all free); RecalcFreieSchaefte() /
+	    RecalcFreieTritte() repopulate them during pattern load and
+	    after editing operations. */
+	freieschaefte = new bool[Data->MAXY1];
+	freietritte   = new bool[Data->MAXX2];
+	for (int j = 0; j < Data->MAXY1; j++) freieschaefte[j] = true;
+	for (int i = 0; i < Data->MAXX2; i++) freietritte[i]   = true;
 
 	/*  Undo stack is constructed after the fields so UrUndoItem's
 	    Allocate() can read field dimensions via `this`.            */
 	undo           = new UrUndo(this);
 	rapporthandler = RpRapport::CreateInstance(this, Data);
+	einzughandler  = EinzugRearrange::CreateInstance(this, Data);
 }
 
 TDBWFRM::~TDBWFRM()
 {
-	RpRapport::ReleaseInstance(rapporthandler); rapporthandler = nullptr;
+	EinzugRearrange::ReleaseInstance(einzughandler); einzughandler = nullptr;
+	RpRapport::ReleaseInstance(rapporthandler);      rapporthandler = nullptr;
 	delete undo;
+	delete[] freieschaefte; freieschaefte = nullptr;
+	delete[] freietritte;   freietritte   = nullptr;
 	/*  QAction members are owned by `this` via QObject parenting. */
 }
 
@@ -92,6 +108,19 @@ bool __fastcall TDBWFRM::IsInRapport(int _i, int _j)
 void __fastcall TDBWFRM::DrawHilfslinien()                         {}
 void __fastcall TDBWFRM::DrawGewebe(int, int)                      {}
 void __fastcall TDBWFRM::DrawGewebeRahmen(int, int)                {}
+void __fastcall TDBWFRM::DrawEinzug(int, int)                      {}
+void __fastcall TDBWFRM::DrawAufknuepfung(int, int)                {}
+void __fastcall TDBWFRM::DrawTrittfolge(int, int)                  {}
+void __fastcall TDBWFRM::DrawGewebeKette(int)                      {}
+void __fastcall TDBWFRM::DeleteGewebeKette(int)                    {}
+void __fastcall TDBWFRM::_ClearEinzug()                            {}
+void __fastcall TDBWFRM::_ClearAufknuepfung()                      {}
+void __fastcall TDBWFRM::_ClearSchlagpatrone()                     {}
+void __fastcall TDBWFRM::_DrawEinzug()                             {}
+void __fastcall TDBWFRM::_DrawAufknuepfung()                       {}
+void __fastcall TDBWFRM::_DrawSchlagpatrone()                      {}
+void __fastcall TDBWFRM::RecalcFreieSchaefte()                     {}
+void __fastcall TDBWFRM::RecalcFreieTritte()                       {}
 
 void __fastcall TDBWFRM::ClearSelection()                        {}
 void __fastcall TDBWFRM::ResizeSelection(int, int, FELD, bool)   {}

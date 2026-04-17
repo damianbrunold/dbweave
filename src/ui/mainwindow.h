@@ -31,6 +31,7 @@
 
 class UrUndo;
 class RpRapport;
+class EinzugRearrange;
 
 class TDBWFRM : public QMainWindow
 {
@@ -101,13 +102,23 @@ public:
 	QAction* TfBelassen      = nullptr;
 
 	QAction* ViewSchlagpatrone = nullptr;
+	QAction* ViewEinzug        = nullptr;
+	QAction* ViewTrittfolge    = nullptr;
 	QAction* RappViewRapport   = nullptr;
 	QAction* GewebeFarbeffekt  = nullptr;
 	QAction* GewebeSimulation  = nullptr;
 
-	/*  Undo stack + rapport handler, owned. */
-	UrUndo*    undo           = nullptr;
-	RpRapport* rapporthandler = nullptr;
+	/*  Per-shaft / per-treadle "unused" flags. Sized to Data->MAXY1 /
+	    Data->MAXX2 and allocated in the ctor. Match the legacy raw
+	    bool[] layout so ported code's `freieschaefte[j] = true`
+	    assignments compile unchanged. */
+	bool* freieschaefte = nullptr;
+	bool* freietritte   = nullptr;
+
+	/*  Undo stack + handlers, owned. */
+	UrUndo*          undo           = nullptr;
+	RpRapport*       rapporthandler = nullptr;
+	EinzugRearrange* einzughandler  = nullptr;
 
 	/*  Called by SwitchLanguage(). Body is filled in when lang_main.cpp
 	    is ported (that unit is a 673-line blob of LANG_C_H assignments
@@ -140,6 +151,19 @@ public:
 	void __fastcall DrawHilfslinien();
 	void __fastcall DrawGewebe (int _i, int _j);
 	void __fastcall DrawGewebeRahmen (int _i, int _j);
+	void __fastcall DrawEinzug (int _i, int _j);
+	void __fastcall DrawAufknuepfung (int _i, int _j);
+	void __fastcall DrawTrittfolge (int _i, int _j);
+	void __fastcall DrawGewebeKette (int _i);
+	void __fastcall DeleteGewebeKette (int _i);
+	void __fastcall _ClearEinzug();
+	void __fastcall _ClearAufknuepfung();
+	void __fastcall _ClearSchlagpatrone();
+	void __fastcall _DrawEinzug();
+	void __fastcall _DrawAufknuepfung();
+	void __fastcall _DrawSchlagpatrone();
+	void __fastcall RecalcFreieSchaefte();
+	void __fastcall RecalcFreieTritte();
 
 	/*  Selection-management stubs (body lands with selection.cpp). */
 	void __fastcall ClearSelection();
