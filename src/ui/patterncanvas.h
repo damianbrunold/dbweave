@@ -36,10 +36,15 @@ public:
 	~PatternCanvas() override;
 
 protected:
-	void paintEvent (QPaintEvent* _e) override;
+	void paintEvent  (QPaintEvent*  _e) override;
+	void resizeEvent (QResizeEvent* _e) override;
 
 private:
 	TDBWFRM* frm;
+	/*  Auto-layout runs only on the first resize; tests that manually
+	    place field positions set this to true after calling resize()
+	    so subsequent resize events don't stomp their layout.         */
+	bool has_laid_out = false;
 };
 
 #endif

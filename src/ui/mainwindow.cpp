@@ -23,7 +23,10 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	: QMainWindow(parent)
 {
 	setWindowTitle(QStringLiteral("DB-WEAVE"));
-	resize(1024, 768);
+	/*  Window sizing is left to main.cpp -- tests that probe rendered
+	    pixels need to control PatternCanvas's size directly, and a
+	    resize() here triggers the central-widget layout to stomp any
+	    subsequent explicit pattern_canvas->resize().               */
 
 	/*  Create all menu-toggle actions up-front so the undo-item
 	    snapshotting logic sees non-null pointers. They are made
@@ -83,6 +86,10 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	    parent-child; Qt will delete it with the window. */
 	pattern_canvas = new PatternCanvas(this, this);
 	setCentralWidget(pattern_canvas);
+
+	/*  Note: main.cpp explicitly calls seedDemo() after construction
+	    so the freshly-launched app shows cloth. Tests skip it and
+	    get a clean TDBWFRM.                                         */
 }
 
 TDBWFRM::~TDBWFRM()
@@ -142,3 +149,51 @@ void __fastcall TDBWFRM::DeleteGewebeSchuss(int)                   {}
 
 void __fastcall TDBWFRM::ClearSelection()                        {}
 void __fastcall TDBWFRM::ResizeSelection(int, int, FELD, bool)   {}
+
+void __fastcall TDBWFRM::seedDemo()
+{
+	/*  2/2 twill on 4 shafts x 4 treadles. Threading: straight draw
+	    (shaft = i % 4 + 1). Treadling: straight (treadle = j % 4).
+	    Tie-up: diagonal 1,1,0,0 pattern that produces the classic
+	    diagonal-stripe cloth.                                    */
+	constexpr int N    = 80;  /* warp + weft span */
+	constexpr int REP  = 4;
+
+	for (int i = 0; i < N; i++) einzug.feld.Set(i, (short)((i % REP) + 1));
+
+	for (int shaft = 0; shaft < REP; shaft++)
+		for (int treadle = 0; treadle < REP; treadle++)
+			if (((shaft - treadle + REP) % REP) < 2)
+				aufknuepfung.feld.Set(treadle, shaft, (char)1);
+
+	for (int j = 0; j < N; j++) {
+		trittfolge.feld.Set(j % REP, j, (char)1);
+		trittfolge.isempty.Set(j, false);
+	}
+
+	/*  Compute gewebe = which warp/weft crossings come up on top. */
+	for (int i = 0; i < N; i++) {
+		const int shaft = einzug.feld.Get(i) - 1;
+		if (shaft < 0) continue;
+		for (int j = 0; j < N; j++) {
+			for (int t = 0; t < REP; t++) {
+				if (trittfolge.feld.Get(t, j) > 0 &&
+				    aufknuepfung.feld.Get(t, shaft) > 0) {
+					gewebe.feld.Set(i, j, (char)1);
+					break;
+				}
+			}
+		}
+	}
+
+	kette    = SZ(0, N - 1);
+	schuesse = SZ(0, N - 1);
+
+	/*  Mark the 4 shafts and 4 treadles as "in use" so
+	    EliminateEmptyTritt / EliminateEmptySchaft don't prune them. */
+	for (int s = 0; s < REP; s++) freieschaefte[s] = false;
+	for (int t = 0; t < REP; t++) freietritte[t]   = false;
+
+	/*  Recompute the rapport so the cloth view looks correct. */
+	if (rapporthandler) rapporthandler->CalcRapport();
+}

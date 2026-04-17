@@ -7,6 +7,7 @@
 
 #include <QApplication>
 #include <QImage>
+#include <QPainter>
 #include <QTest>
 
 #include "datamodule.h"
@@ -27,19 +28,35 @@ class TestRendering : public QObject
 
 	QImage renderCanvas()
 	{
-		/*  The gewebe grid occupies the full canvas area. */
+		/*  Bypass the widget layout (pattern_canvas is QMainWindow's
+		    central widget, so resize() on it is overridden by the
+		    layout engine). Paint directly into an off-screen QImage
+		    via QPainter -- same API path the real paintEvent uses. */
 		DBWFRM->gewebe.pos.x0     = 0;
 		DBWFRM->gewebe.pos.y0     = 0;
 		DBWFRM->gewebe.pos.width  = W;
 		DBWFRM->gewebe.pos.height = H;
 		DBWFRM->gewebe.gw = CELL;
 		DBWFRM->gewebe.gh = CELL;
-
-		DBWFRM->pattern_canvas->resize(W, H);
+		DBWFRM->einzug.pos.width       = 0;
+		DBWFRM->aufknuepfung.pos.width = 0;
+		DBWFRM->trittfolge.pos.width   = 0;
 
 		QImage img(W, H, QImage::Format_ARGB32);
-		img.fill(Qt::magenta);          /* any colour != expected */
-		DBWFRM->pattern_canvas->render(&img);
+		img.fill(DBWFRM->pattern_canvas->palette().color(QPalette::Button));
+
+		QPainter p(&img);
+		p.setRenderHint(QPainter::Antialiasing, false);
+		DBWFRM->currentPainter = &p;
+
+		for (int i = 0; i < COLS; i++)
+			for (int j = 0; j < ROWS; j++)
+				DBWFRM->DrawGewebe(i, j);
+		for (int i = 0; i < COLS; i++)
+			for (int j = 0; j < ROWS; j++)
+				DBWFRM->DrawGewebeRahmen(i, j);
+
+		DBWFRM->currentPainter = nullptr;
 		return img;
 	}
 
@@ -163,10 +180,30 @@ private slots:
 		lay(DBWFRM->trittfolge,   60, 60);
 		lay(DBWFRM->gewebe,       0,  60);
 
-		DBWFRM->pattern_canvas->resize(100, 100);
 		QImage img(100, 100, QImage::Format_ARGB32);
-		img.fill(Qt::magenta);
-		DBWFRM->pattern_canvas->render(&img);
+		img.fill(DBWFRM->pattern_canvas->palette().color(QPalette::Button));
+
+		QPainter p(&img);
+		p.setRenderHint(QPainter::Antialiasing, false);
+		DBWFRM->currentPainter = &p;
+
+		auto paintField = [&](FeldBase& fb,
+		                      void (TDBWFRM::*draw)(int, int),
+		                      void (TDBWFRM::*rahmen)(int, int)) {
+			if (fb.gw <= 0 || fb.pos.width <= 0) return;
+			const int cols = fb.pos.width  / fb.gw;
+			const int rows = fb.pos.height / fb.gh;
+			for (int i = 0; i < cols; i++)
+				for (int j = 0; j < rows; j++) (DBWFRM->*draw)(i, j);
+			for (int i = 0; i < cols; i++)
+				for (int j = 0; j < rows; j++) (DBWFRM->*rahmen)(i, j);
+		};
+		paintField(DBWFRM->einzug,       &TDBWFRM::DrawEinzug,       &TDBWFRM::DrawEinzugRahmen);
+		paintField(DBWFRM->aufknuepfung, &TDBWFRM::DrawAufknuepfung, &TDBWFRM::DrawAufknuepfungRahmen);
+		paintField(DBWFRM->trittfolge,   &TDBWFRM::DrawTrittfolge,   &TDBWFRM::DrawTrittfolgeRahmen);
+		paintField(DBWFRM->gewebe,       &TDBWFRM::DrawGewebe,       &TDBWFRM::DrawGewebeRahmen);
+
+		DBWFRM->currentPainter = nullptr;
 		return img;
 	}
 

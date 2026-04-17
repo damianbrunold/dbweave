@@ -29,6 +29,12 @@ int main (int argc, char* argv[])
 	Data   = new TData();
 	DBWFRM = new TDBWFRM();
 
+	/*  Seed a demo twill so the freshly-launched app shows cloth.
+	    This is a stopgap until file loading (fileload.cpp) is ported
+	    and the user can open real .dbw samples from a File menu. */
+	DBWFRM->seedDemo();
+	DBWFRM->resize(1024, 768);
+
 	DBWFRM->show();
 
 	const int rc = app.exec();

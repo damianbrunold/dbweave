@@ -14,6 +14,9 @@
 
 #include <QPainter>
 #include <QPaintEvent>
+#include <QResizeEvent>
+
+#include <algorithm>
 
 PatternCanvas::PatternCanvas (TDBWFRM* _frm, QWidget* _parent)
 	: QWidget(_parent)
@@ -26,6 +29,76 @@ PatternCanvas::PatternCanvas (TDBWFRM* _frm, QWidget* _parent)
 }
 
 PatternCanvas::~PatternCanvas() = default;
+
+void PatternCanvas::resizeEvent (QResizeEvent* /*_e*/)
+{
+	/*  Auto-layout runs only on the first resize event. Subsequent
+	    resizes (QWidget::render re-fires one; a real user resize will
+	    too) are a no-op so tests and custom layout code can manually
+	    place fields without being stomped. When a real FormResize
+	    port lands, this flag goes away and the layout re-flows. */
+	if (has_laid_out) return;
+	has_laid_out = true;
+
+	/*  Placeholder layout until the legacy TDBWFRM::FormResize port
+	    lands. Splits the widget into four quadrants:
+	        aufknuepfung  top-right
+	        einzug        top-left  (wider than aufknuepfung)
+	        trittfolge    bottom-right
+	        gewebe        bottom-left (the main fabric area)
+	    Cell size is fixed at 12x12 px. Fields are capped at a
+	    reasonable viewport (scroll offsets remain at 0).           */
+
+	constexpr int GW     = 12;
+	constexpr int GH     = 12;
+	constexpr int MARGIN = 10;
+
+	const int W = width();
+	const int H = height();
+	if (W < 4*GW || H < 4*GH) return;   /* too small to lay out anything */
+
+	auto cap = [](int area_px, int cell) {
+		const int fit = (area_px - 2*MARGIN) / cell;
+		return std::max(0, fit);
+	};
+
+	/*  Aufknuepfung: 20 shafts wide, 20 shafts tall (capped to fit). */
+	const int af_cells_x = std::min(20, cap(W / 3,   GW));
+	const int af_cells_y = std::min(20, cap(H / 3,   GH));
+	const int af_w = af_cells_x * GW;
+	const int af_h = af_cells_y * GH;
+
+	frm->aufknuepfung.gw = GW; frm->aufknuepfung.gh = GH;
+	frm->aufknuepfung.pos.x0     = W - af_w - MARGIN;
+	frm->aufknuepfung.pos.y0     = MARGIN;
+	frm->aufknuepfung.pos.width  = af_w;
+	frm->aufknuepfung.pos.height = af_h;
+
+	/*  Einzug: same height as aufknuepfung, remaining width left.    */
+	const int ez_area_w = W - af_w - 3*MARGIN;
+	const int ez_cells  = std::max(0, ez_area_w / GW);
+	frm->einzug.gw = GW; frm->einzug.gh = GH;
+	frm->einzug.pos.x0     = MARGIN;
+	frm->einzug.pos.y0     = MARGIN;
+	frm->einzug.pos.width  = ez_cells * GW;
+	frm->einzug.pos.height = af_h;
+
+	/*  Trittfolge: same width as aufknuepfung, remaining height below. */
+	const int tf_area_h = H - af_h - 3*MARGIN;
+	const int tf_rows   = std::max(0, tf_area_h / GH);
+	frm->trittfolge.gw = GW; frm->trittfolge.gh = GH;
+	frm->trittfolge.pos.x0     = frm->aufknuepfung.pos.x0;
+	frm->trittfolge.pos.y0     = frm->aufknuepfung.pos.y0 + af_h + MARGIN;
+	frm->trittfolge.pos.width  = af_w;
+	frm->trittfolge.pos.height = tf_rows * GH;
+
+	/*  Gewebe: main area under einzug and left of trittfolge. */
+	frm->gewebe.gw = GW; frm->gewebe.gh = GH;
+	frm->gewebe.pos.x0     = frm->einzug.pos.x0;
+	frm->gewebe.pos.y0     = frm->trittfolge.pos.y0;
+	frm->gewebe.pos.width  = frm->einzug.pos.width;
+	frm->gewebe.pos.height = frm->trittfolge.pos.height;
+}
 
 void PatternCanvas::paintEvent (QPaintEvent* /*_e*/)
 {

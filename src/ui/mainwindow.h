@@ -279,6 +279,13 @@ public:
 	void __fastcall DoSetKettfarben  (int _i);
 	void __fastcall SetSchussfarben  (int _j);
 	void __fastcall DoSetSchussfarben (int _j);
+
+	/*  Populate a basic 2/2 twill demo pattern so a freshly-launched
+	    dbweave shows cloth instead of an empty grid. Not called from
+	    the ctor so tests get a clean TDBWFRM; main.cpp invokes it
+	    after construction. Removed once file loading is ported and
+	    the user can open a real .dbw file from the menu.           */
+	void __fastcall seedDemo();
 };
 
 /*  Matches legacy `extern PACKAGE TDBWFRM *DBWFRM;`. Populated by
