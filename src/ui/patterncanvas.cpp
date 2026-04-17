@@ -42,21 +42,35 @@ void PatternCanvas::paintEvent (QPaintEvent* /*_e*/)
 	    (from a menu action or undo restore) safely no-ops. */
 	frm->currentPainter = &p;
 
-	/*  Iterate the visible gewebe cells and paint each one. The
-	    gewebe grid occupies
-	      [frm->gewebe.pos.x0, x0 + width) x
-	      [frm->gewebe.pos.y0, y0 + height)
-	    with cells of gewebe.gw x gewebe.gh. A degenerate grid
-	    (gw == 0 or height == 0) means "not laid out yet" -- skip. */
-	if (frm->gewebe.gw > 0 && frm->gewebe.gh > 0 &&
-	    frm->gewebe.pos.width > 0 && frm->gewebe.pos.height > 0)
-	{
-		const int cols = frm->gewebe.pos.width  / frm->gewebe.gw;
-		const int rows = frm->gewebe.pos.height / frm->gewebe.gh;
+	/*  Iterate the visible cells of each field and paint them one by
+	    one via the DrawX primitives. Degenerate fields (gw/gh == 0
+	    or empty width/height == "not laid out yet") are skipped.
+
+	    Paint order matches legacy: the three symbol grids first
+	    (einzug / aufknuepfung / trittfolge), then gewebe on top.
+	    Colour strips (kettfarben / schussfarben), blatteinzug,
+	    hilfslinien, rapport lines and the cursor land in later
+	    rendering slices. */
+
+	auto paintField = [this](FeldBase& fb, void (TDBWFRM::*draw)(int, int)) {
+		if (fb.gw <= 0 || fb.gh <= 0) return;
+		if (fb.pos.width <= 0 || fb.pos.height <= 0) return;
+		const int cols = fb.pos.width  / fb.gw;
+		const int rows = fb.pos.height / fb.gh;
 		for (int i = 0; i < cols; i++)
 			for (int j = 0; j < rows; j++)
-				frm->DrawGewebe(i, j);
+				(frm->*draw)(i, j);
+	};
+
+	if (frm->ViewEinzug && frm->ViewEinzug->isChecked()) {
+		paintField(frm->einzug,       &TDBWFRM::DrawEinzug);
+		paintField(frm->aufknuepfung, &TDBWFRM::DrawAufknuepfung);
 	}
+
+	if (frm->ViewTrittfolge && frm->ViewTrittfolge->isChecked())
+		paintField(frm->trittfolge,   &TDBWFRM::DrawTrittfolge);
+
+	paintField(frm->gewebe,           &TDBWFRM::DrawGewebe);
 
 	frm->currentPainter = nullptr;
 }

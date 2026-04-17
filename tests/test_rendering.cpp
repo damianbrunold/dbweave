@@ -136,6 +136,92 @@ private slots:
 	{
 		QVERIFY(DBWFRM->centralWidget() == DBWFRM->pattern_canvas);
 	}
+
+	/*  -------- Einzug / Aufknuepfung / Trittfolge rendering --------
+	    These tests share a single large canvas that holds all four
+	    fields stacked diagonally. Each field is 4 cells wide/tall
+	    with 10x10 cells; offsets are fixed so coordinates are easy
+	    to reason about. */
+
+	QImage renderMultiField()
+	{
+		/*  Layout:
+		      einzug       @ (0,   0)  W=40 H=40
+		      aufknuepfung @ (60,  0)  W=40 H=40
+		      trittfolge   @ (60, 60)  W=40 H=40
+		      gewebe       @ (0,  60)  W=40 H=40
+		    Total canvas 100x100 px.                                 */
+		const int CCELL = 10, CN = 4;
+
+		auto lay = [&](FeldBase& fb, int x0, int y0) {
+			fb.pos.x0 = x0; fb.pos.y0 = y0;
+			fb.pos.width = CN*CCELL; fb.pos.height = CN*CCELL;
+			fb.gw = CCELL; fb.gh = CCELL;
+		};
+		lay(DBWFRM->einzug,       0,  0);
+		lay(DBWFRM->aufknuepfung, 60, 0);
+		lay(DBWFRM->trittfolge,   60, 60);
+		lay(DBWFRM->gewebe,       0,  60);
+
+		DBWFRM->pattern_canvas->resize(100, 100);
+		QImage img(100, 100, QImage::Format_ARGB32);
+		img.fill(Qt::magenta);
+		DBWFRM->pattern_canvas->render(&img);
+		return img;
+	}
+
+	void einzug_draws_shaft_at_einzug_feld_position()
+	{
+		/*  einzug[1] = 3  means warp 1 is on shaft 3 (1-based). With
+		    a 4x4 grid the cell lit is (i=1, j=2). Local coords to
+		    widget pixels: x = 1*10 = 10, y = H - (j+1)*10 = 40-30 = 10.
+		    Cell interior pixel at (15, 15).                         */
+		DBWFRM->einzug.feld.Set(1, (short)3);
+
+		QImage img = renderMultiField();
+
+		/*  einzug.darstellung defaults to STRICH which paints two
+		    vertical center lines. At least one of the two centre
+		    pixels should be black.                                  */
+		QRgb p = img.pixel(15, 15);
+		QVERIFY2(p != 0xFFFFFFFF && p != qRgb(240, 240, 240),
+		         "Expected non-background pixel in einzug cell interior");
+	}
+
+	void aufknuepfung_paints_range_color_for_positive_cell()
+	{
+		/*  aufknuepfung.darstellung defaults to KREUZ (an X).
+		    Set cell (1, 2) = range 2. Cell position inside
+		    aufknuepfung field (offset (60,0)): x = 60 + 1*10 = 70,
+		    y = 40 - (2+1)*10 = 10. Interior pixel at (75, 15) --
+		    the KREUZ only lights a few diagonal pixels, so we check
+		    that *some* pixel in the cell is the range-2 colour.   */
+		DBWFRM->aufknuepfung.feld.Set(1, 2, (char)2);
+
+		QImage img = renderMultiField();
+
+		const QColor rc2 = qColorFromTColor(GetRangeColor(2));
+		bool seen = false;
+		for (int y = 0; y < 10 && !seen; y++)
+			for (int x = 0; x < 10 && !seen; x++)
+				if (img.pixelColor(70 + x, 10 + y) == rc2) seen = true;
+		QVERIFY2(seen, "Range-2 aufknuepfung cell did not paint range colour");
+	}
+
+	void trittfolge_non_pegplan_uses_default_darstellung()
+	{
+		/*  Set trittfolge[2, 1] = 1. In non-pegplan view it paints
+		    trittfolge.darstellung (PUNKT default) in black.         */
+		DBWFRM->ViewSchlagpatrone->setChecked(false);
+		DBWFRM->trittfolge.feld.Set(2, 1, (char)1);
+
+		QImage img = renderMultiField();
+
+		/*  Field offset (60, 60), cell (2, 1): x = 60 + 2*10 = 80,
+		    y = 60 + 40 - 20 = 80. PUNKT paints a 2-px dash at centre
+		    (x+5..x+7, y+5..y+6). Check a pixel inside that. */
+		QCOMPARE(img.pixel(85, 85), qRgb(0, 0, 0));
+	}
 };
 
 QTEST_MAIN(TestRendering)

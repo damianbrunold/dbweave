@@ -122,11 +122,9 @@ bool __fastcall TDBWFRM::IsInRapport(int _i, int _j)
                                           { return rapporthandler ? rapporthandler->IsInRapport(_i, _j) : false; }
 
 void __fastcall TDBWFRM::DrawHilfslinien()                         {}
-/*  DrawGewebe body lives in draw.cpp. */
+/*  DrawGewebe / DrawEinzug / DrawAufknuepfung / DrawTrittfolge
+    bodies live in draw.cpp. */
 void __fastcall TDBWFRM::DrawGewebeRahmen(int, int)                {}
-void __fastcall TDBWFRM::DrawEinzug(int, int)                      {}
-void __fastcall TDBWFRM::DrawAufknuepfung(int, int)                {}
-void __fastcall TDBWFRM::DrawTrittfolge(int, int)                  {}
 void __fastcall TDBWFRM::DrawGewebeKette(int)                      {}
 void __fastcall TDBWFRM::DeleteGewebeKette(int)                    {}
 void __fastcall TDBWFRM::_ClearEinzug()                            {}

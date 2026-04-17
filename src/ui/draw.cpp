@@ -87,3 +87,153 @@ void __fastcall TDBWFRM::DrawGewebe (int _i, int _j)
 	p->fillRect(QRect(x + 1, y + 1, xx - x - 1, yy - y - 1), fg);
 }
 /*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::DrawEinzug (int _i, int _j)
+{
+	QPainter* p = currentPainter;
+	if (!p) return;
+
+	int i = _i;
+	if (righttoleft && einzug.gw > 0) {
+		i = einzug.pos.width/einzug.gw - i - 1;
+	}
+	int j = _j;
+	if (toptobottom && einzug.gh > 0) {
+		j = einzug.pos.height/einzug.gh - j - 1;
+	}
+
+	const int x  = einzug.pos.x0 + i*einzug.gw;
+	const int y  = einzug.pos.y0 + einzug.pos.height - (j + 1)*einzug.gh;
+	const int xx = x + einzug.gw;
+	const int yy = y + einzug.gh;
+
+	const QColor bkground = palette().color(QPalette::Button);
+
+	/*  einzug.feld holds 1-based shaft indices; cell (_i, _j) is set
+	    when einzug[scroll_x1+_i] - 1 == scroll_y1+_j. */
+	if (einzug.feld.Get(scroll_x1 + _i) - 1 == (scroll_y1 + _j)) {
+		PaintCell(*p, einzug.darstellung, x, y, xx, yy,
+		          QColor(Qt::black), /*dontclear=*/false, scroll_y1 + _j,
+		          bkground);
+	} else {
+		ClearCell(*p, x, y, xx, yy, bkground);
+	}
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::DrawAufknuepfung (int _i, int _j)
+{
+	QPainter* p = currentPainter;
+	if (!p) return;
+
+	/*  Bei Schlagpatronenansicht mit pegplanstyle wird nichts
+	    gezeichnet -- aufknuepfung is rendered via trittfolge. */
+	if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked() &&
+	    aufknuepfung.pegplanstyle && !toptobottom) return;
+
+	const int x = aufknuepfung.pos.x0 + _i*aufknuepfung.gw;
+	int y;
+	if (toptobottom) y = aufknuepfung.pos.y0 + _j*aufknuepfung.gh;
+	else             y = aufknuepfung.pos.y0 + aufknuepfung.pos.height - (_j + 1)*aufknuepfung.gh;
+	const int xx = x + aufknuepfung.gw;
+	const int yy = y + aufknuepfung.gh;
+
+	const QColor bkground = palette().color(QPalette::Button);
+
+	if (!ViewSchlagpatrone || !ViewSchlagpatrone->isChecked()) {
+		const char s = aufknuepfung.feld.Get(scroll_x2 + _i, scroll_y1 + _j);
+		if (s == AUSHEBUNG) {
+			PaintCell(*p, darst_aushebung, x, y, xx, yy,
+			          (darst_aushebung == AUSGEFUELLT)
+			              ? qColorFromTColor(GetRangeColor(s))
+			              : QColor(Qt::black),
+			          false, -1, bkground);
+		} else if (s == ANBINDUNG) {
+			PaintCell(*p, darst_anbindung, x, y, xx, yy,
+			          (darst_aushebung == AUSGEFUELLT)
+			              ? qColorFromTColor(GetRangeColor(s))
+			              : QColor(Qt::black),
+			          false, -1, bkground);
+		} else if (s == ABBINDUNG) {
+			PaintCell(*p, darst_abbindung, x, y, xx, yy,
+			          (darst_aushebung == AUSGEFUELLT)
+			              ? qColorFromTColor(GetRangeColor(s))
+			              : QColor(Qt::black),
+			          false, -1, bkground);
+		} else if (s > 0) {
+			PaintCell(*p, aufknuepfung.darstellung, x, y, xx, yy,
+			          qColorFromTColor(GetRangeColor(s)),
+			          false, scroll_y1 + _j, bkground);
+		} else {
+			ClearCell(*p, x, y, xx, yy, bkground);
+		}
+	} else {
+		/*  Schlagpatronen view: any non-zero fills as dark-grey filled. */
+		if (aufknuepfung.feld.Get(scroll_x2 + _i, scroll_y1 + _j) > 0) {
+			PaintCell(*p, AUSGEFUELLT, x, y, xx, yy,
+			          QColor(128, 128, 128), false, -1, bkground);
+		} else {
+			ClearCell(*p, x, y, xx, yy, bkground);
+		}
+	}
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::DrawTrittfolge (int _i, int _j)
+{
+	QPainter* p = currentPainter;
+	if (!p) return;
+
+	const int x  = trittfolge.pos.x0 + _i*trittfolge.gw;
+	const int y  = trittfolge.pos.y0 + trittfolge.pos.height - (_j + 1)*trittfolge.gh;
+	const int xx = x + trittfolge.gw;
+	const int yy = y + trittfolge.gh;
+
+	const QColor bkground = palette().color(QPalette::Button);
+	const bool  pegplan   = ViewSchlagpatrone && ViewSchlagpatrone->isChecked();
+
+	const char s = trittfolge.feld.Get(scroll_x2 + _i, scroll_y2 + _j);
+	if (s == AUSHEBUNG) {
+		if (pegplan) {
+			PaintCell(*p, darst_aushebung, x, y, xx, yy,
+			          (darst_aushebung == AUSGEFUELLT)
+			              ? qColorFromTColor(GetRangeColor(s))
+			              : QColor(Qt::black),
+			          false, -1, bkground);
+		} else {
+			PaintCell(*p, trittfolge.darstellung, x, y, xx, yy,
+			          QColor(Qt::black), false, -1, bkground);
+		}
+	} else if (s == ANBINDUNG) {
+		if (pegplan) {
+			PaintCell(*p, darst_anbindung, x, y, xx, yy,
+			          (darst_aushebung == AUSGEFUELLT)
+			              ? qColorFromTColor(GetRangeColor(s))
+			              : QColor(Qt::black),
+			          false, -1, bkground);
+		} else {
+			PaintCell(*p, trittfolge.darstellung, x, y, xx, yy,
+			          QColor(Qt::black), false, -1, bkground);
+		}
+	} else if (s == ABBINDUNG) {
+		if (pegplan) {
+			PaintCell(*p, darst_abbindung, x, y, xx, yy,
+			          (darst_aushebung == AUSGEFUELLT)
+			              ? qColorFromTColor(GetRangeColor(s))
+			              : QColor(Qt::black),
+			          false, -1, bkground);
+		} else {
+			PaintCell(*p, trittfolge.darstellung, x, y, xx, yy,
+			          QColor(Qt::black), false, -1, bkground);
+		}
+	} else if (s > 0) {
+		if (pegplan) {
+			PaintCell(*p, schlagpatronendarstellung, x, y, xx, yy,
+			          qColorFromTColor(GetRangeColor(s)),
+			          false, scroll_x2 + _i, bkground);
+		} else {
+			PaintCell(*p, trittfolge.darstellung, x, y, xx, yy,
+			          QColor(Qt::black), false, -1, bkground);
+		}
+	} else {
+		ClearCell(*p, x, y, xx, yy, bkground);
+	}
+}
+/*-----------------------------------------------------------------*/

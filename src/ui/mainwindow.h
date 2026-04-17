@@ -118,9 +118,10 @@ public:
 	/*  Symbol styles for the three special ranges (AUSHEBUNG,
 	    ANBINDUNG, ABBINDUNG). Legacy DrawGewebeNormal branches on
 	    each of these when painting the corresponding range cells. */
-	DARSTELLUNG darst_aushebung = AUSGEFUELLT;
-	DARSTELLUNG darst_anbindung = AUSGEFUELLT;
-	DARSTELLUNG darst_abbindung = AUSGEFUELLT;
+	DARSTELLUNG darst_aushebung           = AUSGEFUELLT;
+	DARSTELLUNG darst_anbindung           = AUSGEFUELLT;
+	DARSTELLUNG darst_abbindung           = AUSGEFUELLT;
+	DARSTELLUNG schlagpatronendarstellung = AUSGEFUELLT;
 
 	/*  Strongline colour for the heavy grid lines. */
 	QColor strongclr = QColor(Qt::black);
