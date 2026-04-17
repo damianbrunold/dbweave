@@ -522,3 +522,74 @@ void __fastcall FfWriter::WriteFieldDouble (const char* _field, double _data)
 	WriteField (_field, buff);
 }
 /*-----------------------------------------------------------------*/
+static void __fastcall HexToByte (char* _byte, const char* _hex)
+{
+	dbw3_assert (_byte);
+	dbw3_assert (_hex);
+
+	int byte;
+
+	switch (_hex[0]) {
+		case '0': byte = 0; break;
+		case '1': byte = 1; break;
+		case '2': byte = 2; break;
+		case '3': byte = 3; break;
+		case '4': byte = 4; break;
+		case '5': byte = 5; break;
+		case '6': byte = 6; break;
+		case '7': byte = 7; break;
+		case '8': byte = 8; break;
+		case '9': byte = 9; break;
+		case 'a': byte = 10; break;
+		case 'b': byte = 11; break;
+		case 'c': byte = 12; break;
+		case 'd': byte = 13; break;
+		case 'e': byte = 14; break;
+		case 'f': byte = 15; break;
+		default:  byte = 0; break;
+	}
+
+	switch (_hex[1]) {
+		case '0': byte = byte*16 + 0; break;
+		case '1': byte = byte*16 + 1; break;
+		case '2': byte = byte*16 + 2; break;
+		case '3': byte = byte*16 + 3; break;
+		case '4': byte = byte*16 + 4; break;
+		case '5': byte = byte*16 + 5; break;
+		case '6': byte = byte*16 + 6; break;
+		case '7': byte = byte*16 + 7; break;
+		case '8': byte = byte*16 + 8; break;
+		case '9': byte = byte*16 + 9; break;
+		case 'a': byte = byte*16 + 10; break;
+		case 'b': byte = byte*16 + 11; break;
+		case 'c': byte = byte*16 + 12; break;
+		case 'd': byte = byte*16 + 13; break;
+		case 'e': byte = byte*16 + 14; break;
+		case 'f': byte = byte*16 + 15; break;
+		default:  byte = 0; break;
+	}
+
+	*_byte = (char)byte;
+}
+/*-----------------------------------------------------------------*/
+void __fastcall FieldHexToBinary (void* _dest, const void* _source, int _length)
+{
+	dbw3_assert (_dest);
+	dbw3_assert (_source);
+	dbw3_assert (_length>=0);
+
+	try {
+		// Daten von Hexdump zurueckverwandeln!
+		// Buffer sind schon richtig dimensioniert uebergeben worden...
+		char* d = (char*)_dest;
+		char* s = (char*)_source;
+		for (int i=0; i<_length/2; i++) {
+			HexToByte (d, s);
+			s += 2;
+			d++;
+		}
+		*d = 0;
+	} catch (...) {
+	}
+}
+/*-----------------------------------------------------------------*/

@@ -56,3 +56,34 @@ target_link_libraries(test_fileformat
 )
 
 add_test(NAME fileformat COMMAND test_fileformat)
+
+qt_add_executable(test_felddef
+    test_felddef.cpp
+)
+
+target_link_libraries(test_felddef
+    PRIVATE
+        Qt6::Core
+        Qt6::Test
+        dbweave_domain
+)
+
+add_test(NAME felddef COMMAND test_felddef)
+
+qt_add_executable(test_zentralsymm
+    test_zentralsymm.cpp
+)
+target_link_libraries(test_zentralsymm PRIVATE Qt6::Core Qt6::Test dbweave_domain)
+add_test(NAME zentralsymm COMMAND test_zentralsymm)
+
+qt_add_executable(test_palette
+    test_palette.cpp
+)
+target_link_libraries(test_palette PRIVATE Qt6::Core Qt6::Test dbweave_domain)
+add_test(NAME palette COMMAND test_palette)
+
+qt_add_executable(test_settings
+    test_settings.cpp
+)
+target_link_libraries(test_settings PRIVATE Qt6::Core Qt6::Test dbweave_domain)
+add_test(NAME settings COMMAND test_settings)

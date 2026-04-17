@@ -344,24 +344,16 @@ Phase 3 because `felddef`'s `Read`/`Write` methods depend on its
 `FfReader`/`FfWriter` classes.
 
 - [x] `colors` (RGB ↔ HSV).
-- [x] `fileformat` (`@dbw3:file` text reader/writer; `FfFile` replaced Win32 `HANDLE` with `std::FILE*`).
-- [ ] `felddef` (depends on `fileformat`).
-- [ ] `dbw3_base.h` foundation types (`PT`, `SZ`, `RANGE`, `RAPPORT`, `FeldBase*`) — depends on `felddef`; struct `Clear` impls live in `bereiche.cpp`.
-- [ ] `bereiche` (provides the virtual `Clear()` bodies for the Feld* hierarchy).
-- [ ] `rangecolors` (depends on `dbw3_base.h`; `InitRangeColors` takes a `TCanvas*` for `GetDeviceCaps` — rewrite against `QScreen`/`QGuiApplication::primaryScreen()`).
-- [ ] `palette`.
-- [ ] `cursor` (+ `cursorimpl.h`).
-- [ ] `einzug` (+ `einzugimpl.h`).
-- [ ] `trittfolge`.
-- [ ] `aufknuepfung`.
-- [ ] `rapport` (+ `rapportimpl.h`), `rapportieren`.
-- [ ] `blockmuster`, `blockmuster_muster`.
-- [ ] `zentralsymm`.
-- [ ] `hilfslinien`.
-- [ ] `schlagpatrone`, `steigung`.
-- [ ] `undoredo`.
-- [ ] `settings` (→ `QSettings`).
-- [ ] `language`, `lang_main`, `dbw3_strings.h`.
+- [x] `fileformat` (`@dbw3:file` text reader/writer; `FfFile` replaced Win32 `HANDLE` with `std::FILE*`; `FieldHexToBinary` lifted out of legacy `fileload.cpp`).
+- [x] `loadmap.h` (FIELD_MAP / SECTION_MAP DSL macros used by every `Read()`).
+- [x] `felddef` (Feld{Vector,Grid}{Char,Short,Bool} containers, file round-trip via fileformat).
+- [x] `zentralsymm` (pure-algo central-symmetry searcher).
+- [x] `palette` (236-colour palette with forward-compatible format-3.7 save and legacy-format read; `COLORREF`/`BYTE`/`RGB`/`GetRValue`/`GetGValue`/`GetBValue` added to `compat/colors_compat.h`; `LOGPALETTE` kept byte-exact).
+- [x] `settings` (over the `TRegistry` shim → `QSettings`).
+- [ ] **Remainder moved to Phase 5.** Triage showed every remaining `legacy/*.cpp` file on the Phase 2 list either (a) contains `TDBWFRM::` or `TBlockmusterForm::` method bodies (`utilities`, `bereiche`, `blockmuster_muster`, `clear`, `init`), or (b) references global singletons `DBWFRM`/`Data` from within its core logic (`cursor`, `einzug`, `trittfolge`, `aufknuepfung`, `rapport`, `rapportieren`, `blockmuster`, `hilfslinien`, `schlagpatrone`, `steigung`, `undoredo`, `language`, `lang_main`). Porting these without the main window requires a dependency-injection refactor that the ground rules disallow during the port. They will be ported in Phase 5 alongside `TDBWFRM`.
+- [ ] `dbw3_base.h` foundation types (`PT`, `SZ`, `RANGE`, `RAPPORT`, `FeldBase*`) — the type definitions are pure but the virtual `Clear()`/`ScrollX()`/`ScrollY()` bodies in `bereiche.cpp`/`clear.cpp`/`init.cpp` depend on `Data->` and `DBWFRM->`. Moved to Phase 5.
+- [ ] `rangecolors` — depends on `dbw3_base.h` constants plus `TCanvas` for `GetDeviceCaps`. Moved to Phase 4 (rendering) where the Qt `QScreen` replacement naturally belongs.
+- [ ] `dbw3_strings.h` — pure string-table header; port early in Phase 5 when `language`/`lang_main` lands.
 
 ### Phase 3 — File I/O round-trip
 

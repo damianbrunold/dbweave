@@ -16,7 +16,26 @@
 #include <QColor>
 #include <cstdint>
 
-using TColor = std::int32_t;
+using TColor   = std::int32_t;
+
+/*  Win32 COLORREF has the same 0x00BBGGRR byte layout as VCL TColor but
+    is unsigned. Code that serialises palettes to disk relies on this
+    binary layout (little-endian uint32 = R,G,B,0 on x86). */
+using COLORREF = std::uint32_t;
+using BYTE     = unsigned char;
+
+#ifndef RGB
+#   define RGB(r, g, b) ((COLORREF)( ((BYTE)(r)) | ((COLORREF)((BYTE)(g)) << 8) | ((COLORREF)((BYTE)(b)) << 16) ))
+#endif
+#ifndef GetRValue
+#   define GetRValue(c) ((BYTE)( (c)        & 0xFF ))
+#endif
+#ifndef GetGValue
+#   define GetGValue(c) ((BYTE)(((c) >>  8) & 0xFF ))
+#endif
+#ifndef GetBValue
+#   define GetBValue(c) ((BYTE)(((c) >> 16) & 0xFF ))
+#endif
 
 inline QColor qColorFromTColor (TColor _c)
 {

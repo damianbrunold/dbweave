@@ -94,6 +94,13 @@ struct FfTokenValue : public FfTokenBase
 /*-----------------------------------------------------------------*/
 bool IsTokenEqual (FfToken* _token, const char* _id);
 /*-----------------------------------------------------------------*/
+/*  Decodes a 2*N hex-digit ASCII string into an N-byte buffer. The
+    destination must be pre-allocated with at least N+1 bytes (the
+    helper writes a trailing NUL). Inverse of FfWriter::WriteFieldBinary.
+    Extracted out of the legacy fileload.cpp so domain code can hex-
+    decode without dragging in the main-window dependency chain. */
+void __fastcall FieldHexToBinary (void* _dest, const void* _source, int _length);
+/*-----------------------------------------------------------------*/
 enum FfOpenFlag { FfOpenRead=1, FfOpenWrite=2, FfOpenOverwrite=4 };
 /*-----------------------------------------------------------------*/
 class FfFile

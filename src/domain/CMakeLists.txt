@@ -3,6 +3,10 @@
 
 add_library(dbweave_domain STATIC
     colors.cpp
+    felddef.cpp
+    palette.cpp
+    settings.cpp
+    zentralsymm.cpp
 )
 
 target_include_directories(dbweave_domain
@@ -14,4 +18,5 @@ target_link_libraries(dbweave_domain
     PUBLIC
         Qt6::Core
         dbweave_compat
+        dbweave_io
 )
