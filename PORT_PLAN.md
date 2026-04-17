@@ -454,7 +454,15 @@ To port (in dependency order):
   `kette`, `schuesse`, `rapport`, `currentrange` plus
   `ClearSelection`/`ResizeSelection` method stubs.
 - [ ] `einzug` (+ `einzugimpl.h`), `einzugtrittfolge`.
-- [ ] `trittfolge`, `aufknuepfung`, `rapport` (+ `rapportimpl.h`),
+- [x] `rapport` (+ `rapportimpl.h`) — algorithm half fully ported
+  (IsInRapport, CalcRapport via CalcKettrapport/CalcSchussrapport,
+  EinzugEqual, TrittfolgeEqual). Rendering half (ClearRapport,
+  DrawRapport, DrawDifferences) stubbed pending the rendering slice.
+  TDBWFRM delegates the five rapport forwarders to `rapporthandler`
+  and grew `RappViewRapport`, `GewebeFarbeffekt`, `GewebeSimulation`
+  QAction toggles plus `UpdateStatusBar` / `DrawHilfslinien` /
+  `DrawGewebe` / `DrawGewebeRahmen` / `CalcRange` method stubs.
+- [ ] `trittfolge`, `aufknuepfung`,
   `rapportieren`, `schlagpatrone`, `steigung`.
 - [ ] `blockmuster`, `blockmuster_muster`, `hilfslinien`.
 - [ ] State-apply ops: `setaufknuepfung`, `setblatteinzug`,

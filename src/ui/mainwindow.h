@@ -30,6 +30,7 @@
 #include "dbw3_base.h"      /* FeldBase hierarchy */
 
 class UrUndo;
+class RpRapport;
 
 class TDBWFRM : public QMainWindow
 {
@@ -100,9 +101,13 @@ public:
 	QAction* TfBelassen      = nullptr;
 
 	QAction* ViewSchlagpatrone = nullptr;
+	QAction* RappViewRapport   = nullptr;
+	QAction* GewebeFarbeffekt  = nullptr;
+	QAction* GewebeSimulation  = nullptr;
 
-	/*  Undo stack, owned. */
-	UrUndo* undo = nullptr;
+	/*  Undo stack + rapport handler, owned. */
+	UrUndo*    undo           = nullptr;
+	RpRapport* rapporthandler = nullptr;
 
 	/*  Called by SwitchLanguage(). Body is filled in when lang_main.cpp
 	    is ported (that unit is a 673-line blob of LANG_C_H assignments
@@ -118,10 +123,23 @@ public:
 	void __fastcall RecalcGewebe();
 	void __fastcall CalcRangeKette();
 	void __fastcall CalcRangeSchuesse();
-	void __fastcall CalcRapport();
+	void __fastcall CalcRange();
 	void __fastcall SetModified (bool _modified = true);
 	void __fastcall SetCursor   (int _i, int _j);
 	void __fastcall SetAppTitle ();
+	void __fastcall UpdateStatusBar();
+
+	/*  Rapport forwarding methods -- delegate to rapporthandler. */
+	void __fastcall CalcRapport();
+	void __fastcall UpdateRapport();
+	void __fastcall ClearRapport();
+	void __fastcall DrawRapport();
+	bool __fastcall IsInRapport (int _i, int _j);
+
+	/*  Drawing stubs (bodies land with the rendering slice). */
+	void __fastcall DrawHilfslinien();
+	void __fastcall DrawGewebe (int _i, int _j);
+	void __fastcall DrawGewebeRahmen (int _i, int _j);
 
 	/*  Selection-management stubs (body lands with selection.cpp). */
 	void __fastcall ClearSelection();

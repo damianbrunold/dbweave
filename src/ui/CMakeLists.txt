@@ -11,6 +11,7 @@ add_library(dbweave_ui STATIC
     language.cpp
     undoredo.cpp
     cursor.cpp
+    rapport.cpp
 )
 
 target_include_directories(dbweave_ui
