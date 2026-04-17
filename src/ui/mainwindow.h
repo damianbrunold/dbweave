@@ -168,6 +168,33 @@ public:
 	/*  Selection-management stubs (body lands with selection.cpp). */
 	void __fastcall ClearSelection();
 	void __fastcall ResizeSelection (int _i, int _j, FELD _feld, bool _fromMouse);
+
+	/*  --- Trittfolge (weft treadling) utilities ------------------
+	    Legacy helpers that read/write the trittfolge.feld and
+	    aufknuepfung.feld state. Click handlers (ClearTrittfolge-
+	    Click, Tf*Click) are deferred until menus are wired.    */
+	bool __fastcall IsEmptyTritt (int _i);
+	int  __fastcall GetFirstNonemptyTritt (int _i);
+	void __fastcall RedrawTritt (int _i);
+	void __fastcall RedrawAufknuepfungTritt (int _i);
+	void __fastcall MoveTritt (int _von, int _nach);
+	bool __fastcall AufknuepfungsspalteEqual (int _i1, int _i2);
+	void __fastcall MergeTritte();
+	void __fastcall EliminateEmptyTritt();
+	void __fastcall SwitchTritte (int _a, int _b);
+	void __fastcall RearrangeTritte();
+
+	/*  --- Aufknuepfung helpers ----------------------------------- */
+	void __fastcall MinimizeAufknuepfung();
+
+	/*  --- Rapportieren utilities --------------------------------
+	    Pattern replication along the warp / weft direction. */
+	void __fastcall RapportSchuss (int _ry, bool _withcolors);
+	void __fastcall RapportKette  (int _rx, bool _withcolors);
+	void __fastcall CopyKettfaden   (int _von, int _nach, bool _withcolors);
+	void __fastcall CopySchussfaden (int _von, int _nach, bool _withcolors);
+	void __fastcall ClearKettfaden   (int _i);
+	void __fastcall ClearSchussfaden (int _j);
 };
 
 /*  Matches legacy `extern PACKAGE TDBWFRM *DBWFRM;`. Populated by

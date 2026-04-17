@@ -13,6 +13,9 @@ add_library(dbweave_ui STATIC
     cursor.cpp
     rapport.cpp
     einzug.cpp
+    trittfolge.cpp
+    aufknuepfung.cpp
+    rapportieren.cpp
 )
 
 target_include_directories(dbweave_ui

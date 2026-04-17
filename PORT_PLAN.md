@@ -465,6 +465,21 @@ To port (in dependency order):
   (matching legacy raw-array shape), `ViewEinzug` / `ViewTrittfolge`
   QActions, and 15 new Draw / Recalc / Clear method stubs.
 - [ ] `einzugtrittfolge`.
+- [x] `trittfolge` — ten non-click helper methods ported as TDBWFRM::
+  members (IsEmptyTritt, GetFirstNonemptyTritt, RedrawTritt,
+  RedrawAufknuepfungTritt, MoveTritt, AufknuepfungsspalteEqual,
+  MergeTritte, EliminateEmptyTritt, SwitchTritte, RearrangeTritte).
+  The seven Tf*Click / ClearTrittfolgeClick menu handlers are
+  deferred until menus are wired.
+- [x] `aufknuepfung` — `MinimizeAufknuepfung` helper ported; the nine
+  Aux*Click menu handlers (ClearAufknuepfungClick, AufInvertClick,
+  AufZentralsymmClick, four AufRoll*Click, AufSteigung{Inc,Dec}Click)
+  are deferred -- they drive ZentralSymmChecker, selection state,
+  and dialog flows that belong in later slices.
+- [x] `rapportieren` — six utility methods ported (RapportSchuss,
+  RapportKette, CopyKettfaden, CopySchussfaden, ClearKettfaden,
+  ClearSchussfaden). The three Rapp*Click handlers are deferred
+  until the TRapportForm dialog ports in Phase 7.
 - [x] `rapport` (+ `rapportimpl.h`) — algorithm half fully ported
   (IsInRapport, CalcRapport via CalcKettrapport/CalcSchussrapport,
   EinzugEqual, TrittfolgeEqual). Rendering half (ClearRapport,
