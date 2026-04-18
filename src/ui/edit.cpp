@@ -25,14 +25,19 @@
     TRITTFOLGE (the paintable fields on which selection actually
     builds -- strip fields are edited by drag, not rectangle).
 
-    Deferred: RollUp/Down/Left/Right selection shifts, Central
-    symmetry (EditCentralsymClick).                              */
+    Also here: RollUp / RollDown / RollLeft / RollRight (cyclic
+    one-cell shift inside the selection), and CentralsymSelection
+    (rolling search for a point-symmetric arrangement via
+    ZentralSymmChecker).                                       */
 
 #include "mainwindow.h"
 #include "datamodule.h"
 #include "cursor.h"
 #include "undoredo.h"
+#include "zentralsymm.h"
 #include "assert_compat.h"
+
+#include <QMessageBox>
 
 #include <QApplication>
 #include <QByteArray>
@@ -493,6 +498,315 @@ void __fastcall TDBWFRM::RotateSelection()
 		RecalcGewebe();
 		break;
 	}
+	default: break;
+	}
+	recalcRangesAndRapport(this);
+	selection = savesel;
+	SetModified();
+	refresh();
+	if (undo) undo->Snapshot();
+}
+
+/*-----------------------------------------------------------------*/
+/*  Roll the selection along one axis by one cell with wrap-around.
+    Direction mirrors the legacy RollUp / Down / Left / Right
+    handlers. The four public entry points share the same switch
+    structure; a callable `getSet` couples the getter/setter for
+    each field, and three template lambdas drive the actual shift. */
+/*-----------------------------------------------------------------*/
+
+static void rollTrittfolgeEmpty (TDBWFRM* frm, int j0, int j1)
+{
+	for (int j = j0; j <= j1; j++) frm->RecalcTrittfolgeEmpty(j);
+}
+
+void __fastcall TDBWFRM::RollUpSelection()
+{
+	RANGE savesel = selection;
+	selection.Normalize();
+	if (!selection.Valid()) { selection = savesel; return; }
+
+	const int w = selection.end.i - selection.begin.i + 1;
+	QByteArray data(w, Qt::Uninitialized);
+
+	auto rollUp = [&](auto get, auto set) {
+		for (int i = selection.begin.i; i <= selection.end.i; i++)
+			data[i - selection.begin.i] = get(i, selection.end.j);
+		for (int j = selection.end.j; j > selection.begin.j; j--)
+			for (int i = selection.begin.i; i <= selection.end.i; i++)
+				set(i, j, get(i, j - 1));
+		for (int i = selection.begin.i; i <= selection.end.i; i++)
+			set(i, selection.begin.j, data[i - selection.begin.i]);
+	};
+
+	switch (selection.feld) {
+	case GEWEBE:
+		rollUp(
+		    [this](int i, int j) { return gewebe.feld.Get(i, j); },
+		    [this](int i, int j, char v) { gewebe.feld.Set(i, j, v); });
+		break;
+	case AUFKNUEPFUNG:
+		rollUp(
+		    [this](int i, int j) { return aufknuepfung.feld.Get(i, j); },
+		    [this](int i, int j, char v) { aufknuepfung.feld.Set(i, j, v); });
+		RecalcGewebe();
+		break;
+	case EINZUG: {
+		const int dy = selection.end.j - selection.begin.j + 1;
+		for (int i = selection.begin.i; i <= selection.end.i; i++) {
+			const short s = einzug.feld.Get(i);
+			if (s)
+				einzug.feld.Set(i, short(selection.begin.j + 1
+				    + ((s - 1 - selection.begin.j + 1) % dy)));
+		}
+		RecalcGewebe();
+		break;
+	}
+	case TRITTFOLGE:
+		rollUp(
+		    [this](int i, int j) { return trittfolge.feld.Get(i, j); },
+		    [this](int i, int j, char v) { trittfolge.feld.Set(i, j, v); });
+		rollTrittfolgeEmpty(this, selection.begin.j, selection.end.j);
+		RecalcGewebe();
+		break;
+	default: break;
+	}
+	recalcRangesAndRapport(this);
+	selection = savesel;
+	SetModified();
+	refresh();
+	if (undo) undo->Snapshot();
+}
+
+void __fastcall TDBWFRM::RollDownSelection()
+{
+	RANGE savesel = selection;
+	selection.Normalize();
+	if (!selection.Valid()) { selection = savesel; return; }
+
+	const int w = selection.end.i - selection.begin.i + 1;
+	QByteArray data(w, Qt::Uninitialized);
+
+	auto rollDown = [&](auto get, auto set) {
+		for (int i = selection.begin.i; i <= selection.end.i; i++)
+			data[i - selection.begin.i] = get(i, selection.begin.j);
+		for (int j = selection.begin.j; j < selection.end.j; j++)
+			for (int i = selection.begin.i; i <= selection.end.i; i++)
+				set(i, j, get(i, j + 1));
+		for (int i = selection.begin.i; i <= selection.end.i; i++)
+			set(i, selection.end.j, data[i - selection.begin.i]);
+	};
+
+	switch (selection.feld) {
+	case GEWEBE:
+		rollDown(
+		    [this](int i, int j) { return gewebe.feld.Get(i, j); },
+		    [this](int i, int j, char v) { gewebe.feld.Set(i, j, v); });
+		break;
+	case AUFKNUEPFUNG:
+		rollDown(
+		    [this](int i, int j) { return aufknuepfung.feld.Get(i, j); },
+		    [this](int i, int j, char v) { aufknuepfung.feld.Set(i, j, v); });
+		RecalcGewebe();
+		break;
+	case EINZUG: {
+		const int dy = selection.end.j - selection.begin.j + 1;
+		for (int i = selection.begin.i; i <= selection.end.i; i++) {
+			const short s = einzug.feld.Get(i);
+			if (s)
+				einzug.feld.Set(i, short(selection.begin.j + 1
+				    + ((s - 1 - selection.begin.j - 1 + dy) % dy)));
+		}
+		RecalcGewebe();
+		break;
+	}
+	case TRITTFOLGE:
+		rollDown(
+		    [this](int i, int j) { return trittfolge.feld.Get(i, j); },
+		    [this](int i, int j, char v) { trittfolge.feld.Set(i, j, v); });
+		rollTrittfolgeEmpty(this, selection.begin.j, selection.end.j);
+		RecalcGewebe();
+		break;
+	default: break;
+	}
+	recalcRangesAndRapport(this);
+	selection = savesel;
+	SetModified();
+	refresh();
+	if (undo) undo->Snapshot();
+}
+
+void __fastcall TDBWFRM::RollLeftSelection()
+{
+	RANGE savesel = selection;
+	selection.Normalize();
+	if (!selection.Valid()) { selection = savesel; return; }
+
+	const int h = selection.end.j - selection.begin.j + 1;
+	QByteArray data(h, Qt::Uninitialized);
+
+	auto rollLeft = [&](auto get, auto set) {
+		for (int j = selection.begin.j; j <= selection.end.j; j++)
+			data[j - selection.begin.j] = get(selection.begin.i, j);
+		for (int i = selection.begin.i; i < selection.end.i; i++)
+			for (int j = selection.begin.j; j <= selection.end.j; j++)
+				set(i, j, get(i + 1, j));
+		for (int j = selection.begin.j; j <= selection.end.j; j++)
+			set(selection.end.i, j, data[j - selection.begin.j]);
+	};
+
+	switch (selection.feld) {
+	case GEWEBE:
+		rollLeft(
+		    [this](int i, int j) { return gewebe.feld.Get(i, j); },
+		    [this](int i, int j, char v) { gewebe.feld.Set(i, j, v); });
+		break;
+	case AUFKNUEPFUNG:
+		rollLeft(
+		    [this](int i, int j) { return aufknuepfung.feld.Get(i, j); },
+		    [this](int i, int j, char v) { aufknuepfung.feld.Set(i, j, v); });
+		RecalcGewebe();
+		break;
+	case EINZUG: {
+		const short i0 = einzug.feld.Get(selection.begin.i);
+		for (int i = selection.begin.i; i < selection.end.i; i++)
+			einzug.feld.Set(i, einzug.feld.Get(i + 1));
+		einzug.feld.Set(selection.end.i, i0);
+		RecalcGewebe();
+		break;
+	}
+	case TRITTFOLGE:
+		rollLeft(
+		    [this](int i, int j) { return trittfolge.feld.Get(i, j); },
+		    [this](int i, int j, char v) { trittfolge.feld.Set(i, j, v); });
+		rollTrittfolgeEmpty(this, selection.begin.j, selection.end.j);
+		RecalcGewebe();
+		break;
+	default: break;
+	}
+	recalcRangesAndRapport(this);
+	selection = savesel;
+	SetModified();
+	refresh();
+	if (undo) undo->Snapshot();
+}
+
+void __fastcall TDBWFRM::RollRightSelection()
+{
+	RANGE savesel = selection;
+	selection.Normalize();
+	if (!selection.Valid()) { selection = savesel; return; }
+
+	const int h = selection.end.j - selection.begin.j + 1;
+	QByteArray data(h, Qt::Uninitialized);
+
+	auto rollRight = [&](auto get, auto set) {
+		for (int j = selection.begin.j; j <= selection.end.j; j++)
+			data[j - selection.begin.j] = get(selection.end.i, j);
+		for (int i = selection.end.i; i > selection.begin.i; i--)
+			for (int j = selection.begin.j; j <= selection.end.j; j++)
+				set(i, j, get(i - 1, j));
+		for (int j = selection.begin.j; j <= selection.end.j; j++)
+			set(selection.begin.i, j, data[j - selection.begin.j]);
+	};
+
+	switch (selection.feld) {
+	case GEWEBE:
+		rollRight(
+		    [this](int i, int j) { return gewebe.feld.Get(i, j); },
+		    [this](int i, int j, char v) { gewebe.feld.Set(i, j, v); });
+		break;
+	case AUFKNUEPFUNG:
+		rollRight(
+		    [this](int i, int j) { return aufknuepfung.feld.Get(i, j); },
+		    [this](int i, int j, char v) { aufknuepfung.feld.Set(i, j, v); });
+		RecalcGewebe();
+		break;
+	case EINZUG: {
+		const short i0 = einzug.feld.Get(selection.end.i);
+		for (int i = selection.end.i; i > selection.begin.i; i--)
+			einzug.feld.Set(i, einzug.feld.Get(i - 1));
+		einzug.feld.Set(selection.begin.i, i0);
+		RecalcGewebe();
+		break;
+	}
+	case TRITTFOLGE:
+		rollRight(
+		    [this](int i, int j) { return trittfolge.feld.Get(i, j); },
+		    [this](int i, int j, char v) { trittfolge.feld.Set(i, j, v); });
+		rollTrittfolgeEmpty(this, selection.begin.j, selection.end.j);
+		RecalcGewebe();
+		break;
+	default: break;
+	}
+	recalcRangesAndRapport(this);
+	selection = savesel;
+	SetModified();
+	refresh();
+	if (undo) undo->Snapshot();
+}
+
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::CentralsymSelection()
+{
+	RANGE savesel = selection;
+	selection.Normalize();
+	if (!selection.Valid()) { selection = savesel; return; }
+
+	const bool singleTritt = trittfolge.einzeltritt &&
+	                         !(ViewSchlagpatrone && ViewSchlagpatrone->isChecked());
+	if (!(selection.feld == GEWEBE ||
+	      selection.feld == AUFKNUEPFUNG ||
+	      (selection.feld == TRITTFOLGE && !singleTritt))) {
+		selection = savesel;
+		return;
+	}
+
+	const int sizex = selection.end.i - selection.begin.i + 1;
+	const int sizey = selection.end.j - selection.begin.j + 1;
+	const int x0    = selection.begin.i;
+	const int y0    = selection.begin.j;
+
+	ZentralSymmChecker checker(sizex, sizey);
+	auto copyIn = [&](auto get) {
+		for (int i = 0; i < sizex; i++)
+			for (int j = 0; j < sizey; j++)
+				checker.SetData(i, j, get(x0 + i, y0 + j));
+	};
+	switch (selection.feld) {
+	case GEWEBE:       copyIn([this](int i, int j) { return gewebe.feld.Get(i, j);       }); break;
+	case AUFKNUEPFUNG: copyIn([this](int i, int j) { return aufknuepfung.feld.Get(i, j); }); break;
+	case TRITTFOLGE:   copyIn([this](int i, int j) { return trittfolge.feld.Get(i, j);   }); break;
+	default: selection = savesel; return;
+	}
+
+	if (checker.IsAlreadySymmetric()) { selection = savesel; return; }
+
+	if (!checker.SearchSymmetry()) {
+		QMessageBox::information(this, QStringLiteral("DB-WEAVE"),
+		    QStringLiteral("No central symmetry found in the selection."));
+		selection = savesel;
+		return;
+	}
+
+	auto copyOut = [&](auto set) {
+		for (int i = 0; i < sizex; i++)
+			for (int j = 0; j < sizey; j++)
+				set(x0 + i, y0 + j, checker.GetData(i, j));
+	};
+	switch (selection.feld) {
+	case GEWEBE:
+		copyOut([this](int i, int j, char v) { gewebe.feld.Set(i, j, v); });
+		break;
+	case AUFKNUEPFUNG:
+		copyOut([this](int i, int j, char v) { aufknuepfung.feld.Set(i, j, v); });
+		RecalcGewebe();
+		break;
+	case TRITTFOLGE:
+		copyOut([this](int i, int j, char v) { trittfolge.feld.Set(i, j, v); });
+		rollTrittfolgeEmpty(this, selection.begin.j, selection.end.j);
+		RecalcGewebe();
+		break;
 	default: break;
 	}
 	recalcRangesAndRapport(this);

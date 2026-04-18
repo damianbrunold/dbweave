@@ -138,6 +138,12 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	QAction* actMirrorH       = editMenu->addAction(QStringLiteral("Mirror &Horizontal"));
 	QAction* actMirrorV       = editMenu->addAction(QStringLiteral("Mirror &Vertical"));
 	QAction* actRotate        = editMenu->addAction(QStringLiteral("R&otate 90\xc2\xb0"));
+	QAction* actCentralsym    = editMenu->addAction(QStringLiteral("Central &symmetry"));
+	editMenu->addSeparator();
+	QAction* actRollUp    = editMenu->addAction(QStringLiteral("Roll &Up"));
+	QAction* actRollDown  = editMenu->addAction(QStringLiteral("Roll &Down"));
+	QAction* actRollLeft  = editMenu->addAction(QStringLiteral("Roll &Left"));
+	QAction* actRollRight = editMenu->addAction(QStringLiteral("Roll &Right"));
 	actUndo ->setShortcut(QKeySequence::Undo);
 	actRedo ->setShortcut(QKeySequence::Redo);
 	actCut  ->setShortcut(QKeySequence::Cut);
@@ -156,6 +162,11 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	connect(actMirrorH,          &QAction::triggered, this, [this] { MirrorHorzSelection();  });
 	connect(actMirrorV,          &QAction::triggered, this, [this] { MirrorVertSelection();  });
 	connect(actRotate,           &QAction::triggered, this, [this] { RotateSelection();      });
+	connect(actCentralsym,       &QAction::triggered, this, [this] { CentralsymSelection();  });
+	connect(actRollUp,           &QAction::triggered, this, [this] { RollUpSelection();      });
+	connect(actRollDown,         &QAction::triggered, this, [this] { RollDownSelection();    });
+	connect(actRollLeft,         &QAction::triggered, this, [this] { RollLeftSelection();    });
+	connect(actRollRight,        &QAction::triggered, this, [this] { RollRightSelection();   });
 
 	QMenu* viewMenu = menuBar()->addMenu(QStringLiteral("&View"));
 	QAction* actZoomIn     = viewMenu->addAction(QStringLiteral("Zoom &In"));

@@ -315,6 +315,24 @@ public:
 	void __fastcall MirrorVertSelection();
 	void __fastcall RotateSelection();   /* 90deg, square selections only */
 
+	/*  Shift every row / column of the selection by one cell with
+	    wrap-around at the selection edge. Legacy Roll Up / Down /
+	    Left / Right. */
+	void __fastcall RollUpSelection();
+	void __fastcall RollDownSelection();
+	void __fastcall RollLeftSelection();
+	void __fastcall RollRightSelection();
+
+	/*  Rolling search for a point-symmetric arrangement of the
+	    selection. Shifts the block left 0..sizex and up 0..sizey
+	    cells (wrapping at the rectangle edges) and tests every
+	    combination until one is centrally symmetric; on a match
+	    the rolled content replaces the original. No-op if the
+	    selection is already symmetric; a message box warns if no
+	    symmetric roll exists. Port of EditCentralsymClick;
+	    ZentralSymmChecker lives in the domain module.          */
+	void __fastcall CentralsymSelection();
+
 	/*  --- Trittfolge (weft treadling) utilities ------------------
 	    Legacy helpers that read/write the trittfolge.feld and
 	    aufknuepfung.feld state. Click handlers (ClearTrittfolge-
