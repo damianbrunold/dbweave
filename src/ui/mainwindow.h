@@ -314,6 +314,17 @@ public:
 	    SwitchRange (bound to Shift+Ctrl+digit).                  */
 	void __fastcall SwitchRange (int _range);
 
+	/*  --- Pattern utilities -----------------------------------
+	    FillKoeper: given a 1-cell-wide warp (or 1-cell-tall weft)
+	    selection, replicate it diagonally to the right (or up) as
+	    far as space allows. Produces a twill fill from the seed
+	    column / row. Selection must be on GEWEBE.
+	    SwapSide: invert the tie-up (or pegplan) across every
+	    in-use shaft/treadle and mirror the warp side-info
+	    (einzug, kettfarben, blatteinzug) around the kette centre. */
+	void __fastcall FillKoeper();
+	void __fastcall SwapSide();
+
 	/*  --- Edit-menu operations on the selection ----------------
 	    All bodies live in src/ui/edit.cpp. Each op reads
 	    `selection` (normalises internally), mutates the underlying

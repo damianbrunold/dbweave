@@ -158,6 +158,9 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	QAction* actRollDown  = editMenu->addAction(QStringLiteral("Roll &Down"));
 	QAction* actRollLeft  = editMenu->addAction(QStringLiteral("Roll &Left"));
 	QAction* actRollRight = editMenu->addAction(QStringLiteral("Roll &Right"));
+	editMenu->addSeparator();
+	QAction* actFillKoeper = editMenu->addAction(QStringLiteral("Fill &Twill"));
+	QAction* actSwapSide   = editMenu->addAction(QStringLiteral("S&wap Side"));
 	actUndo ->setShortcut(QKeySequence::Undo);
 	actRedo ->setShortcut(QKeySequence::Redo);
 	actCut  ->setShortcut(QKeySequence::Cut);
@@ -181,6 +184,8 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	connect(actRollDown,         &QAction::triggered, this, [this] { RollDownSelection();    });
 	connect(actRollLeft,         &QAction::triggered, this, [this] { RollLeftSelection();    });
 	connect(actRollRight,        &QAction::triggered, this, [this] { RollRightSelection();   });
+	connect(actFillKoeper,       &QAction::triggered, this, [this] { FillKoeper();           });
+	connect(actSwapSide,         &QAction::triggered, this, [this] { SwapSide();             });
 
 	QMenu* viewMenu = menuBar()->addMenu(QStringLiteral("&View"));
 	QAction* actZoomIn     = viewMenu->addAction(QStringLiteral("Zoom &In"));
