@@ -69,6 +69,18 @@ private:
 	QScrollBar* sbHorz2 = nullptr;   /* treadle     (scroll_x2) */
 	QScrollBar* sbVert1 = nullptr;   /* shaft axis  (scroll_y1) */
 	QScrollBar* sbVert2 = nullptr;   /* weft axis   (scroll_y2) */
+
+	/*  Divider drag state. The horizontal divider sits between the
+	    gewebe column and the trittfolge column (vertical line,
+	    dragging it left/right changes wvisible -- treadle count);
+	    the vertical divider sits between the einzug row and the
+	    gewebe row (horizontal line, dragging up/down changes
+	    hvisible -- shaft count).                                  */
+	enum DragKind { DragNone, DragHDivider, DragVDivider };
+	DragKind dragKind = DragNone;
+
+	bool hoverHDivider (int _x, int _y) const;
+	bool hoverVDivider (int _x, int _y) const;
 };
 
 #endif

@@ -36,6 +36,9 @@ PatternCanvas::PatternCanvas (TDBWFRM* _frm, QWidget* _parent)
 	/*  Accept keyboard focus so arrow-key navigation works the
 	    moment the canvas is clicked. */
 	setFocusPolicy(Qt::StrongFocus);
+	/*  Need hover events (no button held) so the cursor shape can
+	    change when the pointer crosses a divider gap.            */
+	setMouseTracking(true);
 
 	/*  Create the four scrollbars as children. They remain hidden
 	    until recomputeLayout sizes them; at that point they're
@@ -106,9 +109,15 @@ void PatternCanvas::recomputeLayout (int _gw, int _gh)
 		return std::max(0, fit);
 	};
 
-	/*  Aufknuepfung: 20 shafts wide, 20 shafts tall (capped to fit). */
-	const int af_cells_x = std::min(20, cap(usableW / 3, GW));
-	const int af_cells_y = std::min(20, cap(usableH / 3, GH));
+	/*  Aufknuepfung: visible shafts x visible treadles (capped to
+	    fit and clamped to the field maxima). wvisible drives the
+	    treadle axis (width), hvisible the shaft axis (height). */
+	const int fitX = cap(usableW / 3, GW);
+	const int fitY = cap(usableH / 3, GH);
+	const int wantW = frm->wvisible > 0 ? frm->wvisible : fitX;
+	const int wantH = frm->hvisible > 0 ? frm->hvisible : fitY;
+	const int af_cells_x = std::clamp(wantW, 1, fitX);
+	const int af_cells_y = std::clamp(wantH, 1, fitY);
 	const int af_w = af_cells_x * GW;
 	const int af_h = af_cells_y * GH;
 
@@ -219,11 +228,54 @@ void PatternCanvas::recomputeLayout (int _gw, int _gh)
 	          maxY2, gewebe_rows, frm->scroll_y2);
 }
 
+/*  Divider hit-test: the 10 px MARGIN gap between gewebe and
+    trittfolge (horizontal divider for wvisible) and between einzug
+    and gewebe (vertical divider for hvisible). A 6 px tolerance
+    lets users grab either side of the gap.                     */
+bool PatternCanvas::hoverHDivider (int _x, int _y) const
+{
+	const int left  = frm->gewebe.pos.x0 + frm->gewebe.pos.width;
+	const int right = frm->trittfolge.pos.x0;
+	if (left >= right) return false;
+	if (_x < left - 2 || _x > right + 2) return false;
+	/*  Only react when the pointer is within the combined vertical
+	    extent of the top and bottom rows. */
+	const int top    = frm->aufknuepfung.pos.y0;
+	const int bottom = frm->trittfolge.pos.y0 + frm->trittfolge.pos.height;
+	return _y >= top && _y <= bottom;
+}
+
+bool PatternCanvas::hoverVDivider (int _x, int _y) const
+{
+	const int top    = frm->einzug.pos.y0 + frm->einzug.pos.height;
+	const int bottom = frm->gewebe.pos.y0;
+	if (top >= bottom) return false;
+	if (_y < top - 2 || _y > bottom + 2) return false;
+	const int left   = frm->einzug.pos.x0;
+	const int right  = frm->trittfolge.pos.x0 + frm->trittfolge.pos.width;
+	return _x >= left && _x <= right;
+}
+
 void PatternCanvas::mousePressEvent (QMouseEvent* _e)
 {
 	if (_e->button() != Qt::LeftButton) { _e->ignore(); return; }
 	setFocus(Qt::MouseFocusReason);
 	const QPoint p = _e->pos();
+
+	/*  Divider-drag has priority over click-to-select. */
+	if (hoverHDivider(p.x(), p.y())) {
+		dragKind = DragHDivider;
+		setCursor(Qt::SplitHCursor);
+		_e->accept();
+		return;
+	}
+	if (hoverVDivider(p.x(), p.y())) {
+		dragKind = DragVDivider;
+		setCursor(Qt::SplitVCursor);
+		_e->accept();
+		return;
+	}
+
 	const bool shift = _e->modifiers().testFlag(Qt::ShiftModifier);
 	frm->handleCanvasMousePress(p.x(), p.y(), shift);
 	_e->accept();
@@ -231,16 +283,60 @@ void PatternCanvas::mousePressEvent (QMouseEvent* _e)
 
 void PatternCanvas::mouseMoveEvent (QMouseEvent* _e)
 {
-	if (!(_e->buttons() & Qt::LeftButton)) { _e->ignore(); return; }
 	const QPoint p = _e->pos();
-	const bool shift = _e->modifiers().testFlag(Qt::ShiftModifier);
-	frm->handleCanvasMouseMove(p.x(), p.y(), shift);
-	_e->accept();
+	const bool leftHeld = (_e->buttons() & Qt::LeftButton);
+
+	if (dragKind != DragNone && leftHeld) {
+		/*  Live-resize the treadle count (wvisible) or shaft count
+		    (hvisible) based on the drag position, and re-run the
+		    layout. */
+		if (dragKind == DragHDivider && frm->trittfolge.gw > 0) {
+			const int rightEdge = frm->trittfolge.pos.x0 + frm->trittfolge.pos.width;
+			int cells = (rightEdge - p.x()) / frm->trittfolge.gw;
+			cells = std::clamp(cells, 1, (int)Data->MAXX2);
+			if (cells != frm->wvisible) {
+				frm->wvisible = cells;
+				recomputeLayout();
+				frm->refresh();
+			}
+		} else if (dragKind == DragVDivider && frm->einzug.gh > 0) {
+			const int topEdge = frm->einzug.pos.y0;
+			int cells = (p.y() - topEdge) / frm->einzug.gh;
+			cells = std::clamp(cells, 1, (int)Data->MAXY1);
+			if (cells != frm->hvisible) {
+				frm->hvisible = cells;
+				recomputeLayout();
+				frm->refresh();
+			}
+		}
+		_e->accept();
+		return;
+	}
+
+	if (leftHeld) {
+		const bool shift = _e->modifiers().testFlag(Qt::ShiftModifier);
+		frm->handleCanvasMouseMove(p.x(), p.y(), shift);
+		_e->accept();
+		return;
+	}
+
+	/*  Hover: adjust the cursor shape when over a divider so the
+	    user can see the grab target before clicking.            */
+	if      (hoverHDivider(p.x(), p.y())) setCursor(Qt::SplitHCursor);
+	else if (hoverVDivider(p.x(), p.y())) setCursor(Qt::SplitVCursor);
+	else                                  unsetCursor();
+	_e->ignore();
 }
 
 void PatternCanvas::mouseReleaseEvent (QMouseEvent* _e)
 {
 	if (_e->button() != Qt::LeftButton) { _e->ignore(); return; }
+	if (dragKind != DragNone) {
+		dragKind = DragNone;
+		unsetCursor();
+		_e->accept();
+		return;
+	}
 	frm->handleCanvasMouseRelease();
 	_e->accept();
 }
