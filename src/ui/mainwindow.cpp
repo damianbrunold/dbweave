@@ -14,6 +14,7 @@
 #include "undoredo.h"
 #include "rapport.h"
 #include "einzug.h"
+#include "cursor.h"
 #include "datamodule.h"
 #include "fileformat.h"
 #include "assert_compat.h"
@@ -82,6 +83,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	undo           = new UrUndo(this);
 	rapporthandler = RpRapport::CreateInstance(this, Data);
 	einzughandler  = EinzugRearrange::CreateInstance(this, Data);
+	cursorhandler  = CrCursorHandler::CreateInstance(this, Data);
 	file           = new FfFile();
 
 	/*  The pattern canvas is the central widget. Ownership is via Qt
@@ -96,6 +98,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 
 TDBWFRM::~TDBWFRM()
 {
+	CrCursorHandler::Release(cursorhandler);         cursorhandler = nullptr;
 	EinzugRearrange::ReleaseInstance(einzughandler); einzughandler = nullptr;
 	RpRapport::ReleaseInstance(rapporthandler);      rapporthandler = nullptr;
 	delete undo;

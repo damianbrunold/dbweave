@@ -11,6 +11,7 @@
 #include <QTest>
 
 #include "datamodule.h"
+#include "cursor.h"
 #include "mainwindow.h"
 #include "palette.h"
 #include "patterncanvas.h"
@@ -56,6 +57,11 @@ class TestRendering : public QObject
 		for (int i = 0; i < COLS; i++)
 			for (int j = 0; j < ROWS; j++)
 				DBWFRM->DrawGewebeRahmen(i, j);
+
+		if (DBWFRM->RappViewRapport && DBWFRM->RappViewRapport->isChecked())
+			DBWFRM->DrawRapport();
+		if (DBWFRM->cursorhandler)
+			DBWFRM->cursorhandler->DrawCursor();
 
 		DBWFRM->currentPainter = nullptr;
 		return img;
@@ -438,6 +444,48 @@ private slots:
 		QCOMPARE(img.pixelColor(25, 55), QColor(Qt::black));
 
 		DBWFRM->rapport.overridden = false;
+	}
+
+	/*  ---- Cursor rendering ------------------------------------- */
+
+	void cursor_paints_white_outline_on_active_cell()
+	{
+		/*  Place the cursor on GEWEBE cell (3, 5). Verify the
+		    cursor outline (four white-pixel lines at the cell
+		    perimeter) appears after paintEvent. */
+		DBWFRM->cursorhandler->SetCursor(GEWEBE, 3, 5);
+
+		QImage img = renderCanvas();
+
+		/*  Cell (3, 5): x = 30..40, y = H - (5+1)*10 = 20..30.
+		    The cursor draws 4 lines: top (y=20), bottom (y=30),
+		    left (x=30), right (x=40), all in white.
+
+		    Check pixels sitting squarely on the outline. Rahmen
+		    paints the top-left borders in palette Dark BEFORE the
+		    cursor; the cursor paints AFTER so white should win on
+		    the relevant pixels. */
+		QCOMPARE(img.pixelColor(35, 20), QColor(Qt::white));  /* top edge */
+		QCOMPARE(img.pixelColor(35, 30), QColor(Qt::white));  /* bottom */
+		QCOMPARE(img.pixelColor(30, 25), QColor(Qt::white));  /* left */
+		QCOMPARE(img.pixelColor(40, 25), QColor(Qt::white));  /* right */
+
+		/*  Cell interior is NOT overwritten by the cursor. */
+		QVERIFY(img.pixelColor(35, 25) != QColor(Qt::white));
+	}
+
+	void cursor_follows_moves_via_cursor_handler()
+	{
+		/*  After MoveCursorRight(2), cursor should be at (2, 0). */
+		DBWFRM->cursorhandler->SetCursor(GEWEBE, 0, 0);
+		DBWFRM->cursorhandler->MoveCursorRight(2, /*_select=*/false);
+
+		QImage img = renderCanvas();
+
+		/*  Cell (2, 0): x = 20..30, y = H - 10 = 70..80.
+		    Top edge at y=70, left edge at x=20.                */
+		QCOMPARE(img.pixelColor(25, 70), QColor(Qt::white));
+		QCOMPARE(img.pixelColor(20, 75), QColor(Qt::white));
 	}
 };
 

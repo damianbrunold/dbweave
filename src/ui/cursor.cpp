@@ -29,6 +29,8 @@
 #include "cursorimpl.h"
 #include "mainwindow.h"
 #include "datamodule.h"
+#include <QPainter>
+#include <QPen>
 /*-----------------------------------------------------------------*/
 #define MAXX (fb.pos.width/fb.gw)
 #define MAXY (fb.pos.height/fb.gh)
@@ -317,19 +319,17 @@ void __fastcall CrCursorHandlerImpl::SetInvisible (FELD _feld)
 /*-----------------------------------------------------------------*/
 void __fastcall CrCursorHandlerImpl::DrawCursor()
 {
-	/*  STUB: real body draws the blinking cursor rectangle onto the
-	    canvas. Pending rendering slice. */
+	if (feld) feld->DrawCursor();
 }
 /*-----------------------------------------------------------------*/
 void __fastcall CrCursorHandlerImpl::DeleteCursor()
 {
-	/*  STUB: real body erases the cursor rectangle and restores any
-	    strongline / hilfslinien / rapport-line pixels underneath. */
+	if (feld) feld->DeleteCursor();
 }
 /*-----------------------------------------------------------------*/
 void __fastcall CrCursorHandlerImpl::ToggleCursor()
 {
-	/*  STUB: toggles visibility each blink tick. */
+	if (feld) feld->ToggleCursor();
 }
 /*-----------------------------------------------------------------*/
 void __fastcall CrCursorHandlerImpl::SetCursorLocked (bool _locked/*=true*/)
@@ -398,8 +398,8 @@ void __fastcall CrFeld::Set (bool /*_set*/, TShiftState /*_shift*/)
 /*-----------------------------------------------------------------*/
 void __fastcall CrFeld::SetCursor (int _i, int _j)
 {
-	if (_i>=fb.ScrollX()+fb.pos.width/fb.gw) _i = fb.ScrollX()+fb.pos.width/fb.gw-1;
-	if (_j>=fb.ScrollY()+fb.pos.height/fb.gh) _j = fb.ScrollY()+fb.pos.height/fb.gh-1;
+	if (fb.gw > 0 && _i>=fb.ScrollX()+fb.pos.width/fb.gw) _i = fb.ScrollX()+fb.pos.width/fb.gw-1;
+	if (fb.gh > 0 && _j>=fb.ScrollY()+fb.pos.height/fb.gh) _j = fb.ScrollY()+fb.pos.height/fb.gh-1;
 
 	fb.kbd.i = _i - fb.ScrollX();
 	fb.kbd.j = _j - fb.ScrollY();
@@ -450,7 +450,7 @@ void __fastcall CrFeld::MoveCursorRight (int _step, bool _select)
 	if (_select) frm->ResizeSelection (fb.kbd.i+fb.ScrollX(), fb.kbd.j+fb.ScrollY(), feld, false);
 
 	fb.kbd.i += _step;
-	if (MAXX>0 && fb.kbd.i>=MAXX) fb.kbd.i = MAXX-1;
+	if (fb.gw > 0 && MAXX>0 && fb.kbd.i>=MAXX) fb.kbd.i = MAXX-1;
 
 	UpdateSharedCoord (fb.kbd.i, fb.kbd.j);
 
@@ -466,7 +466,7 @@ void __fastcall CrFeld::MoveCursorUp (int _step, bool _select)
 	if (_select) frm->ResizeSelection (fb.kbd.i+fb.ScrollX(), fb.kbd.j+fb.ScrollY(), feld, false);
 
 	fb.kbd.j += _step;
-	if (MAXY>0 && fb.kbd.j>=MAXY) fb.kbd.j = MAXY-1;
+	if (fb.gh > 0 && MAXY>0 && fb.kbd.j>=MAXY) fb.kbd.j = MAXY-1;
 
 	UpdateSharedCoord (fb.kbd.i, fb.kbd.j);
 
@@ -493,17 +493,58 @@ void __fastcall CrFeld::MoveCursorDown (int _step, bool _select)
 /*-----------------------------------------------------------------*/
 void __fastcall CrFeld::DrawCursor()
 {
-	/*  STUB: rendering slice. */
+	QPainter* p = frm->currentPainter;
+	if (!p) return;
+	if (fb.gw <= 0 || fb.gh <= 0) return;
+	if (fb.pos.width <= 0 || fb.pos.height <= 0) return;
+
+	/*  Compute the cell rectangle, honouring orientation flips for
+	    the fields where they apply. BLATTEINZUG is the exception --
+	    the whole strip height lights up regardless of kbd.j. */
+	int i = fb.kbd.i;
+	if (frm->righttoleft && (feld == EINZUG || feld == GEWEBE ||
+	                         feld == BLATTEINZUG || feld == KETTFARBEN))
+	{
+		i = fb.pos.width/fb.gw - fb.kbd.i - 1;
+	}
+	int j = fb.kbd.j;
+	if (frm->toptobottom && (feld == EINZUG || feld == AUFKNUEPFUNG)) {
+		j = fb.pos.height/fb.gh - fb.kbd.j - 1;
+	}
+
+	const int x0 = fb.pos.x0 + i*fb.gw;
+	int y0 = fb.pos.y0 + fb.pos.height - (j + 1)*fb.gh;
+	const int x1 = x0 + fb.gw;
+	int y1 = y0 + fb.gh;
+	if (feld == BLATTEINZUG) {
+		y0 = fb.pos.y0;
+		y1 = y0 + fb.pos.height;
+	}
+
+	/*  Legacy default cursor colour is clWhite. A farbeffekt-bright-
+	    gewebe override that flips to black lives in the legacy; it
+	    is deferred here -- simple white outline is adequate for the
+	    basic editing UX and platform-independent in tests.        */
+	p->setPen(QPen(QColor(Qt::white)));
+	p->drawLine(x0, y0, x1, y0);
+	p->drawLine(x1, y0, x1, y1);
+	p->drawLine(x1, y1, x0, y1);
+	p->drawLine(x0, y1, x0, y0);
 }
 /*-----------------------------------------------------------------*/
 void __fastcall CrFeld::DeleteCursor()
 {
-	/*  STUB: rendering slice. */
+	/*  Qt no-op. Legacy's VCL retained-mode canvas needed to erase
+	    the cursor rectangle plus restore strongline / hilfslinien /
+	    rapport-line pixels underneath. Under Qt the widget repaints
+	    from scratch on update(), so erasure is implicit.          */
 }
 /*-----------------------------------------------------------------*/
 void __fastcall CrFeld::ToggleCursor()
 {
-	/*  STUB: rendering slice. */
+	/*  Used by the blink timer (pending). For now, no-op. When the
+	    blink QTimer lands it will flip a TDBWFRM state flag and
+	    issue update(cursor-rect). */
 }
 /*-----------------------------------------------------------------*/
 void __fastcall CrFeld::UpdateSharedCoord (int _i, int _j)

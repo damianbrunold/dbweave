@@ -152,8 +152,8 @@ struct FeldBase
 {
 	INPUTPOS kbd;
 	GRIDPOS  pos;
-	int gh; // Gridheight
-	int gw; // Gridwidth
+	int gh = 0; // Gridheight -- zero until AllocBuffers / PatternCanvas::resizeEvent
+	int gw = 0; // Gridwidth   -- zero until AllocBuffers / PatternCanvas::resizeEvent
 	virtual ~FeldBase() = default;
 	virtual void __fastcall Clear() = 0;
 	virtual int __fastcall SizeX() = 0;

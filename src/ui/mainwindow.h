@@ -36,6 +36,7 @@ class PatternCanvas;
 class UrUndo;
 class RpRapport;
 class EinzugRearrange;
+class CrCursorHandler;
 class FfFile;
 
 class TDBWFRM : public QMainWindow
@@ -164,6 +165,7 @@ public:
 	UrUndo*          undo           = nullptr;
 	RpRapport*       rapporthandler = nullptr;
 	EinzugRearrange* einzughandler  = nullptr;
+	CrCursorHandler* cursorhandler  = nullptr;
 
 	/*  Currently-open file + its path. `file` is owned and persists
 	    for the document lifetime; Load() / Save() reopen it as

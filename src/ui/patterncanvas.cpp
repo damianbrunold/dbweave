@@ -11,6 +11,7 @@
 
 #include "patterncanvas.h"
 #include "mainwindow.h"
+#include "cursor.h"
 
 #include <QPainter>
 #include <QPaintEvent>
@@ -158,6 +159,10 @@ void PatternCanvas::paintEvent (QPaintEvent* /*_e*/)
 	    strips (not the gewebe). Gated on RappViewRapport.        */
 	if (frm->RappViewRapport && frm->RappViewRapport->isChecked())
 		frm->DrawRapport();
+
+	/*  Cursor outline sits on top of everything so it's visible
+	    no matter which view mode is active. */
+	if (frm->cursorhandler) frm->cursorhandler->DrawCursor();
 
 	frm->currentPainter = nullptr;
 }
