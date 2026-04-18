@@ -71,6 +71,20 @@ void __fastcall TDBWFRM::DrawGewebe (int _i, int _j)
 		return;
 	}
 
+	/*  Rapport highlight takes precedence over view mode: inside
+	    the rapport rectangle, positive-range cells paint red on a
+	    btnFace background so the repeat boundary is visible.
+	    Matches the legacy ordering: IsInRapport + RappViewRapport
+	    + not GewebeNone -> DrawGewebeRapport.                    */
+	const bool none_checked = GewebeNone      && GewebeNone     ->isChecked();
+	const bool show_rapport = RappViewRapport && RappViewRapport->isChecked();
+	if (!none_checked && show_rapport &&
+	    IsInRapport(scroll_x1 + _i, scroll_y2 + _j))
+	{
+		DrawGewebeRapport(_i, _j, x, y, xx, yy);
+		return;
+	}
+
 	/*  Dispatch on the three Gewebe* view-mode QActions. Legacy
 	    exposed these as a radio group; the Qt port leaves mutually-
 	    exclusive management to the (pending) menu port. If none is
@@ -92,6 +106,18 @@ void __fastcall TDBWFRM::DrawGewebe (int _i, int _j)
 	}
 	p->fillRect(QRect(x + 1, y + 1, xx - x - 1, yy - y - 1),
 	            qColorFromTColor(GetRangeColor(range)));
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::DrawGewebeRapport (int _i, int _j, int _x, int _y, int _xx, int _yy)
+{
+	QPainter* p = currentPainter;
+	if (!p) return;
+
+	const char s = gewebe.feld.Get(scroll_x1 + _i, scroll_y2 + _j);
+	const QColor fg = (s != ABBINDUNG && s > 0)
+	                ? QColor(Qt::red)
+	                : palette().color(QPalette::Button);
+	p->fillRect(QRect(_x + 1, _y + 1, _xx - _x - 1, _yy - _y - 1), fg);
 }
 /*-----------------------------------------------------------------*/
 void __fastcall TDBWFRM::DrawGewebeFarbeffekt (int _i, int _j, int _x, int _y, int _xx, int _yy)

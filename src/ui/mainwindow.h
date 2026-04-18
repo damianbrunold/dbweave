@@ -222,6 +222,7 @@ public:
 	void __fastcall DrawGewebeRahmen (int _i, int _j);
 	void __fastcall DrawGewebeFarbeffekt  (int _i, int _j, int _x, int _y, int _xx, int _yy);
 	void __fastcall DrawGewebeSimulation  (int _i, int _j, int _x, int _y, int _xx, int _yy);
+	void __fastcall DrawGewebeRapport     (int _i, int _j, int _x, int _y, int _xx, int _yy);
 	void __fastcall DrawEinzug (int _i, int _j);
 	void __fastcall DrawAufknuepfung (int _i, int _j);
 	void __fastcall DrawTrittfolge (int _i, int _j);

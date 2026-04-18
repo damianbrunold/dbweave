@@ -25,6 +25,8 @@
 #include "mainwindow.h"
 #include "datamodule.h"
 #include <QCursor>
+#include <QPainter>
+#include <QPen>
 /*-----------------------------------------------------------------*/
 __fastcall RpRapportImpl::RpRapportImpl (TDBWFRM* _frm, TData* _data)
 : frm(_frm), data(_data)
@@ -55,14 +57,63 @@ void __fastcall RpRapportImpl::UpdateRapport()
 /*-----------------------------------------------------------------*/
 void __fastcall RpRapportImpl::ClearRapport()
 {
-	/*  STUB: legacy paints clBtnShadow 2-pixel markers at the rapport
-	    boundaries across einzug and trittfolge. Rendering slice. */
+	/*  Qt no-op. Legacy's VCL retained-mode canvas needed an
+	    explicit clBtnShadow overpaint to erase a previously-drawn
+	    red rapport marker. Under Qt the widget repaints wholesale
+	    on update(), so the next paintEvent simply omits the marker
+	    and it's gone. DrawHilfslinien redraw that lived here also
+	    falls out of the paintEvent flow. */
 }
 /*-----------------------------------------------------------------*/
 void __fastcall RpRapportImpl::DrawRapport()
 {
-	/*  STUB: legacy paints clRed 2-pixel markers at the rapport
-	    boundaries across einzug and trittfolge. Rendering slice. */
+	QPainter* p = frm->currentPainter;
+	if (!p) return;
+
+	if (frm->gewebe.gw <= 0 || frm->gewebe.gh <= 0) return;
+	const int w = frm->gewebe.pos.width  / frm->gewebe.gw;
+	const int h = frm->gewebe.pos.height / frm->gewebe.gh;
+
+	p->setPen(QPen(QColor(Qt::red)));
+
+	/*  Kettrapport: two vertical red lines at the left edge of the
+	    first warp thread and the right edge of the last, spanning
+	    the einzug strip (not the gewebe -- the legacy put the
+	    marker OUTSIDE the gewebe area so it's visible even when
+	    the pattern is dark).                                     */
+	int i1 = frm->rapport.kr.a;
+	int i2 = frm->rapport.kr.b;
+	if (i2 >= frm->scroll_x1 && i1 <= frm->scroll_x1 + w) {
+		if (i1 < frm->scroll_x1 && i2 >= frm->scroll_x1) i1 = frm->scroll_x1;
+		if (i2 > frm->scroll_x1 + w - 1 && i1 <= frm->scroll_x1 + w - 1)
+			i2 = frm->scroll_x1 + w - 1;
+		int x  = frm->gewebe.pos.x0 + (i1 - frm->scroll_x1)*frm->gewebe.gw;
+		int xx = frm->gewebe.pos.x0 + (i2 - frm->scroll_x1 + 1)*frm->gewebe.gw;
+		if (frm->righttoleft) {
+			x  = frm->gewebe.pos.width - x  + 2*frm->gewebe.pos.x0;
+			xx = frm->gewebe.pos.width - xx + 2*frm->gewebe.pos.x0;
+		}
+		p->drawLine(x,  frm->einzug.pos.y0, x,  frm->einzug.pos.y0 + frm->einzug.pos.height);
+		p->drawLine(xx, frm->einzug.pos.y0, xx, frm->einzug.pos.y0 + frm->einzug.pos.height);
+	}
+
+	/*  Schussrapport: two horizontal red lines spanning the
+	    trittfolge strip. */
+	int j1 = frm->rapport.sr.a;
+	int j2 = frm->rapport.sr.b;
+	if (j2 >= frm->scroll_y2 && j1 <= frm->scroll_y2 + h) {
+		if (j1 < frm->scroll_y2 && j2 >= frm->scroll_y2) j1 = frm->scroll_y2;
+		if (j2 > frm->scroll_y2 + h - 1 && j1 <= frm->scroll_y2 + h - 1)
+			j2 = frm->scroll_y2 + h - 1;
+		const int y  = frm->gewebe.pos.y0 + frm->gewebe.pos.height
+		             - (j1 - frm->scroll_y2)*frm->gewebe.gh;
+		const int yy = frm->gewebe.pos.y0 + frm->gewebe.pos.height
+		             - (j2 - frm->scroll_y2 + 1)*frm->gewebe.gh;
+		p->drawLine(frm->trittfolge.pos.x0, y,
+		            frm->trittfolge.pos.x0 + frm->trittfolge.pos.width, y);
+		p->drawLine(frm->trittfolge.pos.x0, yy,
+		            frm->trittfolge.pos.x0 + frm->trittfolge.pos.width, yy);
+	}
 }
 /*-----------------------------------------------------------------*/
 void __fastcall RpRapportImpl::DrawDifferences (const RAPPORT& _old, const RAPPORT& _new)

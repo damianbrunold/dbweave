@@ -387,6 +387,58 @@ private slots:
 		QVERIFY2(saw_warp, "warp colour not found in simulation cell");
 		QVERIFY2(saw_weft, "weft colour not found in simulation cell");
 	}
+
+	/*  ---- Rapport highlight ------------------------------------ */
+
+	void rapport_highlight_paints_inside_cells_red()
+	{
+		/*  Set up a rapport at (kr=[1..4], sr=[1..4]). Put a
+		    positive gewebe cell inside (2, 2) and one outside (6, 6).
+		    With RappViewRapport checked, the inside cell should
+		    paint red, the outside cell paints the normal range
+		    colour.                                                 */
+		DBWFRM->rapport.kr = SZ(1, 4);
+		DBWFRM->rapport.sr = SZ(1, 4);
+		DBWFRM->rapport.overridden = true;     /* stop CalcRapport from
+		                                          re-computing on the
+		                                          Simulation etc. tests
+		                                          running before us. */
+		DBWFRM->gewebe.feld.Set(2, 2, (char)1);
+		DBWFRM->gewebe.feld.Set(6, 6, (char)1);
+		DBWFRM->GewebeNormal->setChecked(true);
+		DBWFRM->GewebeFarbeffekt->setChecked(false);
+		DBWFRM->GewebeSimulation->setChecked(false);
+		DBWFRM->RappViewRapport->setChecked(true);
+
+		QImage img = renderCanvas();
+
+		/*  Cell (2, 2): x=20..30, y = H - 3*10 = 50..60. Interior (25, 55). */
+		QCOMPARE(img.pixelColor(25, 55), QColor(Qt::red));
+
+		/*  Cell (6, 6): x=60..70, y = H - 7*10 = 10..20. Interior (65, 15).
+		    Outside the rapport -> ordinary range-1 colour (black). */
+		QCOMPARE(img.pixelColor(65, 15), QColor(Qt::black));
+
+		DBWFRM->rapport.overridden = false;
+	}
+
+	void rapport_highlight_hidden_when_action_unchecked()
+	{
+		DBWFRM->rapport.kr = SZ(1, 4);
+		DBWFRM->rapport.sr = SZ(1, 4);
+		DBWFRM->rapport.overridden = true;
+		DBWFRM->gewebe.feld.Set(2, 2, (char)1);
+		DBWFRM->GewebeNormal->setChecked(true);
+		DBWFRM->RappViewRapport->setChecked(false);   /* rapport off */
+
+		QImage img = renderCanvas();
+
+		/*  Same interior pixel -- should paint in range-1 colour
+		    (black), not red, because rapport view is off. */
+		QCOMPARE(img.pixelColor(25, 55), QColor(Qt::black));
+
+		DBWFRM->rapport.overridden = false;
+	}
 };
 
 QTEST_MAIN(TestRendering)

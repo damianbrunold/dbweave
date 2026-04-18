@@ -154,5 +154,10 @@ void PatternCanvas::paintEvent (QPaintEvent* /*_e*/)
 
 	paintField(frm->gewebe,           &TDBWFRM::DrawGewebe,       &TDBWFRM::DrawGewebeRahmen);
 
+	/*  Rapport boundary markers overlay the einzug / trittfolge
+	    strips (not the gewebe). Gated on RappViewRapport.        */
+	if (frm->RappViewRapport && frm->RappViewRapport->isChecked())
+		frm->DrawRapport();
+
 	frm->currentPainter = nullptr;
 }
