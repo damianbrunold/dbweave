@@ -471,6 +471,13 @@ public:
 	    field toggle (Space), and field traversal (Tab / Enter). */
 	void __fastcall handleCanvasKeyPress (int _key, int _modifiers);
 
+	/*  Build and exec a context menu at the given global screen
+	    position. When a selection is active the menu offers Edit
+	    ops (Cut/Copy/Paste/.../Rotate/Roll/Centralsym); otherwise
+	    a View-toggle menu (Threading, Treadling, Pegplan, Rapport,
+	    Guides) + a paste-at-cursor entry.                        */
+	void __fastcall handleContextMenu (const QPoint& _globalPos);
+
 	/*  --- Viewport: zoom ---------------------------------------
 	    Legacy zoom[10] = { 5,7,9,11,13,15,17,19,21,23 } pixels per
 	    cell; currentzoom indexes into it. These three handlers step

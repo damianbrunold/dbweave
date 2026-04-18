@@ -17,6 +17,7 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QResizeEvent>
+#include <QContextMenuEvent>
 #include <QWheelEvent>
 #include <QMouseEvent>
 #include <QKeyEvent>
@@ -241,6 +242,12 @@ void PatternCanvas::mouseReleaseEvent (QMouseEvent* _e)
 {
 	if (_e->button() != Qt::LeftButton) { _e->ignore(); return; }
 	frm->handleCanvasMouseRelease();
+	_e->accept();
+}
+
+void PatternCanvas::contextMenuEvent (QContextMenuEvent* _e)
+{
+	frm->handleContextMenu(_e->globalPos());
 	_e->accept();
 }
 
