@@ -26,7 +26,10 @@ add_library(dbweave_ui STATIC
     setgewebe.cpp
     patterncanvas.cpp
     draw.cpp
+    fileload.cpp
 )
+
+target_link_libraries(dbweave_ui PUBLIC dbweave_io)
 
 target_include_directories(dbweave_ui
     PUBLIC

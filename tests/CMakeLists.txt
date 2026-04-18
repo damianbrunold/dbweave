@@ -152,3 +152,9 @@ qt_add_executable(test_rendering
 )
 target_link_libraries(test_rendering PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test dbweave_ui)
 add_test(NAME rendering COMMAND test_rendering)
+
+qt_add_executable(test_fileload
+    test_fileload.cpp
+)
+target_link_libraries(test_fileload PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test dbweave_ui)
+add_test(NAME fileload_samples COMMAND test_fileload)

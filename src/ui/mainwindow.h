@@ -29,12 +29,14 @@
 
 #include "vcl_compat.h"
 #include "dbw3_base.h"      /* FeldBase hierarchy */
+#include "loadoptions.h"    /* LOADSTAT / LOADPARTS */
 
 class QPainter;
 class PatternCanvas;
 class UrUndo;
 class RpRapport;
 class EinzugRearrange;
+class FfFile;
 
 class TDBWFRM : public QMainWindow
 {
@@ -147,6 +149,30 @@ public:
 	UrUndo*          undo           = nullptr;
 	RpRapport*       rapporthandler = nullptr;
 	EinzugRearrange* einzughandler  = nullptr;
+
+	/*  Currently-open file + its path. `file` is owned and persists
+	    for the document lifetime; Load() / Save() reopen it as
+	    needed.                                                    */
+	AnsiString filename;
+	FfFile*    file = nullptr;
+
+	/*  Loom-control brace state. Legacy stores nine numbered
+	    brace entries (klammern[0..8]) plus a "current" / "last"
+	    pair. The loader populates these; loom-control rendering
+	    lands in Phase 11 so we only keep the array.              */
+	Klammer klammern[9];
+
+	/*  Number of visible shafts / treadles in the einzug /
+	    aufknuepfung / trittfolge viewports. Loaded from files;
+	    used when scroll/zoom land.                               */
+	int hvisible = DEFAULT_MAXY1;
+	int wvisible = DEFAULT_MAXX2;
+
+	/*  Fixed-einzug reference for the EzFixiert style (loom-
+	    control feature). 1:1 port of the legacy raw-array state. */
+	short* fixeinzug = nullptr;
+	short  firstfree = 1;
+	int    fixsize   = 0;
 
 	/*  Called by SwitchLanguage(). Body is filled in when lang_main.cpp
 	    is ported (that unit is a 673-line blob of LANG_C_H assignments
@@ -286,6 +312,20 @@ public:
 	    after construction. Removed once file loading is ported and
 	    the user can open a real .dbw file from the menu.           */
 	void __fastcall seedDemo();
+
+	/*  --- File I/O -------------------------------------------- */
+	/*  Resize every Feld to match the current Data->MAX* dimensions.
+	    Called by the loader after updating MAX*. */
+	void __fastcall AllocBuffers  (bool _clear);
+	void __fastcall AllocBuffersX1();
+	void __fastcall AllocBuffersX2();
+	void __fastcall AllocBuffersY1();
+	void __fastcall AllocBuffersY2();
+
+	/*  Open `filename` as a .dbw file and populate the document
+	    state. Returns true on success; _stat receives a more
+	    detailed outcome in all cases. */
+	bool __fastcall Load (LOADSTAT& _stat, LOADPARTS _loadparts = LOADALL);
 };
 
 /*  Matches legacy `extern PACKAGE TDBWFRM *DBWFRM;`. Populated by

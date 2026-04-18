@@ -15,6 +15,7 @@
 #include "rapport.h"
 #include "einzug.h"
 #include "datamodule.h"
+#include "fileformat.h"
 #include "assert_compat.h"
 
 TDBWFRM* DBWFRM = nullptr;
@@ -81,6 +82,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	undo           = new UrUndo(this);
 	rapporthandler = RpRapport::CreateInstance(this, Data);
 	einzughandler  = EinzugRearrange::CreateInstance(this, Data);
+	file           = new FfFile();
 
 	/*  The pattern canvas is the central widget. Ownership is via Qt
 	    parent-child; Qt will delete it with the window. */
@@ -97,8 +99,10 @@ TDBWFRM::~TDBWFRM()
 	EinzugRearrange::ReleaseInstance(einzughandler); einzughandler = nullptr;
 	RpRapport::ReleaseInstance(rapporthandler);      rapporthandler = nullptr;
 	delete undo;
+	delete file; file = nullptr;
 	delete[] freieschaefte; freieschaefte = nullptr;
 	delete[] freietritte;   freietritte   = nullptr;
+	delete[] fixeinzug;     fixeinzug     = nullptr;
 	/*  QAction members are owned by `this` via QObject parenting. */
 }
 
@@ -107,7 +111,43 @@ void __fastcall TDBWFRM::ReloadLanguage()
 	/*  Placeholder until lang_main.cpp is ported. */
 }
 
-void __fastcall TDBWFRM::RecalcGewebe()       {}
+void __fastcall TDBWFRM::RecalcGewebe()
+{
+	/*  Port of legacy recalc.cpp RecalcGewebe. Rebuilds gewebe from
+	    einzug x aufknuepfung x trittfolge (default view) or from
+	    einzug x trittfolge (pegplan view).                         */
+	QCursor old = cursor();
+	setCursor(Qt::WaitCursor);
+
+	gewebe.feld.Init((char)0);
+
+	if (!ViewSchlagpatrone || !ViewSchlagpatrone->isChecked()) {
+		for (int i = 0; i < Data->MAXX1; i++) {
+			const short n = einzug.feld.Get(i);
+			if (n == 0) continue;
+			for (int k = 0; k < Data->MAXX2; k++) {
+				const char s = aufknuepfung.feld.Get(k, n - 1);
+				if (s > 0) {
+					for (int m = 0; m < Data->MAXY2; m++)
+						if (trittfolge.feld.Get(k, m) > 0)
+							gewebe.feld.Set(i, m, s);
+				}
+			}
+		}
+	} else {
+		for (int i = 0; i < Data->MAXX1; i++) {
+			const short n = einzug.feld.Get(i);
+			if (n == 0) continue;
+			for (int k = 0; k < Data->MAXY2; k++) {
+				const char s = trittfolge.feld.Get(n - 1, k);
+				if (s > 0) gewebe.feld.Set(i, k, s);
+			}
+		}
+	}
+
+	setCursor(old);
+	update();
+}
 void __fastcall TDBWFRM::SetModified(bool)    {}
 void __fastcall TDBWFRM::SetCursor(int, int)  {}
 void __fastcall TDBWFRM::SetAppTitle()        {}

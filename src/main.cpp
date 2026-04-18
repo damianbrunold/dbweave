@@ -10,9 +10,12 @@
 */
 
 #include <QApplication>
+#include <QFileInfo>
+#include <QMessageBox>
 
 #include "datamodule.h"
 #include "mainwindow.h"
+#include "loadoptions.h"
 
 int main (int argc, char* argv[])
 {
@@ -29,10 +32,25 @@ int main (int argc, char* argv[])
 	Data   = new TData();
 	DBWFRM = new TDBWFRM();
 
-	/*  Seed a demo twill so the freshly-launched app shows cloth.
-	    This is a stopgap until file loading (fileload.cpp) is ported
-	    and the user can open real .dbw samples from a File menu. */
-	DBWFRM->seedDemo();
+	/*  If the user passed a .dbw path on the command line, load it;
+	    otherwise seed the 2/2 demo twill so the launched app shows
+	    something. Remove the demo seed once a proper File | Open
+	    menu lands.                                                */
+	const QStringList args = QApplication::arguments();
+	bool loaded = false;
+	if (args.size() >= 2) {
+		const QString path = args.at(1);
+		if (QFileInfo::exists(path)) {
+			DBWFRM->filename = path;
+			LOADSTAT stat = UNKNOWN_FAILURE;
+			loaded = DBWFRM->Load(stat, LOADALL);
+			if (!loaded) {
+				QMessageBox::warning(DBWFRM, QStringLiteral("DB-WEAVE"),
+				    QStringLiteral("Could not load '%1' (status %2)").arg(path).arg(int(stat)));
+			}
+		}
+	}
+	if (!loaded) DBWFRM->seedDemo();
 	DBWFRM->resize(1024, 768);
 
 	DBWFRM->show();

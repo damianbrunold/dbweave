@@ -139,3 +139,64 @@ void __fastcall TDBWFRM::ExtendSchaefte()
 	UpdateScrollbars();
 }
 /*-----------------------------------------------------------------*/
+/*-----------------------------------------------------------------*/
+/*  --- AllocBuffers* ---------------------------------------------
+    The legacy TDBWFRM::AllocBuffers* methods reallocated the raw
+    bool* freieschaefte / freietritte arrays in addition to resizing
+    the Feld members. The port's Feld*.Resize already grows the
+    backing storage, so AllocBuffers* here rebuilds just the
+    "freie" flag arrays to match Data->MAX*. Called by the file
+    loader after Data->MAX* is updated.                            */
+/*-----------------------------------------------------------------*/
+static void resizeFreie (bool*& _arr, int _newsize)
+{
+	if (!_arr) {
+		_arr = new bool[_newsize];
+		for (int i = 0; i < _newsize; i++) _arr[i] = true;
+		return;
+	}
+	bool* p = new bool[_newsize];
+	for (int i = 0; i < _newsize; i++) p[i] = true;
+	delete[] _arr;
+	_arr = p;
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::AllocBuffersX1()
+{
+	einzug.feld.Resize       (Data->MAXX1, 0);
+	kettfarben.feld.Resize   (Data->MAXX1, Data->defcolorh);
+	blatteinzug.feld.Resize  (Data->MAXX1, 0);
+	gewebe.feld.Resize       (Data->MAXX1, Data->MAXY2, 0);
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::AllocBuffersX2()
+{
+	aufknuepfung.feld.Resize (Data->MAXX2, Data->MAXY1, 0);
+	trittfolge.feld.Resize   (Data->MAXX2, Data->MAXY2, 0);
+	resizeFreie(freietritte,   Data->MAXX2);
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::AllocBuffersY1()
+{
+	aufknuepfung.feld.Resize (Data->MAXX2, Data->MAXY1, 0);
+	einzug.maxy = Data->MAXY1;
+	resizeFreie(freieschaefte, Data->MAXY1);
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::AllocBuffersY2()
+{
+	trittfolge.feld.Resize   (Data->MAXX2, Data->MAXY2, 0);
+	trittfolge.isempty.Resize(Data->MAXY2, true);
+	schussfarben.feld.Resize (Data->MAXY2, Data->defcolorv);
+	gewebe.feld.Resize       (Data->MAXX1, Data->MAXY2, 0);
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::AllocBuffers (bool _clear)
+{
+	(void)_clear;   /* legacy cleared; we unconditionally preserve */
+	AllocBuffersX1();
+	AllocBuffersX2();
+	AllocBuffersY1();
+	AllocBuffersY2();
+}
+/*-----------------------------------------------------------------*/
