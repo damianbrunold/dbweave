@@ -38,6 +38,7 @@ add_library(dbweave_ui STATIC
     popupmenu.cpp
     utilities.cpp
     steigung.cpp
+    palettepanel.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)

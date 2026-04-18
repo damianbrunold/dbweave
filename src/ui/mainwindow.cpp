@@ -11,6 +11,7 @@
 
 #include "mainwindow.h"
 #include "patterncanvas.h"
+#include "palettepanel.h"
 #include "undoredo.h"
 #include "rapport.h"
 #include "einzug.h"
@@ -18,6 +19,8 @@
 #include "datamodule.h"
 #include "fileformat.h"
 #include "assert_compat.h"
+
+#include <QDockWidget>
 
 #include <QActionGroup>
 #include <QApplication>
@@ -103,6 +106,18 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	    parent-child; Qt will delete it with the window. */
 	pattern_canvas = new PatternCanvas(this, this);
 	setCentralWidget(pattern_canvas);
+
+	/*  Palette dock -- floats on the right by default. The
+	    enclosing QDockWidget owns the panel; ViewFarbpalette is a
+	    checkable QAction bound to toggleViewAction so the menu
+	    state stays in sync with the dock's visibility. */
+	paletteDock  = new QDockWidget(QStringLiteral("Palette"), this);
+	paletteDock->setObjectName(QStringLiteral("paletteDock"));
+	palettePanel = new PalettePanel(this, paletteDock);
+	paletteDock->setWidget(palettePanel);
+	addDockWidget(Qt::RightDockWidgetArea, paletteDock);
+	ViewFarbpalette = paletteDock->toggleViewAction();
+	ViewFarbpalette->setText(QStringLiteral("&Palette"));
 
 	/*  Minimal File menu -- Open / Save / Save As / Quit. The rest
 	    of the menu bar (Edit / View / Pattern / Loom / Help) lands
@@ -207,6 +222,8 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	/*  View-toggle items reuse the QActions that already live on
 	    TDBWFRM (allocated earlier in the ctor). Put them into the
 	    menu and wire them to refresh the canvas when toggled. */
+	viewMenu->addSeparator();
+	if (ViewFarbpalette) viewMenu->addAction(ViewFarbpalette);
 	viewMenu->addSeparator();
 	viewMenu->addAction(ViewEinzug);        ViewEinzug       ->setText(QStringLiteral("&Threading"));
 	viewMenu->addAction(ViewTrittfolge);    ViewTrittfolge   ->setText(QStringLiteral("T&readling"));

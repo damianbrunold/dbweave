@@ -39,6 +39,8 @@ class RpRapport;
 class EinzugRearrange;
 class CrCursorHandler;
 class FfFile;
+class PalettePanel;
+class QDockWidget;
 
 class TDBWFRM : public QMainWindow
 {
@@ -175,6 +177,12 @@ public:
 	/*  The central widget that renders the pattern. Owned via Qt
 	    parent-child ownership -- delete when the mainwindow dies. */
 	PatternCanvas* pattern_canvas = nullptr;
+
+	/*  Dockable 16x16 palette-picker panel. Visible toggle lives
+	    on the View menu + context menu.                         */
+	QDockWidget*   paletteDock  = nullptr;
+	PalettePanel*  palettePanel = nullptr;
+	QAction*       ViewFarbpalette = nullptr;
 
 	/*  Per-shaft / per-treadle "unused" flags. Sized to Data->MAXY1 /
 	    Data->MAXX2 and allocated in the ctor. Match the legacy raw

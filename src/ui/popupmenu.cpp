@@ -91,6 +91,7 @@ void __fastcall TDBWFRM::handleContextMenu (const QPoint& _globalPos)
 		menu.addSeparator();
 		if (RappViewRapport)   menu.addAction(RappViewRapport);
 		if (ViewHlines)        menu.addAction(ViewHlines);
+		if (ViewFarbpalette)   menu.addAction(ViewFarbpalette);
 		menu.addSeparator();
 		QMenu* sub = menu.addMenu(QStringLiteral("&Cloth display"));
 		if (GewebeNormal)     sub->addAction(GewebeNormal);
