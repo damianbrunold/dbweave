@@ -235,6 +235,11 @@ public:
 	/*  Status-bar labels; created in the ctor and addPermanent-ed
 	    onto statusBar() so they stay right-aligned. UpdateStatusBar
 	    populates them on every refresh().                         */
+	/*  Range picker: nine checkable toolbar buttons. Driven by
+	    currentrange so digit-key changes stay in sync. */
+	class QActionGroup* rangeGroup = nullptr;
+	QAction*            rangeActions[9] = { };
+
 	class QLabel* sbField    = nullptr;
 	class QLabel* sbSelect   = nullptr;
 	class QLabel* sbRange    = nullptr;

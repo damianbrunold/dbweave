@@ -25,6 +25,9 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QStatusBar>
+#include <QStyle>
+#include <QToolBar>
+#include <QToolButton>
 
 TDBWFRM* DBWFRM = nullptr;
 
@@ -122,6 +125,9 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	    selected. The rubber-band selection is built by click+drag in
 	    PatternCanvas.                                            */
 	QMenu* editMenu = menuBar()->addMenu(QStringLiteral("&Edit"));
+	QAction* actUndo             = editMenu->addAction(QStringLiteral("&Undo"));
+	QAction* actRedo             = editMenu->addAction(QStringLiteral("&Redo"));
+	editMenu->addSeparator();
 	QAction* actCut              = editMenu->addAction(QStringLiteral("Cu&t"));
 	QAction* actCopy             = editMenu->addAction(QStringLiteral("&Copy"));
 	QAction* actPaste            = editMenu->addAction(QStringLiteral("&Paste"));
@@ -132,11 +138,15 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	QAction* actMirrorH       = editMenu->addAction(QStringLiteral("Mirror &Horizontal"));
 	QAction* actMirrorV       = editMenu->addAction(QStringLiteral("Mirror &Vertical"));
 	QAction* actRotate        = editMenu->addAction(QStringLiteral("R&otate 90\xc2\xb0"));
+	actUndo ->setShortcut(QKeySequence::Undo);
+	actRedo ->setShortcut(QKeySequence::Redo);
 	actCut  ->setShortcut(QKeySequence::Cut);
 	actCopy ->setShortcut(QKeySequence::Copy);
 	actPaste->setShortcut(QKeySequence::Paste);
 	actPasteTransparent->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_V));
 	actDelete->setShortcut(QKeySequence::Delete);
+	connect(actUndo,             &QAction::triggered, this, [this] { if (undo && undo->Undo()) refresh(); });
+	connect(actRedo,             &QAction::triggered, this, [this] { if (undo && undo->Redo()) refresh(); });
 	connect(actCut,              &QAction::triggered, this, [this] { CutSelection();         });
 	connect(actCopy,             &QAction::triggered, this, [this] { CopySelection();        });
 	connect(actPaste,            &QAction::triggered, this, [this] { PasteSelection(false);  });
@@ -188,6 +198,71 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	                    GewebeSimulation, GewebeNone })
 		connect(a, &QAction::triggered, this, [this] { refresh(); });
 
+	/*  --- Toolbars -----------------------------------------------
+	    Qt standard icons give us passable visuals without shipping
+	    custom art. File + Edit + Transform + Zoom on the main
+	    toolbar; the 1..9 range picker lives on its own toolbar so
+	    it can be hidden independently.                          */
+	auto icon = [this](QStyle::StandardPixmap sp) {
+		return this->style()->standardIcon(sp);
+	};
+	actOpen  ->setIcon(icon(QStyle::SP_DialogOpenButton));
+	actSave  ->setIcon(icon(QStyle::SP_DialogSaveButton));
+	actUndo  ->setIcon(icon(QStyle::SP_ArrowBack));
+	actRedo  ->setIcon(icon(QStyle::SP_ArrowForward));
+	actCut   ->setIcon(icon(QStyle::SP_DialogDiscardButton));
+	actCopy  ->setIcon(icon(QStyle::SP_FileIcon));
+	actPaste ->setIcon(icon(QStyle::SP_FileDialogNewFolder));
+	actDelete->setIcon(icon(QStyle::SP_TrashIcon));
+
+	QToolBar* mainBar = addToolBar(QStringLiteral("Main"));
+	mainBar->setObjectName(QStringLiteral("mainToolBar"));
+	mainBar->addAction(actOpen);
+	mainBar->addAction(actSave);
+	mainBar->addSeparator();
+	mainBar->addAction(actUndo);
+	mainBar->addAction(actRedo);
+	mainBar->addSeparator();
+	mainBar->addAction(actCut);
+	mainBar->addAction(actCopy);
+	mainBar->addAction(actPaste);
+	mainBar->addAction(actDelete);
+	mainBar->addSeparator();
+	mainBar->addAction(actInvert);
+	mainBar->addAction(actMirrorH);
+	mainBar->addAction(actMirrorV);
+	mainBar->addAction(actRotate);
+	mainBar->addSeparator();
+	mainBar->addAction(actZoomIn);
+	mainBar->addAction(actZoomOut);
+	mainBar->addAction(actZoomNormal);
+
+	/*  Range picker: nine checkable buttons driving currentrange.
+	    Clicking also fills the current selection if one is active
+	    (same behaviour as the digit keys). The swatch colour comes
+	    from GetRangeColor; see rangecolors.cpp. */
+	QToolBar* rangeBar = addToolBar(QStringLiteral("Ranges"));
+	rangeBar->setObjectName(QStringLiteral("rangeToolBar"));
+	rangeGroup = new QActionGroup(this);
+	rangeGroup->setExclusive(true);
+	for (int r = 1; r <= 9; r++) {
+		QAction* a = new QAction(QString::number(r), this);
+		a->setCheckable(true);
+		a->setToolTip(QStringLiteral("Range %1").arg(r));
+		rangeGroup->addAction(a);
+		rangeBar->addAction(a);
+		rangeActions[r - 1] = a;
+		connect(a, &QAction::triggered, this, [this, r] {
+			currentrange = r;
+			if (selection.Valid()) ApplyRangeToSelection(r);
+			refresh();
+		});
+	}
+	/*  Keep the toolbar in sync when currentrange is changed from
+	    other paths (digit keys, mouse). */
+	if (currentrange >= 1 && currentrange <= 9)
+		rangeActions[currentrange - 1]->setChecked(true);
+
 	/*  Status-bar panels (right-aligned permanent widgets). */
 	sbField   = new QLabel(this);
 	sbSelect  = new QLabel(this);
@@ -228,6 +303,12 @@ void TDBWFRM::refresh()
 	/*  Rebuild the status-bar labels so the cursor position, range,
 	    selection size and zoom stay current on every refresh.     */
 	UpdateStatusBar();
+	/*  Keep the range-picker toolbar in sync with currentrange. */
+	if (rangeActions[0]) {
+		const int r = currentrange;
+		for (int i = 0; i < 9; i++)
+			rangeActions[i]->setChecked(r == i + 1);
+	}
 }
 
 void __fastcall TDBWFRM::zoomIn()
