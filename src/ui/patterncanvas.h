@@ -35,9 +35,17 @@ public:
 	explicit PatternCanvas (TDBWFRM* _frm, QWidget* _parent = nullptr);
 	~PatternCanvas() override;
 
+	/*  Lay out the four field grids inside the widget rect using
+	    cell size `_gw` x `_gh`. Called by resizeEvent on the first
+	    resize, and by TDBWFRM::zoomIn/zoomOut/zoomNormal thereafter.
+	    A cell size of 0 picks the current zoom from frm->currentzoom.
+	    Safe to call before the widget has ever been shown (tests). */
+	void recomputeLayout (int _gw = 0, int _gh = 0);
+
 protected:
 	void paintEvent  (QPaintEvent*  _e) override;
 	void resizeEvent (QResizeEvent* _e) override;
+	void wheelEvent  (QWheelEvent*  _e) override;
 
 private:
 	TDBWFRM* frm;

@@ -12,10 +12,12 @@
 #include "patterncanvas.h"
 #include "mainwindow.h"
 #include "cursor.h"
+#include "datamodule.h"
 
 #include <QPainter>
 #include <QPaintEvent>
 #include <QResizeEvent>
+#include <QWheelEvent>
 
 #include <algorithm>
 
@@ -33,30 +35,29 @@ PatternCanvas::~PatternCanvas() = default;
 
 void PatternCanvas::resizeEvent (QResizeEvent* /*_e*/)
 {
-	/*  Auto-layout runs only on the first resize event. Subsequent
-	    resizes (QWidget::render re-fires one; a real user resize will
-	    too) are a no-op so tests and custom layout code can manually
-	    place fields without being stomped. When a real FormResize
-	    port lands, this flag goes away and the layout re-flows. */
+	/*  Auto-layout runs only on the first resize event so tests that
+	    manually place fields aren't stomped; zoom handlers re-trigger
+	    the layout explicitly via recomputeLayout(). */
 	if (has_laid_out) return;
 	has_laid_out = true;
+	recomputeLayout();
+}
 
-	/*  Placeholder layout until the legacy TDBWFRM::FormResize port
-	    lands. Splits the widget into four quadrants:
-	        aufknuepfung  top-right
-	        einzug        top-left  (wider than aufknuepfung)
-	        trittfolge    bottom-right
-	        gewebe        bottom-left (the main fabric area)
-	    Cell size is fixed at 12x12 px. Fields are capped at a
-	    reasonable viewport (scroll offsets remain at 0).           */
+void PatternCanvas::recomputeLayout (int _gw, int _gh)
+{
+	/*  Cell size: if not forced by the caller, pick from the zoom
+	    table keyed by frm->currentzoom. Legacy zoom[10] values. */
+	static const int ZOOM_TABLE[10] = { 5, 7, 9, 11, 13, 15, 17, 19, 21, 23 };
+	int zi = frm->currentzoom;
+	if (zi < 0) zi = 0;
+	if (zi > 9) zi = 9;
+	const int GW = _gw > 0 ? _gw : ZOOM_TABLE[zi];
+	const int GH = _gh > 0 ? _gh : ZOOM_TABLE[zi];
 
-	constexpr int GW     = 12;
-	constexpr int GH     = 12;
 	constexpr int MARGIN = 10;
-
 	const int W = width();
 	const int H = height();
-	if (W < 4*GW || H < 4*GH) return;   /* too small to lay out anything */
+	if (W < 4*GW || H < 4*GH) return;
 
 	auto cap = [](int area_px, int cell) {
 		const int fit = (area_px - 2*MARGIN) / cell;
@@ -99,6 +100,46 @@ void PatternCanvas::resizeEvent (QResizeEvent* /*_e*/)
 	frm->gewebe.pos.y0     = frm->trittfolge.pos.y0;
 	frm->gewebe.pos.width  = frm->einzug.pos.width;
 	frm->gewebe.pos.height = frm->trittfolge.pos.height;
+
+	/*  Clamp scroll offsets so the new viewport never shows past
+	    the data extent. */
+	const int gewebe_cols = frm->gewebe.pos.width  / GW;
+	const int gewebe_rows = frm->gewebe.pos.height / GH;
+	const int einzug_cols = frm->einzug.pos.width  / GW;
+	const int ezaf_rows   = frm->einzug.pos.height / GH;
+	const int tf_cols     = frm->trittfolge.pos.width / GW;
+
+	auto clamp = [](int& v, int maximum) {
+		if (v < 0) v = 0;
+		if (v > maximum) v = std::max(0, maximum);
+	};
+	clamp(frm->scroll_x1, std::max(0, Data->MAXX1 - std::max(einzug_cols, gewebe_cols)));
+	clamp(frm->scroll_y1, std::max(0, Data->MAXY1 - ezaf_rows));
+	clamp(frm->scroll_x2, std::max(0, Data->MAXX2 - tf_cols));
+	clamp(frm->scroll_y2, std::max(0, Data->MAXY2 - gewebe_rows));
+}
+
+void PatternCanvas::wheelEvent (QWheelEvent* _e)
+{
+	/*  Mouse wheel: scroll the gewebe vertically by one cell per
+	    notch. Shift+wheel scrolls horizontally. Ctrl+wheel zooms. */
+	const QPoint p = _e->angleDelta();
+	const int steps = (p.y() != 0 ? p.y() : p.x()) / 120;
+	if (steps == 0) { _e->ignore(); return; }
+
+	if (_e->modifiers().testFlag(Qt::ControlModifier)) {
+		if (steps > 0) for (int i = 0; i < steps; i++)  frm->zoomIn();
+		else            for (int i = 0; i < -steps; i++) frm->zoomOut();
+	} else if (_e->modifiers().testFlag(Qt::ShiftModifier)) {
+		frm->scroll_x1 = std::max(0, frm->scroll_x1 - steps);
+		frm->scroll_x2 = std::max(0, frm->scroll_x2 - steps);
+		update();
+	} else {
+		frm->scroll_y2 = std::max(0, frm->scroll_y2 + steps);
+		frm->scroll_y1 = std::max(0, frm->scroll_y1 + steps);
+		update();
+	}
+	_e->accept();
 }
 
 void PatternCanvas::paintEvent (QPaintEvent* /*_e*/)

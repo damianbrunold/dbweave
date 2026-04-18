@@ -17,6 +17,7 @@
 #include "dbw3_base.h"
 #include "datamodule.h"
 #include "mainwindow.h"
+#include "patterncanvas.h"
 
 class TestMainwindowSkeleton : public QObject
 {
@@ -123,6 +124,58 @@ private slots:
 		g.feld.Set(5, 5, (char)9);
 		g.Clear();
 		QCOMPARE(g.feld.Get(5, 5), (char)0);
+	}
+
+	void zoom_in_enlarges_cell_size()
+	{
+		/*  Lay the canvas out at a known size, then zoom in once and
+		    check every field's gw/gh bumped to the next ZOOM_TABLE
+		    step. zoom[4] = 13 (port default) -> zoom[5] = 15. */
+		DBWFRM->pattern_canvas->resize(800, 600);
+		DBWFRM->pattern_canvas->recomputeLayout();
+
+		QCOMPARE(DBWFRM->currentzoom, 4);
+		QCOMPARE(DBWFRM->gewebe.gw, 13);
+
+		DBWFRM->zoomIn();
+		QCOMPARE(DBWFRM->currentzoom, 5);
+		QCOMPARE(DBWFRM->gewebe.gw,       15);
+		QCOMPARE(DBWFRM->einzug.gw,       15);
+		QCOMPARE(DBWFRM->aufknuepfung.gw, 15);
+		QCOMPARE(DBWFRM->trittfolge.gw,   15);
+	}
+
+	void zoom_out_shrinks_and_clamps_at_zero()
+	{
+		DBWFRM->pattern_canvas->resize(800, 600);
+		DBWFRM->pattern_canvas->recomputeLayout();
+		for (int i = 0; i < 10; i++) DBWFRM->zoomOut();
+		QCOMPARE(DBWFRM->currentzoom, 0);
+		QCOMPARE(DBWFRM->gewebe.gw, 5);   /* ZOOM_TABLE[0] */
+	}
+
+	void zoom_normal_resets_to_legacy_default()
+	{
+		DBWFRM->pattern_canvas->resize(800, 600);
+		DBWFRM->pattern_canvas->recomputeLayout();
+		DBWFRM->zoomIn(); DBWFRM->zoomIn();
+		QCOMPARE(DBWFRM->currentzoom, 6);
+		DBWFRM->zoomNormal();
+		QCOMPARE(DBWFRM->currentzoom, 3);
+		QCOMPARE(DBWFRM->gewebe.gw, 11);
+	}
+
+	void recompute_layout_clamps_stale_scroll_offsets()
+	{
+		/*  Set scroll_y2 far past where the new layout can show. The
+		    layout should clamp it back into range instead of leaving
+		    the renderer reading off the end of the field. */
+		DBWFRM->pattern_canvas->resize(800, 600);
+		DBWFRM->pattern_canvas->recomputeLayout();
+		DBWFRM->scroll_y2 = 10000;
+		DBWFRM->pattern_canvas->recomputeLayout();
+		QVERIFY(DBWFRM->scroll_y2 >= 0);
+		QVERIFY(DBWFRM->scroll_y2 <= Data->MAXY2);
 	}
 };
 

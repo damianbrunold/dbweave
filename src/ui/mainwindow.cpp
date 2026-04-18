@@ -114,6 +114,17 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	connect(actSaveAs, &QAction::triggered, this, [this] { FileSaveAs(); });
 	connect(actQuit,   &QAction::triggered, this, &TDBWFRM::close);
 
+	QMenu* viewMenu = menuBar()->addMenu(QStringLiteral("&View"));
+	QAction* actZoomIn     = viewMenu->addAction(QStringLiteral("Zoom &In"));
+	QAction* actZoomOut    = viewMenu->addAction(QStringLiteral("Zoom &Out"));
+	QAction* actZoomNormal = viewMenu->addAction(QStringLiteral("Zoom &Normal"));
+	actZoomIn    ->setShortcut(QKeySequence::ZoomIn);
+	actZoomOut   ->setShortcut(QKeySequence::ZoomOut);
+	actZoomNormal->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_0));
+	connect(actZoomIn,     &QAction::triggered, this, [this] { zoomIn();     });
+	connect(actZoomOut,    &QAction::triggered, this, [this] { zoomOut();    });
+	connect(actZoomNormal, &QAction::triggered, this, [this] { zoomNormal(); });
+
 	/*  Note: main.cpp explicitly calls seedDemo() after construction
 	    so the freshly-launched app shows cloth. Tests skip it and
 	    get a clean TDBWFRM.                                         */
@@ -130,6 +141,34 @@ TDBWFRM::~TDBWFRM()
 	delete[] freietritte;   freietritte   = nullptr;
 	delete[] fixeinzug;     fixeinzug     = nullptr;
 	/*  QAction members are owned by `this` via QObject parenting. */
+}
+
+void __fastcall TDBWFRM::zoomIn()
+{
+	if (currentzoom >= 9) return;
+	++currentzoom;
+	if (pattern_canvas) pattern_canvas->recomputeLayout();
+	update();
+	SetModified();
+}
+
+void __fastcall TDBWFRM::zoomOut()
+{
+	if (currentzoom <= 0) return;
+	--currentzoom;
+	if (pattern_canvas) pattern_canvas->recomputeLayout();
+	update();
+	SetModified();
+}
+
+void __fastcall TDBWFRM::zoomNormal()
+{
+	/*  Legacy default currentzoom = 3 (11 px/cell). */
+	if (currentzoom == 3) return;
+	currentzoom = 3;
+	if (pattern_canvas) pattern_canvas->recomputeLayout();
+	update();
+	SetModified();
 }
 
 void __fastcall TDBWFRM::ReloadLanguage()

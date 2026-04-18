@@ -372,6 +372,15 @@ public:
 	void __fastcall FileOpen ();
 	void __fastcall FileSave ();
 	void __fastcall FileSaveAs ();
+
+	/*  --- Viewport: zoom ---------------------------------------
+	    Legacy zoom[10] = { 5,7,9,11,13,15,17,19,21,23 } pixels per
+	    cell; currentzoom indexes into it. These three handlers step
+	    currentzoom up/down/to-default, reflow the layout, and
+	    trigger a repaint. */
+	void __fastcall zoomIn();
+	void __fastcall zoomOut();
+	void __fastcall zoomNormal();
 };
 
 /*  Matches legacy `extern PACKAGE TDBWFRM *DBWFRM;`. Populated by
