@@ -353,8 +353,9 @@ void PatternCanvas::paintEvent (QPaintEvent* /*_e*/)
 	frm->DrawSelection();
 
 	/*  Cursor outline sits on top of everything so it's visible
-	    no matter which view mode is active. */
-	if (frm->cursorhandler) frm->cursorhandler->DrawCursor();
+	    no matter which view mode is active. Skipped during the
+	    "off" phase of the blink cycle. */
+	if (frm->cursorhandler && frm->cursorVisible) frm->cursorhandler->DrawCursor();
 
 	frm->currentPainter = nullptr;
 }

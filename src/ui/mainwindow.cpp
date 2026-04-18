@@ -20,12 +20,14 @@
 #include "assert_compat.h"
 
 #include <QActionGroup>
+#include <QApplication>
 #include <QKeySequence>
 #include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
 #include <QStatusBar>
 #include <QStyle>
+#include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
 
@@ -302,6 +304,20 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	/*  Populate the recent-files submenu from QSettings. */
 	LoadMRU();
 
+	/*  Cursor blink. QApplication::cursorFlashTime is the total
+	    flash period in ms; fire the timer at half that so one tick
+	    corresponds to a show/hide flip. */
+	const int flash = QApplication::cursorFlashTime();
+	if (flash > 0) {
+		cursorTimer = new QTimer(this);
+		cursorTimer->setInterval(flash / 2);
+		connect(cursorTimer, &QTimer::timeout, this, [this] {
+			cursorVisible = !cursorVisible;
+			if (pattern_canvas) pattern_canvas->update();
+		});
+		cursorTimer->start();
+	}
+
 	/*  Note: main.cpp explicitly calls seedDemo() after construction
 	    so the freshly-launched app shows cloth. Tests skip it and
 	    get a clean TDBWFRM.                                         */
@@ -322,6 +338,12 @@ TDBWFRM::~TDBWFRM()
 
 void TDBWFRM::refresh()
 {
+	/*  Reset the cursor blink so it's visible immediately after any
+	    mutation (cursor move, paint op, zoom, ...) rather than
+	    appearing off mid-flash. */
+	cursorVisible = true;
+	if (cursorTimer) cursorTimer->start();
+
 	/*  Repaint the pattern canvas. QWidget::update() on the main
 	    window only invalidates the window chrome; children paint
 	    independently in Qt. */

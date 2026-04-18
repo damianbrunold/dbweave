@@ -158,6 +158,14 @@ public:
 	/*  Strongline colour for the heavy grid lines. */
 	QColor strongclr = QColor(Qt::black);
 
+	/*  Cursor blink state. The QTimer flips this every half of
+	    QApplication::cursorFlashTime(); the canvas's paintEvent
+	    reads the flag to decide whether to draw the cursor
+	    outline. A value of zero from cursorFlashTime() means "no
+	    blink" -- we leave the cursor permanently visible. */
+	bool          cursorVisible = true;
+	class QTimer* cursorTimer   = nullptr;
+
 	/*  Active QPainter during a paintEvent. nullptr outside paint,
 	    so legacy-style "frm->Canvas->..." ports can no-op safely.
 	    Set by PatternCanvas::paintEvent for the duration of the
