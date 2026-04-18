@@ -373,6 +373,25 @@ public:
 	void __fastcall FileSave ();
 	void __fastcall FileSaveAs ();
 
+	/*  --- Input routing ----------------------------------------
+	    Physical-to-logical hit-test: map (X, Y) pixel inside the
+	    canvas to a FELD and viewport-local cell coordinates (_i,
+	    _j). Sets _feld to INVALID if the point misses every grid.
+	    The viewport coords do NOT include the scroll offsets, so
+	    callers add scroll_x1/x2/y1/y2 as appropriate for the
+	    resulting feld. */
+	void __fastcall Physical2Logical (int _x, int _y, FELD& _feld, int& _i, int& _j);
+
+	/*  Mouse-click handler invoked from PatternCanvas::mousePress-
+	    Event. Sets the cursor to the clicked cell and drives the
+	    corresponding Set* state-apply op for paintable fields. */
+	void __fastcall handleCanvasMousePress (int _x, int _y, bool _shift);
+
+	/*  Key-down handler invoked from PatternCanvas::keyPressEvent.
+	    Drives cursor motion (arrow keys), range selection (digits),
+	    field toggle (Space), and field traversal (Tab / Enter). */
+	void __fastcall handleCanvasKeyPress (int _key, int _modifiers);
+
 	/*  --- Viewport: zoom ---------------------------------------
 	    Legacy zoom[10] = { 5,7,9,11,13,15,17,19,21,23 } pixels per
 	    cell; currentzoom indexes into it. These three handlers step

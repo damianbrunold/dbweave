@@ -18,6 +18,8 @@
 #include <QPaintEvent>
 #include <QResizeEvent>
 #include <QWheelEvent>
+#include <QMouseEvent>
+#include <QKeyEvent>
 
 #include <algorithm>
 
@@ -29,6 +31,9 @@ PatternCanvas::PatternCanvas (TDBWFRM* _frm, QWidget* _parent)
 	    colour (clBtnFace). Set the widget palette so QWidget's default
 	    paint matches.                                               */
 	setAutoFillBackground(true);
+	/*  Accept keyboard focus so arrow-key navigation works the
+	    moment the canvas is clicked. */
+	setFocusPolicy(Qt::StrongFocus);
 }
 
 PatternCanvas::~PatternCanvas() = default;
@@ -117,6 +122,22 @@ void PatternCanvas::recomputeLayout (int _gw, int _gh)
 	clamp(frm->scroll_y1, std::max(0, Data->MAXY1 - ezaf_rows));
 	clamp(frm->scroll_x2, std::max(0, Data->MAXX2 - tf_cols));
 	clamp(frm->scroll_y2, std::max(0, Data->MAXY2 - gewebe_rows));
+}
+
+void PatternCanvas::mousePressEvent (QMouseEvent* _e)
+{
+	if (_e->button() != Qt::LeftButton) { _e->ignore(); return; }
+	setFocus(Qt::MouseFocusReason);
+	const QPoint p = _e->pos();
+	const bool shift = _e->modifiers().testFlag(Qt::ShiftModifier);
+	frm->handleCanvasMousePress(p.x(), p.y(), shift);
+	_e->accept();
+}
+
+void PatternCanvas::keyPressEvent (QKeyEvent* _e)
+{
+	frm->handleCanvasKeyPress(_e->key(), int(_e->modifiers()));
+	_e->accept();
 }
 
 void PatternCanvas::wheelEvent (QWheelEvent* _e)
