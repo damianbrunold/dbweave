@@ -29,8 +29,10 @@
 #include "mainwindow.h"
 #include "cursor.h"
 #include "enums.h"
+#include "datamodule.h"
 
 #include <Qt>
+#include <algorithm>
 
 /*  Apply a state-apply op at the current cursor position of the
     active field. Used by Space and digit-0 to paint / clear; the
@@ -78,21 +80,28 @@ void __fastcall TDBWFRM::handleCanvasKeyPress (int _key, int _modifiers)
 	    select-only convention from the keyboard layer. The Move*
 	    methods' _select flag comes through as shift only.          */
 
+	/*  Ctrl / Alt widens the arrow step to speed navigation.
+	    Legacy used the field's strongline distance; the port fixes
+	    it at 4 / 8 cells which matches the default strongline=4. */
+	const bool alt  = (_modifiers & Qt::AltModifier)     != 0;
+	const bool ctrl = (_modifiers & Qt::ControlModifier) != 0;
+	const int  step = alt ? 8 : (ctrl ? 4 : 1);
+
 	switch (_key) {
 	case Qt::Key_Left:
-		cursorhandler->MoveCursorLeft(1, shift);
+		cursorhandler->MoveCursorLeft(step, shift);
 		refresh();
 		return;
 	case Qt::Key_Right:
-		cursorhandler->MoveCursorRight(1, shift);
+		cursorhandler->MoveCursorRight(step, shift);
 		refresh();
 		return;
 	case Qt::Key_Up:
-		cursorhandler->MoveCursorUp(1, shift);
+		cursorhandler->MoveCursorUp(step, shift);
 		refresh();
 		return;
 	case Qt::Key_Down:
-		cursorhandler->MoveCursorDown(1, shift);
+		cursorhandler->MoveCursorDown(step, shift);
 		refresh();
 		return;
 
@@ -112,6 +121,107 @@ void __fastcall TDBWFRM::handleCanvasKeyPress (int _key, int _modifiers)
 		cursorhandler->GotoPrevField();
 		refresh();
 		return;
+
+	case Qt::Key_Home: {
+		/*  Jump cursor to the first visible column of the active
+		    field; scroll to expose column 0 when already there.   */
+		FeldBase* fb = nullptr;
+		int* sx = nullptr; int sy = 0; FELD f = kbd_field;
+		switch (kbd_field) {
+		case GEWEBE:       fb = &gewebe;       sx = &scroll_x1; sy = scroll_y2; break;
+		case EINZUG:       fb = &einzug;       sx = &scroll_x1; sy = scroll_y1; break;
+		case BLATTEINZUG:  fb = &blatteinzug;  sx = &scroll_x1; sy = 0;         break;
+		case KETTFARBEN:   fb = &kettfarben;   sx = &scroll_x1; sy = 0;         break;
+		case AUFKNUEPFUNG: fb = &aufknuepfung; sx = &scroll_x2; sy = scroll_y1; break;
+		case TRITTFOLGE:   fb = &trittfolge;   sx = &scroll_x2; sy = scroll_y2; break;
+		default: return;
+		}
+		if (fb && sx) {
+			if (fb->kbd.i > 0) {
+				cursorhandler->SetCursor(f, *sx, sy + fb->kbd.j, true);
+			} else {
+				*sx = 0;
+				cursorhandler->SetCursor(f, 0, sy + fb->kbd.j, true);
+			}
+			refresh();
+		}
+		return;
+	}
+
+	case Qt::Key_End: {
+		FeldBase* fb = nullptr;
+		int* sx = nullptr; int sy = 0; int maxx = 0; FELD f = kbd_field;
+		switch (kbd_field) {
+		case GEWEBE:       fb = &gewebe;       sx = &scroll_x1; sy = scroll_y2; maxx = Data->MAXX1; break;
+		case EINZUG:       fb = &einzug;       sx = &scroll_x1; sy = scroll_y1; maxx = Data->MAXX1; break;
+		case BLATTEINZUG:  fb = &blatteinzug;  sx = &scroll_x1; sy = 0;         maxx = Data->MAXX1; break;
+		case KETTFARBEN:   fb = &kettfarben;   sx = &scroll_x1; sy = 0;         maxx = Data->MAXX1; break;
+		case AUFKNUEPFUNG: fb = &aufknuepfung; sx = &scroll_x2; sy = scroll_y1; maxx = Data->MAXX2; break;
+		case TRITTFOLGE:   fb = &trittfolge;   sx = &scroll_x2; sy = scroll_y2; maxx = Data->MAXX2; break;
+		default: return;
+		}
+		if (fb && sx) {
+			const int cols = fb->gw > 0 ? fb->pos.width / fb->gw : 0;
+			if (fb->kbd.i < cols - 1) {
+				cursorhandler->SetCursor(f, *sx + cols - 1, sy + fb->kbd.j, true);
+			} else {
+				*sx = std::max(0, maxx - cols);
+				cursorhandler->SetCursor(f, maxx - 1, sy + fb->kbd.j, true);
+			}
+			refresh();
+		}
+		return;
+	}
+
+	case Qt::Key_PageUp: {
+		/*  The y axis grows up in dbweave; PageUp moves the cursor
+		    toward higher j. */
+		FeldBase* fb = nullptr;
+		int* sy = nullptr; int sx = 0; int maxy = 0; FELD f = kbd_field;
+		switch (kbd_field) {
+		case GEWEBE:       fb = &gewebe;       sx = scroll_x1; sy = &scroll_y2; maxy = Data->MAXY2; break;
+		case EINZUG:       fb = &einzug;       sx = scroll_x1; sy = &scroll_y1; maxy = Data->MAXY1; break;
+		case AUFKNUEPFUNG: fb = &aufknuepfung; sx = scroll_x2; sy = &scroll_y1; maxy = Data->MAXY1; break;
+		case TRITTFOLGE:   fb = &trittfolge;   sx = scroll_x2; sy = &scroll_y2; maxy = Data->MAXY2; break;
+		case SCHUSSFARBEN: fb = &schussfarben; sx = 0;         sy = &scroll_y2; maxy = Data->MAXY2; break;
+		default: return;
+		}
+		if (fb && sy) {
+			const int rows = fb->gh > 0 ? fb->pos.height / fb->gh : 0;
+			if (fb->kbd.j < rows - 1) {
+				cursorhandler->SetCursor(f, sx + fb->kbd.i, *sy + rows - 1, true);
+			} else {
+				*sy = std::min(*sy + rows, std::max(0, maxy - rows));
+				cursorhandler->SetCursor(f, sx + fb->kbd.i, *sy + rows - 1, true);
+			}
+			refresh();
+		}
+		return;
+	}
+
+	case Qt::Key_PageDown: {
+		FeldBase* fb = nullptr;
+		int* sy = nullptr; int sx = 0; FELD f = kbd_field;
+		switch (kbd_field) {
+		case GEWEBE:       fb = &gewebe;       sx = scroll_x1; sy = &scroll_y2; break;
+		case EINZUG:       fb = &einzug;       sx = scroll_x1; sy = &scroll_y1; break;
+		case AUFKNUEPFUNG: fb = &aufknuepfung; sx = scroll_x2; sy = &scroll_y1; break;
+		case TRITTFOLGE:   fb = &trittfolge;   sx = scroll_x2; sy = &scroll_y2; break;
+		case SCHUSSFARBEN: fb = &schussfarben; sx = 0;         sy = &scroll_y2; break;
+		default: return;
+		}
+		if (fb && sy) {
+			const int rows = fb->gh > 0 ? fb->pos.height / fb->gh : 0;
+			if (fb->kbd.j > 0) {
+				cursorhandler->SetCursor(f, sx + fb->kbd.i, *sy, true);
+			} else {
+				*sy = std::max(0, *sy - rows);
+				cursorhandler->SetCursor(f, sx + fb->kbd.i, *sy, true);
+			}
+			refresh();
+		}
+		return;
+	}
 	}
 
 	if (_key >= Qt::Key_0 && _key <= Qt::Key_9) {
