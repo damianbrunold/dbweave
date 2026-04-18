@@ -449,6 +449,21 @@ public:
 	void __fastcall FileSave ();
 	void __fastcall FileSaveAs ();
 
+	/*  --- Most-recently-used files ------------------------------
+	    Up to 6 paths stored via QSettings under
+	    "Brunold Software / DB-WEAVE / mru/{0..5}". The actions and
+	    the "Recent" submenu itself are built once in the ctor;
+	    UpdateMRUMenu rewrites their captions/visibility from the
+	    current `mru` list. */
+	QStringList mru;
+	class QMenu*   mruMenu = nullptr;
+	class QAction* mruActions[6] = { };
+	void __fastcall AddToMRU    (const QString& _filename);
+	void __fastcall LoadMRU     ();
+	void __fastcall SaveMRU     ();
+	void __fastcall UpdateMRUMenu ();
+	void __fastcall OpenFromMRU (int _index);
+
 	/*  --- Input routing ----------------------------------------
 	    Physical-to-logical hit-test: map (X, Y) pixel inside the
 	    canvas to a FELD and viewport-local cell coordinates (_i,

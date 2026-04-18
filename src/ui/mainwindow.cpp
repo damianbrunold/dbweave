@@ -110,6 +110,18 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	QAction* actSave   = fileMenu->addAction(QStringLiteral("&Save"));
 	QAction* actSaveAs = fileMenu->addAction(QStringLiteral("Save &As..."));
 	fileMenu->addSeparator();
+	/*  Recent-files submenu. Six QActions are built up front so
+	    their captions can be rewritten from UpdateMRUMenu without
+	    rebuilding the menu structure.                            */
+	mruMenu = fileMenu->addMenu(QStringLiteral("&Recent"));
+	for (int i = 0; i < 6; i++) {
+		QAction* a = new QAction(this);
+		a->setVisible(false);
+		mruMenu->addAction(a);
+		mruActions[i] = a;
+		connect(a, &QAction::triggered, this, [this, i] { OpenFromMRU(i); });
+	}
+	fileMenu->addSeparator();
 	QAction* actQuit   = fileMenu->addAction(QStringLiteral("&Quit"));
 	actOpen  ->setShortcut(QKeySequence::Open);
 	actSave  ->setShortcut(QKeySequence::Save);
@@ -286,6 +298,9 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	statusBar()->addPermanentWidget(sbRapport);
 	statusBar()->addPermanentWidget(sbZoom);
 	UpdateStatusBar();
+
+	/*  Populate the recent-files submenu from QSettings. */
+	LoadMRU();
 
 	/*  Note: main.cpp explicitly calls seedDemo() after construction
 	    so the freshly-launched app shows cloth. Tests skip it and

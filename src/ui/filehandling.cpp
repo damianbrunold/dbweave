@@ -21,9 +21,12 @@
 #include "fileformat.h"
 #include "loadoptions.h"
 
+#include <QAction>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QMenu>
 #include <QMessageBox>
+#include <QSettings>
 
 static QString fileFilter()
 {
@@ -51,6 +54,7 @@ void __fastcall TDBWFRM::FileOpen ()
 		        .arg(chosen).arg(int(stat)));
 		return;
 	}
+	AddToMRU(chosen);
 	SetAppTitle();
 	refresh();
 }
@@ -77,6 +81,91 @@ void __fastcall TDBWFRM::FileSave ()
 		    QStringLiteral("Could not save '%1'.").arg((QString)filename));
 		return;
 	}
+	AddToMRU((QString)filename);
 	SetModified(false);
 	SetAppTitle();
+}
+
+/*-----------------------------------------------------------------*/
+/*  Recent-files list. Storage via QSettings: six string keys under
+    a "mru" group. The in-memory QStringList is trimmed to 6; the
+    menu captions alias "&1" .. "&6" so Alt+digit opens the slot. */
+
+static constexpr int MRU_MAX = 6;
+
+void __fastcall TDBWFRM::AddToMRU (const QString& _filename)
+{
+	if (_filename.isEmpty()) return;
+	mru.removeAll(_filename);
+	mru.prepend(_filename);
+	while (mru.size() > MRU_MAX) mru.removeLast();
+	UpdateMRUMenu();
+	SaveMRU();
+}
+
+void __fastcall TDBWFRM::LoadMRU ()
+{
+	QSettings settings;
+	settings.beginGroup(QStringLiteral("mru"));
+	mru.clear();
+	for (int i = 0; i < MRU_MAX; i++) {
+		const QString v = settings.value(QString::number(i)).toString();
+		if (!v.isEmpty()) mru.append(v);
+	}
+	settings.endGroup();
+	UpdateMRUMenu();
+}
+
+void __fastcall TDBWFRM::SaveMRU ()
+{
+	QSettings settings;
+	settings.beginGroup(QStringLiteral("mru"));
+	settings.remove(QString());   /* wipe the group */
+	for (int i = 0; i < mru.size(); i++)
+		settings.setValue(QString::number(i), mru.at(i));
+	settings.endGroup();
+}
+
+void __fastcall TDBWFRM::UpdateMRUMenu ()
+{
+	if (!mruMenu) return;
+	for (int i = 0; i < MRU_MAX; i++) {
+		QAction* a = mruActions[i];
+		if (!a) continue;
+		if (i < mru.size()) {
+			const QString path = mru.at(i);
+			const QString shown = QFileInfo(path).fileName();
+			a->setText(QStringLiteral("&%1 %2").arg(i + 1).arg(shown.isEmpty() ? path : shown));
+			a->setToolTip(path);
+			a->setVisible(true);
+		} else {
+			a->setVisible(false);
+		}
+	}
+	mruMenu->setEnabled(!mru.isEmpty());
+}
+
+void __fastcall TDBWFRM::OpenFromMRU (int _index)
+{
+	if (_index < 0 || _index >= mru.size()) return;
+	const QString path = mru.at(_index);
+	if (!QFileInfo::exists(path)) {
+		QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
+		    QStringLiteral("'%1' no longer exists.").arg(path));
+		mru.removeAt(_index);
+		UpdateMRUMenu();
+		SaveMRU();
+		return;
+	}
+	if (file && file->IsOpen()) file->Close();
+	filename = path;
+	LOADSTAT stat = UNKNOWN_FAILURE;
+	if (!Load(stat, LOADALL)) {
+		QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
+		    QStringLiteral("Could not open '%1' (status %2).").arg(path).arg(int(stat)));
+		return;
+	}
+	AddToMRU(path);
+	SetAppTitle();
+	refresh();
 }
