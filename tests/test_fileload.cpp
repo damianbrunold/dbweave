@@ -6,10 +6,12 @@
 #include <QApplication>
 #include <QDir>
 #include <QFileInfo>
+#include <QTemporaryDir>
 #include <QTest>
 
 #include "datamodule.h"
 #include "mainwindow.h"
+#include "hilfslinien.h"
 #include "loadoptions.h"
 
 class TestFileload : public QObject
@@ -107,6 +109,62 @@ private slots:
 		for (int j = 0; j < Data->MAXY1 && !any_used; j++)
 			if (!DBWFRM->freieschaefte[j]) any_used = true;
 		QVERIFY(any_used);
+	}
+
+	void save_then_load_round_trips_fields()
+	{
+		/*  Load satin.dbw, capture its key state, save to a temp file,
+		    wipe TDBWFRM, reload from the temp file, compare. */
+		QTemporaryDir tmp;
+		QVERIFY(tmp.isValid());
+		const QString out = tmp.filePath("roundtrip.dbw");
+
+		DBWFRM->filename = samplePath("satin.dbw");
+		LOADSTAT stat;
+		QVERIFY(DBWFRM->Load(stat, LOADALL));
+
+		/*  Capture expected state. */
+		const int maxx1 = Data->MAXX1;
+		const int maxy1 = Data->MAXY1;
+		const short e0 = DBWFRM->einzug.feld.Get(0);
+		const short e5 = DBWFRM->einzug.feld.Get(5);
+		const char a00 = DBWFRM->aufknuepfung.feld.Get(0, 0);
+		const char t00 = DBWFRM->trittfolge.feld.Get(0, 0);
+
+		/*  Add a guide line so we cover the new hilfslinien round-trip. */
+		DBWFRM->hlines.Add(HL_VERT, HL_LEFT, 7);
+
+		DBWFRM->filename = out;
+		QVERIFY2(DBWFRM->Save(), "Save() returned false");
+
+		/*  Fresh TDBWFRM, load the file we just wrote. */
+		delete DBWFRM;
+		delete Data;
+		Data   = new TData();
+		DBWFRM = new TDBWFRM();
+		DBWFRM->filename = out;
+		QVERIFY(DBWFRM->Load(stat, LOADALL));
+		QCOMPARE(stat, FILE_LOADED);
+
+		QCOMPARE(Data->MAXX1, maxx1);
+		QCOMPARE(Data->MAXY1, maxy1);
+		QCOMPARE(DBWFRM->einzug.feld.Get(0), e0);
+		QCOMPARE(DBWFRM->einzug.feld.Get(5), e5);
+		QCOMPARE(DBWFRM->aufknuepfung.feld.Get(0, 0), a00);
+		QCOMPARE(DBWFRM->trittfolge.feld.Get(0, 0), t00);
+
+		QCOMPARE(DBWFRM->hlines.GetCount(), 1);
+		Hilfslinie* h = DBWFRM->hlines.GetLine(0);
+		QVERIFY(h);
+		QCOMPARE((int)h->typ,  (int)HL_VERT);
+		QCOMPARE((int)h->feld, (int)HL_LEFT);
+		QCOMPARE(h->pos, 7);
+	}
+
+	void save_without_filename_returns_false()
+	{
+		DBWFRM->filename = QString();
+		QVERIFY(!DBWFRM->Save());
 	}
 
 	void multiple_samples_load_cleanly()

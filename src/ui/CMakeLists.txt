@@ -27,6 +27,8 @@ add_library(dbweave_ui STATIC
     patterncanvas.cpp
     draw.cpp
     fileload.cpp
+    filesave.cpp
+    filehandling.cpp
     hilfslinien.cpp
 )
 

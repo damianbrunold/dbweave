@@ -360,6 +360,18 @@ public:
 	    state. Returns true on success; _stat receives a more
 	    detailed outcome in all cases. */
 	bool __fastcall Load (LOADSTAT& _stat, LOADPARTS _loadparts = LOADALL);
+
+	/*  Write the current document state to `filename` in the
+	    @dbw3:file text format. Covers only the sections the
+	    port currently loads (signature, version, data.size,
+	    data.fields, data.palette, data.hilfslinien). Returns
+	    true on success. */
+	bool __fastcall Save ();
+
+	/*  --- File menu handlers ------------------------------------ */
+	void __fastcall FileOpen ();
+	void __fastcall FileSave ();
+	void __fastcall FileSaveAs ();
 };
 
 /*  Matches legacy `extern PACKAGE TDBWFRM *DBWFRM;`. Populated by

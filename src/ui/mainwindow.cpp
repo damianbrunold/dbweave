@@ -19,6 +19,10 @@
 #include "fileformat.h"
 #include "assert_compat.h"
 
+#include <QMenuBar>
+#include <QMenu>
+#include <QKeySequence>
+
 TDBWFRM* DBWFRM = nullptr;
 
 TDBWFRM::TDBWFRM(QWidget* parent)
@@ -91,6 +95,24 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	    parent-child; Qt will delete it with the window. */
 	pattern_canvas = new PatternCanvas(this, this);
 	setCentralWidget(pattern_canvas);
+
+	/*  Minimal File menu -- Open / Save / Save As / Quit. The rest
+	    of the menu bar (Edit / View / Pattern / Loom / Help) lands
+	    alongside the corresponding behaviour in later slices.    */
+	QMenu* fileMenu = menuBar()->addMenu(QStringLiteral("&File"));
+	QAction* actOpen   = fileMenu->addAction(QStringLiteral("&Open..."));
+	QAction* actSave   = fileMenu->addAction(QStringLiteral("&Save"));
+	QAction* actSaveAs = fileMenu->addAction(QStringLiteral("Save &As..."));
+	fileMenu->addSeparator();
+	QAction* actQuit   = fileMenu->addAction(QStringLiteral("&Quit"));
+	actOpen  ->setShortcut(QKeySequence::Open);
+	actSave  ->setShortcut(QKeySequence::Save);
+	actSaveAs->setShortcut(QKeySequence::SaveAs);
+	actQuit  ->setShortcut(QKeySequence::Quit);
+	connect(actOpen,   &QAction::triggered, this, [this] { FileOpen();   });
+	connect(actSave,   &QAction::triggered, this, [this] { FileSave();   });
+	connect(actSaveAs, &QAction::triggered, this, [this] { FileSaveAs(); });
+	connect(actQuit,   &QAction::triggered, this, &TDBWFRM::close);
 
 	/*  Note: main.cpp explicitly calls seedDemo() after construction
 	    so the freshly-launched app shows cloth. Tests skip it and

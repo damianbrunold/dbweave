@@ -67,6 +67,7 @@ private:
 	void LoadDataKettfarben (FfReader* _reader);
 	void LoadDataBlatteinzug (FfReader* _reader);
 	void LoadDataPalette (FfReader* _reader);
+	void LoadDataHilfslinien (FfReader* _reader);
 };
 
 #endif

@@ -16,6 +16,7 @@
 #include "loadmap.h"
 #include "palette.h"
 #include "rapport.h"
+#include "hilfslinien.h"
 #include "assert_compat.h"
 
 #include <QFileInfo>
@@ -162,8 +163,9 @@ void FhLoader::LoadData (FfReader* _reader)
 			_SECTION_MAP("size",   LoadDataSize)
 			SECTION_MAP ("fields", LoadDataFields)
 			SECTION_MAP ("palette", LoadDataPalette)
-			DEFAULT_SECTION   /* webstuhl / blockmuster / bereichmuster /
-			                     hilfslinien -- skipped in this slice */
+			SECTION_MAP ("hilfslinien", LoadDataHilfslinien)
+			DEFAULT_SECTION   /* webstuhl / blockmuster / bereichmuster
+			                     -- skipped in this slice */
 		BEGIN_DEFAULT_MAP
 	END_LOAD_MAP
 }
@@ -273,5 +275,30 @@ void FhLoader::LoadDataPalette (FfReader* _reader)
 {
 	if (Need(LOADPALETTE)) Data->palette->Load(_reader);
 	else                   _reader->SkipSection();
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadDataHilfslinien (FfReader* _reader)
+{
+	if (!Need(LOADALL)) { _reader->SkipSection(); return; }
+
+	int   count = 0;
+	char* list  = nullptr;
+	BEGIN_LOAD_MAP
+		BEGIN_FIELD_MAP
+			_FIELD_MAP_INT("count", count, int)
+			FIELD_MAP_BINARY("list", list)
+			DEFAULT_FIELD
+		BEGIN_SECTION_MAP
+			NO_SECTIONS
+		BEGIN_DEFAULT_MAP
+	END_LOAD_MAP
+
+	mainfrm->hlines.DeleteAll();
+	if (list && count > 0) {
+		const Hilfslinie* entries = reinterpret_cast<const Hilfslinie*>(list);
+		for (int i = 0; i < count; i++)
+			mainfrm->hlines.Add(entries[i].typ, entries[i].feld, entries[i].pos);
+	}
+	delete[] list;
 }
 /*-----------------------------------------------------------------*/
