@@ -308,6 +308,12 @@ public:
 	    selection is empty or on a non-paintable field.           */
 	void __fastcall ApplyRangeToSelection (int _range);
 
+	/*  Re-colour the cells inside the selection to `_range`. Only
+	    non-zero cells get rewritten; if every cell is zero the
+	    whole rectangle is filled with `_range`. Matches legacy
+	    SwitchRange (bound to Shift+Ctrl+digit).                  */
+	void __fastcall SwitchRange (int _range);
+
 	/*  --- Edit-menu operations on the selection ----------------
 	    All bodies live in src/ui/edit.cpp. Each op reads
 	    `selection` (normalises internally), mutates the underlying

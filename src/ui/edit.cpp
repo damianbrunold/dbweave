@@ -815,3 +815,58 @@ void __fastcall TDBWFRM::CentralsymSelection()
 	refresh();
 	if (undo) undo->Snapshot();
 }
+
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::SwitchRange (int _range)
+{
+	RANGE savesel = selection;
+	selection.Normalize();
+	if (!selection.Valid()) { selection = savesel; return; }
+
+	auto switchField = [&](auto get, auto set) {
+		bool empty = true;
+		for (int i = selection.begin.i; i <= selection.end.i; i++)
+			for (int j = selection.begin.j; j <= selection.end.j; j++) {
+				const char c = get(i, j);
+				if (c > 0) {
+					set(i, j, char(_range));
+					empty = false;
+				}
+			}
+		if (empty) {
+			for (int i = selection.begin.i; i <= selection.end.i; i++)
+				for (int j = selection.begin.j; j <= selection.end.j; j++)
+					set(i, j, char(_range));
+		}
+	};
+
+	switch (selection.feld) {
+	case GEWEBE:
+		switchField(
+		    [this](int i, int j) { return gewebe.feld.Get(i, j); },
+		    [this](int i, int j, char v) { gewebe.feld.Set(i, j, v); });
+		break;
+	case AUFKNUEPFUNG:
+		switchField(
+		    [this](int i, int j) { return aufknuepfung.feld.Get(i, j); },
+		    [this](int i, int j, char v) { aufknuepfung.feld.Set(i, j, v); });
+		RecalcGewebe();
+		break;
+	case TRITTFOLGE:
+		if (!(ViewSchlagpatrone && ViewSchlagpatrone->isChecked())) break;
+		switchField(
+		    [this](int i, int j) { return trittfolge.feld.Get(i, j); },
+		    [this](int i, int j, char v) { trittfolge.feld.Set(i, j, v); });
+		for (int j = selection.begin.j; j <= selection.end.j; j++)
+			RecalcTrittfolgeEmpty(j);
+		RecalcGewebe();
+		break;
+	default: break;
+	}
+	recalcRangesAndRapport(this);
+	currentrange = _range;
+	selection = savesel;
+	SetModified();
+	refresh();
+	if (undo) undo->Snapshot();
+}

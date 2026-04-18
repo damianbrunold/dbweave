@@ -288,6 +288,25 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	if (currentrange >= 1 && currentrange <= 9)
 		rangeActions[currentrange - 1]->setChecked(true);
 
+	/*  Three special ranges: AUSHEBUNG / ANBINDUNG / ABBINDUNG.
+	    Legacy bound these to menu entries outside the Range1..9
+	    group; keep them on the same toolbar but visually separated. */
+	rangeBar->addSeparator();
+	auto addSpecial = [&](const QString& label, int r, const QString& tip) {
+		QAction* a = new QAction(label, this);
+		a->setCheckable(true);
+		a->setToolTip(tip);
+		rangeGroup->addAction(a);
+		rangeBar->addAction(a);
+		connect(a, &QAction::triggered, this, [this, r] {
+			currentrange = r;
+			refresh();
+		});
+	};
+	addSpecial(QStringLiteral("L"), AUSHEBUNG, QStringLiteral("Lift out (Aushebung)"));
+	addSpecial(QStringLiteral("B"), ANBINDUNG, QStringLiteral("Binding (Anbindung)"));
+	addSpecial(QStringLiteral("U"), ABBINDUNG, QStringLiteral("Unbinding (Abbindung)"));
+
 	/*  Status-bar panels (right-aligned permanent widgets). */
 	sbField   = new QLabel(this);
 	sbSelect  = new QLabel(this);

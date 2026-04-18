@@ -116,10 +116,15 @@ void __fastcall TDBWFRM::handleCanvasKeyPress (int _key, int _modifiers)
 
 	if (_key >= Qt::Key_0 && _key <= Qt::Key_9) {
 		const int digit = _key - Qt::Key_0;
+		const bool ctrlShift = (_modifiers & Qt::ControlModifier) && (_modifiers & Qt::ShiftModifier);
 		if (digit == 0) {
 			/*  '0' always clears the cell under the cursor, regardless
 			    of any active selection. */
 			applyAtCursor(this, /*_set=*/false, 0);
+		} else if (ctrlShift && selection.Valid()) {
+			/*  Ctrl+Shift+digit: re-colour non-zero cells in the
+			    selection (legacy SwitchRange). */
+			SwitchRange(digit);
 		} else if (selection.Valid()) {
 			/*  Fill the current selection with the picked range. */
 			currentrange = digit;
