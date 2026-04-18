@@ -34,6 +34,7 @@ add_library(dbweave_ui STATIC
     kbdhandling.cpp
     selection.cpp
     statusbar.cpp
+    edit.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)

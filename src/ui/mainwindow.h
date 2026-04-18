@@ -295,6 +295,21 @@ public:
 	    selection is empty or on a non-paintable field.           */
 	void __fastcall ApplyRangeToSelection (int _range);
 
+	/*  --- Edit-menu operations on the selection ----------------
+	    All bodies live in src/ui/edit.cpp. Each op reads
+	    `selection` (normalises internally), mutates the underlying
+	    field, recomputes derived state (gewebe / ranges / rapport)
+	    and snapshots an undo entry. No-op if the selection is
+	    empty or on a non-editable field.                        */
+	bool __fastcall CopySelection  (bool _movecursor = true);  /* true on success */
+	void __fastcall CutSelection   ();
+	void __fastcall PasteSelection (bool _transparent = false);
+	void __fastcall DeleteSelection();
+	void __fastcall InvertSelection();
+	void __fastcall MirrorHorzSelection();
+	void __fastcall MirrorVertSelection();
+	void __fastcall RotateSelection();   /* 90deg, square selections only */
+
 	/*  --- Trittfolge (weft treadling) utilities ------------------
 	    Legacy helpers that read/write the trittfolge.feld and
 	    aufknuepfung.feld state. Click handlers (ClearTrittfolge-

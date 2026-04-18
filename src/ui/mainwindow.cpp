@@ -117,6 +117,36 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	connect(actSaveAs, &QAction::triggered, this, [this] { FileSaveAs(); });
 	connect(actQuit,   &QAction::triggered, this, &TDBWFRM::close);
 
+	/*  Edit menu: clipboard + selection transforms. All operate on
+	    the currently-active selection; they're no-ops if nothing is
+	    selected. The rubber-band selection is built by click+drag in
+	    PatternCanvas.                                            */
+	QMenu* editMenu = menuBar()->addMenu(QStringLiteral("&Edit"));
+	QAction* actCut              = editMenu->addAction(QStringLiteral("Cu&t"));
+	QAction* actCopy             = editMenu->addAction(QStringLiteral("&Copy"));
+	QAction* actPaste            = editMenu->addAction(QStringLiteral("&Paste"));
+	QAction* actPasteTransparent = editMenu->addAction(QStringLiteral("Paste T&ransparent"));
+	QAction* actDelete           = editMenu->addAction(QStringLiteral("&Delete"));
+	editMenu->addSeparator();
+	QAction* actInvert        = editMenu->addAction(QStringLiteral("&Invert"));
+	QAction* actMirrorH       = editMenu->addAction(QStringLiteral("Mirror &Horizontal"));
+	QAction* actMirrorV       = editMenu->addAction(QStringLiteral("Mirror &Vertical"));
+	QAction* actRotate        = editMenu->addAction(QStringLiteral("R&otate 90\xc2\xb0"));
+	actCut  ->setShortcut(QKeySequence::Cut);
+	actCopy ->setShortcut(QKeySequence::Copy);
+	actPaste->setShortcut(QKeySequence::Paste);
+	actPasteTransparent->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_V));
+	actDelete->setShortcut(QKeySequence::Delete);
+	connect(actCut,              &QAction::triggered, this, [this] { CutSelection();         });
+	connect(actCopy,             &QAction::triggered, this, [this] { CopySelection();        });
+	connect(actPaste,            &QAction::triggered, this, [this] { PasteSelection(false);  });
+	connect(actPasteTransparent, &QAction::triggered, this, [this] { PasteSelection(true);   });
+	connect(actDelete,           &QAction::triggered, this, [this] { DeleteSelection();      });
+	connect(actInvert,           &QAction::triggered, this, [this] { InvertSelection();      });
+	connect(actMirrorH,          &QAction::triggered, this, [this] { MirrorHorzSelection();  });
+	connect(actMirrorV,          &QAction::triggered, this, [this] { MirrorVertSelection();  });
+	connect(actRotate,           &QAction::triggered, this, [this] { RotateSelection();      });
+
 	QMenu* viewMenu = menuBar()->addMenu(QStringLiteral("&View"));
 	QAction* actZoomIn     = viewMenu->addAction(QStringLiteral("Zoom &In"));
 	QAction* actZoomOut    = viewMenu->addAction(QStringLiteral("Zoom &Out"));

@@ -4,6 +4,7 @@
     via handleCanvasKeyPress. */
 
 #include <QApplication>
+#include <QClipboard>
 #include <Qt>
 #include <QTest>
 
@@ -144,6 +145,104 @@ private slots:
 		DBWFRM->gewebe.feld.Set(2, 2, (char)4);
 		DBWFRM->handleCanvasKeyPress(Qt::Key_0, 0);
 		QVERIFY((int)DBWFRM->gewebe.feld.Get(2, 2) <= 0);
+	}
+
+	void delete_selection_clears_cells_in_range()
+	{
+		DBWFRM->gewebe.feld.Set(2, 3, (char)1);
+		DBWFRM->gewebe.feld.Set(3, 4, (char)1);
+		DBWFRM->selection.feld  = GEWEBE;
+		DBWFRM->selection.begin = PT(2, 3);
+		DBWFRM->selection.end   = PT(3, 4);
+
+		DBWFRM->DeleteSelection();
+
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(2, 3), 0);
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(3, 4), 0);
+	}
+
+	void copy_paste_round_trips_gewebe_block()
+	{
+		/*  Seed a 2x2 pattern block then copy it. */
+		DBWFRM->gewebe.feld.Set(0, 0, (char)1);
+		DBWFRM->gewebe.feld.Set(1, 0, (char)2);
+		DBWFRM->gewebe.feld.Set(0, 1, (char)3);
+		DBWFRM->gewebe.feld.Set(1, 1, (char)4);
+		DBWFRM->selection.feld  = GEWEBE;
+		DBWFRM->selection.begin = PT(0, 0);
+		DBWFRM->selection.end   = PT(1, 1);
+
+		QVERIFY(DBWFRM->CopySelection(/*_movecursor=*/false));
+
+		/*  Paste at cursor (4, 4). */
+		DBWFRM->cursorhandler->SetCursor(GEWEBE, 4, 4);
+		DBWFRM->kbd_field = GEWEBE;
+		DBWFRM->PasteSelection(/*_transparent=*/false);
+
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(4, 4), 1);
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(5, 4), 2);
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(4, 5), 3);
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(5, 5), 4);
+	}
+
+	void mirror_horz_on_gewebe_flips_left_right()
+	{
+		DBWFRM->gewebe.feld.Set(0, 0, (char)1);
+		DBWFRM->gewebe.feld.Set(2, 0, (char)3);
+		DBWFRM->selection.feld  = GEWEBE;
+		DBWFRM->selection.begin = PT(0, 0);
+		DBWFRM->selection.end   = PT(2, 0);
+
+		DBWFRM->MirrorHorzSelection();
+
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(0, 0), 3);
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(2, 0), 1);
+	}
+
+	void mirror_vert_on_gewebe_flips_top_bottom()
+	{
+		DBWFRM->gewebe.feld.Set(0, 0, (char)1);
+		DBWFRM->gewebe.feld.Set(0, 2, (char)3);
+		DBWFRM->selection.feld  = GEWEBE;
+		DBWFRM->selection.begin = PT(0, 0);
+		DBWFRM->selection.end   = PT(0, 2);
+
+		DBWFRM->MirrorVertSelection();
+
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(0, 0), 3);
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(0, 2), 1);
+	}
+
+	void rotate_requires_square_selection()
+	{
+		/*  Non-square: rotate is a no-op. */
+		DBWFRM->gewebe.feld.Set(0, 0, (char)1);
+		DBWFRM->selection.feld  = GEWEBE;
+		DBWFRM->selection.begin = PT(0, 0);
+		DBWFRM->selection.end   = PT(2, 1);   /* 3x2 -> non-square */
+		DBWFRM->RotateSelection();
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(0, 0), 1);
+	}
+
+	void rotate_90deg_moves_corner_cell()
+	{
+		/*  2x2 selection with only the (0, 0) corner set. After a
+		    90-degree rotation the cell ends up at (0, 1) in the
+		    legacy convention (top-left of the block rotates to the
+		    bottom-left corner due to the y-up grid).              */
+		DBWFRM->gewebe.feld.Set(0, 0, (char)1);
+		DBWFRM->selection.feld  = GEWEBE;
+		DBWFRM->selection.begin = PT(0, 0);
+		DBWFRM->selection.end   = PT(1, 1);
+		DBWFRM->RotateSelection();
+
+		/*  The cell must have moved somewhere in the 2x2 block. */
+		int found = 0;
+		for (int i = 0; i < 2; i++)
+			for (int j = 0; j < 2; j++)
+				if (DBWFRM->gewebe.feld.Get(i, j) == 1) ++found;
+		QCOMPARE(found, 1);
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(0, 0), 0);
 	}
 };
 
