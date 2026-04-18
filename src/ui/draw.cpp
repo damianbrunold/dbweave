@@ -40,6 +40,14 @@
 #include <QPen>
 #include <QRect>
 /*-----------------------------------------------------------------*/
+/*  Helper: look up a palette-indexed thread colour. Extracted so the
+    Farbeffekt / Simulation paths share the same lookup as the legacy
+    GETPALCOL macro (((TColor)Data->palette->GetColor(idx))).         */
+static QColor palCol (int _idx)
+{
+	return qColorFromTColor((TColor)Data->palette->GetColor(_idx));
+}
+/*-----------------------------------------------------------------*/
 void __fastcall TDBWFRM::DrawGewebe (int _i, int _j)
 {
 	QPainter* p = currentPainter;
@@ -63,28 +71,126 @@ void __fastcall TDBWFRM::DrawGewebe (int _i, int _j)
 		return;
 	}
 
-	/*  Phase-5 initial slice: only the GewebeNormal branch is
-	    ported. Inverserepeat / rapport / Farbeffekt / Simulation
-	    paths fall through to "normal" for now, which is correct
-	    for the default view (GewebeNormal checked, everything else
-	    unchecked) and visually close enough for other cases. */
-	const int range = gewebe.feld.Get(scroll_x1 + _i, scroll_y2 + _j);
-
-	QColor fg;
-	if (range == AUSHEBUNG || range == ANBINDUNG || range == ABBINDUNG) {
-		fg = qColorFromTColor(GetRangeColor(range));
-	} else if (range > 0) {
-		fg = qColorFromTColor(GetRangeColor(range));
-	} else {
-		/*  Empty / negative (toggled-off) cell. */
-		p->fillRect(QRect(x + 1, y + 1, xx - x - 1, yy - y - 1), bkground);
+	/*  Dispatch on the three Gewebe* view-mode QActions. Legacy
+	    exposed these as a radio group; the Qt port leaves mutually-
+	    exclusive management to the (pending) menu port. If none is
+	    checked, fall through to the Normal path. */
+	if (GewebeFarbeffekt && GewebeFarbeffekt->isChecked()) {
+		DrawGewebeFarbeffekt(_i, _j, x, y, xx, yy);
+		return;
+	}
+	if (GewebeSimulation && GewebeSimulation->isChecked()) {
+		DrawGewebeSimulation(_i, _j, x, y, xx, yy);
 		return;
 	}
 
-	/*  Legacy: Canvas->Rectangle(x+1, y+1, xx, yy) with brush = fg
-	    and pen = clBtnFace. VCL's Rectangle is inclusive-exclusive;
-	    fillRect gives the same coverage.                        */
-	p->fillRect(QRect(x + 1, y + 1, xx - x - 1, yy - y - 1), fg);
+	/*  Default (GewebeNormal): paint the range colour. */
+	const int range = gewebe.feld.Get(scroll_x1 + _i, scroll_y2 + _j);
+	if (range <= 0) {
+		p->fillRect(QRect(x + 1, y + 1, xx - x - 1, yy - y - 1), bkground);
+		return;
+	}
+	p->fillRect(QRect(x + 1, y + 1, xx - x - 1, yy - y - 1),
+	            qColorFromTColor(GetRangeColor(range)));
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::DrawGewebeFarbeffekt (int _i, int _j, int _x, int _y, int _xx, int _yy)
+{
+	QPainter* p = currentPainter;
+	if (!p) return;
+
+	const char s = gewebe.feld.Get(scroll_x1 + _i, scroll_y2 + _j);
+	bool drawhebung = s > 0 && s != ABBINDUNG;
+	if (sinkingshed) drawhebung = !drawhebung;
+
+	const QColor col = drawhebung
+	    ? palCol(kettfarben.feld.Get(scroll_x1 + _i))
+	    : palCol(schussfarben.feld.Get(scroll_y2 + _j));
+
+	p->fillRect(QRect(_x, _y, _xx - _x, _yy - _y), col);
+
+	if (fewithraster) DrawGewebeRahmen(_i, _j);
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::DrawGewebeSimulation (int _i, int _j, int _x, int _y, int _xx, int _yy)
+{
+	QPainter* p = currentPainter;
+	if (!p) return;
+
+	/*  Thread-width: scale with cell size (gw/5) but give small
+	    cells minimum widths per legacy zoom table.                */
+	int dw = gewebe.gw / 5;
+	int dh = gewebe.gh / 5;
+	if (faktor_kette == 1.0f && faktor_schuss == 1.0f) {
+		switch (currentzoom) {
+			case 0: dw = dh = 1; break;
+			case 1: case 2: case 3: dw = dh = 2; break;
+			case 4: case 5: case 6: case 7: dw = dh = 3; break;
+			case 8: case 9: dw = dh = 4; break;
+		}
+	}
+	if (dw == 0 && gewebe.gw > 2) dw = 1;
+	if (dh == 0 && gewebe.gh > 2) dh = 1;
+
+	const QColor bkg = palette().color(QPalette::Button);
+	p->fillRect(QRect(_x, _y, _xx - _x, _yy - _y), bkg);
+
+	const char s = gewebe.feld.Get(scroll_x1 + _i, scroll_y2 + _j);
+	bool drawhebung = s > 0 && s != ABBINDUNG;
+	if (sinkingshed) drawhebung = !drawhebung;
+
+	const QColor kc = palCol(kettfarben.feld.Get(scroll_x1 + _i));
+	const QColor sc = palCol(schussfarben.feld.Get(scroll_y2 + _j));
+
+	if (drawhebung) {
+		/*  Warp on top: vertical warp strip in kettfarben, with
+		    small weft stubs peeking out above and below.       */
+		p->fillRect(QRect(_x + dw,       _y,             (_xx - dw) - (_x + dw), (_yy) - (_y)), kc);
+		p->fillRect(QRect(_x,            _y + dh,        dw,                     (_yy - dh) - (_y + dh)), sc);
+		p->fillRect(QRect(_xx - dw,      _y + dh,        dw,                     (_yy - dh) - (_y + dh)), sc);
+		p->setPen(QPen(QColor(Qt::black)));
+		p->drawLine(_xx - dw, _y + dh, _xx - dw, _yy - dh);
+	} else {
+		/*  Weft on top: horizontal weft strip in schussfarben, with
+		    warp stubs above and below.                            */
+		p->fillRect(QRect(_x,            _y + dh,        (_xx) - (_x),           (_yy - dh) - (_y + dh)), sc);
+		p->fillRect(QRect(_x + dw,       _y,             (_xx - dw) - (_x + dw), dh), kc);
+		p->fillRect(QRect(_x + dw,       _yy - dh,       (_xx - dw) - (_x + dw), dh), kc);
+		p->setPen(QPen(QColor(Qt::black)));
+		p->drawLine(_x + dw, _yy - dh, _xx - dw, _yy - dh);
+	}
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::DrawGewebeSchuss (int _j)
+{
+	if (gewebe.gw <= 0) return;
+	for (int i = 0; i < gewebe.pos.width / gewebe.gw; i++)
+		DrawGewebe(i, _j);
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::DrawGewebeKette (int _i)
+{
+	if (gewebe.gh <= 0) return;
+	for (int j = 0; j < gewebe.pos.height / gewebe.gh; j++)
+		DrawGewebe(_i, j);
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::DeleteGewebeSchuss (int _j)
+{
+	if (gewebe.gw <= 0) return;
+	for (int i = 0; i < gewebe.pos.width / gewebe.gw; i++) {
+		DrawGewebeRahmen(i, _j);
+		DrawGewebe(i, _j);
+	}
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::DeleteGewebeKette (int _i)
+{
+	if (gewebe.gh <= 0) return;
+	for (int j = 0; j < gewebe.pos.height / gewebe.gh; j++) {
+		DrawGewebeRahmen(_i, j);
+		DrawGewebe(_i, j);
+	}
 }
 /*-----------------------------------------------------------------*/
 void __fastcall TDBWFRM::DrawEinzug (int _i, int _j)

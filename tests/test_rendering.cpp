@@ -12,6 +12,7 @@
 
 #include "datamodule.h"
 #include "mainwindow.h"
+#include "palette.h"
 #include "patterncanvas.h"
 #include "rangecolors.h"
 #include "colors_compat.h"
@@ -290,6 +291,101 @@ private slots:
 		    Check pixel (40, 45). */
 		QImage img = renderCanvas();
 		QCOMPARE(img.pixelColor(40, 45), QColor(Qt::black));
+	}
+
+	/*  ---- Colour overlays ------------------------------------- */
+
+	void farbeffekt_uses_warp_colour_for_warp_up()
+	{
+		/*  Populate kettfarben[2] with a known palette index and
+		    set gewebe(2, 3) = range 1 (positive -> warp is up).
+		    In GewebeFarbeffekt the whole cell is painted in the
+		    warp thread's palette colour. */
+		const int WARP_IDX = 10;
+		Data->palette->SetColor(WARP_IDX, RGB(200, 50, 50));   /* a distinct red */
+		DBWFRM->kettfarben.feld.Set(2, (unsigned char)WARP_IDX);
+		DBWFRM->gewebe.feld.Set(2, 3, (char)1);
+		DBWFRM->GewebeNormal->setChecked(false);
+		DBWFRM->GewebeFarbeffekt->setChecked(true);
+
+		QImage img = renderCanvas();
+
+		const QColor warp = qColorFromTColor(
+		    (TColor)Data->palette->GetColor(WARP_IDX));
+		/*  Cell (2, 3) interior. Farbeffekt paints the full cell
+		    rect (_x, _y) to (_xx, _yy); pixel (25, 45) is strictly
+		    interior.                                               */
+		QCOMPARE(img.pixelColor(25, 45), warp);
+	}
+
+	void farbeffekt_uses_weft_colour_for_warp_down()
+	{
+		const int WEFT_IDX = 11;
+		Data->palette->SetColor(WEFT_IDX, RGB(30, 30, 200));    /* a distinct blue */
+		DBWFRM->schussfarben.feld.Set(5, (unsigned char)WEFT_IDX);
+		/*  gewebe(2, 5) = 0 -> warp is NOT up -> paint weft. */
+		DBWFRM->GewebeNormal->setChecked(false);
+		DBWFRM->GewebeFarbeffekt->setChecked(true);
+
+		QImage img = renderCanvas();
+
+		const QColor weft = qColorFromTColor(
+		    (TColor)Data->palette->GetColor(WEFT_IDX));
+		/*  Cell (2, 5): y_px = H - (5+1)*10 = 20. Interior (25, 25). */
+		QCOMPARE(img.pixelColor(25, 25), weft);
+	}
+
+	void farbeffekt_sinkingshed_inverts_warp_down()
+	{
+		const int WARP_IDX = 12;
+		Data->palette->SetColor(WARP_IDX, RGB(10, 200, 10));
+		DBWFRM->kettfarben.feld.Set(2, (unsigned char)WARP_IDX);
+		/*  gewebe(2, 5) = 0. sinkingshed flips: drawhebung=true -> warp. */
+		DBWFRM->GewebeNormal->setChecked(false);
+		DBWFRM->GewebeFarbeffekt->setChecked(true);
+		DBWFRM->sinkingshed = true;
+
+		QImage img = renderCanvas();
+
+		const QColor warp = qColorFromTColor(
+		    (TColor)Data->palette->GetColor(WARP_IDX));
+		QCOMPARE(img.pixelColor(25, 25), warp);
+
+		DBWFRM->sinkingshed = false;
+	}
+
+	void simulation_paints_both_warp_and_weft()
+	{
+		/*  In Simulation mode, even a "warp up" cell shows BOTH
+		    kettfarben (main vertical strip) and schussfarben
+		    (narrow stubs at top/bottom). Distinct palette entries
+		    let us verify both colours appear inside the cell.   */
+		const int WARP_IDX = 20;
+		const int WEFT_IDX = 21;
+		Data->palette->SetColor(WARP_IDX, RGB(0xA0, 0x20, 0x20));
+		Data->palette->SetColor(WEFT_IDX, RGB(0x20, 0x20, 0xA0));
+		DBWFRM->kettfarben.feld.Set(2, (unsigned char)WARP_IDX);
+		DBWFRM->schussfarben.feld.Set(3, (unsigned char)WEFT_IDX);
+		DBWFRM->gewebe.feld.Set(2, 3, (char)1);
+		DBWFRM->GewebeNormal->setChecked(false);
+		DBWFRM->GewebeSimulation->setChecked(true);
+		DBWFRM->currentzoom = 4;   /* gives dw=dh=3 */
+
+		QImage img = renderCanvas();
+
+		const QColor warp = qColorFromTColor((TColor)Data->palette->GetColor(WARP_IDX));
+		const QColor weft = qColorFromTColor((TColor)Data->palette->GetColor(WEFT_IDX));
+
+		bool saw_warp = false;
+		bool saw_weft = false;
+		for (int y = 40; y < 50 && !(saw_warp && saw_weft); y++)
+			for (int x = 20; x < 30; x++) {
+				const QColor pc = img.pixelColor(x, y);
+				if (pc == warp) saw_warp = true;
+				if (pc == weft) saw_weft = true;
+			}
+		QVERIFY2(saw_warp, "warp colour not found in simulation cell");
+		QVERIFY2(saw_weft, "weft colour not found in simulation cell");
 	}
 };
 

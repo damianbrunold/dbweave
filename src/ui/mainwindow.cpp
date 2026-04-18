@@ -169,10 +169,10 @@ bool __fastcall TDBWFRM::IsInRapport(int _i, int _j)
                                           { return rapporthandler ? rapporthandler->IsInRapport(_i, _j) : false; }
 
 void __fastcall TDBWFRM::DrawHilfslinien()                         {}
-/*  DrawGewebe / DrawEinzug / DrawAufknuepfung / DrawTrittfolge
-    and the four *Rahmen painters live in draw.cpp. */
-void __fastcall TDBWFRM::DrawGewebeKette(int)                      {}
-void __fastcall TDBWFRM::DeleteGewebeKette(int)                    {}
+/*  DrawGewebe / DrawEinzug / DrawAufknuepfung / DrawTrittfolge,
+    the four *Rahmen painters, DrawGewebeFarbeffekt /
+    DrawGewebeSimulation, and DrawGewebeKette / Schuss /
+    DeleteGewebeKette / Schuss all live in draw.cpp. */
 void __fastcall TDBWFRM::_ClearEinzug()                            {}
 void __fastcall TDBWFRM::_ClearAufknuepfung()                      {}
 void __fastcall TDBWFRM::_ClearSchlagpatrone()                     {}
@@ -184,8 +184,6 @@ void __fastcall TDBWFRM::RecalcFreieTritte()                       {}
 void __fastcall TDBWFRM::ClearGewebe(int, int)                     {}
 void __fastcall TDBWFRM::RedrawGewebe(int, int)                    {}
 void __fastcall TDBWFRM::RedrawAufknuepfung(int, int)              {}
-void __fastcall TDBWFRM::DrawGewebeSchuss(int)                     {}
-void __fastcall TDBWFRM::DeleteGewebeSchuss(int)                   {}
 
 void __fastcall TDBWFRM::ClearSelection()                        {}
 void __fastcall TDBWFRM::ResizeSelection(int, int, FELD, bool)   {}

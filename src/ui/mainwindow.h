@@ -125,6 +125,21 @@ public:
 	DARSTELLUNG darst_abbindung           = AUSGEFUELLT;
 	DARSTELLUNG schlagpatronendarstellung = AUSGEFUELLT;
 
+	/*  GewebeFarbeffekt / GewebeSimulation state:
+	    sinkingshed  -- invert the "warp up" check for sinking-shed
+	                    looms.
+	    fewithraster -- in Farbeffekt mode, overlay the Rahmen after
+	                    the fill.
+	    faktor_kette / faktor_schuss -- thread-density factors for
+	                    Simulation (default 1.0).
+	    currentzoom  -- cell-size-derived zoom 0..9; picks shadow-
+	                    line width in Simulation.                   */
+	bool  sinkingshed  = false;
+	bool  fewithraster = false;
+	float faktor_kette  = 1.0f;
+	float faktor_schuss = 1.0f;
+	int   currentzoom   = 4;
+
 	/*  Strongline colour for the heavy grid lines. */
 	QColor strongclr = QColor(Qt::black);
 
@@ -205,6 +220,8 @@ public:
 	void __fastcall DrawHilfslinien();
 	void __fastcall DrawGewebe (int _i, int _j);
 	void __fastcall DrawGewebeRahmen (int _i, int _j);
+	void __fastcall DrawGewebeFarbeffekt  (int _i, int _j, int _x, int _y, int _xx, int _yy);
+	void __fastcall DrawGewebeSimulation  (int _i, int _j, int _x, int _y, int _xx, int _yy);
 	void __fastcall DrawEinzug (int _i, int _j);
 	void __fastcall DrawAufknuepfung (int _i, int _j);
 	void __fastcall DrawTrittfolge (int _i, int _j);
