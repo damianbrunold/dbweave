@@ -46,8 +46,10 @@ protected:
 	void paintEvent      (QPaintEvent*  _e) override;
 	void resizeEvent     (QResizeEvent* _e) override;
 	void wheelEvent      (QWheelEvent*  _e) override;
-	void mousePressEvent (QMouseEvent*  _e) override;
-	void keyPressEvent   (QKeyEvent*    _e) override;
+	void mousePressEvent   (QMouseEvent* _e) override;
+	void mouseMoveEvent    (QMouseEvent* _e) override;
+	void mouseReleaseEvent (QMouseEvent* _e) override;
+	void keyPressEvent     (QKeyEvent*   _e) override;
 
 private:
 	TDBWFRM* frm;

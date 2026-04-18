@@ -257,8 +257,6 @@ void __fastcall TDBWFRM::ClearGewebe(int, int)                     {}
 void __fastcall TDBWFRM::RedrawGewebe(int, int)                    {}
 void __fastcall TDBWFRM::RedrawAufknuepfung(int, int)              {}
 
-void __fastcall TDBWFRM::ClearSelection()                        {}
-void __fastcall TDBWFRM::ResizeSelection(int, int, FELD, bool)   {}
 
 void __fastcall TDBWFRM::seedDemo()
 {

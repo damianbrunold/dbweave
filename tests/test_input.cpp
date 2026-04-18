@@ -82,24 +82,44 @@ private slots:
 		QCOMPARE((int)f, (int)INVALID);
 	}
 
-	void left_click_on_gewebe_paints_current_range()
+	void left_click_on_gewebe_starts_selection_at_cell()
 	{
+		/*  Legacy semantic: a click on the main grids starts a
+		    rubber-band selection; it does not paint the cell. The
+		    cell is painted via a subsequent Range1..9 digit press or
+		    drag. The cursor follows the click regardless. */
 		DBWFRM->currentrange = 3;
-		/*  Interior of cell (2, 5) -> (x=25, y=75). */
 		DBWFRM->handleCanvasMousePress(25, 75, /*shift=*/false);
-		QCOMPARE((int)DBWFRM->gewebe.feld.Get(2, 5), 3);
 		QCOMPARE(DBWFRM->cursorhandler->CurrentFeld(), GEWEBE);
+		QVERIFY(DBWFRM->selection.Valid());
+		QCOMPARE(DBWFRM->selection.feld, GEWEBE);
+		QCOMPARE(DBWFRM->selection.begin.i, 2);
+		QCOMPARE(DBWFRM->selection.begin.j, 5);
+		/*  Cell itself untouched by the click. */
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(2, 5), 0);
 	}
 
-	void shift_click_clears_cell()
+	void drag_on_gewebe_grows_selection()
 	{
-		/*  Legacy "clear" semantics: DoSetGewebe flips the sign of a
-		    positive cell, marking it as "removed in overlay". A
-		    subsequent non-shift click toggles it back. Test the flip
-		    rather than an outright zero.                            */
-		DBWFRM->gewebe.feld.Set(2, 5, (char)5);
-		DBWFRM->handleCanvasMousePress(25, 75, /*shift=*/true);
-		QVERIFY((int)DBWFRM->gewebe.feld.Get(2, 5) <= 0);
+		DBWFRM->handleCanvasMousePress(25, 75, /*shift=*/false);
+		/*  Drag to cell (4, 3): x=45, y = 50+80-(3+1)*10 = 90+5 = 95. */
+		DBWFRM->handleCanvasMouseMove (45, 95, /*shift=*/false);
+		QVERIFY(DBWFRM->selection.Valid());
+		QCOMPARE(DBWFRM->selection.end.i, 4);
+		QCOMPARE(DBWFRM->selection.end.j, 3);
+	}
+
+	void digit_fills_selection_with_range()
+	{
+		DBWFRM->handleCanvasMousePress(25, 75, /*shift=*/false);
+		DBWFRM->handleCanvasMouseMove (45, 95, /*shift=*/false);
+		DBWFRM->handleCanvasMouseRelease();
+		DBWFRM->handleCanvasKeyPress(Qt::Key_4, 0);
+		/*  Normalised selection spans i=2..4, j=3..5. Every cell
+		    should now carry range 4.                          */
+		for (int i = 2; i <= 4; i++)
+			for (int j = 3; j <= 5; j++)
+				QCOMPARE((int)DBWFRM->gewebe.feld.Get(i, j), 4);
 	}
 
 	void arrow_key_moves_cursor()

@@ -260,9 +260,31 @@ public:
 	void __fastcall RecalcFreieSchaefte();
 	void __fastcall RecalcFreieTritte();
 
-	/*  Selection-management stubs (body lands with selection.cpp). */
+	/*  --- Selection --------------------------------------------
+	    The RANGE tracks a rubber-band rectangle on GEWEBE / EINZUG
+	    / AUFKNUEPFUNG / TRITTFOLGE / BLATTEINZUG / KETTFARBEN /
+	    SCHUSSFARBEN. Coordinates are absolute (include scroll). */
+	RANGE selection;
+
+	/*  Mouse-drag tracking. md stores the data-coord cell where the
+	    left button went down; md_feld is the field the drag began in
+	    (used so dragging out of the start field is ignored). */
+	bool mousedown = false;
+	FELD md_feld   = INVALID;
+	PT   md;
+	int  lastfarbei       = -1;  /* drag-paint de-dup, kettfarben */
+	int  lastfarbej       = -1;  /* drag-paint de-dup, schussfarben */
+	int  lastblatteinzugi = -1;  /* drag-paint de-dup, blatteinzug */
+
 	void __fastcall ClearSelection();
-	void __fastcall ResizeSelection (int _i, int _j, FELD _feld, bool _fromMouse);
+	void __fastcall DrawSelection();
+	void __fastcall ResizeSelection (int _i, int _j, FELD _feld, bool _square);
+
+	/*  Apply `_range` (1..9) to every cell inside the current
+	    selection using the matching SetGewebe / SetAufknuepfung /
+	    SetTrittfolge op. Used by digit-key shortcuts. No-op if the
+	    selection is empty or on a non-paintable field.           */
+	void __fastcall ApplyRangeToSelection (int _range);
 
 	/*  --- Trittfolge (weft treadling) utilities ------------------
 	    Legacy helpers that read/write the trittfolge.feld and
@@ -389,10 +411,13 @@ public:
 	    resulting feld. */
 	void __fastcall Physical2Logical (int _x, int _y, FELD& _feld, int& _i, int& _j);
 
-	/*  Mouse-click handler invoked from PatternCanvas::mousePress-
-	    Event. Sets the cursor to the clicked cell and drives the
-	    corresponding Set* state-apply op for paintable fields. */
-	void __fastcall handleCanvasMousePress (int _x, int _y, bool _shift);
+	/*  Mouse-button handlers invoked from PatternCanvas mouse events.
+	    Press starts a selection / paints the initial cell; Move
+	    grows the rubber-band or drag-paints a 1-D strip; Release
+	    clears the drag state. */
+	void __fastcall handleCanvasMousePress   (int _x, int _y, bool _shift);
+	void __fastcall handleCanvasMouseMove    (int _x, int _y, bool _shift);
+	void __fastcall handleCanvasMouseRelease ();
 
 	/*  Key-down handler invoked from PatternCanvas::keyPressEvent.
 	    Drives cursor motion (arrow keys), range selection (digits),

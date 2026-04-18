@@ -32,6 +32,7 @@ add_library(dbweave_ui STATIC
     hilfslinien.cpp
     mousehandling.cpp
     kbdhandling.cpp
+    selection.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)

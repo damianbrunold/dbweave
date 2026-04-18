@@ -134,6 +134,22 @@ void PatternCanvas::mousePressEvent (QMouseEvent* _e)
 	_e->accept();
 }
 
+void PatternCanvas::mouseMoveEvent (QMouseEvent* _e)
+{
+	if (!(_e->buttons() & Qt::LeftButton)) { _e->ignore(); return; }
+	const QPoint p = _e->pos();
+	const bool shift = _e->modifiers().testFlag(Qt::ShiftModifier);
+	frm->handleCanvasMouseMove(p.x(), p.y(), shift);
+	_e->accept();
+}
+
+void PatternCanvas::mouseReleaseEvent (QMouseEvent* _e)
+{
+	if (_e->button() != Qt::LeftButton) { _e->ignore(); return; }
+	frm->handleCanvasMouseRelease();
+	_e->accept();
+}
+
 void PatternCanvas::keyPressEvent (QKeyEvent* _e)
 {
 	frm->handleCanvasKeyPress(_e->key(), int(_e->modifiers()));
@@ -226,6 +242,11 @@ void PatternCanvas::paintEvent (QPaintEvent* /*_e*/)
 	    top of cell fills but under the cursor outline. */
 	if (frm->ViewHlines && frm->ViewHlines->isChecked())
 		frm->DrawHilfslinien();
+
+	/*  Rubber-band selection rectangle sits on top of the cells
+	    and guide lines; cursor paints after so it remains visible
+	    even when inside a selection.                          */
+	frm->DrawSelection();
 
 	/*  Cursor outline sits on top of everything so it's visible
 	    no matter which view mode is active. */

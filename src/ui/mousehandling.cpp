@@ -10,16 +10,19 @@
 */
 
 /*  Port scope:
-      * Physical2Logical + HitCheck pixel-to-cell lookup -- full port
-        of the legacy algorithm covering every FELD that currently
-        exists in the port (BLATTEINZUG, KETTFARBEN, EINZUG, GEWEBE,
-        AUFKNUEPFUNG, TRITTFOLGE, SCHUSSFARBEN). Hlinehorz/vert hit
-        rectangles are deferred alongside the mouse-drag-guide-line
-        slice.
-      * handleCanvasMousePress -- minimal click-to-paint: left click
-        sets the cursor to the clicked cell and drives the matching
-        Set* state-apply op. Shift clears; no drag, no rubber-band
-        selection, no tool palette, no right-click context menu.
+      * Physical2Logical + HitCheck pixel-to-cell lookup.
+      * handleCanvasMousePress / Move / Release -- legacy semantics:
+          GEWEBE / EINZUG / AUFKNUEPFUNG / TRITTFOLGE: drag builds a
+              rubber-band selection; Set* is only driven directly on
+              the initial click cell for parity with legacy feedback.
+              A Range1..9 digit key applies currentrange across the
+              selection (ApplyRangeToSelection).
+          BLATTEINZUG / KETTFARBEN / SCHUSSFARBEN: drag paints every
+              new cell crossed (lastfarbei/j / lastblatteinzugi
+              deduplication matches legacy).
+      * Deferred: hlinehorz/vert grab-bar drag, tool palette drawing
+        modes (TOOL_LINE / TOOL_RECT / ...), divider-drag to resize
+        einzug/trittfolge strips, right-click context menu.
 */
 
 #include "mainwindow.h"
@@ -58,6 +61,22 @@ void __fastcall TDBWFRM::Physical2Logical (int _x, int _y, FELD& _feld, int& _i,
 	else if (HitCheck (schussfarben.pos,  _x, _y, 0,         scroll_y2, _i, _j, schussfarben.gw,  schussfarben.gh))            _feld = SCHUSSFARBEN;
 }
 
+/*  Data-coord cell indices for the hit field. Scroll offset differs
+    per field; centralise it here.                                 */
+static void dataCoords (TDBWFRM* frm, FELD f, int vp_i, int vp_j, int& di, int& dj)
+{
+	switch (f) {
+	case GEWEBE:       di = vp_i + frm->scroll_x1; dj = vp_j + frm->scroll_y2; break;
+	case EINZUG:       di = vp_i + frm->scroll_x1; dj = vp_j + frm->scroll_y1; break;
+	case AUFKNUEPFUNG: di = vp_i + frm->scroll_x2; dj = vp_j + frm->scroll_y1; break;
+	case TRITTFOLGE:   di = vp_i + frm->scroll_x2; dj = vp_j + frm->scroll_y2; break;
+	case BLATTEINZUG:
+	case KETTFARBEN:   di = vp_i + frm->scroll_x1; dj = 0;                     break;
+	case SCHUSSFARBEN: di = 0;                     dj = vp_j + frm->scroll_y2; break;
+	default:           di = vp_i;                  dj = vp_j;                  break;
+	}
+}
+
 void __fastcall TDBWFRM::handleCanvasMousePress (int _x, int _y, bool _shift)
 {
 	FELD f;
@@ -65,44 +84,96 @@ void __fastcall TDBWFRM::handleCanvasMousePress (int _x, int _y, bool _shift)
 	Physical2Logical(_x, _y, f, i, j);
 	if (f == INVALID) return;
 
-	const int r = currentrange;
+	mousedown        = true;
+	md_feld          = f;
+	lastfarbei       = -1;
+	lastfarbej       = -1;
+	lastblatteinzugi = -1;
 
-	/*  (i, j) come back from Physical2Logical as viewport-local cell
-	    indices. Cursor SetCursor takes data coords, so it gets
-	    (i + scroll, j + scroll); Set* editor ops expect viewport
-	    coords (they add scroll internally), so they see (i, j)
-	    untouched.                                                 */
+	int di, dj;
+	dataCoords(this, f, i, j, di, dj);
+	md = PT(di, dj);
+
+	if (cursorhandler) cursorhandler->SetCursor(f, di, dj, /*_clearselection=*/true);
+
 	switch (f) {
 	case GEWEBE:
-		if (cursorhandler) cursorhandler->SetCursor(f, i + scroll_x1, j + scroll_y2, true);
-		SetGewebe(i, j, !_shift, r);
-		break;
 	case EINZUG:
-		if (cursorhandler) cursorhandler->SetCursor(f, i + scroll_x1, j + scroll_y1, true);
-		SetEinzug(i, j);
-		break;
 	case AUFKNUEPFUNG:
-		if (cursorhandler) cursorhandler->SetCursor(f, i + scroll_x2, j + scroll_y1, true);
-		SetAufknuepfung(i, j, !_shift, r);
-		break;
 	case TRITTFOLGE:
-		if (cursorhandler) cursorhandler->SetCursor(f, i + scroll_x2, j + scroll_y2, true);
-		SetTrittfolge(i, j, !_shift, r);
+		/*  Start a fresh rubber-band selection at the clicked cell. */
+		ClearSelection();
+		ResizeSelection(di, dj, f, _shift);
 		break;
+
 	case KETTFARBEN:
-		if (cursorhandler) cursorhandler->SetCursor(f, i + scroll_x1, 0, true);
 		SetKettfarben(i);
+		lastfarbei = i;
 		break;
 	case SCHUSSFARBEN:
-		if (cursorhandler) cursorhandler->SetCursor(f, 0, j + scroll_y2, true);
 		SetSchussfarben(j);
+		lastfarbej = j;
 		break;
 	case BLATTEINZUG:
-		if (cursorhandler) cursorhandler->SetCursor(f, i + scroll_x1, 0, true);
 		SetBlatteinzug(i);
+		lastblatteinzugi = i;
 		break;
-	default:
-		break;
+	default: break;
 	}
 	refresh();
+}
+
+void __fastcall TDBWFRM::handleCanvasMouseMove (int _x, int _y, bool _shift)
+{
+	if (!mousedown) return;
+
+	FELD f;
+	int  i, j;
+	Physical2Logical(_x, _y, f, i, j);
+	if (f != md_feld) return;
+
+	int di, dj;
+	dataCoords(this, f, i, j, di, dj);
+
+	switch (f) {
+	case GEWEBE:
+	case EINZUG:
+	case AUFKNUEPFUNG:
+	case TRITTFOLGE:
+		if (cursorhandler) cursorhandler->SetCursor(f, di, dj, /*_clearselection=*/false);
+		ResizeSelection(di, dj, f, _shift);
+		break;
+
+	case KETTFARBEN:
+		if (i != lastfarbei) {
+			SetKettfarben(i);
+			lastfarbei = i;
+			refresh();
+		}
+		break;
+	case SCHUSSFARBEN:
+		if (j != lastfarbej) {
+			SetSchussfarben(j);
+			lastfarbej = j;
+			refresh();
+		}
+		break;
+	case BLATTEINZUG:
+		if (i != lastblatteinzugi) {
+			SetBlatteinzug(i);
+			lastblatteinzugi = i;
+			refresh();
+		}
+		break;
+	default: break;
+	}
+}
+
+void __fastcall TDBWFRM::handleCanvasMouseRelease ()
+{
+	mousedown        = false;
+	md_feld          = INVALID;
+	lastfarbei       = -1;
+	lastfarbej       = -1;
+	lastblatteinzugi = -1;
 }
