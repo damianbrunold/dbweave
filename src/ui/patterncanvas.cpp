@@ -20,6 +20,7 @@
 #include <QWheelEvent>
 #include <QMouseEvent>
 #include <QKeyEvent>
+#include <QScrollBar>
 
 #include <algorithm>
 
@@ -34,6 +35,34 @@ PatternCanvas::PatternCanvas (TDBWFRM* _frm, QWidget* _parent)
 	/*  Accept keyboard focus so arrow-key navigation works the
 	    moment the canvas is clicked. */
 	setFocusPolicy(Qt::StrongFocus);
+
+	/*  Create the four scrollbars as children. They remain hidden
+	    until recomputeLayout sizes them; at that point they're
+	    also show()n (only if their axis actually has off-screen
+	    content).                                               */
+	sbHorz1 = new QScrollBar(Qt::Horizontal, this);
+	sbHorz2 = new QScrollBar(Qt::Horizontal, this);
+	sbVert1 = new QScrollBar(Qt::Vertical,   this);
+	sbVert2 = new QScrollBar(Qt::Vertical,   this);
+	for (QScrollBar* b : { sbHorz1, sbHorz2, sbVert1, sbVert2 }) b->hide();
+
+	connect(sbHorz1, &QScrollBar::valueChanged, this, [this](int v) {
+		if (frm->scroll_x1 == v) return; frm->scroll_x1 = v; update();
+	});
+	connect(sbHorz2, &QScrollBar::valueChanged, this, [this](int v) {
+		if (frm->scroll_x2 == v) return; frm->scroll_x2 = v; update();
+	});
+	connect(sbVert1, &QScrollBar::valueChanged, this, [this](int v) {
+		/*  Legacy inverts sb_vert1 / sb_vert2 so that the top of the
+		    bar corresponds to the top of the viewport (y grows down)
+		    while scroll_y1 / y2 are cell indices growing upward. */
+		const int inv = sbVert1->maximum() - v;
+		if (frm->scroll_y1 == inv) return; frm->scroll_y1 = inv; update();
+	});
+	connect(sbVert2, &QScrollBar::valueChanged, this, [this](int v) {
+		const int inv = sbVert2->maximum() - v;
+		if (frm->scroll_y2 == inv) return; frm->scroll_y2 = inv; update();
+	});
 }
 
 PatternCanvas::~PatternCanvas() = default;
@@ -59,10 +88,17 @@ void PatternCanvas::recomputeLayout (int _gw, int _gh)
 	const int GW = _gw > 0 ? _gw : ZOOM_TABLE[zi];
 	const int GH = _gh > 0 ? _gh : ZOOM_TABLE[zi];
 
-	constexpr int MARGIN = 10;
+	constexpr int MARGIN  = 10;
+	constexpr int SB_SIZE = 16;   /* thickness of a scrollbar channel */
 	const int W = width();
 	const int H = height();
 	if (W < 4*GW || H < 4*GH) return;
+
+	/*  Reserve SB_SIZE at the bottom + right edges for horizontal
+	    and vertical scrollbars. Everything else lays out inside the
+	    reduced rectangle.                                        */
+	const int usableW = W - SB_SIZE;
+	const int usableH = H - SB_SIZE;
 
 	auto cap = [](int area_px, int cell) {
 		const int fit = (area_px - 2*MARGIN) / cell;
@@ -70,19 +106,18 @@ void PatternCanvas::recomputeLayout (int _gw, int _gh)
 	};
 
 	/*  Aufknuepfung: 20 shafts wide, 20 shafts tall (capped to fit). */
-	const int af_cells_x = std::min(20, cap(W / 3,   GW));
-	const int af_cells_y = std::min(20, cap(H / 3,   GH));
+	const int af_cells_x = std::min(20, cap(usableW / 3, GW));
+	const int af_cells_y = std::min(20, cap(usableH / 3, GH));
 	const int af_w = af_cells_x * GW;
 	const int af_h = af_cells_y * GH;
 
 	frm->aufknuepfung.gw = GW; frm->aufknuepfung.gh = GH;
-	frm->aufknuepfung.pos.x0     = W - af_w - MARGIN;
+	frm->aufknuepfung.pos.x0     = usableW - af_w - MARGIN;
 	frm->aufknuepfung.pos.y0     = MARGIN;
 	frm->aufknuepfung.pos.width  = af_w;
 	frm->aufknuepfung.pos.height = af_h;
 
-	/*  Einzug: same height as aufknuepfung, remaining width left.    */
-	const int ez_area_w = W - af_w - 3*MARGIN;
+	const int ez_area_w = usableW - af_w - 3*MARGIN;
 	const int ez_cells  = std::max(0, ez_area_w / GW);
 	frm->einzug.gw = GW; frm->einzug.gh = GH;
 	frm->einzug.pos.x0     = MARGIN;
@@ -90,8 +125,7 @@ void PatternCanvas::recomputeLayout (int _gw, int _gh)
 	frm->einzug.pos.width  = ez_cells * GW;
 	frm->einzug.pos.height = af_h;
 
-	/*  Trittfolge: same width as aufknuepfung, remaining height below. */
-	const int tf_area_h = H - af_h - 3*MARGIN;
+	const int tf_area_h = usableH - af_h - 3*MARGIN;
 	const int tf_rows   = std::max(0, tf_area_h / GH);
 	frm->trittfolge.gw = GW; frm->trittfolge.gh = GH;
 	frm->trittfolge.pos.x0     = frm->aufknuepfung.pos.x0;
@@ -99,7 +133,6 @@ void PatternCanvas::recomputeLayout (int _gw, int _gh)
 	frm->trittfolge.pos.width  = af_w;
 	frm->trittfolge.pos.height = tf_rows * GH;
 
-	/*  Gewebe: main area under einzug and left of trittfolge. */
 	frm->gewebe.gw = GW; frm->gewebe.gh = GH;
 	frm->gewebe.pos.x0     = frm->einzug.pos.x0;
 	frm->gewebe.pos.y0     = frm->trittfolge.pos.y0;
@@ -114,14 +147,75 @@ void PatternCanvas::recomputeLayout (int _gw, int _gh)
 	const int ezaf_rows   = frm->einzug.pos.height / GH;
 	const int tf_cols     = frm->trittfolge.pos.width / GW;
 
+	const int maxX1 = std::max(0, Data->MAXX1 - std::max(einzug_cols, gewebe_cols));
+	const int maxY1 = std::max(0, Data->MAXY1 - ezaf_rows);
+	const int maxX2 = std::max(0, Data->MAXX2 - tf_cols);
+	const int maxY2 = std::max(0, Data->MAXY2 - gewebe_rows);
+
 	auto clamp = [](int& v, int maximum) {
 		if (v < 0) v = 0;
 		if (v > maximum) v = std::max(0, maximum);
 	};
-	clamp(frm->scroll_x1, std::max(0, Data->MAXX1 - std::max(einzug_cols, gewebe_cols)));
-	clamp(frm->scroll_y1, std::max(0, Data->MAXY1 - ezaf_rows));
-	clamp(frm->scroll_x2, std::max(0, Data->MAXX2 - tf_cols));
-	clamp(frm->scroll_y2, std::max(0, Data->MAXY2 - gewebe_rows));
+	clamp(frm->scroll_x1, maxX1);
+	clamp(frm->scroll_y1, maxY1);
+	clamp(frm->scroll_x2, maxX2);
+	clamp(frm->scroll_y2, maxY2);
+
+	/*  Configure and position the four scrollbars. QScrollBar emits
+	    valueChanged on setValue unless the new value equals the old
+	    one; use blockSignals() while we push the current scroll_*
+	    back so the feedback loop doesn't re-trigger update(). */
+
+	auto setupHorz = [&](QScrollBar* sb, int x, int y, int w,
+	                     int maxScroll, int pageCells, int& scrollVal)
+	{
+		if (w <= 0 || pageCells <= 0) { sb->hide(); return; }
+		sb->setGeometry(x, y, w, SB_SIZE);
+		sb->blockSignals(true);
+		sb->setRange(0, maxScroll);
+		sb->setPageStep(pageCells);
+		sb->setSingleStep(1);
+		sb->setValue(scrollVal);
+		sb->blockSignals(false);
+		sb->setVisible(maxScroll > 0);
+	};
+
+	auto setupVert = [&](QScrollBar* sb, int x, int y, int h,
+	                     int maxScroll, int pageCells, int& scrollVal)
+	{
+		if (h <= 0 || pageCells <= 0) { sb->hide(); return; }
+		sb->setGeometry(x, y, SB_SIZE, h);
+		sb->blockSignals(true);
+		sb->setRange(0, maxScroll);
+		sb->setPageStep(pageCells);
+		sb->setSingleStep(1);
+		/*  Invert because the bar top maps to high scroll_y values
+		    in the legacy (y grows up). */
+		sb->setValue(maxScroll - scrollVal);
+		sb->blockSignals(false);
+		sb->setVisible(maxScroll > 0);
+	};
+
+	setupHorz(sbHorz1,
+	          frm->gewebe.pos.x0,
+	          H - SB_SIZE,
+	          frm->gewebe.pos.width,
+	          maxX1, gewebe_cols, frm->scroll_x1);
+	setupHorz(sbHorz2,
+	          frm->trittfolge.pos.x0,
+	          H - SB_SIZE,
+	          frm->trittfolge.pos.width,
+	          maxX2, tf_cols, frm->scroll_x2);
+	setupVert(sbVert1,
+	          W - SB_SIZE,
+	          frm->aufknuepfung.pos.y0,
+	          frm->aufknuepfung.pos.height,
+	          maxY1, ezaf_rows, frm->scroll_y1);
+	setupVert(sbVert2,
+	          W - SB_SIZE,
+	          frm->gewebe.pos.y0,
+	          frm->gewebe.pos.height,
+	          maxY2, gewebe_rows, frm->scroll_y2);
 }
 
 void PatternCanvas::mousePressEvent (QMouseEvent* _e)
@@ -168,13 +262,16 @@ void PatternCanvas::wheelEvent (QWheelEvent* _e)
 		if (steps > 0) for (int i = 0; i < steps; i++)  frm->zoomIn();
 		else            for (int i = 0; i < -steps; i++) frm->zoomOut();
 	} else if (_e->modifiers().testFlag(Qt::ShiftModifier)) {
-		frm->scroll_x1 = std::max(0, frm->scroll_x1 - steps);
-		frm->scroll_x2 = std::max(0, frm->scroll_x2 - steps);
-		update();
+		/*  Route through the scrollbars so their thumb position
+		    tracks the wheel-driven scroll. The valueChanged signal
+		    writes back to frm->scroll_* and triggers update().     */
+		if (sbHorz1->isVisible()) sbHorz1->setValue(sbHorz1->value() - steps);
+		if (sbHorz2->isVisible()) sbHorz2->setValue(sbHorz2->value() - steps);
 	} else {
-		frm->scroll_y2 = std::max(0, frm->scroll_y2 + steps);
-		frm->scroll_y1 = std::max(0, frm->scroll_y1 + steps);
-		update();
+		/*  Vertical scrollbars use inverted values, so a "wheel
+		    down => content moves up" matches a value increase. */
+		if (sbVert1->isVisible()) sbVert1->setValue(sbVert1->value() - steps);
+		if (sbVert2->isVisible()) sbVert2->setValue(sbVert2->value() - steps);
 	}
 	_e->accept();
 }

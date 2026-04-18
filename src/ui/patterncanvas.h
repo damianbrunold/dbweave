@@ -25,6 +25,7 @@
 
 #include <QWidget>
 
+class QScrollBar;
 class TDBWFRM;
 
 class PatternCanvas : public QWidget
@@ -57,6 +58,16 @@ private:
 	    place field positions set this to true after calling resize()
 	    so subsequent resize events don't stomp their layout.         */
 	bool has_laid_out = false;
+
+	/*  Four scrollbars matching legacy sb_horz1 / sb_horz2 / sb_vert1
+	    / sb_vert2: one per (scroll_x1, scroll_x2, scroll_y1, scroll_y2)
+	    axis. Positioned in recomputeLayout along the matching field
+	    extents; their value is bound to the corresponding frm->scroll_*
+	    member and a change triggers update().                       */
+	QScrollBar* sbHorz1 = nullptr;   /* warp axis   (scroll_x1) */
+	QScrollBar* sbHorz2 = nullptr;   /* treadle     (scroll_x2) */
+	QScrollBar* sbVert1 = nullptr;   /* shaft axis  (scroll_y1) */
+	QScrollBar* sbVert2 = nullptr;   /* weft axis   (scroll_y2) */
 };
 
 #endif
