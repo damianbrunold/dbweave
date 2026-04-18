@@ -81,36 +81,36 @@ void __fastcall TDBWFRM::handleCanvasKeyPress (int _key, int _modifiers)
 	switch (_key) {
 	case Qt::Key_Left:
 		cursorhandler->MoveCursorLeft(1, shift);
-		update();
+		refresh();
 		return;
 	case Qt::Key_Right:
 		cursorhandler->MoveCursorRight(1, shift);
-		update();
+		refresh();
 		return;
 	case Qt::Key_Up:
 		cursorhandler->MoveCursorUp(1, shift);
-		update();
+		refresh();
 		return;
 	case Qt::Key_Down:
 		cursorhandler->MoveCursorDown(1, shift);
-		update();
+		refresh();
 		return;
 
 	case Qt::Key_Space:
 		applyAtCursor(this, /*_set=*/!shift, currentrange);
-		update();
+		refresh();
 		return;
 
 	case Qt::Key_Return:
 	case Qt::Key_Enter:
 	case Qt::Key_Tab:
 		cursorhandler->GotoNextField();
-		update();
+		refresh();
 		return;
 
 	case Qt::Key_Backtab:
 		cursorhandler->GotoPrevField();
-		update();
+		refresh();
 		return;
 	}
 
@@ -122,6 +122,6 @@ void __fastcall TDBWFRM::handleCanvasKeyPress (int _key, int _modifiers)
 			currentrange = digit;
 		}
 		UpdateStatusBar();
-		update();
+		refresh();
 	}
 }

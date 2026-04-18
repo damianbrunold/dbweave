@@ -32,25 +32,21 @@ int main (int argc, char* argv[])
 	Data   = new TData();
 	DBWFRM = new TDBWFRM();
 
-	/*  If the user passed a .dbw path on the command line, load it;
-	    otherwise seed the 2/2 demo twill so the launched app shows
-	    something. Remove the demo seed once a proper File | Open
-	    menu lands.                                                */
+	/*  If the user passed a .dbw path on the command line, load it.
+	    Otherwise start with an empty pattern -- File | Open is now
+	    available from the menu. */
 	const QStringList args = QApplication::arguments();
-	bool loaded = false;
 	if (args.size() >= 2) {
 		const QString path = args.at(1);
 		if (QFileInfo::exists(path)) {
 			DBWFRM->filename = path;
 			LOADSTAT stat = UNKNOWN_FAILURE;
-			loaded = DBWFRM->Load(stat, LOADALL);
-			if (!loaded) {
+			if (!DBWFRM->Load(stat, LOADALL)) {
 				QMessageBox::warning(DBWFRM, QStringLiteral("DB-WEAVE"),
 				    QStringLiteral("Could not load '%1' (status %2)").arg(path).arg(int(stat)));
 			}
 		}
 	}
-	if (!loaded) DBWFRM->seedDemo();
 	DBWFRM->resize(1024, 768);
 
 	DBWFRM->show();

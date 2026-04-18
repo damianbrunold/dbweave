@@ -50,7 +50,7 @@ void __fastcall TDBWFRM::SetTrittfolge (int _i, int _j, bool _set, int _range)
 
 	UpdateRapport();
 	SetModified();
-	update();
+	refresh();
 
 	dbw3_assert (undo!=0);
 	if (undo) undo->Snapshot();

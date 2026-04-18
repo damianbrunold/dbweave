@@ -25,7 +25,7 @@
 void __fastcall TDBWFRM::SetBlatteinzug (int _i)
 {
 	DoSetBlatteinzug (_i);
-	update();    /* legacy painted inline; defer to paintEvent */
+	refresh();    /* legacy painted inline; defer to paintEvent */
 
 	dbw3_assert (undo!=0);
 	if (undo) undo->Snapshot();

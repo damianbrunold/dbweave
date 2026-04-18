@@ -104,5 +104,5 @@ void __fastcall TDBWFRM::handleCanvasMousePress (int _x, int _y, bool _shift)
 	default:
 		break;
 	}
-	update();
+	refresh();
 }

@@ -19,7 +19,7 @@
 void __fastcall TDBWFRM::SetKettfarben (int _i)
 {
 	DoSetKettfarben (_i);
-	update();
+	refresh();
 
 	dbw3_assert (undo!=0);
 	if (undo) undo->Snapshot();
@@ -43,7 +43,7 @@ void __fastcall TDBWFRM::DoSetKettfarben (int _i)
 void __fastcall TDBWFRM::SetSchussfarben (int _j)
 {
 	DoSetSchussfarben (_j);
-	update();
+	refresh();
 
 	dbw3_assert (undo!=0);
 	if (undo) undo->Snapshot();

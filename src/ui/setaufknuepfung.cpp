@@ -41,7 +41,7 @@ void __fastcall TDBWFRM::DoSetAufknuepfung (int _i, int _j, bool _set, int _rang
 	    IsEmptyTritt (scroll_x2+_i))
 	{
 		SetModified();
-		update();
+		refresh();
 		return;
 	}
 
@@ -85,6 +85,6 @@ void __fastcall TDBWFRM::DoSetAufknuepfung (int _i, int _j, bool _set, int _rang
 	UpdateRapport();
 
 	SetModified();
-	update();
+	refresh();
 }
 /*-----------------------------------------------------------------*/

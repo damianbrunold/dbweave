@@ -54,7 +54,7 @@ void __fastcall TDBWFRM::SetEinzug (int _i, int _j)
 
 	UpdateRapport();
 	SetModified();
-	update();
+	refresh();
 
 	dbw3_assert (undo!=0);
 	if (undo) undo->Snapshot();

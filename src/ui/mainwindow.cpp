@@ -143,12 +143,20 @@ TDBWFRM::~TDBWFRM()
 	/*  QAction members are owned by `this` via QObject parenting. */
 }
 
+void TDBWFRM::refresh()
+{
+	/*  Repaint the pattern canvas. QWidget::update() on the main
+	    window only invalidates the window chrome; children paint
+	    independently in Qt. */
+	if (pattern_canvas) pattern_canvas->update();
+}
+
 void __fastcall TDBWFRM::zoomIn()
 {
 	if (currentzoom >= 9) return;
 	++currentzoom;
 	if (pattern_canvas) pattern_canvas->recomputeLayout();
-	update();
+	refresh();
 	SetModified();
 }
 
@@ -157,7 +165,7 @@ void __fastcall TDBWFRM::zoomOut()
 	if (currentzoom <= 0) return;
 	--currentzoom;
 	if (pattern_canvas) pattern_canvas->recomputeLayout();
-	update();
+	refresh();
 	SetModified();
 }
 
@@ -167,7 +175,7 @@ void __fastcall TDBWFRM::zoomNormal()
 	if (currentzoom == 3) return;
 	currentzoom = 3;
 	if (pattern_canvas) pattern_canvas->recomputeLayout();
-	update();
+	refresh();
 	SetModified();
 }
 
@@ -211,14 +219,14 @@ void __fastcall TDBWFRM::RecalcGewebe()
 	}
 
 	setCursor(old);
-	update();
+	refresh();
 }
 void __fastcall TDBWFRM::SetModified(bool)    {}
 void __fastcall TDBWFRM::SetCursor(int, int)  {}
 void __fastcall TDBWFRM::SetAppTitle()        {}
 void __fastcall TDBWFRM::UpdateStatusBar()    {}
 void __fastcall TDBWFRM::UpdateScrollbars()   {}
-void __fastcall TDBWFRM::InvalidateFeld(const GRIDPOS&) { update(); }
+void __fastcall TDBWFRM::InvalidateFeld(const GRIDPOS&) { refresh(); }
 
 void __fastcall TDBWFRM::RearrangeSchaefte()
 {

@@ -199,7 +199,7 @@ void __fastcall UrUndoItem::Undo (TDBWFRM* _mainfrm)
 	_mainfrm->SetCursor (kbd_pos.i, kbd_pos.j);
 
 	_mainfrm->setCursor(old);
-	_mainfrm->update();        /* legacy Invalidate() -> QWidget::update() */
+	_mainfrm->refresh();        /* legacy Invalidate() -> QWidget::update() */
 	_mainfrm->SetModified();
 }
 /*-----------------------------------------------------------------*/

@@ -52,7 +52,7 @@ void __fastcall TDBWFRM::FileOpen ()
 		return;
 	}
 	SetAppTitle();
-	update();
+	refresh();
 }
 
 void __fastcall TDBWFRM::FileSaveAs ()

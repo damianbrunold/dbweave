@@ -205,6 +205,13 @@ public:
 	short  firstfree = 1;
 	int    fixsize   = 0;
 
+	/*  Schedule a repaint of the pattern canvas. QWidget::update() on
+	    the main window only invalidates the window chrome; children
+	    paint independently. Every TDBWFRM method that mutates the
+	    document state and wants the canvas to re-render calls this
+	    instead of update().                                       */
+	void refresh();
+
 	/*  Called by SwitchLanguage(). Body is filled in when lang_main.cpp
 	    is ported (that unit is a 673-line blob of LANG_C_H assignments
 	    against menu items and actions that don't exist yet). */
