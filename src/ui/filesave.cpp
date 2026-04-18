@@ -84,6 +84,21 @@ bool __fastcall TDBWFRM::Save ()
 
 		if (Data->palette) Data->palette->Save(&writer, /*format37=*/true);
 
+		/*  Webstuhl: just the 9 klammer brace entries. The legacy
+		    also wrote STRGFRM weave_position / last_position /
+		    schussselected etc.; those belong to the loom-control
+		    window which isn't ported yet and are skipped here.    */
+		writer.BeginSection("webstuhl");
+		for (int i = 0; i < 9; i++) {
+			const QByteArray name = QStringLiteral("klammer%1").arg(i).toLatin1();
+			writer.BeginSection(name.constData());
+			writer.WriteFieldInt("first",       klammern[i].first);
+			writer.WriteFieldInt("last",        klammern[i].last);
+			writer.WriteFieldInt("repetitions", klammern[i].repetitions);
+			writer.EndSection();
+		}
+		writer.EndSection();
+
 		writer.BeginSection("hilfslinien");
 		writer.WriteFieldInt   ("count", hlines.GetCount());
 		writer.WriteFieldBinary("list",  hlines.Data(), hlines.DataSize());

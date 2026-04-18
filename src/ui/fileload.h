@@ -68,6 +68,8 @@ private:
 	void LoadDataBlatteinzug (FfReader* _reader);
 	void LoadDataPalette (FfReader* _reader);
 	void LoadDataHilfslinien (FfReader* _reader);
+	void LoadDataWebstuhl    (FfReader* _reader);
+	void LoadDataWebstuhlKlammer (FfReader* _reader, int _index);
 	void LoadView (FfReader* _reader);
 	void LoadViewGeneral (FfReader* _reader);
 	void LoadViewGewebe  (FfReader* _reader);

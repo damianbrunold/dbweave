@@ -21,6 +21,10 @@
 
 #include <QFileInfo>
 
+#include <algorithm>
+#include <cstdlib>
+#include <cstring>
+
 /*-----------------------------------------------------------------*/
 /*  TDBWFRM::Load wraps an FhLoader instance so callers don't have
     to know about the loader class. Matches the legacy call site:
@@ -164,8 +168,10 @@ void FhLoader::LoadData (FfReader* _reader)
 			SECTION_MAP ("fields", LoadDataFields)
 			SECTION_MAP ("palette", LoadDataPalette)
 			SECTION_MAP ("hilfslinien", LoadDataHilfslinien)
-			DEFAULT_SECTION   /* webstuhl / blockmuster / bereichmuster
-			                     -- skipped in this slice */
+			SECTION_MAP ("webstuhl",    LoadDataWebstuhl)
+			DEFAULT_SECTION   /* blockmuster / bereichmuster -- skipped
+			                     until the block-pattern state is
+			                     ported. */
 		BEGIN_DEFAULT_MAP
 	END_LOAD_MAP
 }
@@ -300,6 +306,60 @@ void FhLoader::LoadDataHilfslinien (FfReader* _reader)
 			mainfrm->hlines.Add(entries[i].typ, entries[i].feld, entries[i].pos);
 	}
 	delete[] list;
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadDataWebstuhlKlammer (FfReader* _reader, int _index)
+{
+	int first       = 0;
+	int last        = 1;
+	int repetitions = 0;
+	BEGIN_LOAD_MAP
+		BEGIN_FIELD_MAP
+			_FIELD_MAP_INT("first",       first,       int)
+			FIELD_MAP_INT ("last",        last,        int)
+			FIELD_MAP_INT ("repetitions", repetitions, int)
+			DEFAULT_FIELD
+		BEGIN_SECTION_MAP
+			NO_SECTIONS
+		BEGIN_DEFAULT_MAP
+	END_LOAD_MAP
+	if (_index >= 0 && _index < 9) {
+		mainfrm->klammern[_index].first       = first;
+		mainfrm->klammern[_index].last        = last;
+		mainfrm->klammern[_index].repetitions = repetitions;
+	}
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadDataWebstuhl (FfReader* _reader)
+{
+	/*  Webstuhl carries klammer0..klammer8 sections plus "current" /
+	    "last" / "divers" that belong to the (unported) loom-control
+	    window. Match section names manually because SECTION_MAP
+	    can't forward an index to the handler.                    */
+	dbw3_assert(_reader);
+	FfToken* token = _reader->GetToken();
+	while (token) {
+		if (token->GetType() == FfSection) {
+			const char* name = (const char*)((FfTokenSection*)token)->data;
+			int idx = -1;
+			if (name && std::strncmp(name, "klammer", 7) == 0 && name[7] != '\0') {
+				const int n = std::atoi(name + 7);
+				if (n >= 0 && n < 9) idx = n;
+			}
+			if (idx >= 0) LoadDataWebstuhlKlammer(_reader, idx);
+			else          _reader->SkipSection();
+		} else if (token->GetType() == FfField) {
+			_reader->SkipField();
+		} else if (token->GetType() == FfEndSection) {
+			delete token;
+			break;
+		} else {
+			delete token;
+			throw int(0);
+		}
+		delete token;
+		token = _reader->GetToken();
+	}
 }
 /*-----------------------------------------------------------------*/
 void FhLoader::LoadView (FfReader* _reader)
