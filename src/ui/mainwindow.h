@@ -325,6 +325,24 @@ public:
 	void __fastcall FillKoeper();
 	void __fastcall SwapSide();
 
+	/*  Steigung ("slope") shifts each column of the selection by
+	    an increasing offset, producing a diagonal twist. Valid
+	    on GEWEBE / AUFKNUEPFUNG / TRITTFOLGE (last only when
+	    trittfolge.einzeltritt is off).                          */
+	void __fastcall SteigungInc();
+	void __fastcall SteigungDec();
+	void __fastcall IncrementSteigung (int _i, int _j, int _ii, int _jj, FELD _feld);
+	void __fastcall DecrementSteigung (int _i, int _j, int _ii, int _jj, FELD _feld);
+
+	/*  Range-wide schlagpatrone invert -- flips every cell in
+	    trittfolge and gewebe across the used shaft range and
+	    weft range. */
+	void __fastcall SpInvert();
+
+	/*  First / last used treadle indices (-1 if none used). */
+	int  __fastcall GetFirstTritt();
+	int  __fastcall GetLastTritt();
+
 	/*  --- Edit-menu operations on the selection ----------------
 	    All bodies live in src/ui/edit.cpp. Each op reads
 	    `selection` (normalises internally), mutates the underlying

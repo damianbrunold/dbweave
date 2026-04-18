@@ -161,6 +161,9 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	editMenu->addSeparator();
 	QAction* actFillKoeper = editMenu->addAction(QStringLiteral("Fill &Twill"));
 	QAction* actSwapSide   = editMenu->addAction(QStringLiteral("S&wap Side"));
+	QAction* actSteigInc   = editMenu->addAction(QStringLiteral("Steigung &+"));
+	QAction* actSteigDec   = editMenu->addAction(QStringLiteral("Steigung &-"));
+	QAction* actSpInvert   = editMenu->addAction(QStringLiteral("Pegplan In&vert"));
 	actUndo ->setShortcut(QKeySequence::Undo);
 	actRedo ->setShortcut(QKeySequence::Redo);
 	actCut  ->setShortcut(QKeySequence::Cut);
@@ -186,6 +189,9 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	connect(actRollRight,        &QAction::triggered, this, [this] { RollRightSelection();   });
 	connect(actFillKoeper,       &QAction::triggered, this, [this] { FillKoeper();           });
 	connect(actSwapSide,         &QAction::triggered, this, [this] { SwapSide();             });
+	connect(actSteigInc,         &QAction::triggered, this, [this] { SteigungInc();          });
+	connect(actSteigDec,         &QAction::triggered, this, [this] { SteigungDec();          });
+	connect(actSpInvert,         &QAction::triggered, this, [this] { SpInvert();             });
 
 	QMenu* viewMenu = menuBar()->addMenu(QStringLiteral("&View"));
 	QAction* actZoomIn     = viewMenu->addAction(QStringLiteral("Zoom &In"));

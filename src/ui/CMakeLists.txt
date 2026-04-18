@@ -37,6 +37,7 @@ add_library(dbweave_ui STATIC
     edit.cpp
     popupmenu.cpp
     utilities.cpp
+    steigung.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)
