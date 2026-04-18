@@ -232,6 +232,15 @@ public:
 	void __fastcall SetAppTitle ();
 	void __fastcall UpdateStatusBar();
 
+	/*  Status-bar labels; created in the ctor and addPermanent-ed
+	    onto statusBar() so they stay right-aligned. UpdateStatusBar
+	    populates them on every refresh().                         */
+	class QLabel* sbField    = nullptr;
+	class QLabel* sbSelect   = nullptr;
+	class QLabel* sbRange    = nullptr;
+	class QLabel* sbRapport  = nullptr;
+	class QLabel* sbZoom     = nullptr;
+
 	/*  Rapport forwarding methods -- delegate to rapporthandler. */
 	void __fastcall CalcRapport();
 	void __fastcall UpdateRapport();

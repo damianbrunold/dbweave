@@ -19,9 +19,12 @@
 #include "fileformat.h"
 #include "assert_compat.h"
 
-#include <QMenuBar>
-#include <QMenu>
+#include <QActionGroup>
 #include <QKeySequence>
+#include <QLabel>
+#include <QMenu>
+#include <QMenuBar>
+#include <QStatusBar>
 
 TDBWFRM* DBWFRM = nullptr;
 
@@ -125,6 +128,49 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	connect(actZoomOut,    &QAction::triggered, this, [this] { zoomOut();    });
 	connect(actZoomNormal, &QAction::triggered, this, [this] { zoomNormal(); });
 
+	/*  View-toggle items reuse the QActions that already live on
+	    TDBWFRM (allocated earlier in the ctor). Put them into the
+	    menu and wire them to refresh the canvas when toggled. */
+	viewMenu->addSeparator();
+	viewMenu->addAction(ViewEinzug);        ViewEinzug       ->setText(QStringLiteral("&Threading"));
+	viewMenu->addAction(ViewTrittfolge);    ViewTrittfolge   ->setText(QStringLiteral("T&readling"));
+	viewMenu->addAction(ViewSchlagpatrone); ViewSchlagpatrone->setText(QStringLiteral("&Pegplan"));
+	viewMenu->addSeparator();
+	viewMenu->addAction(RappViewRapport);   RappViewRapport  ->setText(QStringLiteral("&Rapport markers"));
+	viewMenu->addAction(ViewHlines);        ViewHlines       ->setText(QStringLiteral("&Guide lines"));
+	viewMenu->addSeparator();
+	QMenu* gewebeMenu = viewMenu->addMenu(QStringLiteral("&Cloth display"));
+	auto* gewebeGroup = new QActionGroup(this);
+	gewebeGroup->setExclusive(true);
+	GewebeNormal    ->setText(QStringLiteral("&Normal"));
+	GewebeFarbeffekt->setText(QStringLiteral("Colour &effect"));
+	GewebeSimulation->setText(QStringLiteral("&Simulation"));
+	GewebeNone      ->setText(QStringLiteral("N&one"));
+	for (QAction* a : { GewebeNormal, GewebeFarbeffekt, GewebeSimulation, GewebeNone }) {
+		a->setCheckable(true);
+		gewebeGroup->addAction(a);
+		gewebeMenu->addAction(a);
+	}
+	/*  Any toggle should repaint the canvas. */
+	for (QAction* a : { ViewEinzug, ViewTrittfolge, ViewSchlagpatrone,
+	                    RappViewRapport, ViewHlines,
+	                    GewebeNormal, GewebeFarbeffekt,
+	                    GewebeSimulation, GewebeNone })
+		connect(a, &QAction::triggered, this, [this] { refresh(); });
+
+	/*  Status-bar panels (right-aligned permanent widgets). */
+	sbField   = new QLabel(this);
+	sbSelect  = new QLabel(this);
+	sbRange   = new QLabel(this);
+	sbRapport = new QLabel(this);
+	sbZoom    = new QLabel(this);
+	statusBar()->addWidget(sbField, 1);
+	statusBar()->addWidget(sbSelect, 1);
+	statusBar()->addPermanentWidget(sbRange);
+	statusBar()->addPermanentWidget(sbRapport);
+	statusBar()->addPermanentWidget(sbZoom);
+	UpdateStatusBar();
+
 	/*  Note: main.cpp explicitly calls seedDemo() after construction
 	    so the freshly-launched app shows cloth. Tests skip it and
 	    get a clean TDBWFRM.                                         */
@@ -149,6 +195,9 @@ void TDBWFRM::refresh()
 	    window only invalidates the window chrome; children paint
 	    independently in Qt. */
 	if (pattern_canvas) pattern_canvas->update();
+	/*  Rebuild the status-bar labels so the cursor position, range,
+	    selection size and zoom stay current on every refresh.     */
+	UpdateStatusBar();
 }
 
 void __fastcall TDBWFRM::zoomIn()
@@ -224,7 +273,6 @@ void __fastcall TDBWFRM::RecalcGewebe()
 void __fastcall TDBWFRM::SetModified(bool)    {}
 void __fastcall TDBWFRM::SetCursor(int, int)  {}
 void __fastcall TDBWFRM::SetAppTitle()        {}
-void __fastcall TDBWFRM::UpdateStatusBar()    {}
 void __fastcall TDBWFRM::UpdateScrollbars()   {}
 void __fastcall TDBWFRM::InvalidateFeld(const GRIDPOS&) { refresh(); }
 
