@@ -12,6 +12,7 @@
 
 #include "datamodule.h"
 #include "cursor.h"
+#include "hilfslinien.h"
 #include "mainwindow.h"
 #include "palette.h"
 #include "patterncanvas.h"
@@ -60,6 +61,8 @@ class TestRendering : public QObject
 
 		if (DBWFRM->RappViewRapport && DBWFRM->RappViewRapport->isChecked())
 			DBWFRM->DrawRapport();
+		if (DBWFRM->ViewHlines && DBWFRM->ViewHlines->isChecked())
+			DBWFRM->DrawHilfslinien();
 		if (DBWFRM->cursorhandler)
 			DBWFRM->cursorhandler->DrawCursor();
 
@@ -486,6 +489,49 @@ private slots:
 		    Top edge at y=70, left edge at x=20.                */
 		QCOMPARE(img.pixelColor(25, 70), QColor(Qt::white));
 		QCOMPARE(img.pixelColor(20, 75), QColor(Qt::white));
+	}
+
+	/*  ---- Hilfslinien (guide lines) ----------------------------- */
+
+	void hilfslinien_vertical_guide_paints_blue_line_in_gewebe()
+	{
+		/*  Add a HL_VERT / HL_LEFT guide at pos=3. GewebeNormal is
+		    on by default so the line paints across the gewebe. */
+		DBWFRM->hlines.Add(HL_VERT, HL_LEFT, 3);
+
+		QImage img = renderCanvas();
+
+		/*  Line x coordinate: gewebe.pos.x0(0) + (3 - scroll_x1(0))*CELL = 30.
+		    Vertical line spans gewebe.pos.y0+1 to y0+height -> y in [1..H). */
+		QCOMPARE(img.pixelColor(30, 5),  QColor(Qt::blue));
+		QCOMPARE(img.pixelColor(30, 40), QColor(Qt::blue));
+
+		/*  No blue bleed one pixel to the side. */
+		QVERIFY(img.pixelColor(29, 40) != QColor(Qt::blue));
+		QVERIFY(img.pixelColor(31, 40) != QColor(Qt::blue));
+	}
+
+	void hilfslinien_horizontal_guide_paints_blue_line_in_gewebe()
+	{
+		/*  HL_HORZ / HL_BOTTOM renders in gewebe (not einzug). */
+		DBWFRM->hlines.Add(HL_HORZ, HL_BOTTOM, 2);
+
+		QImage img = renderCanvas();
+
+		/*  Line y coordinate: gewebe.pos.y0(0) + height(80) - 2*CELL = 60. */
+		QCOMPARE(img.pixelColor(5,  60), QColor(Qt::blue));
+		QCOMPARE(img.pixelColor(40, 60), QColor(Qt::blue));
+	}
+
+	void hilfslinien_hidden_when_viewhlines_off()
+	{
+		DBWFRM->hlines.Add(HL_VERT, HL_LEFT, 3);
+		DBWFRM->ViewHlines->setChecked(false);
+
+		QImage img = renderCanvas();
+
+		/*  No blue anywhere on the expected line column. */
+		QVERIFY(img.pixelColor(30, 40) != QColor(Qt::blue));
 	}
 };
 

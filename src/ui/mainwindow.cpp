@@ -68,6 +68,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	GewebeFarbeffekt  = mk();
 	GewebeSimulation  = mk();
 	Inverserepeat     = mk();
+	ViewHlines        = mk(/*checked=*/true);
 
 	/*  Allocate the per-shaft / per-treadle availability arrays. Both
 	    are initialised to true (all free); RecalcFreieSchaefte() /
@@ -171,7 +172,6 @@ void __fastcall TDBWFRM::DrawRapport()    { if (rapporthandler) rapporthandler->
 bool __fastcall TDBWFRM::IsInRapport(int _i, int _j)
                                           { return rapporthandler ? rapporthandler->IsInRapport(_i, _j) : false; }
 
-void __fastcall TDBWFRM::DrawHilfslinien()                         {}
 /*  DrawGewebe / DrawEinzug / DrawAufknuepfung / DrawTrittfolge,
     the four *Rahmen painters, DrawGewebeFarbeffekt /
     DrawGewebeSimulation, and DrawGewebeKette / Schuss /

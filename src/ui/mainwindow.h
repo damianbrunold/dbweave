@@ -29,6 +29,7 @@
 
 #include "vcl_compat.h"
 #include "dbw3_base.h"      /* FeldBase hierarchy */
+#include "hilfslinien.h"    /* Hilfslinien container */
 #include "loadoptions.h"    /* LOADSTAT / LOADPARTS */
 
 class QPainter;
@@ -117,6 +118,19 @@ public:
 	QAction* GewebeFarbeffekt  = nullptr;
 	QAction* GewebeSimulation  = nullptr;
 	QAction* Inverserepeat     = nullptr;
+	QAction* ViewHlines        = nullptr;
+
+	/*  Guide lines (Hilfslinien) + the four grab-bar rectangles.
+	    hlinehorz1/2 sit above/below the pattern grids, hlinevert1/2
+	    to the left/right. Bar positions remain zero-sized until the
+	    FormResize port lands -- the hilfslinien renderer only needs
+	    them non-degenerate if the user wants the "tick into the bar"
+	    segment to show. */
+	Hilfslinien hlines;
+	HlineBar    hlinehorz1;
+	HlineBar    hlinehorz2;
+	HlineBar    hlinevert1;
+	HlineBar    hlinevert2;
 
 	/*  Symbol styles for the three special ranges (AUSHEBUNG,
 	    ANBINDUNG, ABBINDUNG). Legacy DrawGewebeNormal branches on

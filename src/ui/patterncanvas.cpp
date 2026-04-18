@@ -160,6 +160,11 @@ void PatternCanvas::paintEvent (QPaintEvent* /*_e*/)
 	if (frm->RappViewRapport && frm->RappViewRapport->isChecked())
 		frm->DrawRapport();
 
+	/*  Hilfslinien (guide lines) drawn after rapport so they sit on
+	    top of cell fills but under the cursor outline. */
+	if (frm->ViewHlines && frm->ViewHlines->isChecked())
+		frm->DrawHilfslinien();
+
 	/*  Cursor outline sits on top of everything so it's visible
 	    no matter which view mode is active. */
 	if (frm->cursorhandler) frm->cursorhandler->DrawCursor();
