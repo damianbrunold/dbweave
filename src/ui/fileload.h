@@ -68,6 +68,11 @@ private:
 	void LoadDataBlatteinzug (FfReader* _reader);
 	void LoadDataPalette (FfReader* _reader);
 	void LoadDataHilfslinien (FfReader* _reader);
+	void LoadView (FfReader* _reader);
+	void LoadViewGeneral (FfReader* _reader);
+	void LoadViewGewebe  (FfReader* _reader);
+	void LoadViewEinzug  (FfReader* _reader);
+	void LoadViewTrittfolge (FfReader* _reader);
 };
 
 #endif

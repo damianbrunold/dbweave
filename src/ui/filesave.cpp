@@ -91,6 +91,38 @@ bool __fastcall TDBWFRM::Save ()
 
 		writer.EndSection();   /* data */
 
+		/*  View state -- only the fields the port actually drives.
+		    aufknuepfung / schlagpatrone / blatteinzug / kettfarben /
+		    schussfarben subsections are omitted (their darstellung
+		    toggles aren't yet wired to QActions).                  */
+		writer.BeginSection("view", "Ansicht");
+		writer.BeginSection("general");
+		writer.WriteFieldInt("zoom",        currentzoom);
+		writer.WriteFieldInt("hebung",      sinkingshed ? 0 : 1);
+		writer.WriteFieldInt("viewpegplan", (ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) ? 1 : 0);
+		writer.WriteFieldInt("viewrapport", (RappViewRapport   && RappViewRapport  ->isChecked()) ? 1 : 0);
+		writer.WriteFieldInt("viewhlines",  (ViewHlines        && ViewHlines       ->isChecked()) ? 1 : 0);
+		writer.WriteFieldInt("righttoleft", righttoleft ? 1 : 0);
+		writer.WriteFieldInt("toptobottom", toptobottom ? 1 : 0);
+		writer.EndSection();
+		writer.BeginSection("gewebe");
+		int g = 0;
+		if (GewebeFarbeffekt && GewebeFarbeffekt->isChecked()) g = 1;
+		else if (GewebeSimulation && GewebeSimulation->isChecked()) g = 2;
+		else if (GewebeNone && GewebeNone->isChecked()) g = 3;
+		writer.WriteFieldInt("state",    g);
+		writer.WriteFieldInt("withgrid", fewithraster ? 1 : 0);
+		writer.EndSection();
+		writer.BeginSection("einzug");
+		writer.WriteFieldInt("visible",  (ViewEinzug && ViewEinzug->isChecked()) ? 1 : 0);
+		writer.WriteFieldInt("hvisible", hvisible);
+		writer.EndSection();
+		writer.BeginSection("trittfolge");
+		writer.WriteFieldInt("visible",  (ViewTrittfolge && ViewTrittfolge->isChecked()) ? 1 : 0);
+		writer.WriteFieldInt("wvisible", wvisible);
+		writer.EndSection();
+		writer.EndSection();   /* view */
+
 		file->SetEndOfFile();
 		file->Close();
 		return true;

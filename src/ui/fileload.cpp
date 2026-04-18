@@ -86,7 +86,7 @@ bool FhLoader::Load (LOADSTAT& _stat, LOADPARTS _loadparts)
 				_SECTION_MAP("version", LoadVersion)
 				SECTION_MAP ("properties", LoadVersion)   /* SkipSection-compatible: reads fields, discards */
 				SECTION_MAP ("data", LoadData)
-				SECTION_MAP ("view", LoadVersion)
+				SECTION_MAP ("view", LoadView)
 				SECTION_MAP ("printsettings", LoadVersion)
 				DEFAULT_SECTION
 			BEGIN_DEFAULT_MAP
@@ -300,5 +300,114 @@ void FhLoader::LoadDataHilfslinien (FfReader* _reader)
 			mainfrm->hlines.Add(entries[i].typ, entries[i].feld, entries[i].pos);
 	}
 	delete[] list;
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadView (FfReader* _reader)
+{
+	BEGIN_LOAD_MAP
+		BEGIN_FIELD_MAP
+			NO_FIELDS
+		BEGIN_SECTION_MAP
+			_SECTION_MAP("general",    LoadViewGeneral)
+			SECTION_MAP ("gewebe",     LoadViewGewebe)
+			SECTION_MAP ("einzug",     LoadViewEinzug)
+			SECTION_MAP ("trittfolge", LoadViewTrittfolge)
+			DEFAULT_SECTION   /* aufknuepfung, schlagpatrone, blatteinzug,
+			                     kettfarben, schussfarben, pagesetup --
+			                     skipped until those toggles + metadata
+			                     are wired up in the port.          */
+		BEGIN_DEFAULT_MAP
+	END_LOAD_MAP
+}
+/*-----------------------------------------------------------------*/
+static void setChecked (QAction* _a, bool _v)
+{
+	if (_a) _a->setChecked(_v);
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadViewGeneral (FfReader* _reader)
+{
+	int zoom        = mainfrm->currentzoom;
+	int hebung      = 1;           /* inverse of sinkingshed */
+	int viewpegplan = mainfrm->ViewSchlagpatrone ? mainfrm->ViewSchlagpatrone->isChecked() : 0;
+	int viewrapport = mainfrm->RappViewRapport   ? mainfrm->RappViewRapport  ->isChecked() : 0;
+	int viewhlines  = mainfrm->ViewHlines        ? mainfrm->ViewHlines       ->isChecked() : 1;
+	int righttoleft = mainfrm->righttoleft ? 1 : 0;
+	int toptobottom = mainfrm->toptobottom ? 1 : 0;
+	BEGIN_LOAD_MAP
+		BEGIN_FIELD_MAP
+			_FIELD_MAP_INT("zoom",        zoom,        int)
+			FIELD_MAP_INT ("hebung",      hebung,      int)
+			FIELD_MAP_INT ("viewpegplan", viewpegplan, int)
+			FIELD_MAP_INT ("viewrapport", viewrapport, int)
+			FIELD_MAP_INT ("viewhlines",  viewhlines,  int)
+			FIELD_MAP_INT ("righttoleft", righttoleft, int)
+			FIELD_MAP_INT ("toptobottom", toptobottom, int)
+			DEFAULT_FIELD
+		BEGIN_SECTION_MAP
+			NO_SECTIONS
+		BEGIN_DEFAULT_MAP
+	END_LOAD_MAP
+	mainfrm->currentzoom = (zoom < 0 ? 0 : (zoom > 9 ? 9 : zoom));
+	mainfrm->sinkingshed = (hebung == 0);
+	mainfrm->righttoleft = (righttoleft != 0);
+	mainfrm->toptobottom = (toptobottom != 0);
+	setChecked(mainfrm->ViewSchlagpatrone, viewpegplan != 0);
+	setChecked(mainfrm->RappViewRapport,   viewrapport != 0);
+	setChecked(mainfrm->ViewHlines,        viewhlines  != 0);
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadViewGewebe (FfReader* _reader)
+{
+	int state = 0;   /* 0=Normal 1=Farbeffekt 2=Simulation 3=None */
+	int withgrid = mainfrm->fewithraster ? 1 : 0;
+	BEGIN_LOAD_MAP
+		BEGIN_FIELD_MAP
+			_FIELD_MAP_INT("state",    state,    int)
+			FIELD_MAP_INT ("withgrid", withgrid, int)
+			DEFAULT_FIELD
+		BEGIN_SECTION_MAP
+			NO_SECTIONS
+		BEGIN_DEFAULT_MAP
+	END_LOAD_MAP
+	setChecked(mainfrm->GewebeNormal,     state == 0);
+	setChecked(mainfrm->GewebeFarbeffekt, state == 1);
+	setChecked(mainfrm->GewebeSimulation, state == 2);
+	setChecked(mainfrm->GewebeNone,       state == 3);
+	mainfrm->fewithraster = (withgrid != 0);
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadViewEinzug (FfReader* _reader)
+{
+	int visible  = mainfrm->ViewEinzug ? mainfrm->ViewEinzug->isChecked() : 1;
+	int hvisible = mainfrm->hvisible;
+	BEGIN_LOAD_MAP
+		BEGIN_FIELD_MAP
+			_FIELD_MAP_INT("visible",  visible,  int)
+			FIELD_MAP_INT ("hvisible", hvisible, int)
+			DEFAULT_FIELD
+		BEGIN_SECTION_MAP
+			NO_SECTIONS
+		BEGIN_DEFAULT_MAP
+	END_LOAD_MAP
+	setChecked(mainfrm->ViewEinzug, visible != 0);
+	if (hvisible > 0) mainfrm->hvisible = hvisible;
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadViewTrittfolge (FfReader* _reader)
+{
+	int visible  = mainfrm->ViewTrittfolge ? mainfrm->ViewTrittfolge->isChecked() : 1;
+	int wvisible = mainfrm->wvisible;
+	BEGIN_LOAD_MAP
+		BEGIN_FIELD_MAP
+			_FIELD_MAP_INT("visible",  visible,  int)
+			FIELD_MAP_INT ("wvisible", wvisible, int)
+			DEFAULT_FIELD
+		BEGIN_SECTION_MAP
+			NO_SECTIONS
+		BEGIN_DEFAULT_MAP
+	END_LOAD_MAP
+	setChecked(mainfrm->ViewTrittfolge, visible != 0);
+	if (wvisible > 0) mainfrm->wvisible = wvisible;
 }
 /*-----------------------------------------------------------------*/
