@@ -86,7 +86,8 @@ void FeldVectorChar::Read(FfReader* _reader, unsigned char _default)
     }
 
     // Daten setzen
-    memcpy(feld, newdata, sizeof(unsigned char) * size);
+    if (newdata)
+        memcpy(feld, newdata, sizeof(unsigned char) * size);
     delete[] newdata;
 }
 
@@ -177,7 +178,8 @@ void FeldVectorShort::Read(FfReader* _reader, short _default)
     }
 
     // Daten setzen
-    memcpy(feld, newdata, sizeof(short) * size);
+    if (newdata)
+        memcpy(feld, newdata, sizeof(short) * size);
     delete[] newdata;
 }
 
@@ -230,7 +232,7 @@ void FeldVectorBool::Resize(int _newsize, bool _default)
         for (int i = size; i < _newsize; i++)
             newfeld[i] = _default;
     }
-    delete feld;
+    delete[] feld;
     feld = newfeld;
     size = _newsize;
 }
@@ -267,7 +269,8 @@ void FeldVectorBool::Read(FfReader* _reader, bool _default)
     }
 
     // Daten setzen
-    memcpy(feld, newdata, sizeof(bool) * size);
+    if (newdata)
+        memcpy(feld, newdata, sizeof(bool) * size);
     delete[] newdata;
 }
 
@@ -314,19 +317,24 @@ void FeldGridChar::Resize(int _newsizex, int _newsizey, char _default)
         }
     }
 
-    // Falls Feld vergroessert wurde, muss es initialisiert werden
+    // Falls Feld vergroessert wurde, muss es initialisiert werden.
+    // Uses min(sizex, _newsizex) as the x-range for the "new y rows"
+    // branch, because newfeld's width is _newsizex and iterating up to
+    // the old sizex (which may be larger than _newsizex) would index
+    // past the end of newfeld.                                      */
     if (_newsizex > sizex) {
         for (int i = sizex; i < _newsizex; i++)
             for (int j = 0; j < _newsizey; j++)
                 newfeld[i + _newsizex * j] = _default;
     }
     if (_newsizey > sizey) {
+        const int xmax = min(sizex, _newsizex);
         for (int j = sizey; j < _newsizey; j++)
-            for (int i = 0; i < sizex; i++)
+            for (int i = 0; i < xmax; i++)
                 newfeld[i + _newsizex * j] = _default;
     }
 
-    delete feld;
+    delete[] feld;
     feld = newfeld;
     sizex = _newsizex;
     sizey = _newsizey;
@@ -367,7 +375,8 @@ void FeldGridChar::Read(FfReader* _reader, char _default)
     }
 
     // Daten setzen
-    memcpy(feld, newdata, sizeof(char) * sizex * sizey);
+    if (newdata)
+        memcpy(feld, newdata, sizeof(char) * sizex * sizey);
     delete[] newdata;
 }
 

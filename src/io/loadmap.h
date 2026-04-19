@@ -96,6 +96,26 @@
 /*-----------------------------------------------------------------*/
 #define FIELD_MAP_BINARY(fieldname, variable) else _FIELD_MAP_BINARY(fieldname, variable)
 /*-----------------------------------------------------------------*/
+/*  FIELD_MAP_BINARY_SIZED behaves like FIELD_MAP_BINARY but also
+    captures the decoded byte length into `size_var`. Needed when
+    the caller wants to validate before memcpy'ing into a fixed-size
+    destination.                                                   */
+#define _FIELD_MAP_BINARY_SIZED(fieldname, variable, size_var) \
+    if (IsTokenEqual(token, fieldname)) {                      \
+        FfToken* t = _reader->GetToken();                      \
+        if (!t || t->GetType() != FfValue)                     \
+            throw int(0);                                      \
+        FfTokenValue* val = (FfTokenValue*)t;                  \
+        delete[] variable;                                     \
+        variable = new char[val->length / 2 + 1];              \
+        FieldHexToBinary(variable, val->data, val->length);    \
+        size_var = int(val->length / 2);                       \
+        delete t;                                              \
+    }
+/*-----------------------------------------------------------------*/
+#define FIELD_MAP_BINARY_SIZED(fieldname, variable, size_var) \
+    else _FIELD_MAP_BINARY_SIZED(fieldname, variable, size_var)
+/*-----------------------------------------------------------------*/
 #define DEFAULT_FIELD else _reader->SkipField();
 /*-----------------------------------------------------------------*/
 #define BEGIN_SECTION_MAP                   \

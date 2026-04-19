@@ -32,6 +32,9 @@
 #include "palette.h"
 #include "hilfslinien.h"
 #include "properties.h"
+#include "blockmuster.h"
+
+#include <vector>
 
 /*  @dbw3:file format version tag -- matches legacy FILEFORMATVERSION
     for 3.7+ files. "0001" is the older style; we always emit "0002". */
@@ -86,6 +89,25 @@ bool TDBWFRM::Save()
         kettfarben.feld.Write("kettfarben", &writer);
         schussfarben.feld.Write("schussfarben", &writer);
         blatteinzug.feld.Write("blatteinzug", &writer);
+        /*  fixeinzug: MAXX1 shorts -- written even when the table
+            was never filled, so File > New state matches the legacy
+            default (all zeros, firstfree=1, fixsize=0).            */
+        writer.BeginSection("fixeinzug");
+        {
+            const int bytes = int(sizeof(short)) * Data->MAXX1;
+            /*  If the user never opened the dialog we still allocate
+                a zeroed buffer on the fly so the file always has the
+                section.                                              */
+            if (fixeinzug) {
+                writer.WriteFieldBinary("fixeinzug", fixeinzug, bytes);
+            } else {
+                std::vector<short> zero(Data->MAXX1, 0);
+                writer.WriteFieldBinary("fixeinzug", zero.data(), bytes);
+            }
+            writer.WriteFieldInt("fixsize", fixsize);
+            writer.WriteFieldInt("firstfree", firstfree);
+        }
+        writer.EndSection();
         writer.EndSection();
 
         if (Data->palette)
@@ -103,6 +125,42 @@ bool TDBWFRM::Save()
             writer.WriteFieldInt("last", klammern[i].last);
             writer.WriteFieldInt("repetitions", klammern[i].repetitions);
             writer.EndSection();
+        }
+        writer.BeginSection("current");
+        writer.WriteFieldInt("position", weave_position);
+        writer.WriteFieldInt("klammer", weave_klammer);
+        writer.WriteFieldInt("repetition", weave_repetition);
+        writer.EndSection();
+        writer.BeginSection("last");
+        writer.WriteFieldInt("position", last_position);
+        writer.WriteFieldInt("klammer", last_klammer);
+        writer.WriteFieldInt("repetition", last_repetition);
+        writer.EndSection();
+        writer.BeginSection("divers");
+        writer.WriteFieldInt("schussselected", schussselected ? 1 : 0);
+        writer.WriteFieldInt("scrolly", scrolly_weben);
+        writer.WriteFieldInt("firstschuss", firstschuss ? 1 : 0);
+        writer.WriteFieldInt("weaving", weaving ? 1 : 0);
+        writer.EndSection();
+        writer.EndSection();
+
+        writer.BeginSection("blockmuster");
+        for (int i = 0; i < 10; i++) {
+            const QByteArray name = QStringLiteral("bindung%1").arg(i).toLatin1();
+            writer.WriteFieldBinary(name.constData(),
+                                    const_cast<char*>(blockmuster[i].Data()),
+                                    blockmuster[i].DataSize());
+        }
+        writer.WriteFieldInt("einzugz", einzugZ ? 1 : 0);
+        writer.WriteFieldInt("trittfolgez", trittfolgeZ ? 1 : 0);
+        writer.EndSection();
+
+        writer.BeginSection("bereichmuster");
+        for (int i = 0; i < 10; i++) {
+            const QByteArray name = QStringLiteral("bindung%1").arg(i).toLatin1();
+            writer.WriteFieldBinary(name.constData(),
+                                    const_cast<char*>(bereichmuster[i].Data()),
+                                    bereichmuster[i].DataSize());
         }
         writer.EndSection();
 
@@ -205,6 +263,19 @@ bool TDBWFRM::Save()
         writer.WriteField("footertext", footer.text.toUtf8().constData());
         writer.EndSection();
         writer.EndSection(); /* view */
+
+        writer.BeginSection("printsettings", "Druckeinstellungen");
+        writer.BeginSection("printrange");
+        writer.WriteFieldInt("kettevon", printkette.a);
+        writer.WriteFieldInt("kettebis", printkette.b);
+        writer.WriteFieldInt("schuessevon", printschuesse.a);
+        writer.WriteFieldInt("schuessebis", printschuesse.b);
+        writer.WriteFieldInt("schaeftevon", printschaefte.a);
+        writer.WriteFieldInt("schaeftebis", printschaefte.b);
+        writer.WriteFieldInt("trittevon", printtritte.a);
+        writer.WriteFieldInt("trittebis", printtritte.b);
+        writer.EndSection();
+        writer.EndSection();
 
         file->SetEndOfFile();
         file->Close();

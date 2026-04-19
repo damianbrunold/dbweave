@@ -13,6 +13,7 @@
 #include "mainwindow.h"
 #include "patterncanvas.h"
 #include "datamodule.h"
+#include "blockmuster.h"
 #include "fileformat.h"
 #include "loadmap.h"
 #include "palette.h"
@@ -96,7 +97,7 @@ bool FhLoader::Load(LOADSTAT& _stat, LOADPARTS _loadparts)
         SECTION_MAP("properties", LoadProperties)
         SECTION_MAP("data", LoadData)
         SECTION_MAP("view", LoadView)
-        SECTION_MAP("printsettings", LoadVersion)
+        SECTION_MAP("printsettings", LoadPrint)
         DEFAULT_SECTION
         BEGIN_DEFAULT_MAP
         END_LOAD_MAP
@@ -201,9 +202,9 @@ void FhLoader::LoadData(FfReader* _reader)
     SECTION_MAP("palette", LoadDataPalette)
     SECTION_MAP("hilfslinien", LoadDataHilfslinien)
     SECTION_MAP("webstuhl", LoadDataWebstuhl)
-    DEFAULT_SECTION /* blockmuster / bereichmuster -- skipped
-                       until the block-pattern state is
-                       ported. */
+    SECTION_MAP("blockmuster", LoadDataBlockmuster)
+    SECTION_MAP("bereichmuster", LoadDataBereichmuster)
+    DEFAULT_SECTION
         BEGIN_DEFAULT_MAP END_LOAD_MAP
 }
 /*-----------------------------------------------------------------*/
@@ -250,6 +251,7 @@ void FhLoader::LoadDataFields(FfReader* _reader)
     SECTION_MAP("schussfarben", LoadDataSchussfarben)
     SECTION_MAP("kettfarben", LoadDataKettfarben)
     SECTION_MAP("blatteinzug", LoadDataBlatteinzug)
+    SECTION_MAP("fixeinzug", LoadDataFixeinzug)
     DEFAULT_SECTION /* fixeinzug skipped */
         BEGIN_DEFAULT_MAP END_LOAD_MAP
 }
@@ -359,6 +361,213 @@ void FhLoader::LoadDataHilfslinien(FfReader* _reader)
     delete[] list;
 }
 /*-----------------------------------------------------------------*/
+void FhLoader::LoadDataFixeinzug(FfReader* _reader)
+{
+    char* data = nullptr;
+    int dataBytes = 0;
+    int firstfree = 1;
+    int fixsize = Data ? Data->MAXX1 : 0;
+    BEGIN_LOAD_MAP
+    BEGIN_FIELD_MAP
+    _FIELD_MAP_BINARY_SIZED("fixeinzug", data, dataBytes)
+    FIELD_MAP_INT("firstfree", firstfree, int)
+    FIELD_MAP_INT("fixsize", fixsize, int)
+    DEFAULT_FIELD
+    BEGIN_SECTION_MAP
+    NO_SECTIONS
+    BEGIN_DEFAULT_MAP
+    END_LOAD_MAP
+    mainfrm->firstfree = short(firstfree);
+    mainfrm->fixsize = fixsize;
+    if (data) {
+        /*  Allocate a properly-typed short[] so the destructor's
+            delete[] gets the correct type. Copy only as many bytes
+            as the file actually stored (older files may be shorter
+            than sizeof(short) * MAXX1); zero the rest.              */
+        delete[] mainfrm->fixeinzug;
+        const int want = int(sizeof(short)) * Data->MAXX1;
+        mainfrm->fixeinzug = new short[Data->MAXX1];
+        std::memset(mainfrm->fixeinzug, 0, want);
+        const int copy = dataBytes < want ? dataBytes : want;
+        std::memcpy(mainfrm->fixeinzug, data, copy);
+        delete[] data;
+    }
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadDataBlockmuster(FfReader* _reader)
+{
+    char* data[10] = { nullptr };
+    int sizes[10] = { 0 };
+    int einzugz = mainfrm->einzugZ ? 1 : 0;
+    int trittfolgez = mainfrm->trittfolgeZ ? 1 : 0;
+    BEGIN_LOAD_MAP
+    BEGIN_FIELD_MAP
+    _FIELD_MAP_BINARY_SIZED("bindung0", data[0], sizes[0])
+    FIELD_MAP_BINARY_SIZED("bindung1", data[1], sizes[1])
+    FIELD_MAP_BINARY_SIZED("bindung2", data[2], sizes[2])
+    FIELD_MAP_BINARY_SIZED("bindung3", data[3], sizes[3])
+    FIELD_MAP_BINARY_SIZED("bindung4", data[4], sizes[4])
+    FIELD_MAP_BINARY_SIZED("bindung5", data[5], sizes[5])
+    FIELD_MAP_BINARY_SIZED("bindung6", data[6], sizes[6])
+    FIELD_MAP_BINARY_SIZED("bindung7", data[7], sizes[7])
+    FIELD_MAP_BINARY_SIZED("bindung8", data[8], sizes[8])
+    FIELD_MAP_BINARY_SIZED("bindung9", data[9], sizes[9])
+    FIELD_MAP_INT("einzugz", einzugz, int)
+    FIELD_MAP_INT("trittfolgez", trittfolgez, int)
+    DEFAULT_FIELD
+    BEGIN_SECTION_MAP
+    NO_SECTIONS
+    BEGIN_DEFAULT_MAP
+    END_LOAD_MAP
+    mainfrm->einzugZ = (einzugz != 0);
+    mainfrm->trittfolgeZ = (trittfolgez != 0);
+    const int expected = mainfrm->blockmuster[0].DataSize();
+    for (int i = 0; i < 10; i++) {
+        if (data[i]) {
+            /*  Only apply if the file stored exactly the expected
+                per-Muster byte count (12*12 = 144). Older / partial
+                files may have a shorter blob; SetData would
+                memcpy past the allocation and corrupt the heap, so
+                we defensively skip those.                         */
+            if (sizes[i] >= expected)
+                mainfrm->blockmuster[i].SetData(data[i]);
+            delete[] data[i];
+        }
+    }
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadDataBereichmuster(FfReader* _reader)
+{
+    char* data[10] = { nullptr };
+    int sizes[10] = { 0 };
+    BEGIN_LOAD_MAP
+    BEGIN_FIELD_MAP
+    _FIELD_MAP_BINARY_SIZED("bindung0", data[0], sizes[0])
+    FIELD_MAP_BINARY_SIZED("bindung1", data[1], sizes[1])
+    FIELD_MAP_BINARY_SIZED("bindung2", data[2], sizes[2])
+    FIELD_MAP_BINARY_SIZED("bindung3", data[3], sizes[3])
+    FIELD_MAP_BINARY_SIZED("bindung4", data[4], sizes[4])
+    FIELD_MAP_BINARY_SIZED("bindung5", data[5], sizes[5])
+    FIELD_MAP_BINARY_SIZED("bindung6", data[6], sizes[6])
+    FIELD_MAP_BINARY_SIZED("bindung7", data[7], sizes[7])
+    FIELD_MAP_BINARY_SIZED("bindung8", data[8], sizes[8])
+    FIELD_MAP_BINARY_SIZED("bindung9", data[9], sizes[9])
+    DEFAULT_FIELD
+    BEGIN_SECTION_MAP
+    NO_SECTIONS
+    BEGIN_DEFAULT_MAP
+    END_LOAD_MAP
+    const int expected = mainfrm->bereichmuster[0].DataSize();
+    for (int i = 0; i < 10; i++) {
+        if (data[i]) {
+            if (sizes[i] >= expected)
+                mainfrm->bereichmuster[i].SetData(data[i]);
+            delete[] data[i];
+        }
+    }
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadDataWebstuhlCurrent(FfReader* _reader)
+{
+    int pos = 0, kl = 0, rep = 0;
+    BEGIN_LOAD_MAP
+    BEGIN_FIELD_MAP
+    _FIELD_MAP_INT("position", pos, int)
+    FIELD_MAP_INT("klammer", kl, int)
+    FIELD_MAP_INT("repetition", rep, int)
+    DEFAULT_FIELD
+    BEGIN_SECTION_MAP
+    NO_SECTIONS
+    BEGIN_DEFAULT_MAP
+    END_LOAD_MAP
+    mainfrm->weave_position = pos;
+    mainfrm->weave_klammer = kl;
+    mainfrm->weave_repetition = rep;
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadDataWebstuhlLast(FfReader* _reader)
+{
+    int pos = 0, kl = 0, rep = 0;
+    BEGIN_LOAD_MAP
+    BEGIN_FIELD_MAP
+    _FIELD_MAP_INT("position", pos, int)
+    FIELD_MAP_INT("klammer", kl, int)
+    FIELD_MAP_INT("repetition", rep, int)
+    DEFAULT_FIELD
+    BEGIN_SECTION_MAP
+    NO_SECTIONS
+    BEGIN_DEFAULT_MAP
+    END_LOAD_MAP
+    mainfrm->last_position = pos;
+    mainfrm->last_klammer = kl;
+    mainfrm->last_repetition = rep;
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadDataWebstuhlDivers(FfReader* _reader)
+{
+    int schussselected = mainfrm->schussselected ? 1 : 0;
+    int scrolly = mainfrm->scrolly_weben;
+    int firstschuss = mainfrm->firstschuss ? 1 : 0;
+    int weaving = mainfrm->weaving ? 1 : 0;
+    BEGIN_LOAD_MAP
+    BEGIN_FIELD_MAP
+    _FIELD_MAP_INT("schussselected", schussselected, int)
+    FIELD_MAP_INT("scrolly", scrolly, int)
+    FIELD_MAP_INT("firstschuss", firstschuss, int)
+    FIELD_MAP_INT("weaving", weaving, int)
+    DEFAULT_FIELD
+    BEGIN_SECTION_MAP
+    NO_SECTIONS
+    BEGIN_DEFAULT_MAP
+    END_LOAD_MAP
+    mainfrm->schussselected = (schussselected != 0);
+    mainfrm->scrolly_weben = scrolly;
+    mainfrm->firstschuss = (firstschuss != 0);
+    mainfrm->weaving = (weaving != 0);
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadPrint(FfReader* _reader)
+{
+    BEGIN_LOAD_MAP
+    BEGIN_FIELD_MAP
+    NO_FIELDS
+    BEGIN_SECTION_MAP
+    _SECTION_MAP("printrange", LoadPrintRange)
+    DEFAULT_SECTION
+        BEGIN_DEFAULT_MAP END_LOAD_MAP
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadPrintRange(FfReader* _reader)
+{
+    int ka = mainfrm->printkette.a;
+    int kb = mainfrm->printkette.b;
+    int sa = mainfrm->printschuesse.a;
+    int sb = mainfrm->printschuesse.b;
+    int scha = mainfrm->printschaefte.a;
+    int schb = mainfrm->printschaefte.b;
+    int ta = mainfrm->printtritte.a;
+    int tb = mainfrm->printtritte.b;
+    BEGIN_LOAD_MAP
+    BEGIN_FIELD_MAP
+    _FIELD_MAP_INT("kettevon", ka, int)
+    FIELD_MAP_INT("kettebis", kb, int)
+    FIELD_MAP_INT("schuessevon", sa, int)
+    FIELD_MAP_INT("schuessebis", sb, int)
+    FIELD_MAP_INT("schaeftevon", scha, int)
+    FIELD_MAP_INT("schaeftebis", schb, int)
+    FIELD_MAP_INT("trittevon", ta, int)
+    FIELD_MAP_INT("trittebis", tb, int)
+    DEFAULT_FIELD
+    BEGIN_SECTION_MAP
+    NO_SECTIONS
+    BEGIN_DEFAULT_MAP
+    END_LOAD_MAP
+    mainfrm->printkette = SZ(ka, kb);
+    mainfrm->printschuesse = SZ(sa, sb);
+    mainfrm->printschaefte = SZ(scha, schb);
+    mainfrm->printtritte = SZ(ta, tb);
+}
+/*-----------------------------------------------------------------*/
 void FhLoader::LoadDataWebstuhlKlammer(FfReader* _reader, int _index)
 {
     int first = 0;
@@ -400,6 +609,12 @@ void FhLoader::LoadDataWebstuhl(FfReader* _reader)
             }
             if (idx >= 0)
                 LoadDataWebstuhlKlammer(_reader, idx);
+            else if (name && std::strcmp(name, "current") == 0)
+                LoadDataWebstuhlCurrent(_reader);
+            else if (name && std::strcmp(name, "last") == 0)
+                LoadDataWebstuhlLast(_reader);
+            else if (name && std::strcmp(name, "divers") == 0)
+                LoadDataWebstuhlDivers(_reader);
             else
                 _reader->SkipSection();
         } else if (token->GetType() == FfField) {

@@ -71,6 +71,14 @@ private:
     void LoadDataHilfslinien(FfReader* _reader);
     void LoadDataWebstuhl(FfReader* _reader);
     void LoadDataWebstuhlKlammer(FfReader* _reader, int _index);
+    void LoadDataWebstuhlCurrent(FfReader* _reader);
+    void LoadDataWebstuhlLast(FfReader* _reader);
+    void LoadDataWebstuhlDivers(FfReader* _reader);
+    void LoadDataFixeinzug(FfReader* _reader);
+    void LoadDataBlockmuster(FfReader* _reader);
+    void LoadDataBereichmuster(FfReader* _reader);
+    void LoadPrint(FfReader* _reader);
+    void LoadPrintRange(FfReader* _reader);
     void LoadView(FfReader* _reader);
     void LoadViewGeneral(FfReader* _reader);
     void LoadViewGewebe(FfReader* _reader);

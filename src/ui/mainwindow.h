@@ -239,6 +239,30 @@ public:
         lands in Phase 11 so we only keep the array.              */
     Klammer klammern[9];
 
+    /*  Loom-control runtime state from the legacy STRGFRM form
+        (weave position / klammer / repetition), plus the "divers"
+        viewport state (schussselected, scrolly, firstschuss,
+        weaving). Not wired to UI yet, but preserved in-memory so
+        file round-trip doesn't lose the values.                   */
+    int weave_position = 0;
+    int weave_klammer = 0;
+    int weave_repetition = 0;
+    int last_position = 0;
+    int last_klammer = 0;
+    int last_repetition = 0;
+    bool schussselected = true;
+    int scrolly_weben = 0;
+    bool firstschuss = true;
+    bool weaving = false;
+
+    /*  Print-range selection (Datei > Teil drucken...). Preserved
+        via file round-trip even though the port's print path
+        currently ignores them.                                    */
+    SZ printkette { 0, 20 };
+    SZ printschuesse { 0, 20 };
+    SZ printschaefte { 0, 8 };
+    SZ printtritte { 0, 8 };
+
     /*  Number of visible shafts / treadles in the einzug /
         aufknuepfung / trittfolge viewports. Loaded from files;
         used when scroll/zoom land.                               */
