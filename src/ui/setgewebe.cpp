@@ -106,12 +106,6 @@ void TDBWFRM::SetGewebe(int _i, int _j, bool _set, int _range)
 /*-----------------------------------------------------------------*/
 void TDBWFRM::DoSetGewebe(int _i, int _j, bool _set, int _range)
 {
-    int i, j, k;
-    bool wasemptyeinzug = IsEmptyEinzug(_i + scroll_x1);
-    bool wasemptytrittfolge = IsEmptyTrittfolge(_j + scroll_y2);
-    (void)wasemptyeinzug; /* used only by the stripped Canvas-draw tail */
-    (void)wasemptytrittfolge;
-
     // Feld toggeln
     char oldstate = gewebe.feld.Get(_i + scroll_x1, _j + scroll_y2);
     if (!_set)
@@ -124,178 +118,15 @@ void TDBWFRM::DoSetGewebe(int _i, int _j, bool _set, int _range)
     else
         UpdateRange(_i + scroll_x1, _j + scroll_y2, _range > 0);
 
-    // Einzug loeschen
-    int oldeinzug = einzug.feld.Get(_i + scroll_x1);
-    einzug.feld.Set(_i + scroll_x1, 0);
-    if (oldeinzug != 0) {
-        freieschaefte[oldeinzug - 1] = true;
-        for (int k = 0; k < Data->MAXX1; k++)
-            if (einzug.feld.Get(k) == (short)oldeinzug) {
-                freieschaefte[oldeinzug - 1] = false;
-                break;
-            }
-    }
-
-    // Bestimmen, ob Einzug berechnet werden muss
-    bool bNeedEinzugRecalc = false;
-    for (j = 0; j < Data->MAXY2; j++) {
-        char s = gewebe.feld.Get(_i + scroll_x1, j);
-        if (s > 0) {
-            bNeedEinzugRecalc = true;
-            break;
-        }
-    }
-
-    // Einzug neuberechnen
-    short neweinzug = 0;
-    if (bNeedEinzugRecalc) {
-        bool bEqualCol = false;
-        for (i = 0; i < Data->MAXX1; i++) {
-            if (i == _i + scroll_x1)
-                continue;
-            bEqualCol = true;
-            for (j = 0; j < Data->MAXY2; j++) {
-                if (IsEmptyEinzug(i)
-                    || (gewebe.feld.Get(i, j) != gewebe.feld.Get(_i + scroll_x1, j))) {
-                    bEqualCol = false;
-                    break;
-                }
-            }
-            if (bEqualCol)
-                break;
-        }
-        if (bEqualCol)
-            neweinzug = einzug.feld.Get(i);
-        else
-            neweinzug = GetFreeEinzug();
-        einzug.feld.Set(_i + scroll_x1, neweinzug);
-        if (neweinzug > 0)
-            freieschaefte[neweinzug - 1] = false;
-        if (!bEqualCol && ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) {
-            for (int j = 0; j < Data->MAXY2; j++) {
-                char s = gewebe.feld.Get(_i + scroll_x1, j);
-                if (s > 0) {
-                    if (neweinzug != 0) {
-                        trittfolge.feld.Set(neweinzug - 1, j, s);
-                        dbw3_assert(neweinzug - 1 < Data->MAXX2);
-                        freietritte[neweinzug - 1] = false;
-                    }
-                }
-            }
-        }
-    }
-
-    // Falls Schaft leer: Aufknuepfung anpassen!
-    if (oldeinzug != 0) {
-        if (freieschaefte[oldeinzug - 1]) {
-            if (!ViewSchlagpatrone || !ViewSchlagpatrone->isChecked()) {
-                for (i = 0; i < Data->MAXX2; i++)
-                    aufknuepfung.feld.Set(i, oldeinzug - 1, 0);
-            } else {
-                for (j = 0; j < Data->MAXY2; j++) {
-                    trittfolge.feld.Set(oldeinzug - 1, j, 0);
-                    RecalcTrittfolgeEmpty(j);
-                }
-                dbw3_assert(oldeinzug - 1 < Data->MAXX2);
-                freietritte[oldeinzug - 1] = true;
-            }
-        }
-    }
-
-    // Trittfolge loeschen
-    for (i = 0; i < Data->MAXX2; i++) {
-        char s = trittfolge.feld.Get(i, _j + scroll_y2);
-        if (s > 0) {
-            trittfolge.feld.Set(i, _j + scroll_y2, 0);
-            bool bEmptyTritt = true;
-            for (j = 0; j < Data->MAXY2; j++)
-                if (trittfolge.feld.Get(i, j) > 0) {
-                    bEmptyTritt = false;
-                    break;
-                }
-            if (bEmptyTritt && (!ViewSchlagpatrone || !ViewSchlagpatrone->isChecked()))
-                for (j = 0; j < Data->MAXY1; j++)
-                    aufknuepfung.feld.Set(i, j, 0);
-            if (bEmptyTritt)
-                freietritte[i] = true;
-        }
-    }
-
-    // Bestimmen, ob Trittfolge berechnet werden muss
-    bool bNeedTrittfolgeRecalc = false;
-    for (i = 0; i < Data->MAXX1; i++) {
-        char s = gewebe.feld.Get(i, _j + scroll_y2);
-        if (s > 0) {
-            bNeedTrittfolgeRecalc = true;
-            break;
-        }
-    }
-
-    // Trittfolge neuberechnen
-    if (bNeedTrittfolgeRecalc) {
-        if (!ViewSchlagpatrone || !ViewSchlagpatrone->isChecked()) {
-            bool bEqualRow = false;
-            for (j = 0; j < Data->MAXY2; j++) {
-                if (j == _j + scroll_y2)
-                    continue;
-                bEqualRow = true;
-                if (IsEmptyTrittfolge(j))
-                    bEqualRow = false;
-                else {
-                    for (i = 0; i < Data->MAXX1; i++) {
-                        if (gewebe.feld.Get(i, j) != gewebe.feld.Get(i, _j + scroll_y2)) {
-                            bEqualRow = false;
-                            break;
-                        }
-                    }
-                }
-                if (bEqualRow)
-                    break;
-            }
-            if (bEqualRow)
-                CopyTritt(j, _j + scroll_y2);
-            else {
-                short freetritt = GetFreeTritt();
-                if (freetritt != -1) {
-                    trittfolge.feld.Set(freetritt, _j + scroll_y2, 1);
-                    dbw3_assert(freetritt < Data->MAXX2);
-                    freietritte[freetritt] = false;
-                }
-            }
-        } else {
-            for (int i = 0; i < Data->MAXX1; i++) {
-                char c = gewebe.feld.Get(i, _j + scroll_y2);
-                if (c > 0) {
-                    int jj = einzug.feld.Get(i);
-                    if (jj != 0) {
-                        trittfolge.feld.Set(jj - 1, _j + scroll_y2, c);
-                        dbw3_assert(jj - 1 < Data->MAXX2);
-                        freietritte[jj - 1] = false;
-                        trittfolge.isempty.Set(_j + scroll_y2, false);
-                    }
-                }
-            }
-        }
-    }
-
-    RecalcTrittfolgeEmpty(_j + scroll_y2);
-
-    // Aufknuepfung nachfuehren
-    if (!ViewSchlagpatrone || !ViewSchlagpatrone->isChecked()) {
-        // Schussfaden
-        for (i = 0; i < Data->MAXX1; i++)
-            if (einzug.feld.Get(i))
-                for (k = 0; k < Data->MAXX2; k++)
-                    if (trittfolge.feld.Get(k, _j + scroll_y2) > 0)
-                        aufknuepfung.feld.Set(k, einzug.feld.Get(i) - 1,
-                                              gewebe.feld.Get(i, _j + scroll_y2));
-        // Kettfaden
-        if (einzug.feld.Get(_i + scroll_x1))
-            for (j = 0; j < Data->MAXY2; j++)
-                for (k = 0; k < Data->MAXX2; k++)
-                    if (trittfolge.feld.Get(k, j) > 0)
-                        aufknuepfung.feld.Set(k, einzug.feld.Get(_i + scroll_x1) - 1,
-                                              gewebe.feld.Get(_i + scroll_x1, j));
-    }
+    /*  The legacy hand-rolled rebuild (find-identical-column /
+        reuse-shaft / per-column aufknuepfung writes / pegplan-branch
+        trittfolge writes / freieschaefte+freietritte bookkeeping)
+        is superseded by a full RcRecalcAll pass. RecalcEinzug /
+        RecalcTrittfolge already reuse matching shafts / treadles via
+        KettfadenEqual / SchussfadenEqual and rebuild the aufknuepfung
+        from scratch. Identity assignment in the einzug / trittfolge
+        strips may renumber compared to legacy's "closest match" rule;
+        the underlying weave is unchanged.                           */
+    RecalcAll();
 }
 /*-----------------------------------------------------------------*/

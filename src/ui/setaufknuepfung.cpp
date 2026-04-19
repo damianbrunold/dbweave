@@ -30,54 +30,16 @@ void TDBWFRM::SetAufknuepfung(int _i, int _j, bool _set, int _range)
 /*-----------------------------------------------------------------*/
 void TDBWFRM::DoSetAufknuepfung(int _i, int _j, bool _set, int _range)
 {
-    int i, j, k, l;
     if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked())
         return;
 
-    // Punkt toggeln und neuzeichnen
+    // Punkt toggeln
     if (!_set)
         ToggleAufknuepfung(scroll_x2 + _i, scroll_y1 + _j);
     else
         aufknuepfung.feld.Set(scroll_x2 + _i, scroll_y1 + _j, char(_range));
 
-    // Muss ueberhaupt neuberechnet werden?!
-    if ((einzughandler && einzughandler->IsEmptySchaft(scroll_y1 + _j))
-        || IsEmptyTritt(scroll_x2 + _i)) {
-        SetModified();
-        refresh();
-        return;
-    }
-
-    // Zeilen und Spalten loeschen
-    for (i = 0; i < Data->MAXX1; i++)
-        if (einzug.feld.Get(i) == scroll_y1 + _j + 1)
-            for (j = 0; j < Data->MAXY2; j++) {
-                char s = gewebe.feld.Get(i, j);
-                if (s > 0)
-                    gewebe.feld.Set(i, j, 0);
-            }
-    for (j = 0; j < Data->MAXY2; j++)
-        if (trittfolge.feld.Get(scroll_x2 + _i, j) > 0)
-            for (i = 0; i < Data->MAXX1; i++) {
-                char s = gewebe.feld.Get(i, j);
-                if (s > 0)
-                    gewebe.feld.Set(i, j, 0);
-            }
-
-    // Neuberechnen
-    for (i = 0; i < Data->MAXX2; i++)
-        for (l = 0; l < Data->MAXY1; l++) {
-            char s = aufknuepfung.feld.Get(i, l);
-            if (s > 0) {
-                for (j = 0; j < Data->MAXY2; j++)
-                    if (trittfolge.feld.Get(i, j) > 0)
-                        for (k = 0; k < Data->MAXX1; k++)
-                            if (einzug.feld.Get(k) == l + 1)
-                                if (gewebe.feld.Get(k, j) <= 0)
-                                    gewebe.feld.Set(k, j, s);
-            }
-        }
-
+    RecalcGewebe();
     CalcRange();
     UpdateRapport();
 

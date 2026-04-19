@@ -80,17 +80,7 @@ void TDBWFRM::DoSetEinzug(int _i, int _j)
             }
     }
 
-    // Kettfaden neuberechnen
-    int i, j, k;
-    for (j = 0; j < Data->MAXY2; j++)
-        gewebe.feld.Set(scroll_x1 + _i, j, 0);
-    for (i = 0; i < Data->MAXX2; i++) {
-        char s = aufknuepfung.feld.Get(i, neweinzug - 1);
-        if (s > 0)
-            for (k = 0; k < Data->MAXY2; k++)
-                if (trittfolge.feld.Get(i, k) > 0)
-                    gewebe.feld.Set(scroll_x1 + _i, k, s);
-    }
+    RecalcGewebe();
 
     // Belegter Bereich nachfuehren
     CalcRangeKette();

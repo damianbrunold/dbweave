@@ -68,60 +68,17 @@ void TDBWFRM::DoSetTrittfolge(int _i, int _j, bool _set, int _range)
                                 char(oldstate <= 0 ? currentrange : -oldstate));
         else
             trittfolge.feld.Set(scroll_x2 + _i, scroll_y2 + _j, char(_range));
-        if ((!_set && oldstate < 0) || (_set && _range != 0)) {
-            dbw3_assert(scroll_x2 + _i < Data->MAXX2);
-            freietritte[scroll_x2 + _i] = false;
-        } else {
-            dbw3_assert(scroll_x2 + _i < Data->MAXX2);
-            freietritte[scroll_x2 + _i] = true;
-            for (int j = 0; j < Data->MAXY2; j++)
-                if (trittfolge.feld.Get(scroll_x1 + _i, j) > 0) {
-                    freietritte[scroll_x2 + _i] = false;
-                    break;
-                }
-        }
     } else if (!trittfolge.einzeltritt) {
         char oldstate = trittfolge.feld.Get(scroll_x2 + _i, scroll_y2 + _j);
         trittfolge.feld.Set(scroll_x2 + _i, scroll_y2 + _j, char(oldstate <= 0 ? 1 : -oldstate));
-        if (oldstate < 0) {
-            dbw3_assert(scroll_x2 + _i < Data->MAXX2);
-            freietritte[scroll_x2 + _i] = false;
-        } else {
-            dbw3_assert(scroll_x2 + _i < Data->MAXX2);
-            freietritte[scroll_x2 + _i] = true;
-            for (int j = 0; j < Data->MAXY2; j++)
-                if (trittfolge.feld.Get(scroll_x1 + _i, j) > 0) {
-                    freietritte[scroll_x2 + _i] = false;
-                    break;
-                }
-        }
     } else {
         bool bSet = trittfolge.feld.Get(scroll_x2 + _i, scroll_y2 + _j);
         for (int i = 0; i < Data->MAXX2; i++)
             trittfolge.feld.Set(i, scroll_y2 + _j, 0);
         trittfolge.feld.Set(scroll_x2 + _i, scroll_y2 + _j, bSet ? (char)0 : (char)1);
-        RecalcFreieTritte();
     }
 
-    RecalcTrittfolgeEmpty(_j + scroll_y2);
-
-    // Faden neu berechnen
-    int i, j, k;
-    for (i = 0; i < Data->MAXX1; i++)
-        gewebe.feld.Set(i, _j + scroll_y2, 0);
-    for (i = 0; i < Data->MAXX2; i++) {
-        char t = trittfolge.feld.Get(i, _j + scroll_y2);
-        if (t > 0)
-            for (j = 0; j < Data->MAXY1; j++) {
-                char s = aufknuepfung.feld.Get(i, j);
-                if (s > 0)
-                    for (k = 0; k < Data->MAXX1; k++)
-                        if (einzug.feld.Get(k) == j + 1)
-                            gewebe.feld.Set(
-                                k, _j + scroll_y2,
-                                (ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) ? t : s);
-            }
-    }
+    RecalcGewebe();
 
     // Belegter Bereich nachfuehren
     CalcRangeKette();

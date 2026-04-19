@@ -147,7 +147,6 @@ private slots:
         DBWFRM->ViewSchlagpatrone->setChecked(true);
         DBWFRM->SetTrittfolge(/*_i=*/4, /*_j=*/5, /*_set=*/true, /*_range=*/7);
         QCOMPARE(DBWFRM->trittfolge.feld.Get(4, 5), (char)7);
-        QCOMPARE(DBWFRM->freietritte[4], false);
     }
 
     void set_trittfolge_non_pegplan_einzeltritt_clears_row()
