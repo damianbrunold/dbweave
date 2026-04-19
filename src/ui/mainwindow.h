@@ -687,6 +687,11 @@ public:
 	void __fastcall FilePrintpreviewClick ();
 	void __fastcall FileSetPageClick      ();
 
+	/*  Loom control (Phase 11). Opens LoomDialog with the current
+	    trittfolge / aufknuepfung / klammer state and lets the user
+	    run a dummy loom simulation row-by-row. */
+	void __fastcall LoomControlClick      ();
+
 	/*  Drawing tools (tools.cpp). */
 	TOOL             tool = TOOL_POINT;
 	/*  Tool-drag preview: when the user is dragging with a non-

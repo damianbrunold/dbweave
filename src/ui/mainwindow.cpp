@@ -587,6 +587,11 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	addTool(QStringLiteral("&Ellipse"),         TOOL_ELLIPSE);
 	addTool(QStringLiteral("Fille&d ellipse"),  TOOL_FILLEDELLIPSE);
 
+	/*  Loom menu — Phase 11 dummy simulator. */
+	QMenu* loomMenu = menuBar()->addMenu(QStringLiteral("&Loom"));
+	QAction* actLoomControl = loomMenu->addAction(QStringLiteral("&Loom control..."));
+	connect(actLoomControl, &QAction::triggered, this, [this]{ LoomControlClick(); });
+
 	/*  Options menu. */
 	QMenu* optMenu = menuBar()->addMenu(QStringLiteral("&Options"));
 	QAction* actEnvOpt = optMenu->addAction(QStringLiteral("&Environment..."));
