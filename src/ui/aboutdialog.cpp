@@ -10,11 +10,13 @@
 */
 
 #include "aboutdialog.h"
+#include "techinfodialog.h"
 
 #include <QApplication>
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QPushButton>
 #include <QVBoxLayout>
 
 AboutDialog::AboutDialog (QWidget* _parent)
@@ -81,7 +83,14 @@ AboutDialog::AboutDialog (QWidget* _parent)
 	cols->addWidget(colRight);
 
 	auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok, this);
+	QPushButton* techBtn = btns->addButton(QStringLiteral("&Technical Info..."),
+	                                       QDialogButtonBox::ActionRole);
 	connect(btns, &QDialogButtonBox::accepted, this, &QDialog::accept);
+	connect(techBtn, &QPushButton::clicked, this, [this] {
+		hide();
+		TechinfoDialog(this).exec();
+		show();
+	});
 
 	auto* root = new QVBoxLayout(this);
 	root->addWidget(title);

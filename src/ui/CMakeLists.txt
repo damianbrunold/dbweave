@@ -50,6 +50,7 @@ add_library(dbweave_ui STATIC
     entervvdialog.cpp
     loadpartsdialog.cpp
     aboutdialog.cpp
+    techinfodialog.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)
