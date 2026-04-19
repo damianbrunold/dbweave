@@ -680,6 +680,13 @@ public:
     void FileSave();
     void FileSaveAs();
     void LoadPartsClick();
+    void FileNewClick();
+    void FileNewTemplateClick();
+    /*  Reset the document state to defaults. Shared between
+        FileNewClick and FileNewTemplateClick -- after template
+        loading the caller clears the filename so Save prompts for a
+        fresh target.                                              */
+    void ResetDocument();
 
     /*  Options / Environment dialogs (app settings). */
     void OptEnvironmentClick();

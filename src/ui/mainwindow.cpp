@@ -227,12 +227,12 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     QAction* actFileNew = menuAct(fileMenu, "&New", "&Neu", "sb_new",
                                   "Creates a new pattern", "Erstellt ein neues Muster");
     actFileNew->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_N));
-    actFileNew->setEnabled(false);
+    connect(actFileNew, &QAction::triggered, this, [this] { FileNewClick(); });
     QAction* actFileNewTpl = menuAct(fileMenu, "New &from template...",
                                      "Neu ge&mäss Vorlage...", nullptr,
                                      "Creates a new pattern based upon a template",
                                      "Erstellt ein neues Muster anhand einer Vorlage");
-    actFileNewTpl->setEnabled(false);
+    connect(actFileNewTpl, &QAction::triggered, this, [this] { FileNewTemplateClick(); });
     QAction* actOpen = menuAct(fileMenu, "&Open...", "Ö&ffnen...", "sb_open",
                                "Opens a pattern", "Öffnet ein Muster");
     actOpen->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_O));

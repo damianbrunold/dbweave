@@ -18,10 +18,20 @@
     chrome.                                                         */
 
 #include "mainwindow.h"
+#include "patterncanvas.h"
 #include "fileformat.h"
 #include "loadoptions.h"
 #include "undoredo.h"
+#include "cursor.h"
+#include "datamodule.h"
+#include "palette.h"
+#include "properties.h"
+#include "blockmuster.h"
 #include "language.h"
+#include <QCoreApplication>
+#include <QDir>
+
+#include <cstring>
 
 #include <QAction>
 #include <QCloseEvent>
@@ -35,6 +45,205 @@ static QString fileFilter()
 {
     return LANG_STR("DB-WEAVE files (*.dbw);;All files (*.*)",
                     "DB-WEAVE-Dateien (*.dbw);;Alle Dateien (*.*)");
+}
+
+static QString templateFilter()
+{
+    return LANG_STR("DB-WEAVE templates (*.dbv);;All files (*.*)",
+                    "DB-WEAVE-Vorlagen (*.dbv);;Alle Dateien (*.*)");
+}
+
+/*-----------------------------------------------------------------*/
+/*  Port of legacy DateiNeu: reset every bit of document state back
+    to the values a freshly-constructed TDBWFRM would have. Does NOT
+    prompt the user or clear the filename -- callers handle those so
+    the same helper can be shared between FileNewClick (no filename)
+    and FileNewTemplateClick (loads a .dbv first, then clears).   */
+void TDBWFRM::ResetDocument()
+{
+    /*  Close any open backing file so the next Save won't try to
+        write through a stale handle.                              */
+    if (file && file->IsOpen())
+        file->Close();
+
+    /*  Reset Data->MAX* back to their ctor defaults so the cleared
+        document has the same dimensions a freshly-constructed one
+        would have.                                                 */
+    Data->MAXX1 = DEFAULT_MAXX1;
+    Data->MAXX2 = DEFAULT_MAXX2;
+    Data->MAXY1 = DEFAULT_MAXY1;
+    Data->MAXY2 = DEFAULT_MAXY2;
+
+    /*  Resize the field buffers to match, then wipe every cell.
+        Resize() preserves existing content -- Clear() is what
+        actually zeroes the gewebe / einzug / aufknuepfung /
+        trittfolge / colour strips back to empty.                 */
+    AllocBuffers(true);
+    gewebe.Clear();
+    einzug.Clear();
+    aufknuepfung.Clear();
+    trittfolge.Clear();
+    blatteinzug.Clear();
+    kettfarben.Clear();
+    schussfarben.Clear();
+
+    /*  Per-shaft / per-treadle availability + recalc scratch. */
+    for (int j = 0; j < Data->MAXY1; j++)
+        freieschaefte[j] = true;
+    for (int i = 0; i < Data->MAXX2; i++)
+        freietritte[i] = true;
+    if (xbuf)
+        std::memset(xbuf, 0, Data->MAXX1);
+    if (ybuf)
+        std::memset(ybuf, 0, Data->MAXY2);
+
+    /*  Klammer (loom brace) ranges. */
+    for (int i = 0; i < 9; i++) {
+        klammern[i].first = 0;
+        klammern[i].last = 1;
+        klammern[i].repetitions = 0;
+    }
+
+    /*  Fix-einzug state. */
+    delete[] fixeinzug;
+    fixeinzug = nullptr;
+    firstfree = 1;
+    fixsize = 0;
+
+    /*  Scroll / viewport. */
+    scroll_x1 = scroll_x2 = scroll_y1 = scroll_y2 = 0;
+    currentzoom = 4;
+
+    /*  Ranges + rapport + selection. Legacy sentinel for "no range"
+        is a = b = -1.                                              */
+    kette = SZ(-1, -1);
+    schuesse = SZ(-1, -1);
+    rapport = RAPPORT();
+    rapport.kr = SZ(0, -1);
+    rapport.sr = SZ(0, -1);
+    ClearSelection();
+
+    /*  Reset the visible strip caps to the ctor defaults (12 each).
+        A subsequent template load would overwrite these anyway, but
+        File > New starts from a clean default look.                */
+    hvisible = DEFAULT_MAXY1;
+    wvisible = DEFAULT_MAXX2;
+
+    /*  Tool / range state. */
+    tool = TOOL_POINT;
+    currentrange = 1;
+    if (rangeActions[0] && rangeActions[0]->actionGroup())
+        rangeActions[0]->setChecked(true);
+
+    /*  View-menu toggles back to defaults. */
+    if (ViewSchlagpatrone)
+        ViewSchlagpatrone->setChecked(false);
+    trittfolge.einzeltritt = true;
+    if (EzMinimalZ)
+        EzMinimalZ->setChecked(true);
+    if (TfMinimalZ)
+        TfMinimalZ->setChecked(true);
+    if (GewebeNormal)
+        GewebeNormal->setChecked(true);
+    if (RappViewRapport)
+        RappViewRapport->setChecked(false);
+    if (ViewHlines)
+        ViewHlines->setChecked(true);
+    if (Inverserepeat)
+        Inverserepeat->setChecked(false);
+    fewithraster = false;
+    sinkingshed = false;
+    righttoleft = false;
+    toptobottom = false;
+
+    /*  Secondary state: hilfslinien, blockmuster, bereichmuster,
+        metadata, print borders.                                   */
+    hlines.DeleteAll();
+    for (int i = 0; i < 10; i++) {
+        blockmuster[i].Clear();
+        bereichmuster[i].Clear();
+    }
+    currentbm = 0;
+    if (Data->properties)
+        Data->properties->Init();
+    if (Data->palette)
+        Data->palette->InitPalette();
+    InitBorders();
+
+    /*  Cursor + keyboard field. */
+    kbd_field = GEWEBE;
+    if (cursorhandler) {
+        cursorhandler->SetCursorDirection(CD_UP);
+    }
+
+    /*  Undo stack: clear + seed with a snapshot of the empty state. */
+    if (undo) {
+        delete undo;
+        undo = new UrUndo(this);
+    }
+
+    /*  Menu chrome catches up (Trittfolge vs Schlagpatrone). */
+    UpdateSchlagpatroneMode();
+
+    /*  Repaint + relayout. */
+    RecalcGewebe();
+    if (pattern_canvas)
+        pattern_canvas->recomputeLayout();
+    SetModified(false);
+    refresh();
+    if (undo)
+        undo->Snapshot();
+}
+
+/*-----------------------------------------------------------------*/
+/*  FileNewClick — prompt-save, reset the document and clear the
+    filename so Save prompts for a new target. Mirrors legacy
+    DateiNeu semantics minus the optional "normal.dbv" bootstrap
+    (that's what FileNewTemplateClick is for).                    */
+void TDBWFRM::FileNewClick()
+{
+    if (!AskSave())
+        return;
+    filename.clear();
+    ResetDocument();
+    SetAppTitle();
+}
+
+/*-----------------------------------------------------------------*/
+/*  FileNewTemplateClick — ask the user for a .dbv file, load it and
+    then clear the filename so the next Save prompts for a fresh
+    target. If the user cancels the file-dialog we leave the current
+    document untouched.                                           */
+void TDBWFRM::FileNewTemplateClick()
+{
+    if (!AskSave())
+        return;
+    const QString dir
+        = filename.isEmpty() ? QString() : QFileInfo((QString)filename).absolutePath();
+    const QString chosen = QFileDialog::getOpenFileName(
+        this, LANG_STR("New from template", "Neu gemäss Vorlage"), dir, templateFilter());
+    if (chosen.isEmpty())
+        return;
+    if (file && file->IsOpen())
+        file->Close();
+    filename = chosen;
+    LOADSTAT stat = UNKNOWN_FAILURE;
+    if (!Load(stat, LOADALL)) {
+        QMessageBox::warning(
+            this, QStringLiteral("DB-WEAVE"),
+            LANG_STR("Could not load template '%1' (status %2).",
+                     "Vorlage '%1' konnte nicht geladen werden (Status %2).")
+                .arg(chosen)
+                .arg(int(stat)));
+        return;
+    }
+    /*  The loaded file lives under its template path; reset filename
+        so Save treats it as an unnamed document and prompts for a
+        target. Flag modified because the template contents now exist
+        without a backing file.                                     */
+    filename.clear();
+    SetModified(true);
+    SetAppTitle();
 }
 
 void TDBWFRM::FileOpen()
