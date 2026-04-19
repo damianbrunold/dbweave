@@ -21,6 +21,7 @@
 #include "datamodule.h"
 #include "fileformat.h"
 #include "language.h"
+#include "settings.h"
 #include "assert_compat.h"
 
 #include <QDockWidget>
@@ -647,7 +648,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         threadMenu->addAction(a);
     }
     threadMenu->addSeparator();
-    QAction* actCopyEzTf = menuAct(threadMenu, "&Copy from treadling",
+    actCopyEzTf = menuAct(threadMenu, "&Copy from treadling",
                                    "&Kopieren von Trittfolge", nullptr,
                                    "Copies the treadling into the threading",
                                    "Kopiert die Trittfolge in den Einzug");
@@ -657,7 +658,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     connect(EzFixiert, &QAction::triggered, this, [this] { EditFixeinzug(); });
 
     /*  ---------- Tre&adling (MenuTrittfolge) ---------------- */
-    QMenu* treadMenu = addMenu(menuBar(), "Tre&adling", "&Trittfolge");
+    treadMenu = addMenu(menuBar(), "Tre&adling", "&Trittfolge");
     QAction* actTfSpiegeln = menuAct(treadMenu, "&Mirror", "&Spiegeln", nullptr,
                                      "Mirrors the treadling in vertical direction",
                                      "Spiegelt die Trittfolge in vertikaler Richtung");
@@ -700,7 +701,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     connect(actCopyTfEz, &QAction::triggered, this, [this] { CopyTrittfolgeEinzugClick(); });
 
     /*  ---------- &Pegplan (MenuSchlagpatrone) --------------- */
-    QMenu* spMenu = addMenu(menuBar(), "&Pegplan", "&Schlagpatrone");
+    spMenu = addMenu(menuBar(), "&Pegplan", "&Schlagpatrone");
     QAction* actSpInvert = menuAct(spMenu, "&Invert", "&Invertieren", "sb_invert",
                                    "Inverts the pegplan",
                                    "Invertiert die gesamte Schlagpatrone");
@@ -973,7 +974,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
                  QStringLiteral("Wechselt zwischen Schlagpatrone und Aufknüpfung/Trittfolge"));
     ViewSchlagpatrone->setShortcut(QKeySequence(Qt::Key_F9));
     extrasMenu->addAction(ViewSchlagpatrone);
-    connect(ViewSchlagpatrone, &QAction::triggered, this, relayout);
+    connect(ViewSchlagpatrone, &QAction::triggered, this, [this] { ToggleSchlagpatrone(); });
     QAction* actWeave = menuAct(extrasMenu, "&Weave", "&Weben", nullptr,
                                 "Switches into the weaving mode",
                                 "Wechselt in den Weben-Modus");
@@ -1162,6 +1163,13 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     LoadMRU();
     LoadUserdefMenu();
 
+    /*  Apply the initial pegplan-vs-trittfolge menu layout. The saved
+        PegplanMode preference will be honoured when the file loader
+        / startup path toggles ViewSchlagpatrone; calling this now
+        ensures the "Pegplan" top-level menu is hidden in the default
+        (trittfolge) state.                                          */
+    UpdateSchlagpatroneMode();
+
     /*  Cursor blink. QApplication::cursorFlashTime is the total
         flash period in ms; fire the timer at half that so one tick
         corresponds to a show/hide flip. */
@@ -1324,6 +1332,90 @@ void TDBWFRM::ReloadLanguage()
     /*  Window title follows the active pattern; just re-run the
         usual app-title builder. */
     SetAppTitle();
+    /*  The View > Trittfolge caption depends on pegplan mode, which
+        the langEntries registry doesn't know about. Let the dedicated
+        helper fix it up (and the menu visibility along with it).    */
+    UpdateSchlagpatroneMode();
+}
+
+/*-----------------------------------------------------------------*/
+/*  Pegplan mode entry / exit. Port of legacy ToggleSchlagpatrone +
+    ViewSchlagpatroneClick from dbw3_form.cpp.                     */
+void TDBWFRM::ToggleSchlagpatrone()
+{
+    if (!ViewSchlagpatrone)
+        return;
+    /*  Qt already flipped isChecked() before emitting triggered().
+        Read the new state and act on it.                           */
+    const bool pegplan = ViewSchlagpatrone->isChecked();
+    trittfolge.einzeltritt = !pegplan;
+    if (!pegplan) {
+        /*  Leaving pegplan: split the schlagpatrone back into a
+            diagonal einzug-aligned trittfolge plus a compact
+            aufknuepfung. Legacy also re-checks the saved trittfolge
+            style radio; MinimalZ is the ctor default, so reassert
+            that when we can't recover the previous one.             */
+        if (TfMinimalZ)
+            TfMinimalZ->setChecked(true);
+        RecalcTrittfolgeAufknuepfung();
+    } else {
+        /*  Entering pegplan: project (einzug × aufknuepfung × trittfolge)
+            into a single Schlagpatrone in the trittfolge field.     */
+        RecalcSchlagpatrone();
+    }
+    SetModified();
+    /*  The aufknuepfung field is gone while pegplan is active; jump
+        the kbd cursor out of it if it's parked there.               */
+    if (kbd_field == AUFKNUEPFUNG && cursorhandler) {
+        cursorhandler->GotoNextField();
+    }
+    if (undo)
+        undo->Snapshot();
+
+    UpdateSchlagpatroneMode();
+    if (pattern_canvas)
+        pattern_canvas->recomputeLayout();
+    refresh();
+
+    /*  Persist the preference so the next session starts in the same
+        mode. Matches legacy "Divers / PegplanMode".                  */
+    Settings settings;
+    settings.SetCategory(AnsiString("Divers"));
+    settings.Save(AnsiString("PegplanMode"), pegplan ? 1 : 0);
+}
+
+/*-----------------------------------------------------------------*/
+void TDBWFRM::UpdateSchlagpatroneMode()
+{
+    const bool pegplan = ViewSchlagpatrone && ViewSchlagpatrone->isChecked();
+    const bool de = (active_language == GE);
+    /*  View > Trittfolge caption switches to Pegplan/Schlagpatrone in
+        pegplan mode. Overrides whatever ReloadLanguage set.          */
+    if (ViewTrittfolge) {
+        if (pegplan) {
+            ViewTrittfolge->setText(de ? QStringLiteral("Sch&lagpatrone")
+                                       : QStringLiteral("Pegpl&an"));
+            ViewTrittfolge->setToolTip(
+                de ? QStringLiteral("Schlagpatrone sichtbar/unsichtbar")
+                   : QStringLiteral("Toggles pegplan"));
+        } else {
+            ViewTrittfolge->setText(de ? QStringLiteral("&Trittfolge")
+                                       : QStringLiteral("Tre&adling"));
+            ViewTrittfolge->setToolTip(
+                de ? QStringLiteral("Trittfolge sichtbar/unsichtbar")
+                   : QStringLiteral("Toggles treadling"));
+        }
+    }
+    /*  Top-level Treadling / Pegplan menus swap visibility with the
+        active mode. */
+    if (treadMenu && treadMenu->menuAction())
+        treadMenu->menuAction()->setVisible(!pegplan);
+    if (spMenu && spMenu->menuAction())
+        spMenu->menuAction()->setVisible(pegplan);
+    /*  "Copy from treadling" only makes sense with a separate
+        trittfolge field -- hide it while pegplan is active. */
+    if (actCopyEzTf)
+        actCopyEzTf->setVisible(!pegplan);
 }
 
 void TDBWFRM::RecalcGewebe()

@@ -275,6 +275,30 @@ public:
     QAction* UserdefAct[MAXUSERDEF] = {};
     class QMenu* MenuWeitere = nullptr;
 
+    /*  Top-level menus whose visibility flips with pegplan mode.
+        Legacy swapped the Trittfolge caption to "Pegplan/Schlagpatrone"
+        and hid the Trittfolge operations menu in favour of the
+        pegplan-specific one (SpInvert / ClearSchlagpatrone /
+        SpSpiegeln).                                                    */
+    class QMenu* treadMenu = nullptr;
+    class QMenu* spMenu = nullptr;
+    /*  "Copy from treadling" under the Threading menu. Hidden while
+        ViewSchlagpatrone is checked (pegplan mode) because Trittfolge
+        doesn't exist as a separate field there.                      */
+    QAction* actCopyEzTf = nullptr;
+
+    /*  Schlagpatrone (pegplan) mode toggle. Port of legacy
+        ToggleSchlagpatrone + ViewSchlagpatroneClick: flips
+        trittfolge.einzeltritt, rebuilds the Trittfolge/Aufknuepfung
+        pair into a Schlagpatrone or back, pushes an undo snapshot,
+        updates the menu layout and persists the preference.         */
+    void ToggleSchlagpatrone();
+    /*  Apply the visible/caption state of the Trittfolge / Pegplan
+        menus and the "Copy from treadling" entry to match the current
+        pegplan mode. Called from ToggleSchlagpatrone, ReloadLanguage,
+        and once from the ctor after menu construction.              */
+    void UpdateSchlagpatroneMode();
+
     /*  Schedule a repaint of the pattern canvas. QWidget::update() on
         the main window only invalidates the window chrome; children
         paint independently. Every TDBWFRM method that mutates the
