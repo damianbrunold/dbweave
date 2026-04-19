@@ -26,7 +26,6 @@ protected:
     FeldVectorShort* einzug;
     FeldGridChar* aufknuepfung;
     FeldGridChar* trittfolge;
-    FeldVectorBool* isempty;
     FeldVectorChar* schussfarben;
     FeldVectorChar* kettfarben;
     FeldVectorChar* blatteinzug;

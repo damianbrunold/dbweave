@@ -161,24 +161,24 @@ void WifWriter::calcDimensions()
 {
     firstschaft = lastschaft = 0;
     for (int i = 0; i < Data->MAXY1; i++)
-        if (!frm->freieschaefte[i]) {
+        if (!frm->IsFreeSchaft(i)) {
             firstschaft = i;
             break;
         }
     for (int i = Data->MAXY1 - 1; i >= 0; i--)
-        if (!frm->freieschaefte[i]) {
+        if (!frm->IsFreeSchaft(i)) {
             lastschaft = i;
             break;
         }
 
     firsttritt = lasttritt = 0;
     for (int i = 0; i < Data->MAXX2; i++)
-        if (!frm->freietritte[i]) {
+        if (!frm->IsFreeTritt(i)) {
             firsttritt = i;
             break;
         }
     for (int i = Data->MAXX2 - 1; i >= 0; i--)
-        if (!frm->freietritte[i]) {
+        if (!frm->IsFreeTritt(i)) {
             lasttritt = i;
             break;
         }

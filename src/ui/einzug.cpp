@@ -383,7 +383,7 @@ void EinzugRearrangeImpl::CalcRange()
 /*-----------------------------------------------------------------*/
 bool EinzugRearrangeImpl::IsEmptySchaft(int _j)
 {
-    return frm->freieschaefte[_j];
+    return frm->IsFreeSchaft(_j);
 }
 /*-----------------------------------------------------------------*/
 int EinzugRearrangeImpl::GetFirstNonemptySchaft(int _j)
@@ -446,9 +446,6 @@ void EinzugRearrangeImpl::MoveSchaft(int _von, int _nach)
         if (frm->einzug.feld.Get(i) == _von + 1)
             frm->einzug.feld.Set(i, (short)(_nach + 1));
 
-    frm->freieschaefte[_nach] = frm->freieschaefte[_von];
-    frm->freieschaefte[_von] = true;
-
     if (!frm->ViewSchlagpatrone || !frm->ViewSchlagpatrone->isChecked()) {
         for (i = 0; i < data->MAXX2; i++) {
             frm->aufknuepfung.feld.Set(i, _nach, frm->aufknuepfung.feld.Get(i, _von));
@@ -465,9 +462,6 @@ void EinzugRearrangeImpl::MoveSchaft(int _von, int _nach)
         RedrawSchlagpatrone(_nach);
         dbw3_assert(_nach < data->MAXX2);
         dbw3_assert(_von < data->MAXX2);
-        bool bEmpty = frm->freietritte[_nach];
-        frm->freietritte[_nach] = frm->freietritte[_von];
-        frm->freietritte[_von] = bEmpty;
     }
 
     RedrawSchaft(_von);
@@ -514,7 +508,6 @@ void EinzugRearrangeImpl::EliminateEmptySchaft()
                             frm->DrawAufknuepfung(i - frm->scroll_x2, j - frm->scroll_y1);
                     }
             }
-            frm->freieschaefte[j] = true;
             int firstnonempty = GetFirstNonemptySchaft(j);
             if (firstnonempty == -1 || firstnonempty < j)
                 return;
@@ -534,14 +527,6 @@ void EinzugRearrangeImpl::EliminateEmptySchaft()
                     for (int i = 0; i < Data->MAXY2; i++) {
                         if (j < Data->MAXX2)
                             frm->trittfolge.feld.Set(j, i, 0);
-                        frm->trittfolge.isempty.Set(i, true);
-                        for (int ii = 0; ii < Data->MAXX2; ii++)
-                            if (frm->trittfolge.feld.Get(ii, i) > 0) {
-                                frm->trittfolge.isempty.Set(i, false);
-                                break;
-                            }
-                        if (j < Data->MAXX2)
-                            frm->freietritte[j] = true;
                         if (frm->trittfolge.gh > 0 && i >= frm->scroll_y2
                             && i < frm->scroll_y2 + frm->trittfolge.pos.height / frm->trittfolge.gh)
                             frm->DrawTrittfolge(j - frm->scroll_x2, i - frm->scroll_y2);
@@ -563,9 +548,6 @@ void EinzugRearrangeImpl::SwitchSchaefte(int _a, int _b)
             frm->einzug.feld.Set(i, (short)(_a + 1));
     }
 
-    bool bEmpty = frm->freieschaefte[_a];
-    frm->freieschaefte[_a] = frm->freieschaefte[_b];
-    frm->freieschaefte[_b] = bEmpty;
 
     if (!frm->ViewSchlagpatrone || !frm->ViewSchlagpatrone->isChecked()) {
         for (i = 0; i < data->MAXX2; i++) {
@@ -585,9 +567,6 @@ void EinzugRearrangeImpl::SwitchSchaefte(int _a, int _b)
         RedrawSchlagpatrone(_b);
         dbw3_assert(_a < data->MAXX2);
         dbw3_assert(_b < data->MAXX2);
-        bool bEmpty = frm->freietritte[_a];
-        frm->freietritte[_a] = frm->freietritte[_b];
-        frm->freietritte[_b] = bEmpty;
     }
 
     RedrawSchaft(_a);
@@ -615,10 +594,8 @@ int EinzugRearrangeImpl::SplitSchaft(int _searchj, int _sourcej)
                         // alle entsprechenden Punkte im Einzug transferieren
                         int x = i;
                         while (x < data->MAXX1) {
-                            if (frm->einzug.feld.Get(x) - 1 == _sourcej) {
+                            if (frm->einzug.feld.Get(x) - 1 == _sourcej)
                                 frm->einzug.feld.Set(x, (short)(j + 1));
-                                frm->freieschaefte[j] = false;
-                            }
                             x += (r.b - r.a + 1);
                         }
                         if (!frm->ViewSchlagpatrone || !frm->ViewSchlagpatrone->isChecked()) {
@@ -633,10 +610,6 @@ int EinzugRearrangeImpl::SplitSchaft(int _searchj, int _sourcej)
                             for (int k = 0; k < data->MAXY2; k++) {
                                 char s = frm->trittfolge.feld.Get(_sourcej, k);
                                 frm->trittfolge.feld.Set(j, k, s);
-                                if (s > 0) {
-                                    dbw3_assert(j < Data->MAXX2);
-                                    frm->freietritte[j] = false;
-                                }
                             }
                             // Neuen 'Schaft' neuzeichnen
                             RedrawSchlagpatrone(j);
@@ -716,11 +689,9 @@ void EinzugRearrangeImpl::MergeSchaefte()
                             frm->trittfolge.feld.Set(j2, j, 0);
                         RedrawSchlagpatrone(j2);
                         dbw3_assert(j2 < Data->MAXX2);
-                        frm->freietritte[j2] = true;
                     }
                     RedrawSchaft(j1);
                     RedrawSchaft(j2);
-                    frm->freieschaefte[j2] = true;
                 }
             }
         }

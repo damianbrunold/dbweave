@@ -76,14 +76,11 @@ void TDBWFRM::SetGewebe(int _i, int _j, bool _set, int _range)
                     // Tritt kopieren
                     for (int ii = 0; ii < Data->MAXX2; ii++)
                         trittfolge.feld.Set(ii, j, trittfolge.feld.Get(ii, _j + scroll_y2));
-                    trittfolge.isempty.Set(j, trittfolge.isempty.Get(_j + scroll_y2));
                 }
                 j += rapport.sr.count();
             }
             i += rapport.kr.count();
         }
-        RecalcFreieSchaefte();
-        RecalcFreieTritte();
     }
 
     RearrangeSchaefte();
@@ -120,8 +117,7 @@ void TDBWFRM::DoSetGewebe(int _i, int _j, bool _set, int _range)
 
     /*  The legacy hand-rolled rebuild (find-identical-column /
         reuse-shaft / per-column aufknuepfung writes / pegplan-branch
-        trittfolge writes / freieschaefte+freietritte bookkeeping)
-        is superseded by a full RcRecalcAll pass. RecalcEinzug /
+        trittfolge writes) is superseded by a full RcRecalcAll pass. RecalcEinzug /
         RecalcTrittfolge already reuse matching shafts / treadles via
         KettfadenEqual / SchussfadenEqual and rebuild the aufknuepfung
         from scratch. Identity assignment in the einzug / trittfolge

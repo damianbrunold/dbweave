@@ -215,7 +215,6 @@ void TDBWFRM::PasteSelection(bool _transparent)
                     if (ptr[i] != 'k' || !_transparent)
                         trittfolge.feld.Set(ii, jj, char(ptr[i] - 'k'));
                 }
-                RecalcTrittfolgeEmpty(jj);
             }
             ptr += x + 2;
         }
@@ -290,7 +289,6 @@ void TDBWFRM::DeleteSelection()
             for (int j = selection.begin.j; j <= selection.end.j; j++)
                 trittfolge.feld.Set(i, j, 0);
         for (int j = selection.begin.j; j <= selection.end.j; j++)
-            RecalcTrittfolgeEmpty(j);
         RecalcGewebe();
         break;
     case AUFKNUEPFUNG:
@@ -347,7 +345,6 @@ void TDBWFRM::InvertSelection()
                 trittfolge.feld.Set(i, j, char(s == 0 ? currentrange : -s));
             }
         for (int j = selection.begin.j; j <= selection.end.j; j++)
-            RecalcTrittfolgeEmpty(j);
         RecalcGewebe();
         break;
     }
@@ -406,7 +403,6 @@ void TDBWFRM::MirrorHorzSelection()
         mirrorRow([this](int i, int j) { return trittfolge.feld.Get(i, j); },
                   [this](int i, int j, char v) { trittfolge.feld.Set(i, j, v); });
         for (int j = selection.begin.j; j <= selection.end.j; j++)
-            RecalcTrittfolgeEmpty(j);
         RecalcGewebe();
         break;
     default:
@@ -464,7 +460,6 @@ void TDBWFRM::MirrorVertSelection()
         mirrorCol([this](int i, int j) { return trittfolge.feld.Get(i, j); },
                   [this](int i, int j, char v) { trittfolge.feld.Set(i, j, v); });
         for (int j = selection.begin.j; j <= selection.end.j; j++)
-            RecalcTrittfolgeEmpty(j);
         RecalcGewebe();
         break;
     default:
@@ -527,7 +522,6 @@ void TDBWFRM::RotateSelection()
         rotate([this](int i, int j) { return trittfolge.feld.Get(i, j); },
                [this](int i, int j, char v) { trittfolge.feld.Set(i, j, v); });
         for (int j = selection.begin.j; j <= selection.end.j; j++)
-            RecalcTrittfolgeEmpty(j);
         RecalcGewebe();
         break;
     }
@@ -550,10 +544,11 @@ void TDBWFRM::RotateSelection()
     each field, and three template lambdas drive the actual shift. */
 /*-----------------------------------------------------------------*/
 
-static void rollTrittfolgeEmpty(TDBWFRM* frm, int j0, int j1)
+static void rollTrittfolgeEmpty(TDBWFRM*, int, int)
 {
-    for (int j = j0; j <= j1; j++)
-        frm->RecalcTrittfolgeEmpty(j);
+    /*  No-op: trittfolge.isempty cache is gone; IsEmptyTrittfolge is
+        derived from trittfolge.feld on demand. Callers kept for
+        readability; inlining would hurt the editing-op structure. */
 }
 
 void TDBWFRM::RollUpSelection()
@@ -920,7 +915,6 @@ void TDBWFRM::SwitchRange(int _range)
         switchField([this](int i, int j) { return trittfolge.feld.Get(i, j); },
                     [this](int i, int j, char v) { trittfolge.feld.Set(i, j, v); });
         for (int j = selection.begin.j; j <= selection.end.j; j++)
-            RecalcTrittfolgeEmpty(j);
         RecalcGewebe();
         break;
     default:

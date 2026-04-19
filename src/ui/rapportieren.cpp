@@ -135,9 +135,6 @@ void TDBWFRM::CopyKettfaden(int _von, int _nach, bool _withcolors)
 /*-----------------------------------------------------------------*/
 void TDBWFRM::CopySchussfaden(int _von, int _nach, bool _withcolors)
 {
-    // IsTrittfolgeEmpty kopieren
-    trittfolge.isempty.Set(_nach, trittfolge.isempty.Get(_von));
-
     // Tritt kopieren
     for (int i = 0; i < Data->MAXX2; i++)
         trittfolge.feld.Set(i, _nach, trittfolge.feld.Get(i, _von));
@@ -165,7 +162,6 @@ void TDBWFRM::ClearSchussfaden(int _j)
 {
     for (int i = 0; i < Data->MAXX2; i++)
         trittfolge.feld.Set(i, _j, 0);
-    trittfolge.isempty.Set(_j, true);
     if (kette.b != -1)
         for (int i = kette.a; i <= kette.b; i++)
             gewebe.feld.Set(i, _j, 0);

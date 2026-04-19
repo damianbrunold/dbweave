@@ -39,7 +39,6 @@ UrUndoItem::UrUndoItem(TDBWFRM* _mainfrm, UrUndoItem* _prev /*=0*/, UrUndoItem* 
     einzug = NULL;
     aufknuepfung = NULL;
     trittfolge = NULL;
-    isempty = NULL;
     schussfarben = NULL;
     kettfarben = NULL;
     blatteinzug = NULL;
@@ -58,7 +57,6 @@ UrUndoItem::~UrUndoItem()
     delete einzug;
     delete aufknuepfung;
     delete trittfolge;
-    delete isempty;
     delete schussfarben;
     delete kettfarben;
     delete blatteinzug;
@@ -75,7 +73,6 @@ void UrUndoItem::Allocate(TDBWFRM* _mainfrm)
                                         _mainfrm->aufknuepfung.feld.SizeY(), 0);
         trittfolge = new FeldGridChar(_mainfrm->trittfolge.feld.SizeX(),
                                       _mainfrm->trittfolge.feld.SizeY(), 0);
-        isempty = new FeldVectorBool(_mainfrm->trittfolge.isempty.Size(), true);
         schussfarben = new FeldVectorChar(_mainfrm->schussfarben.feld.Size(), 0);
         kettfarben = new FeldVectorChar(_mainfrm->kettfarben.feld.Size(), 0);
         blatteinzug = new FeldVectorChar(_mainfrm->blatteinzug.feld.Size(), 0);
@@ -89,7 +86,6 @@ void UrUndoItem::SetData(TDBWFRM* _mainfrm)
     dbw3_assert(einzug);
     dbw3_assert(aufknuepfung);
     dbw3_assert(trittfolge);
-    dbw3_assert(isempty);
     dbw3_assert(schussfarben);
     dbw3_assert(kettfarben);
     dbw3_assert(blatteinzug);
@@ -98,7 +94,6 @@ void UrUndoItem::SetData(TDBWFRM* _mainfrm)
     *einzug = _mainfrm->einzug.feld;
     *aufknuepfung = _mainfrm->aufknuepfung.feld;
     *trittfolge = _mainfrm->trittfolge.feld;
-    *isempty = _mainfrm->trittfolge.isempty;
     *schussfarben = _mainfrm->schussfarben.feld;
     *kettfarben = _mainfrm->kettfarben.feld;
     *blatteinzug = _mainfrm->blatteinzug.feld;
@@ -174,7 +169,6 @@ void UrUndoItem::UpdateSize()
     dbw3_assert(einzug);
     dbw3_assert(aufknuepfung);
     dbw3_assert(trittfolge);
-    dbw3_assert(isempty);
     dbw3_assert(schussfarben);
     dbw3_assert(kettfarben);
     dbw3_assert(blatteinzug);
@@ -182,7 +176,6 @@ void UrUndoItem::UpdateSize()
     einzug->Resize(Data->MAXX1, 0);
     aufknuepfung->Resize(Data->MAXX2, Data->MAXY1, 0);
     trittfolge->Resize(Data->MAXX2, Data->MAXY2, 0);
-    isempty->Resize(Data->MAXY2, true);
     schussfarben->Resize(Data->MAXY2, Data->defcolorv);
     kettfarben->Resize(Data->MAXX1, Data->defcolorh);
     blatteinzug->Resize(Data->MAXX1, 0);
@@ -196,7 +189,6 @@ void UrUndoItem::Undo(TDBWFRM* _mainfrm)
     dbw3_assert(einzug);
     dbw3_assert(aufknuepfung);
     dbw3_assert(trittfolge);
-    dbw3_assert(isempty);
     dbw3_assert(schussfarben);
     dbw3_assert(kettfarben);
     dbw3_assert(blatteinzug);
@@ -207,7 +199,6 @@ void UrUndoItem::Undo(TDBWFRM* _mainfrm)
     _mainfrm->einzug.feld = *einzug;
     _mainfrm->aufknuepfung.feld = *aufknuepfung;
     _mainfrm->trittfolge.feld = *trittfolge;
-    _mainfrm->trittfolge.isempty = *isempty;
     _mainfrm->schussfarben.feld = *schussfarben;
     _mainfrm->kettfarben.feld = *kettfarben;
     _mainfrm->blatteinzug.feld = *blatteinzug;

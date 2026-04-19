@@ -94,7 +94,6 @@ int FeldAufknuepfung::ScrollY()
 /*-----------------------------------------------------------------*/
 FeldTrittfolge::FeldTrittfolge()
     : feld(DEFAULT_MAXX2, DEFAULT_MAXY2, 0)
-    , isempty(DEFAULT_MAXY2, true)
 {
     darstellung = PUNKT;
     einzeltritt = true;

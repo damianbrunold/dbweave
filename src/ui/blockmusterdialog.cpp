@@ -854,7 +854,6 @@ void TDBWFRM::BlockExpandTrittfolge(int _count)
             pData[j * Data->MAXX2 + i] = trittfolge.feld.Get(i, j);
             trittfolge.feld.Set(i, j, 0);
         }
-        trittfolge.isempty.Set(j, true);
     }
     for (int j = schuesse.a; j <= schuesse.b; j++) {
         for (int i = 0; i < Data->MAXX2; i++) {
@@ -866,7 +865,6 @@ void TDBWFRM::BlockExpandTrittfolge(int _count)
                         if (i * _count + k >= Data->MAXX2)
                             ExtendTritte();
                         trittfolge.feld.Set(i * _count + k, j * _count + k, 1);
-                        trittfolge.isempty.Set(j * _count + k, false);
                     }
                 } else {
                     for (int k = 0; k < _count; k++) {
@@ -875,7 +873,6 @@ void TDBWFRM::BlockExpandTrittfolge(int _count)
                         if ((i + 1) * _count - 1 - k >= Data->MAXX2)
                             ExtendTritte();
                         trittfolge.feld.Set((i + 1) * _count - 1 - k, j * _count + k, 1);
-                        trittfolge.isempty.Set(j * _count + k, false);
                     }
                 }
             }

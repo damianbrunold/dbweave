@@ -84,15 +84,13 @@ private slots:
             QCOMPARE(ez.feld.Get(i), (short)0);
     }
 
-    void feld_trittfolge_clear_resets_isempty()
+    void feld_trittfolge_clear_zeroes_feld()
     {
         FeldTrittfolge tf;
         QCOMPARE(tf.einzeltritt, true);
         QCOMPARE(tf.darstellung, PUNKT);
-        tf.isempty.Set(5, false);
         tf.feld.Set(0, 0, (char)7);
         tf.Clear();
-        QCOMPARE(tf.isempty.Get(5), true);
         QCOMPARE(tf.feld.Get(0, 0), (char)0);
     }
 

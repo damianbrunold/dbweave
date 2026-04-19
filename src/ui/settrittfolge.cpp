@@ -38,7 +38,6 @@ void TDBWFRM::SetTrittfolge(int _i, int _j, bool _set, int _range)
                 // Tritt kopieren
                 for (int ii = 0; ii < Data->MAXX2; ii++)
                     trittfolge.feld.Set(ii, j, trittfolge.feld.Get(ii, _j + scroll_y2));
-                trittfolge.isempty.Set(j, trittfolge.isempty.Get(_j + scroll_y2));
 
                 // Schussfaden kopieren
                 for (int ii = 0; ii < Data->MAXX1; ii++)
@@ -46,7 +45,6 @@ void TDBWFRM::SetTrittfolge(int _i, int _j, bool _set, int _range)
             }
             j += rapport.sr.count();
         }
-        RecalcFreieTritte();
     }
 
     UpdateRapport();

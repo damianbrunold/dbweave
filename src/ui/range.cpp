@@ -141,7 +141,7 @@ void TDBWFRM::UpdateRange(int _i, int _j, bool _set)
 /*-----------------------------------------------------------------*/
 bool TDBWFRM::IsEmptySchuss(int _j)
 {
-    if (!trittfolge.isempty.Get(_j))
+    if (!IsEmptyTrittfolge(_j))
         return false;
     for (int i = 0; i < Data->MAXX1; i++)
         if (gewebe.feld.Get(i, _j) > 0)

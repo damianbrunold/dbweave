@@ -427,7 +427,7 @@ void TDBWFRM::UpdateEinzugFixiert()
     }
     firstfree = 0;
     for (int i = Data->MAXY1 - 1; i >= 0; i--) {
-        if (!freieschaefte[i]) {
+        if (!IsFreeSchaft(i)) {
             firstfree = short(i + 1);
             break;
         }

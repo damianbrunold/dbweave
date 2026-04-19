@@ -49,7 +49,6 @@ void TDBWFRM::SetEinzug(int _i, int _j)
             }
             i += rapport.kr.count();
         }
-        RecalcFreieSchaefte();
     }
 
     UpdateRapport();
@@ -69,16 +68,6 @@ void TDBWFRM::DoSetEinzug(int _i, int _j)
     if (oldeinzug == neweinzug)
         neweinzug = 0;
     einzug.feld.Set(scroll_x1 + _i, neweinzug);
-    if (neweinzug != 0)
-        freieschaefte[neweinzug - 1] = false;
-    if (oldeinzug != 0) {
-        freieschaefte[oldeinzug - 1] = true;
-        for (int i = 0; i < Data->MAXX1; i++)
-            if (einzug.feld.Get(i) == oldeinzug) {
-                freieschaefte[oldeinzug - 1] = false;
-                break;
-            }
-    }
 
     RecalcGewebe();
 

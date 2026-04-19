@@ -118,17 +118,6 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     ViewFarbe = mk(/*checked=*/true);
     ViewBlatteinzug = mk(/*checked=*/true);
 
-    /*  Allocate the per-shaft / per-treadle availability arrays. Both
-        are initialised to true (all free); RecalcFreieSchaefte() /
-        RecalcFreieTritte() repopulate them during pattern load and
-        after editing operations. */
-    freieschaefte = new bool[Data->MAXY1];
-    freietritte = new bool[Data->MAXX2];
-    for (int j = 0; j < Data->MAXY1; j++)
-        freieschaefte[j] = true;
-    for (int i = 0; i < Data->MAXX2; i++)
-        freietritte[i] = true;
-
     /*  Scratch buffers for RcRecalcAll. */
     xbuf = new char[Data->MAXX1];
     ybuf = new char[Data->MAXY2];
@@ -1203,10 +1192,6 @@ TDBWFRM::~TDBWFRM()
     delete undo;
     delete file;
     file = nullptr;
-    delete[] freieschaefte;
-    freieschaefte = nullptr;
-    delete[] freietritte;
-    freietritte = nullptr;
     delete[] xbuf;
     xbuf = nullptr;
     delete[] ybuf;
@@ -1508,18 +1493,16 @@ void saveBaseStyle(DARSTELLUNG ezD, DARSTELLUNG aufD, DARSTELLUNG tfD, DARSTELLU
 }
 } /* anonymous namespace */
 
-bool TDBWFRM::HasNonTrivialContent() const
+bool TDBWFRM::HasNonTrivialContent()
 {
     if (kette.b != -1 || schuesse.b != -1)
         return true;
-    if (freieschaefte)
-        for (int j = 0; j < Data->MAXY1; j++)
-            if (!freieschaefte[j])
-                return true;
-    if (freietritte)
-        for (int i = 0; i < Data->MAXX2; i++)
-            if (!freietritte[i])
-                return true;
+    for (int j = 0; j < Data->MAXY1; j++)
+        if (!IsFreeSchaft(j))
+            return true;
+    for (int i = 0; i < Data->MAXX2; i++)
+        if (!IsFreeTritt(i))
+            return true;
     return false;
 }
 

@@ -89,7 +89,7 @@ private slots:
         for (int i = 0; i < COLS; i++)
             DBWFRM->einzug.feld.Set(i, (short)1);
         for (int j = 0; j < ROWS; j++)
-            DBWFRM->trittfolge.isempty.Set(j, false);
+            DBWFRM->trittfolge.feld.Set(0, j, (char)1);
     }
 
     void cleanup()

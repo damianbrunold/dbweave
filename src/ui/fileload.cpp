@@ -115,24 +115,6 @@ bool FhLoader::Load(LOADSTAT& _stat, LOADPARTS _loadparts)
     if (mainfrm->rapporthandler)
         mainfrm->rapporthandler->CalcRapport();
 
-    /*  RecalcFreieSchaefte/Tritte from the loaded data -- walk the
-        einzug to find which shafts are used, ditto aufknuepfung
-        columns for the treadles.                                  */
-    for (int j = 0; j < Data->MAXY1; j++)
-        mainfrm->freieschaefte[j] = true;
-    for (int i = 0; i < Data->MAXX1; i++) {
-        const short s = mainfrm->einzug.feld.Get(i);
-        if (s > 0 && s - 1 < Data->MAXY1)
-            mainfrm->freieschaefte[s - 1] = false;
-    }
-    for (int i = 0; i < Data->MAXX2; i++) {
-        bool used = false;
-        for (int j = 0; j < Data->MAXY1 && !used; j++)
-            if (mainfrm->aufknuepfung.feld.Get(i, j) > 0)
-                used = true;
-        mainfrm->freietritte[i] = !used;
-    }
-
     /*  LoadViewGeneral sets ViewSchlagpatrone->setChecked() directly,
         which bypasses the triggered signal — so trittfolge.einzeltritt
         never flips, and the Trittfolge / Pegplan menu visibility
@@ -295,10 +277,12 @@ void FhLoader::LoadDataTrittfolgeTrittfolge(FfReader* _reader)
 /*-----------------------------------------------------------------*/
 void FhLoader::LoadDataTrittfolgeIsEmpty(FfReader* _reader)
 {
-    if (Need(LOADTRITTFOLGE))
-        mainfrm->trittfolge.isempty.Read(_reader, 1);
-    else
-        _reader->SkipSection();
+    /*  Parse the section for format compatibility but discard the
+        decoded flags -- IsEmptyTrittfolge is derived on demand from
+        trittfolge.feld, so the cached "isempty" vector no longer
+        lives in memory.                                          */
+    FeldVectorBool discard(Data->MAXY2, true);
+    discard.Read(_reader, 1);
 }
 /*-----------------------------------------------------------------*/
 void FhLoader::LoadDataSchussfarben(FfReader* _reader)

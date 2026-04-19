@@ -9,17 +9,11 @@
     (at your option) any later version.
 */
 
-/*  Verbatim port of legacy/recalc.cpp. The module carries:
-      * RecalcFreieSchaefte / RecalcFreieTritte  -- scan einzug /
-        trittfolge to refresh the freieschaefte[] / freietritte[]
-        availability arrays.
-      * RcRecalcAll  -- full einzug + trittfolge + aufknuepfung
-        rebuild from the current gewebe content.
-      * TDBWFRM::RecalcAll / RecalcSchlagpatrone /
-        RecalcTrittfolgeAufknuepfung / RecalcFixEinzug  -- thin
-        wrappers around RcRecalcAll.
-
-    The port's RecalcGewebe lives in mainwindow.cpp (unchanged). */
+/*  RcRecalcAll: full einzug + trittfolge + aufknuepfung rebuild
+    from the current gewebe content, plus TDBWFRM::RecalcAll /
+    RecalcSchlagpatrone / RecalcTrittfolgeAufknuepfung /
+    RecalcFixEinzug thin wrappers. The port's RecalcGewebe lives in
+    mainwindow.cpp.                                              */
 
 #include "recalc.h"
 #include "mainwindow.h"
@@ -33,31 +27,6 @@
 
 using std::min;
 
-/*-----------------------------------------------------------------*/
-void TDBWFRM::RecalcFreieSchaefte()
-{
-    dbw3_assert(freieschaefte);
-    if (!freieschaefte)
-        return;
-    for (int i = 0; i < Data->MAXY1; i++)
-        freieschaefte[i] = true;
-    for (int i = 0; i < Data->MAXX1; i++)
-        if (einzug.feld.Get(i) != 0)
-            freieschaefte[einzug.feld.Get(i) - 1] = false;
-}
-/*-----------------------------------------------------------------*/
-void TDBWFRM::RecalcFreieTritte()
-{
-    dbw3_assert(freietritte);
-    if (!freietritte)
-        return;
-    for (int i = 0; i < Data->MAXX2; i++)
-        freietritte[i] = true;
-    for (int i = 0; i < Data->MAXX2; i++)
-        for (int j = 0; j < Data->MAXY2; j++)
-            if (trittfolge.feld.Get(i, j) > 0)
-                freietritte[i] = false;
-}
 /*-----------------------------------------------------------------*/
 RcRecalcAll::RcRecalcAll(TDBWFRM* _frm, TData* _data, bool _schlagpatrone)
 {
@@ -87,10 +56,6 @@ void RcRecalcAll::Recalc()
         frm->RearrangeTritte();
     }
 
-    /*  RecalcFreieSchaefte is already done inside RecalcEinzug /
-        RecalcEinzugFixiert; only the tritte side needs a refresh. */
-    frm->RecalcFreieTritte();
-
     frm->SetModified();
     frm->refresh();
 }
@@ -113,7 +78,6 @@ void RcRecalcAll::RecalcSchlagpatrone()
     CalcK();
     RecalcTrittfolge();
     RecalcAufknuepfung();
-    frm->RecalcFreieTritte();
     frm->SetModified();
     frm->refresh();
 }
@@ -126,7 +90,6 @@ void RcRecalcAll::RecalcTrittfolgeAufknuepfung()
     RecalcAufknuepfung();
     if (!schlagpatrone)
         frm->RearrangeTritte();
-    frm->RecalcFreieTritte();
     frm->SetModified();
     frm->refresh();
 }
@@ -193,16 +156,12 @@ void RcRecalcAll::RecalcEinzug()
     short j = 0;
     k1 = k2 = 0;
 
-    for (int i = 0; i < data->MAXY1; i++)
-        frm->freieschaefte[i] = true;
-
     /*  Ersten belegten Kettfaden finden. */
     for (int i = 0; i < data->MAXX1; i++)
         if (!KettfadenEmpty(i)) {
             frm->xbuf[i] = 1;
             k1 = k2 = first = i;
             frm->einzug.feld.Set(i, ++j);
-            frm->freieschaefte[j - 1] = false;
             break;
         }
 
@@ -223,10 +182,8 @@ void RcRecalcAll::RecalcEinzug()
                     break;
                 }
             }
-            if (!ok) {
+            if (!ok)
                 frm->einzug.feld.Set(i, ++j);
-                frm->freieschaefte[j - 1] = false;
-            }
         }
 
         if (j + 2 > data->MAXY1)
@@ -253,8 +210,6 @@ void RcRecalcAll::RecalcEinzugFixiert()
     /*  Einzug loeschen und neuberechnen. */
     frm->einzug.feld.Init(0);
     std::memset(frm->xbuf, 0, data->MAXX1);
-    for (int i = 0; i < Data->MAXY1; i++)
-        frm->freieschaefte[i] = true;
     k1 = Data->MAXX1 - 1;
     k2 = 0;
     short firstfree = frm->firstfree;
@@ -275,9 +230,8 @@ void RcRecalcAll::RecalcEinzugFixiert()
             frm->xbuf[i] = 1;
             short s = GetSchaft(k++);
             dbw3_assert(s > 0);
-            if (frm->freieschaefte[s - 1]) {
+            if (frm->IsFreeSchaft(s - 1)) {
                 frm->einzug.feld.Set(i, s);
-                frm->freieschaefte[s - 1] = false;
             } else {
                 bool done = false;
                 for (int m = 0; m < i; m++)
@@ -294,7 +248,6 @@ void RcRecalcAll::RecalcEinzugFixiert()
                     }
                 if (!done) {
                     frm->einzug.feld.Set(i, short(firstfree + 1));
-                    frm->freieschaefte[firstfree] = false;
                     firstfree++;
                     if (firstfree >= data->MAXY1)
                         frm->ExtendSchaefte();
@@ -308,7 +261,6 @@ void RcRecalcAll::RecalcTrittfolge()
 {
     /*  Trittfolge loeschen und neuberechnen. */
     frm->trittfolge.feld.Init(0);
-    frm->trittfolge.isempty.Init(true);
     if (!schlagpatrone) {
         std::memset(frm->ybuf, 0, data->MAXY2);
         int first = 0;
@@ -321,7 +273,6 @@ void RcRecalcAll::RecalcTrittfolge()
                 frm->ybuf[j] = 1;
                 s1 = s2 = first = j;
                 frm->trittfolge.feld.Set(++i, j, 1);
-                frm->trittfolge.isempty.Set(j, false);
                 break;
             }
 
@@ -339,15 +290,12 @@ void RcRecalcAll::RecalcTrittfolge()
                     if (SchussfadenEqual(j, k)) {
                         for (int m = 0; m < data->MAXX2; m++)
                             frm->trittfolge.feld.Set(m, j, frm->trittfolge.feld.Get(m, k));
-                        frm->trittfolge.isempty.Set(j, frm->trittfolge.isempty.Get(k));
                         ok = true;
                         break;
                     }
                 }
-                if (!ok) {
+                if (!ok)
                     frm->trittfolge.feld.Set(++i, j, 1);
-                    frm->trittfolge.isempty.Set(j, false);
-                }
             }
 
             if (i + 2 > data->MAXX2)
@@ -371,7 +319,6 @@ void RcRecalcAll::RecalcTrittfolge()
                         if (jj >= data->MAXX2)
                             frm->ExtendTritte();
                         frm->trittfolge.feld.Set(jj - 1, j, s);
-                        frm->trittfolge.isempty.Set(j, false);
                     }
                 }
             }

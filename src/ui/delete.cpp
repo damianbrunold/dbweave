@@ -43,15 +43,8 @@ void TDBWFRM::DeleteSchaftClick()
         for (int i = 0; i < Data->MAXX2; i++)
             aufknuepfung.feld.Set(i, currentpos, 0);
     } else {
-        for (int j = 0; j < Data->MAXY2; j++) {
+        for (int j = 0; j < Data->MAXY2; j++)
             trittfolge.feld.Set(currentpos, j, 0);
-            trittfolge.isempty.Set(j, true);
-            for (int i = 0; i < Data->MAXX2; i++)
-                if (trittfolge.feld.Get(i, j) > 0) {
-                    trittfolge.isempty.Set(j, false);
-                    break;
-                }
-        }
     }
 
     RecalcGewebe();
@@ -83,15 +76,8 @@ void TDBWFRM::DeleteTrittClick()
         return;
 
     /*  Tritt loeschen. */
-    for (int j = 0; j < Data->MAXY2; j++) {
+    for (int j = 0; j < Data->MAXY2; j++)
         trittfolge.feld.Set(currentpos, j, 0);
-        trittfolge.isempty.Set(j, true);
-        for (int i = 0; i < Data->MAXX2; i++)
-            if (trittfolge.feld.Get(i, j) > 0) {
-                trittfolge.isempty.Set(j, false);
-                break;
-            }
-    }
 
     /*  Aufknuepfung / Einzug loeschen. */
     if (!(ViewSchlagpatrone && ViewSchlagpatrone->isChecked())) {
@@ -132,7 +118,6 @@ void TDBWFRM::DeleteKettfaden(int _i)
         gewebe.feld.Set(Data->MAXX1 - 1, j, 0);
     einzug.feld.Set(Data->MAXX1 - 1, 0);
 
-    RecalcFreieSchaefte();
     CalcRangeKette();
     CalcRapport();
 }
@@ -143,7 +128,6 @@ void TDBWFRM::DeleteSchussfaden(int _j)
     for (int j = _j + 1; j < Data->MAXY2; j++) {
         for (int i = 0; i < Data->MAXX2; i++)
             trittfolge.feld.Set(i, j - 1, trittfolge.feld.Get(i, j));
-        trittfolge.isempty.Set(j - 1, trittfolge.isempty.Get(j));
     }
     /*  Alles eins nach unten kopieren im Gewebe. */
     for (int j = _j + 1; j < Data->MAXY2; j++)
@@ -154,9 +138,7 @@ void TDBWFRM::DeleteSchussfaden(int _j)
         gewebe.feld.Set(i, Data->MAXY2 - 1, 0);
     for (int i = 0; i < Data->MAXX2; i++)
         trittfolge.feld.Set(i, Data->MAXY2 - 1, 0);
-    trittfolge.isempty.Set(Data->MAXY2 - 1, true);
 
-    RecalcFreieTritte();
     CalcRangeSchuesse();
     CalcRapport();
 }

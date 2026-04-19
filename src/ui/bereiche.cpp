@@ -32,7 +32,6 @@
 void TDBWFRM::ClearTrittfolgeClick()
 {
     for (int j = 0; j < Data->MAXY2; j++) {
-        trittfolge.isempty.Set(j, true);
         for (int i = 0; i < Data->MAXX2; i++)
             trittfolge.feld.Set(i, j, 0);
         for (int i = 0; i < Data->MAXX1; i++)
@@ -40,7 +39,6 @@ void TDBWFRM::ClearTrittfolgeClick()
     }
     CalcRangeSchuesse();
     CalcRangeKette();
-    RecalcFreieTritte();
     UpdateRapport();
     refresh();
     SetModified();
@@ -53,9 +51,6 @@ void TDBWFRM::TfSpiegelnClick()
     if (TfBelassen)
         TfBelassen->setChecked(true);
     for (int j = schuesse.a; j <= (schuesse.b - schuesse.a) / 2; j++) {
-        bool isempty = trittfolge.isempty.Get(j);
-        trittfolge.isempty.Set(j, trittfolge.isempty.Get(schuesse.b - (j - schuesse.a)));
-        trittfolge.isempty.Set(schuesse.b - (j - schuesse.a), isempty);
         for (int i = 0; i < Data->MAXX2; i++) {
             char s = trittfolge.feld.Get(i, j);
             trittfolge.feld.Set(i, j, trittfolge.feld.Get(i, schuesse.b - (j - schuesse.a)));
@@ -144,17 +139,14 @@ void TDBWFRM::CopyTrittfolgeEinzugClick()
     for (int j = 0; j < Data->MAXY2; j++) {
         for (int i = 0; i < Data->MAXX2; i++)
             trittfolge.feld.Set(i, j, 0);
-        trittfolge.isempty.Set(j, true);
     }
 
     /*  Copy einzug shaft number into the matching treadle column. */
     const int maxj = std::min(int(Data->MAXY2), int(Data->MAXX1));
     for (int j = 0; j < maxj; j++) {
         const int schaft = einzug.feld.Get(j);
-        if (schaft != 0) {
+        if (schaft != 0)
             trittfolge.feld.Set(schaft - 1, j, 1);
-            trittfolge.isempty.Set(j, false);
-        }
     }
 
     CalcRange();

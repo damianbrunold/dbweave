@@ -14,7 +14,7 @@
     Geradedurch (straight-through, Z or S orientation) and Abgesetzt
     (stepped/broken draft with gratlen + versatz). On OK: writes
     einzug.feld then runs RecalcGewebe, CalcRangeKette,
-    CalcRangeSchuesse, RecalcFreieSchaefte, UpdateRapport.         */
+    CalcRangeSchuesse, UpdateRapport.                              */
 
 #ifndef DBWEAVE_UI_EINZUGASSISTENT_DIALOG_H
 #define DBWEAVE_UI_EINZUGASSISTENT_DIALOG_H

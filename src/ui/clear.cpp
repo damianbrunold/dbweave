@@ -42,7 +42,6 @@ void FeldAufknuepfung::Clear()
 void FeldTrittfolge::Clear()
 {
     feld.Init(0);
-    isempty.Init(true);
 }
 /*-----------------------------------------------------------------*/
 void FeldGewebe::Clear()

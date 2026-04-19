@@ -73,7 +73,6 @@ private slots:
         const short raw[] = { 3, 1, 4, 1, 3, 4, 1, 3 };
         for (int i = 0; i < 8; i++) {
             DBWFRM->einzug.feld.Set(i, raw[i]);
-            DBWFRM->freieschaefte[raw[i] - 1] = false;
         }
         /*  Give schafts 0, 2, 3 distinct aufknuepfung fingerprints so
             MergeSchaefte leaves them alone (legacy SchaefteEqual
@@ -100,7 +99,6 @@ private slots:
         const short raw[] = { 3, 5, 3, 5, 3, 5 };
         for (int i = 0; i < 6; i++) {
             DBWFRM->einzug.feld.Set(i, raw[i]);
-            DBWFRM->freieschaefte[raw[i] - 1] = false;
         }
         DBWFRM->aufknuepfung.feld.Set(0, 2, (char)1);
         DBWFRM->aufknuepfung.feld.Set(1, 4, (char)1);
@@ -133,9 +131,6 @@ private slots:
             expected index range. We verify indirectly: the first
             appearance is "5", so it should become schaft 1. */
         DBWFRM->kette = SZ(0, 3);
-        DBWFRM->freieschaefte[4] = false;
-        DBWFRM->freieschaefte[1] = false;
-        DBWFRM->freieschaefte[6] = false;
         DBWFRM->aufknuepfung.feld.Set(0, 4, (char)1);
         DBWFRM->aufknuepfung.feld.Set(1, 1, (char)1);
         DBWFRM->aufknuepfung.feld.Set(2, 6, (char)1);
@@ -157,7 +152,6 @@ private slots:
 
         /*  Flip to EzMinimalZ -- NormalZ runs and renumbers 5 -> 1. */
         DBWFRM->kette = SZ(0, 0);
-        DBWFRM->freieschaefte[4] = false;
         DBWFRM->aufknuepfung.feld.Set(0, 4, (char)1);
         DBWFRM->EzBelassen->setChecked(false);
         DBWFRM->EzMinimalZ->setChecked(true);
@@ -177,7 +171,6 @@ private slots:
         for (int i = 0; i < 6; i++)
             DBWFRM->einzug.feld.Set(i, (short)((i % 3) + 1));
         for (int s = 0; s < 3; s++)
-            DBWFRM->freieschaefte[s] = false;
         DBWFRM->aufknuepfung.feld.Set(0, 0, (char)1);
         DBWFRM->aufknuepfung.feld.Set(1, 1, (char)1);
         DBWFRM->aufknuepfung.feld.Set(2, 2, (char)1);

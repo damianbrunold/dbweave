@@ -43,17 +43,26 @@ bool TDBWFRM::IsEmptyEinzug(int _i)
 /*-----------------------------------------------------------------*/
 bool TDBWFRM::IsEmptyTrittfolge(int _j)
 {
-    return trittfolge.isempty.Get(_j);
+    for (int i = 0; i < Data->MAXX2; i++)
+        if (trittfolge.feld.Get(i, _j) > 0)
+            return false;
+    return true;
 }
 /*-----------------------------------------------------------------*/
-void TDBWFRM::RecalcTrittfolgeEmpty(int _j)
+bool TDBWFRM::IsFreeSchaft(int _j)
 {
-    for (int i = 0; i < Data->MAXX2; i++)
-        if (trittfolge.feld.Get(i, _j) > 0) {
-            trittfolge.isempty.Set(_j, false);
-            return;
-        }
-    trittfolge.isempty.Set(_j, true);
+    for (int i = 0; i < Data->MAXX1; i++)
+        if (einzug.feld.Get(i) == short(_j + 1))
+            return false;
+    return true;
+}
+/*-----------------------------------------------------------------*/
+bool TDBWFRM::IsFreeTritt(int _i)
+{
+    for (int j = 0; j < Data->MAXY2; j++)
+        if (trittfolge.feld.Get(_i, j) > 0)
+            return false;
+    return true;
 }
 /*-----------------------------------------------------------------*/
 bool TDBWFRM::KettfadenEqual(int _a, int _b)
@@ -72,22 +81,22 @@ bool TDBWFRM::KettfadenEqual(int _a, int _b)
 short TDBWFRM::GetFreeEinzug()
 {
     for (int i = 0; i < Data->MAXY1; i++)
-        if (freieschaefte[i] == true)
+        if (IsFreeSchaft(i))
             return short(i + 1);
     short free = short(Data->MAXY1);
     ExtendSchaefte();
-    dbw3_assert(freieschaefte[free] == true);
+    dbw3_assert(IsFreeSchaft(free));
     return free;
 }
 /*-----------------------------------------------------------------*/
 short TDBWFRM::GetFreeTritt()
 {
     for (short i = 0; i < Data->MAXX2; i++)
-        if (freietritte[i] == true)
+        if (IsFreeTritt(i))
             return i;
     short free = short(Data->MAXX2);
     ExtendTritte();
-    dbw3_assert(freietritte[free] == true);
+    dbw3_assert(IsFreeTritt(free));
     return free;
 }
 /*-----------------------------------------------------------------*/
@@ -103,18 +112,6 @@ void TDBWFRM::_ExtendTritte(int _max)
         Data->MAXX2 = _max;
         aufknuepfung.feld.Resize(Data->MAXX2, Data->MAXY1, 0);
         trittfolge.feld.Resize(Data->MAXX2, Data->MAXY2, 0);
-        bool* pNew = NULL;
-        try {
-            pNew = new bool[Data->MAXX2];
-        } catch (...) {
-            dbw3_assert(false);
-        }
-        for (int i = 0; i < Data->MAXX2 - 10; i++)
-            pNew[i] = freietritte[i];
-        for (int i = Data->MAXX2 - 10; i < Data->MAXX2; i++)
-            pNew[i] = true;
-        delete[] freietritte;
-        freietritte = pNew;
     }
 }
 /*-----------------------------------------------------------------*/
@@ -123,17 +120,6 @@ void TDBWFRM::_ExtendSchaefte(int _max)
     if (Data->MAXY1 < _max) {
         Data->MAXY1 = _max;
         aufknuepfung.feld.Resize(Data->MAXX2, Data->MAXY1, 0);
-        bool* pNew = NULL;
-        try {
-            pNew = new bool[Data->MAXY1];
-        } catch (...) {
-        }
-        for (int i = 0; i < Data->MAXY1 - 10; i++)
-            pNew[i] = freieschaefte[i];
-        for (int i = Data->MAXY1 - 10; i < Data->MAXY1; i++)
-            pNew[i] = true;
-        delete[] freieschaefte;
-        freieschaefte = pNew;
     }
 }
 /*-----------------------------------------------------------------*/
@@ -157,29 +143,10 @@ void TDBWFRM::ExtendSchaefte()
     UpdateScrollbars();
 }
 /*-----------------------------------------------------------------*/
-/*-----------------------------------------------------------------*/
 /*  --- AllocBuffers* ---------------------------------------------
-    The legacy TDBWFRM::AllocBuffers* methods reallocated the raw
-    bool* freieschaefte / freietritte arrays in addition to resizing
-    the Feld members. The port's Feld*.Resize already grows the
-    backing storage, so AllocBuffers* here rebuilds just the
-    "freie" flag arrays to match Data->MAX*. Called by the file
-    loader after Data->MAX* is updated.                            */
-/*-----------------------------------------------------------------*/
-static void resizeFreie(bool*& _arr, int _newsize)
-{
-    if (!_arr) {
-        _arr = new bool[_newsize];
-        for (int i = 0; i < _newsize; i++)
-            _arr[i] = true;
-        return;
-    }
-    bool* p = new bool[_newsize];
-    for (int i = 0; i < _newsize; i++)
-        p[i] = true;
-    delete[] _arr;
-    _arr = p;
-}
+    Resize each Feld member to match the current Data->MAX*. Called
+    by the file loader after Data->MAX* is updated. Feld*.Resize is
+    idempotent when the size is unchanged.                        */
 /*-----------------------------------------------------------------*/
 static void resizeScratch(char*& _buf, int _newsize)
 {
@@ -201,20 +168,17 @@ void TDBWFRM::AllocBuffersX2()
 {
     aufknuepfung.feld.Resize(Data->MAXX2, Data->MAXY1, 0);
     trittfolge.feld.Resize(Data->MAXX2, Data->MAXY2, 0);
-    resizeFreie(freietritte, Data->MAXX2);
 }
 /*-----------------------------------------------------------------*/
 void TDBWFRM::AllocBuffersY1()
 {
     aufknuepfung.feld.Resize(Data->MAXX2, Data->MAXY1, 0);
     einzug.maxy = Data->MAXY1;
-    resizeFreie(freieschaefte, Data->MAXY1);
 }
 /*-----------------------------------------------------------------*/
 void TDBWFRM::AllocBuffersY2()
 {
     trittfolge.feld.Resize(Data->MAXX2, Data->MAXY2, 0);
-    trittfolge.isempty.Resize(Data->MAXY2, true);
     schussfarben.feld.Resize(Data->MAXY2, Data->defcolorv);
     gewebe.feld.Resize(Data->MAXX1, Data->MAXY2, 0);
     resizeScratch(ybuf, Data->MAXY2);
@@ -254,10 +218,8 @@ void TDBWFRM::SetAusmasse(int _x1, int _y1, int _x2, int _y2, int _vx2, int _vy1
         gewebe.feld.Resize(_x1, _y2, 0);
     if (_x2 != Data->MAXX2 || _y1 != Data->MAXY1)
         aufknuepfung.feld.Resize(_x2, _y1, 0);
-    if (_x2 != Data->MAXX2 || _y2 != Data->MAXY2) {
+    if (_x2 != Data->MAXX2 || _y2 != Data->MAXY2)
         trittfolge.feld.Resize(_x2, _y2, 0);
-        trittfolge.isempty.Resize(_y2, true);
-    }
     if (_y2 != Data->MAXY2)
         schussfarben.feld.Resize(_y2, Data->defcolorv);
 

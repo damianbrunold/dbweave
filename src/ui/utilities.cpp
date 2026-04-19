@@ -134,9 +134,9 @@ void TDBWFRM::SwapSide()
         /*  Invert the aufknuepfung across every in-use (shaft,
             treadle) cell. */
         for (int i = 0; i < Data->MAXX2; i++) {
-            if (!freietritte[i]) {
+            if (!IsFreeTritt(i)) {
                 for (int j = 0; j < Data->MAXY1; j++) {
-                    if (!freieschaefte[j]) {
+                    if (!IsFreeSchaft(j)) {
                         const char s = aufknuepfung.feld.Get(i, j);
                         aufknuepfung.feld.Set(i, j, char(s == 0 ? currentrange : -s));
                     }
@@ -147,9 +147,9 @@ void TDBWFRM::SwapSide()
         /*  Invert the schlagpatrone in the active weft range. */
         const int maxShaft = std::min(Data->MAXY1, Data->MAXX2);
         for (int i = 0; i < maxShaft; i++) {
-            if (!freieschaefte[i]) {
+            if (!IsFreeSchaft(i)) {
                 for (int j = schuesse.a; j <= schuesse.b; j++) {
-                    if (!trittfolge.isempty.Get(j)) {
+                    if (!IsEmptyTrittfolge(j)) {
                         const char s = trittfolge.feld.Get(i, j);
                         trittfolge.feld.Set(i, j, char(s == 0 ? currentrange : -s));
                     }
@@ -287,7 +287,6 @@ void TDBWFRM::KettLancierungClick()
     delete[] buff;
 
     CalcRangeKette();
-    RecalcFreieSchaefte();
     UpdateRapport();
     SetModified();
     refresh();
@@ -371,7 +370,6 @@ void TDBWFRM::SchussLancierungClick()
     /*  Restdaten auf Seite kopieren. */
     const int maxjj = std::min((int)Data->MAXY2, schuesse.b - b + 1);
     for (int j = b + maxjj - 1; j > b; j--) {
-        trittfolge.isempty.Set(a + needed + j - b - 1, trittfolge.isempty.Get(j));
         for (int i = 0; i < Data->MAXX2; i++)
             trittfolge.feld.Set(i, a + needed + j - b - 1, trittfolge.feld.Get(i, j));
         for (int i = kette.a; i <= kette.b; i++)
@@ -380,13 +378,11 @@ void TDBWFRM::SchussLancierungClick()
     /*  Auseinanderziehen. */
     for (int j = a + needed - 1; j >= a; j--) {
         if (buff[j - a] == -1) {
-            trittfolge.isempty.Set(j, true);
             for (int i = 0; i < Data->MAXX2; i++)
                 trittfolge.feld.Set(i, j, 0);
             for (int i = kette.a; i <= kette.b; i++)
                 gewebe.feld.Set(i, j, 0);
         } else {
-            trittfolge.isempty.Set(j, trittfolge.isempty.Get(buff[j - a]));
             for (int i = 0; i < Data->MAXX2; i++)
                 trittfolge.feld.Set(i, j, trittfolge.feld.Get(i, buff[j - a]));
             for (int i = kette.a; i <= kette.b; i++)
@@ -396,7 +392,6 @@ void TDBWFRM::SchussLancierungClick()
     delete[] buff;
 
     CalcRangeSchuesse();
-    RecalcFreieTritte();
     UpdateRapport();
     SetModified();
     refresh();

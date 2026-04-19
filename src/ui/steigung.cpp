@@ -10,8 +10,7 @@
 */
 
 /*  Port scope:
-      * GetFirstTritt / GetLastTritt -- thin helpers over the
-        freietritte availability array.
+      * GetFirstTritt / GetLastTritt -- first / last in-use treadle.
       * SpInvert -- schlagpatrone + gewebe wide invert across the
         used treadle column range.
       * IncrementSteigung / DecrementSteigung and the SteigungInc /
@@ -27,7 +26,7 @@
 int TDBWFRM::GetFirstTritt()
 {
     for (int i = 0; i < Data->MAXX2; i++)
-        if (freietritte && !freietritte[i])
+        if (!IsFreeTritt(i))
             return i;
     return Data->MAXX2 - 1;
 }
@@ -35,7 +34,7 @@ int TDBWFRM::GetFirstTritt()
 int TDBWFRM::GetLastTritt()
 {
     for (int i = Data->MAXX2 - 1; i >= 0; i--)
-        if (freietritte && !freietritte[i])
+        if (!IsFreeTritt(i))
             return i;
     return 0;
 }
@@ -90,9 +89,6 @@ void TDBWFRM::IncrementSteigung(int _i, int _j, int _ii, int _jj, FELD _feld)
         for (int j = _j; j <= _jj; j++)
             feld.Set(i, j, temp.at(((j - _j) + (_ii - _i) * ysize - inc) % ysize));
     }
-    if (_feld == TRITTFOLGE)
-        for (int j = _j; j <= _jj; j++)
-            RecalcTrittfolgeEmpty(j);
 }
 
 void TDBWFRM::DecrementSteigung(int _i, int _j, int _ii, int _jj, FELD _feld)
@@ -114,9 +110,6 @@ void TDBWFRM::DecrementSteigung(int _i, int _j, int _ii, int _jj, FELD _feld)
         for (int j = _j; j <= _jj; j++)
             feld.Set(i, j, temp.at(((j - _j) + dec) % ysize));
     }
-    if (_feld == TRITTFOLGE)
-        for (int j = _j; j <= _jj; j++)
-            RecalcTrittfolgeEmpty(j);
 }
 
 static bool allowedForSteigung(TDBWFRM* frm, FELD f)

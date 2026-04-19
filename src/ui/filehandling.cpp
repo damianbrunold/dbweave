@@ -87,11 +87,7 @@ void TDBWFRM::ResetDocument()
     kettfarben.Clear();
     schussfarben.Clear();
 
-    /*  Per-shaft / per-treadle availability + recalc scratch. */
-    for (int j = 0; j < Data->MAXY1; j++)
-        freieschaefte[j] = true;
-    for (int i = 0; i < Data->MAXX2; i++)
-        freietritte[i] = true;
+    /*  Recalc scratch buffers. */
     if (xbuf)
         std::memset(xbuf, 0, Data->MAXX1);
     if (ybuf)
@@ -332,7 +328,7 @@ bool TDBWFRM::AskSave()
     if (filename.isEmpty()) {
         bool anyShaft = false;
         for (int j = 0; j < Data->MAXY1 && !anyShaft; j++)
-            if (!freieschaefte[j])
+            if (!IsFreeSchaft(j))
                 anyShaft = true;
         const bool anyTritt = GetFirstTritt() <= GetLastTritt();
         const bool hasContent
@@ -499,8 +495,6 @@ void TDBWFRM::LoadPartsClick()
                 .arg(int(stat)));
         return;
     }
-    RecalcFreieSchaefte();
-    RecalcFreieTritte();
     SetModified();
     refresh();
     if (undo)

@@ -41,10 +41,10 @@ private slots:
         QCOMPARE(DBWFRM->IsEmptyKette(0), false);
     }
 
-    void is_empty_schuss_reads_isempty_and_gewebe()
+    void is_empty_schuss_reads_trittfolge_and_gewebe()
     {
         QCOMPARE(DBWFRM->IsEmptySchuss(4), true);
-        DBWFRM->trittfolge.isempty.Set(4, false);
+        DBWFRM->trittfolge.feld.Set(0, 4, (char)1);
         QCOMPARE(DBWFRM->IsEmptySchuss(4), false);
     }
 
@@ -59,8 +59,8 @@ private slots:
 
     void calc_range_schuesse_finds_occupied_span()
     {
-        DBWFRM->trittfolge.isempty.Set(2, false);
-        DBWFRM->trittfolge.isempty.Set(6, false);
+        DBWFRM->trittfolge.feld.Set(0, 2, (char)1);
+        DBWFRM->trittfolge.feld.Set(0, 6, (char)1);
         DBWFRM->CalcRangeSchuesse();
         QCOMPARE(DBWFRM->schuesse.a, 2);
         QCOMPARE(DBWFRM->schuesse.b, 6);
@@ -178,15 +178,18 @@ private slots:
 
     void get_free_einzug_allocates_low_index()
     {
+        /*  GetFreeEinzug is stateless now (no cache bookkeeping); the
+            caller must record the allocation in einzug.feld for the
+            next call to advance. */
         QCOMPARE(DBWFRM->GetFreeEinzug(), (short)1);
-        DBWFRM->freieschaefte[0] = false;
+        DBWFRM->einzug.feld.Set(0, (short)1);
         QCOMPARE(DBWFRM->GetFreeEinzug(), (short)2);
     }
 
     void get_free_tritt_allocates_low_index()
     {
         QCOMPARE(DBWFRM->GetFreeTritt(), (short)0);
-        DBWFRM->freietritte[0] = false;
+        DBWFRM->trittfolge.feld.Set(0, 0, (char)1);
         QCOMPARE(DBWFRM->GetFreeTritt(), (short)1);
     }
 
@@ -209,14 +212,13 @@ private slots:
         QCOMPARE(DBWFRM->gewebe.feld.Get(2, 2), (char)-1);
     }
 
-    void recalc_trittfolge_empty_flips_isempty()
+    void is_empty_trittfolge_derives_from_feld()
     {
+        QCOMPARE(DBWFRM->IsEmptyTrittfolge(4), true);
         DBWFRM->trittfolge.feld.Set(3, 4, (char)1);
-        DBWFRM->RecalcTrittfolgeEmpty(4);
-        QCOMPARE(DBWFRM->trittfolge.isempty.Get(4), false);
+        QCOMPARE(DBWFRM->IsEmptyTrittfolge(4), false);
         DBWFRM->trittfolge.feld.Set(3, 4, (char)0);
-        DBWFRM->RecalcTrittfolgeEmpty(4);
-        QCOMPARE(DBWFRM->trittfolge.isempty.Get(4), true);
+        QCOMPARE(DBWFRM->IsEmptyTrittfolge(4), true);
     }
 
     void kettfaden_equal_compares_columns()

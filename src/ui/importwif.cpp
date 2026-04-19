@@ -360,20 +360,6 @@ void TDBWFRM::ImportWIFClick()
     CalcRangeSchuesse();
     if (rapporthandler)
         rapporthandler->CalcRapport();
-    for (int j = 0; j < Data->MAXY1; j++)
-        freieschaefte[j] = true;
-    for (int i = 0; i < Data->MAXX1; i++) {
-        const short s = einzug.feld.Get(i);
-        if (s > 0 && s - 1 < Data->MAXY1)
-            freieschaefte[s - 1] = false;
-    }
-    for (int i = 0; i < Data->MAXX2; i++) {
-        bool used = false;
-        for (int j = 0; j < Data->MAXY1 && !used; j++)
-            if (aufknuepfung.feld.Get(i, j) > 0)
-                used = true;
-        freietritte[i] = !used;
-    }
     if (undo) {
         undo->Clear();
         undo->Snapshot();

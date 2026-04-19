@@ -153,13 +153,13 @@ void EntwurfsinfoDialog::buildAusmasse()
 
     int nschaefte = 0;
     for (int i = 0; i < Data->MAXY1; i++)
-        if (!frm->freieschaefte[i])
+        if (!frm->IsFreeSchaft(i))
             nschaefte++;
     ausmasse << LANG_STR("Number of shafts: %1", "Anzahl Schäfte: %1").arg(nschaefte);
 
     int ntritte = 0;
     for (int i = 0; i < Data->MAXX2; i++)
-        if (!frm->freietritte[i])
+        if (!frm->IsFreeTritt(i))
             ntritte++;
     ausmasse << LANG_STR("Number of treadles: %1", "Anzahl Tritte: %1").arg(ntritte);
 
@@ -284,7 +284,7 @@ void EntwurfsinfoDialog::buildLitzen()
     litzen << LANG_STR("Distribution across the shafts:", "Verteilung auf die Schäfte:");
     int schaft = 0;
     for (int j = 0; j < Data->MAXY1; j++) {
-        if (!frm->freieschaefte[j]) {
+        if (!frm->IsFreeSchaft(j)) {
             schaft++;
             int count = 0;
             for (int i = 0; i < Data->MAXX1; i++)

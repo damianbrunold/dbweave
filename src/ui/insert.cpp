@@ -160,7 +160,6 @@ void TDBWFRM::InsertSchussfaden(int _j)
     for (int j = Data->MAXY2 - 1; j > _j; j--) {
         for (int i = 0; i < Data->MAXX2; i++)
             trittfolge.feld.Set(i, j, trittfolge.feld.Get(i, j - 1));
-        trittfolge.isempty.Set(j, trittfolge.isempty.Get(j - 1));
     }
     /*  Alles eins nach oben kopieren im Gewebe. */
     for (int j = Data->MAXY2 - 1; j > _j; j--)
@@ -175,7 +174,6 @@ void TDBWFRM::InsertSchussfaden(int _j)
         gewebe.feld.Set(i, _j, 0);
     for (int i = 0; i < Data->MAXX2; i++)
         trittfolge.feld.Set(i, _j, 0);
-    trittfolge.isempty.Set(_j, true);
 
     CalcRangeSchuesse();
     CalcRapport();

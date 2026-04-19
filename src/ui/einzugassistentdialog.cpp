@@ -113,7 +113,6 @@ void EinzugassistentDialog::recalc()
     frm->RecalcGewebe();
     frm->CalcRangeSchuesse();
     frm->CalcRangeKette();
-    frm->RecalcFreieSchaefte();
     frm->UpdateRapport();
     frm->update();
     frm->SetModified();

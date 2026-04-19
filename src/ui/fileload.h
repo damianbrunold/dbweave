@@ -14,8 +14,9 @@
         - signature
         - data/size        (MAXX1/MAXX2/MAXY1/MAXY2)
         - data/fields      (einzug, aufknuepfung, trittfolge,
-                            schussfarben, kettfarben, blatteinzug,
-                            trittfolge.isempty)
+                            schussfarben, kettfarben, blatteinzug;
+                            the legacy "isempty" subsection is
+                            parsed-and-discarded for forward compat)
         - data/palette     (via Palette::Load)
         - properties       (reads Author/Organization/Remarks into a
                             FileProperties owned by TData)

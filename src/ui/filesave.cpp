@@ -84,7 +84,16 @@ bool TDBWFRM::Save()
         aufknuepfung.feld.Write("aufknuepfung", &writer);
         writer.BeginSection("trittfolge");
         trittfolge.feld.Write("trittfolge", &writer);
-        trittfolge.isempty.Write("isempty", &writer);
+        /*  The in-memory isempty cache is gone; derive the vector
+            on the fly from trittfolge.feld so the file format stays
+            byte-identical and older DB-WEAVE binaries can still
+            read newly-written files.                             */
+        {
+            FeldVectorBool isempty(Data->MAXY2, true);
+            for (int j = 0; j < Data->MAXY2; j++)
+                isempty.Set(j, IsEmptyTrittfolge(j));
+            isempty.Write("isempty", &writer);
+        }
         writer.EndSection();
         kettfarben.feld.Write("kettfarben", &writer);
         schussfarben.feld.Write("schussfarben", &writer);

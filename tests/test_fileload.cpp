@@ -100,17 +100,17 @@ private slots:
         QVERIFY(DBWFRM->kette.b >= DBWFRM->kette.a + 2);
     }
 
-    void freieschaefte_reflects_loaded_einzug()
+    void is_free_schaft_reflects_loaded_einzug()
     {
         DBWFRM->filename = samplePath("satin.dbw");
         LOADSTAT stat;
         QVERIFY(DBWFRM->Load(stat, LOADALL));
 
-        /*  At least one shaft should be marked NOT free (i.e. in
-            use) after the load -- otherwise no einzug references it. */
+        /*  At least one shaft should be in use after the load --
+            otherwise no einzug references it. */
         bool any_used = false;
         for (int j = 0; j < Data->MAXY1 && !any_used; j++)
-            if (!DBWFRM->freieschaefte[j])
+            if (!DBWFRM->IsFreeSchaft(j))
                 any_used = true;
         QVERIFY(any_used);
     }

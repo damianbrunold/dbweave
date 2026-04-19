@@ -67,16 +67,13 @@ struct Klammer {
 // GRIDPOS verwaltet die Ausmasse und wichtigsten Properties des
 // sichtbaren Teils eines Feldes.
 struct GRIDPOS {
-    int x0;
-    int y0;
-    int width;
-    int height;
-    int strongline_x;
-    int strongline_y;
-    GRIDPOS()
-    {
-        Init();
-    }
+    int x0 = 0;
+    int y0 = 0;
+    int width = 0;
+    int height = 0;
+    int strongline_x = DEFAULT_STRONGLINE;
+    int strongline_y = DEFAULT_STRONGLINE;
+    GRIDPOS() { }
     void Init()
     {
         strongline_x = strongline_y = DEFAULT_STRONGLINE;
@@ -301,7 +298,6 @@ struct FeldAufknuepfung : public FeldBase3 {
 /*-----------------------------------------------------------------*/
 struct FeldTrittfolge : public FeldBase3 {
     FeldGridChar feld;
-    FeldVectorBool isempty;
     bool einzeltritt;
     FeldTrittfolge();
     virtual void Clear();
@@ -337,8 +333,8 @@ struct FeldGewebe : public FeldBase2 {
 // horizontale und einen fuer vertikale Linien), in dem
 // sie mit der Maus manipuliert werden koennen.
 struct HlineBar : GRIDPOS {
-    int gw;
-    int gh;
+    int gw = 0;
+    int gh = 0;
 };
 /*-----------------------------------------------------------------*/
 #endif

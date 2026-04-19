@@ -26,7 +26,7 @@
 /*-----------------------------------------------------------------*/
 bool TDBWFRM::IsEmptyTritt(int _i)
 {
-    return freietritte[_i];
+    return IsFreeTritt(_i);
 }
 /*-----------------------------------------------------------------*/
 int TDBWFRM::GetFirstNonemptyTritt(int _i)
@@ -78,8 +78,6 @@ void TDBWFRM::MoveTritt(int _von, int _nach)
     RedrawTritt(_nach);
     RedrawAufknuepfungTritt(_von);
     RedrawAufknuepfungTritt(_nach);
-    freietritte[_nach] = freietritte[_von];
-    freietritte[_von] = true;
 }
 /*-----------------------------------------------------------------*/
 bool TDBWFRM::AufknuepfungsspalteEqual(int _i1, int _i2)
@@ -121,7 +119,6 @@ void TDBWFRM::MergeTritte()
                         }
                     RedrawTritt(i);
                     RedrawTritt(ii);
-                    freietritte[i] = true;
                     // Aufknuepfung bereinigen
                     for (int j = 0; j < Data->MAXY1; j++)
                         aufknuepfung.feld.Set(i, j, 0);
@@ -163,9 +160,6 @@ void TDBWFRM::SwitchTritte(int _a, int _b)
     RedrawAufknuepfungTritt(_b);
     dbw3_assert(_a < Data->MAXX2);
     dbw3_assert(_b < Data->MAXX2);
-    bool IsEmpty = freietritte[_a];
-    freietritte[_a] = freietritte[_b];
-    freietritte[_b] = IsEmpty;
 }
 /*-----------------------------------------------------------------*/
 void TDBWFRM::RearrangeTritte()

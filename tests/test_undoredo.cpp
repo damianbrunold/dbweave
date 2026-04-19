@@ -36,11 +36,11 @@ private slots:
 
     void snapshot_then_modify_then_undo_restores_original()
     {
-        /*  Undo snapshots the seven input fields (einzug,
-            aufknuepfung, trittfolge, isempty, schussfarben,
-            kettfarben, blatteinzug). The gewebe field is derived
-            via RecalcGewebe() on restore, so assertions target
-            einzug directly.                                   */
+        /*  Undo snapshots the six input fields (einzug,
+            aufknuepfung, trittfolge, schussfarben, kettfarben,
+            blatteinzug). The gewebe field is derived via
+            RecalcGewebe() on restore, so assertions target einzug
+            directly.                                            */
         DBWFRM->undo->Snapshot(); /* state A (empty) */
 
         DBWFRM->einzug.feld.Set(3, (short)7);

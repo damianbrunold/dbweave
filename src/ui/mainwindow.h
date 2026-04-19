@@ -207,13 +207,6 @@ public:
     PalettePanel* palettePanel = nullptr;
     QAction* ViewFarbpalette = nullptr;
 
-    /*  Per-shaft / per-treadle "unused" flags. Sized to Data->MAXY1 /
-        Data->MAXX2 and allocated in the ctor. Match the legacy raw
-        bool[] layout so ported code's `freieschaefte[j] = true`
-        assignments compile unchanged. */
-    bool* freieschaefte = nullptr;
-    bool* freietritte = nullptr;
-
     /*  Scratch buffers used by RcRecalcAll: xbuf[i] marks warp i
         as seen (non-empty) during RecalcEinzug; ybuf[j] does the
         same for wefts during RecalcTrittfolge. Sized to MAXX1 and
@@ -424,9 +417,6 @@ public:
     void DrawEinzug(int _i, int _j);
     void DrawAufknuepfung(int _i, int _j);
     void DrawTrittfolge(int _i, int _j);
-    void RecalcFreieSchaefte();
-    void RecalcFreieTritte();
-
     /*  --- Insert / Delete / Move menu ops ---------------------
         Structural editing: shift warp / weft / shaft / treadle to
         make room for a new one or remove an existing one. Ported
@@ -631,7 +621,8 @@ public:
     void ToggleAufknuepfung(int _i, int _j);
     bool IsEmptyEinzug(int _i);
     bool IsEmptyTrittfolge(int _j);
-    void RecalcTrittfolgeEmpty(int _j);
+    bool IsFreeSchaft(int _j);
+    bool IsFreeTritt(int _i);
     bool KettfadenEqual(int _a, int _b);
     short GetFreeEinzug();
     short GetFreeTritt();
@@ -709,7 +700,7 @@ public:
         SetModified() inside Grundeinstellung changes so that flipping
         settings on an empty freshly-launched session doesn't leave
         the document in a "needs saving" state.                     */
-    bool HasNonTrivialContent() const;
+    bool HasNonTrivialContent();
 
     /*  Read the saved Grundeinstellung from Settings and apply it to
         the current session. Called from File > New and at startup so
