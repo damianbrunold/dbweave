@@ -607,19 +607,32 @@ void PatternCanvas::paintEvent(QPaintEvent* /*_e*/)
         hilfslinien, rapport lines and the cursor land in later
         rendering slices. */
 
+    /*  Matches legacy redraw.cpp: under ViewOnlyGewebe (for einzug /
+        aufknuepfung / trittfolge) and under GewebeNone (for gewebe),
+        the field is blanked to btnFace first, then only the Rahmen
+        (grid lines + strongline + outer frame) is drawn. Cell
+        symbols / fills are skipped. */
     auto paintField
-        = [this](FeldBase& fb, void (TDBWFRM::*draw)(int, int), void (TDBWFRM::*rahmen)(int, int)) {
+        = [this, &p](FeldBase& fb, void (TDBWFRM::*draw)(int, int),
+                     void (TDBWFRM::*rahmen)(int, int), bool _blankContent) {
               if (fb.gw <= 0 || fb.gh <= 0)
                   return;
               if (fb.pos.width <= 0 || fb.pos.height <= 0)
                   return;
+              if (_blankContent) {
+                  p.setPen(Qt::NoPen);
+                  p.setBrush(kLegacyBtnFace);
+                  p.drawRect(fb.pos.x0, fb.pos.y0, fb.pos.width, fb.pos.height);
+              }
               const int cols = fb.pos.width / fb.gw;
               const int rows = fb.pos.height / fb.gh;
               /*  Cells first, Rahmen second so the strongline lines draw
                   on top of cell fills without getting overwritten. */
-              for (int i = 0; i < cols; i++)
-                  for (int j = 0; j < rows; j++)
-                      (frm->*draw)(i, j);
+              if (!_blankContent) {
+                  for (int i = 0; i < cols; i++)
+                      for (int j = 0; j < rows; j++)
+                          (frm->*draw)(i, j);
+              }
               if (rahmen) {
                   for (int i = 0; i < cols; i++)
                       for (int j = 0; j < rows; j++)
@@ -627,15 +640,20 @@ void PatternCanvas::paintEvent(QPaintEvent* /*_e*/)
               }
           };
 
+    const bool onlyGewebe = frm->ViewOnlyGewebe && frm->ViewOnlyGewebe->isChecked();
+    const bool gewebeNone = frm->GewebeNone && frm->GewebeNone->isChecked();
+
     if (frm->ViewEinzug && frm->ViewEinzug->isChecked()) {
-        paintField(frm->einzug, &TDBWFRM::DrawEinzug, &TDBWFRM::DrawEinzugRahmen);
-        paintField(frm->aufknuepfung, &TDBWFRM::DrawAufknuepfung, &TDBWFRM::DrawAufknuepfungRahmen);
+        paintField(frm->einzug, &TDBWFRM::DrawEinzug, &TDBWFRM::DrawEinzugRahmen, onlyGewebe);
+        paintField(frm->aufknuepfung, &TDBWFRM::DrawAufknuepfung,
+                   &TDBWFRM::DrawAufknuepfungRahmen, onlyGewebe);
     }
 
     if (frm->ViewTrittfolge && frm->ViewTrittfolge->isChecked())
-        paintField(frm->trittfolge, &TDBWFRM::DrawTrittfolge, &TDBWFRM::DrawTrittfolgeRahmen);
+        paintField(frm->trittfolge, &TDBWFRM::DrawTrittfolge, &TDBWFRM::DrawTrittfolgeRahmen,
+                   onlyGewebe);
 
-    paintField(frm->gewebe, &TDBWFRM::DrawGewebe, &TDBWFRM::DrawGewebeRahmen);
+    paintField(frm->gewebe, &TDBWFRM::DrawGewebe, &TDBWFRM::DrawGewebeRahmen, gewebeNone);
 
     /*  Outer frames. DrawXRahmen only paints top/left borders per
         cell, so the last column / row is unframed. Match legacy's
