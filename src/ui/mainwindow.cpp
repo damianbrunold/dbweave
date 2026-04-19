@@ -114,7 +114,8 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	/*  Blockmuster undo ring. Allocated once per mainwindow; the
 	    Muster array it references lives as member state so no
 	    ownership transfer is needed. */
-	blockundo = new BlockUndo(&blockmuster, currentbm);
+	blockundo   = new BlockUndo(&blockmuster,   currentbm);
+	bereichundo = new BlockUndo(&bereichmuster, currentbm);
 	std::memset(xbuf, 0, Data->MAXX1);
 	std::memset(ybuf, 0, Data->MAXY2);
 
@@ -335,6 +336,20 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	QAction* actFarbverlauf = patternMenu->addAction(QStringLiteral("Color &blending..."));
 	QAction* actDefColors   = patternMenu->addAction(QStringLiteral("&Define colors..."));
 	QAction* actBlockmuster = patternMenu->addAction(QStringLiteral("&Substitute with block patterns..."));
+	QAction* actRangeSubst  = patternMenu->addAction(QStringLiteral("Substitute &ranges with patterns..."));
+	connect(actRangeSubst, &QAction::triggered, this, [this]{ RangePatternsClick(); });
+	patternMenu->addSeparator();
+	QAction* actCopyEzTf = patternMenu->addAction(QStringLiteral("Copy threading → treadling"));
+	QAction* actCopyTfEz = patternMenu->addAction(QStringLiteral("Copy treadling → threading"));
+	connect(actCopyEzTf, &QAction::triggered, this, [this]{ CopyEinzugTrittfolgeClick(); });
+	connect(actCopyTfEz, &QAction::triggered, this, [this]{ CopyTrittfolgeEinzugClick(); });
+	patternMenu->addSeparator();
+	QAction* actClearTf   = patternMenu->addAction(QStringLiteral("Clear &treadling / pegplan"));
+	QAction* actMirrorTf  = patternMenu->addAction(QStringLiteral("&Mirror treadling vertically"));
+	QAction* actInvertSp  = patternMenu->addAction(QStringLiteral("In&vert pegplan"));
+	connect(actClearTf,   &QAction::triggered, this, [this]{ ClearTrittfolgeClick(); });
+	connect(actMirrorTf,  &QAction::triggered, this, [this]{ TfSpiegelnClick();      });
+	connect(actInvertSp,  &QAction::triggered, this, [this]{ SpInvertClick();        });
 	connect(actDefColors, &QAction::triggered, this, [this]{ DefineColorsClick(); });
 	connect(actEzAssist,    &QAction::triggered, this, [this]{ EinzugAssistentClick(); });
 	connect(actFixEinzug,   &QAction::triggered, this, [this]{ EditFixeinzug();        });
@@ -596,6 +611,7 @@ TDBWFRM::~TDBWFRM()
 	delete[] ybuf;          ybuf          = nullptr;
 	delete[] fixeinzug;     fixeinzug     = nullptr;
 	delete   blockundo;     blockundo     = nullptr;
+	delete   bereichundo;   bereichundo   = nullptr;
 	/*  QAction members are owned by `this` via QObject parenting. */
 }
 

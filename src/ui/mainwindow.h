@@ -256,6 +256,14 @@ public:
 	bool             trittfolgeZ  = true;
 	class BlockUndo* blockundo    = nullptr;
 
+	/*  Bereichmuster (range-substitution) state. Parallel to the
+	    blockmuster slots but used by RangePatternsClick: the dialog
+	    edits these, and BereicheFillPattern then replays the selected
+	    bereichmuster over the selection (or the whole pattern if no
+	    selection is active). */
+	Muster           bereichmuster[10];
+	class BlockUndo* bereichundo   = nullptr;
+
 	/*  User-defined patterns: 10 slots persisted via QSettings under
 	    Userdef0..9. LoadUserdefMenu rebuilds the menu captions from
 	    the slot array. */
@@ -641,6 +649,21 @@ public:
 	void __fastcall DateiExportClick    ();
 	void __fastcall DateiExportieren    (const QString& _filename);
 	void __fastcall DoExportBitmap      (const QString& _filename);
+
+	/*  Schlagpatrone (pegplan) / trittfolge clickhandlers. */
+	void __fastcall ClearSchlagpatroneClick ();
+	void __fastcall SpSpiegelnClick         ();
+	void __fastcall SpInvertClick           ();
+	void __fastcall ClearTrittfolgeClick    ();
+	void __fastcall TfSpiegelnClick         ();
+
+	/*  Einzug ↔ Trittfolge transfer. */
+	void __fastcall CopyEinzugTrittfolgeClick ();
+	void __fastcall CopyTrittfolgeEinzugClick ();
+
+	/*  Bereiche (range-substitution) dialog + fill. */
+	void __fastcall RangePatternsClick    ();
+	void __fastcall BereicheFillPattern   (int _x, int _y);
 	void __fastcall BlockExpandEinzug      (int _count);
 	void __fastcall BlockExpandTrittfolge  (int _count);
 	void __fastcall BlockExpandAufknuepfung(int _x, int _y);
