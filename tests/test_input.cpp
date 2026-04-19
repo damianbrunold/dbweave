@@ -272,6 +272,38 @@ private slots:
 		QCOMPARE((int)DBWFRM->gewebe.feld.Get(2, 5), 0);
 	}
 
+	void ctrl_click_moves_cursor_without_toggling()
+	{
+		/*  Legacy: a Ctrl-modified click only moves the cursor to
+		    the target cell without toggling. Gate required because
+		    users navigate with Ctrl-click all the time.          */
+		DBWFRM->currentrange = 3;
+		DBWFRM->handleCanvasMousePress (25, 75, /*shift=*/false, /*ctrl=*/true);
+		DBWFRM->handleCanvasMouseRelease();
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(2, 5), 0);
+		/*  Cursor should have moved to the Ctrl-clicked cell. */
+		QCOMPARE(DBWFRM->cursorhandler->CurrentFeld(), GEWEBE);
+		QCOMPARE(DBWFRM->gewebe.kbd.i, 2);
+		QCOMPARE(DBWFRM->gewebe.kbd.j, 5);
+	}
+
+	void plain_click_after_ctrl_click_still_toggles()
+	{
+		/*  Regression: the press-side 1x1 rubber band used to
+		    survive the release of a Ctrl-click. On the next plain
+		    click bSelectionCleared then latched true and
+		    suppressed the toggle -- the flag appeared "stuck".   */
+		DBWFRM->currentrange = 2;
+		/*  First: Ctrl-click (navigation only, no toggle). */
+		DBWFRM->handleCanvasMousePress (25, 75, /*shift=*/false, /*ctrl=*/true);
+		DBWFRM->handleCanvasMouseRelease();
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(2, 5), 0);
+		/*  Now: plain click should toggle. */
+		DBWFRM->handleCanvasMousePress (25, 75, /*shift=*/false);
+		DBWFRM->handleCanvasMouseRelease();
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(2, 5), 2);
+	}
+
 	void click_release_dismisses_prior_selection_without_toggle()
 	{
 		/*  Legacy bSelectionCleared: a click that only serves to

@@ -317,6 +317,10 @@ public:
 	    dismiss a previous rubber-band doesn't also toggle the
 	    clicked cell. Matches legacy bSelectionCleared.         */
 	bool bSelectionCleared = false;
+	/*  Ctrl held at press time. A Ctrl-click on the main fields
+	    only moves the cursor without toggling the cell, matching
+	    legacy FormMouseUp's `if (!ctrl) SetX(...)` gate.         */
+	bool md_ctrl           = false;
 
 	void __fastcall ClearSelection();
 	void __fastcall DrawSelection();
@@ -533,7 +537,7 @@ public:
 	    Press starts a selection / paints the initial cell; Move
 	    grows the rubber-band or drag-paints a 1-D strip; Release
 	    clears the drag state. */
-	void __fastcall handleCanvasMousePress   (int _x, int _y, bool _shift);
+	void __fastcall handleCanvasMousePress   (int _x, int _y, bool _shift, bool _ctrl = false);
 	void __fastcall handleCanvasMouseMove    (int _x, int _y, bool _shift);
 	void __fastcall handleCanvasMouseRelease ();
 

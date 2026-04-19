@@ -77,7 +77,7 @@ static void dataCoords (TDBWFRM* frm, FELD f, int vp_i, int vp_j, int& di, int& 
 	}
 }
 
-void __fastcall TDBWFRM::handleCanvasMousePress (int _x, int _y, bool _shift)
+void __fastcall TDBWFRM::handleCanvasMousePress (int _x, int _y, bool _shift, bool _ctrl)
 {
 	FELD f;
 	int  i, j;
@@ -90,6 +90,7 @@ void __fastcall TDBWFRM::handleCanvasMousePress (int _x, int _y, bool _shift)
 	lastfarbej       = -1;
 	lastblatteinzugi = -1;
 	bSelectionCleared = selection.Valid();
+	md_ctrl          = _ctrl;
 
 	int di, dj;
 	dataCoords(this, f, i, j, di, dj);
@@ -174,11 +175,14 @@ void __fastcall TDBWFRM::handleCanvasMouseMove (int _x, int _y, bool _shift)
 
 void __fastcall TDBWFRM::handleCanvasMouseRelease ()
 {
-	/*  Click-without-drag: if the release leaves the rubber-band
-	    as a single cell at the press point, interpret the click
-	    as a toggle on that cell. Matches legacy FormMouseUp in
-	    mousehandling.cpp (the md_feld==f && md==pt branch).     */
-	if (mousedown && md_feld != INVALID && !bSelectionCleared) {
+	/*  Click-without-drag: the press installed a transient 1x1
+	    selection at the click cell. On release, always drop that
+	    transient selection (otherwise the next click sees a
+	    leftover "prior" selection and bSelectionCleared traps it
+	    forever); then, if no drag happened and nothing is
+	    suppressing the toggle, dispatch the per-field Set* op.
+	    Matches legacy FormMouseUp (mousehandling.cpp:503). */
+	if (mousedown && md_feld != INVALID) {
 		RANGE sel = selection;
 		sel.Normalize();
 		const bool sameCell = sel.Valid() && sel.feld == md_feld
@@ -187,21 +191,23 @@ void __fastcall TDBWFRM::handleCanvasMouseRelease ()
 		                   && sel.begin.i == md.i && sel.begin.j == md.j;
 		if (sameCell) {
 			ClearSelection();
-			const int r = currentrange;
-			switch (md_feld) {
-			case GEWEBE:
-				SetGewebe     (md.i - scroll_x1, md.j - scroll_y2, /*_set=*/false, r);
-				break;
-			case EINZUG:
-				SetEinzug     (md.i - scroll_x1, md.j - scroll_y1);
-				break;
-			case AUFKNUEPFUNG:
-				SetAufknuepfung (md.i - scroll_x2, md.j - scroll_y1, /*_set=*/false, r);
-				break;
-			case TRITTFOLGE:
-				SetTrittfolge (md.i - scroll_x2, md.j - scroll_y2, /*_set=*/false, r);
-				break;
-			default: break;
+			if (!bSelectionCleared && !md_ctrl) {
+				const int r = currentrange;
+				switch (md_feld) {
+				case GEWEBE:
+					SetGewebe     (md.i - scroll_x1, md.j - scroll_y2, /*_set=*/false, r);
+					break;
+				case EINZUG:
+					SetEinzug     (md.i - scroll_x1, md.j - scroll_y1);
+					break;
+				case AUFKNUEPFUNG:
+					SetAufknuepfung (md.i - scroll_x2, md.j - scroll_y1, /*_set=*/false, r);
+					break;
+				case TRITTFOLGE:
+					SetTrittfolge (md.i - scroll_x2, md.j - scroll_y2, /*_set=*/false, r);
+					break;
+				default: break;
+				}
 			}
 		}
 	}
@@ -212,4 +218,5 @@ void __fastcall TDBWFRM::handleCanvasMouseRelease ()
 	lastfarbej       = -1;
 	lastblatteinzugi = -1;
 	bSelectionCleared = false;
+	md_ctrl          = false;
 }

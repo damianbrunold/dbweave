@@ -367,7 +367,8 @@ void PatternCanvas::mousePressEvent (QMouseEvent* _e)
 	}
 
 	const bool shift = _e->modifiers().testFlag(Qt::ShiftModifier);
-	frm->handleCanvasMousePress(p.x(), p.y(), shift);
+	const bool ctrl  = _e->modifiers().testFlag(Qt::ControlModifier);
+	frm->handleCanvasMousePress(p.x(), p.y(), shift, ctrl);
 	_e->accept();
 }
 
