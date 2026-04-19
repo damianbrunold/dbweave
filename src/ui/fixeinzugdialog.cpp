@@ -23,6 +23,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QKeyEvent>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QScrollBar>
@@ -46,6 +47,11 @@ public:
 		pal.setColor(QPalette::Window, QColor(192, 192, 192));
 		setPalette(pal);
 		setMinimumSize(400, 240);
+		setFocusPolicy(Qt::StrongFocus);
+		/*  Seed cursor direction from the main window's handler so
+		    keyboard stepping after Space matches the parent editor. */
+		if (frm && frm->cursorhandler)
+			cursordirection = frm->cursorhandler->GetCursorDirection();
 	}
 
 	int  scrollX() const { return scrollx; }
@@ -92,6 +98,76 @@ protected:
 			          x, y, x+dx, y+dy,
 			          QColor(Qt::black));
 		}
+
+		/*  Keyboard cursor: outlined rect at (cx, cy) with the same
+		    axis-flip rules the cells use. */
+		if (hasFocus() && cx < maxx && cy < maxy) {
+			const int x = frm->righttoleft ? (maxx-1-cx)*dx : cx*dx;
+			const int y = frm->toptobottom ? cy*dy : (maxy-1-cy)*dy;
+			p.setPen(QColor(Qt::white));
+			p.setBrush(Qt::NoBrush);
+			p.drawRect(x, y, dx, dy);
+		}
+	}
+
+	void keyPressEvent (QKeyEvent* _e) override {
+		const int maxx = maxColsVisible();
+		const int maxy = maxShaftsShown();
+		const bool ctrl = _e->modifiers().testFlag(Qt::ControlModifier);
+		const int step = ctrl ? 4 : 1;
+
+		auto moveLeft  = [&]{ cx -= step; if (cx < 0)      cx = 0;      };
+		auto moveRight = [&]{ cx += step; if (cx > maxx-1) cx = maxx-1; };
+		auto moveUp    = [&]{ cy += step; if (cy > maxy-1) cy = maxy-1; };
+		auto moveDown  = [&]{ cy -= step; if (cy < 0)      cy = 0;      };
+
+		switch (_e->key()) {
+		case Qt::Key_Left:
+			if (frm->righttoleft) moveRight(); else moveLeft();
+			update();
+			break;
+		case Qt::Key_Right:
+			if (frm->righttoleft) moveLeft(); else moveRight();
+			update();
+			break;
+		case Qt::Key_Up:
+			if (frm->toptobottom) moveDown(); else moveUp();
+			update();
+			break;
+		case Qt::Key_Down:
+			if (frm->toptobottom) moveUp(); else moveDown();
+			update();
+			break;
+		case Qt::Key_Space: {
+			const int src = scrollx + cx;
+			if (src >= Data->MAXX1) break;
+			const short old = owner->scratch[src];
+			owner->scratch[src] = (old == cy+1) ? short(0) : short(cy+1);
+			owner->size = 0;
+			for (int k = 0; k < Data->MAXX1; k++)
+				if (owner->scratch[k] != 0) owner->size = k;
+			/*  Advance cursor in the configured direction. */
+			if (frm->toptobottom) {
+				if ((cursordirection & CD_DOWN) && cy > 0)      cy--;
+				if ((cursordirection & CD_UP)   && cy < maxy-1) cy++;
+			} else {
+				if ((cursordirection & CD_UP)   && cy < maxy-1) cy++;
+				if ((cursordirection & CD_DOWN) && cy > 0)      cy--;
+			}
+			if (frm->righttoleft) {
+				if ((cursordirection & CD_RIGHT) && cx < maxx-1) cx++;
+				if ((cursordirection & CD_LEFT)  && cx > 0)      cx--;
+			} else {
+				if ((cursordirection & CD_LEFT)  && cx > 0)      cx--;
+				if ((cursordirection & CD_RIGHT) && cx < maxx-1) cx++;
+			}
+			update();
+			break;
+		}
+		default:
+			QWidget::keyPressEvent(_e);
+			return;
+		}
 	}
 
 	void mouseReleaseEvent (QMouseEvent* _e) override {
@@ -113,6 +189,8 @@ protected:
 		owner->size = 0;
 		for (int k = 0; k < Data->MAXX1; k++)
 			if (owner->scratch[k] != 0) owner->size = k;
+		cx = i; cy = j;
+		setFocus();
 		update();
 	}
 
@@ -120,6 +198,9 @@ private:
 	FixeinzugDialog* owner;
 	TDBWFRM*         frm;
 	int              scrollx = 0;
+	int              cx = 0;
+	int              cy = 0;
+	CURSORDIRECTION  cursordirection = CD_RIGHT;
 };
 
 /*-----------------------------------------------------------------*/
@@ -140,6 +221,7 @@ FixeinzugDialog::FixeinzugDialog (TDBWFRM* _frm, QWidget* _parent)
 	calcRange();
 
 	canvas = new FixeinzugCanvas(this, frm);
+	canvas->setFocus();
 	sbH    = new QScrollBar(Qt::Horizontal, this);
 	sbH->setRange(0, Data->MAXX1);
 	sbH->setPageStep(32);

@@ -28,6 +28,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QKeyEvent>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPushButton>
@@ -65,7 +66,12 @@ public:
 		pal.setColor(QPalette::Window, QColor(192, 192, 192));
 		setPalette(pal);
 		setAutoFillBackground(true);
+		setFocusPolicy(Qt::StrongFocus);
 	}
+
+	int cx = 0;
+	int cy = 0;
+	CURSORDIRECTION cursordirection = CD_UP;
 
 	static constexpr int cellSize = 18;
 
@@ -98,6 +104,77 @@ protected:
 			p.drawLine(1, (myG-1-owner->my)*dy, (owner->mx+1)*dx, (myG-1-owner->my)*dy);
 			p.drawLine((owner->mx+1)*dx, (myG-1-owner->my)*dy, (owner->mx+1)*dx, myG*dy);
 		}
+
+		if (hasFocus()) {
+			p.setPen(QColor(Qt::white));
+			p.setBrush(Qt::NoBrush);
+			p.drawRect(cx*dx, (myG-1-cy)*dy, dx, dy);
+		}
+	}
+
+	void keyPressEvent (QKeyEvent* _e) override {
+		const int mxG = Muster::maxx;
+		const int myG = Muster::maxy;
+		const bool ctrl  = _e->modifiers().testFlag(Qt::ControlModifier);
+		const bool shift = _e->modifiers().testFlag(Qt::ShiftModifier);
+		const int step = ctrl ? 4 : 1;
+
+		switch (_e->key()) {
+		case Qt::Key_Left:
+			if (shift) { owner->rollLeft(); return; }
+			cx -= step; if (cx < 0) cx = 0;
+			update();
+			break;
+		case Qt::Key_Right:
+			if (shift) { owner->rollRight(); return; }
+			cx += step; if (cx > mxG-1) cx = mxG-1;
+			update();
+			break;
+		case Qt::Key_Up:
+			if (shift) { owner->rollUp(); return; }
+			cy += step; if (cy > myG-1) cy = myG-1;
+			update();
+			break;
+		case Qt::Key_Down:
+			if (shift) { owner->rollDown(); return; }
+			cy -= step; if (cy < 0) cy = 0;
+			update();
+			break;
+		case Qt::Key_Space: {
+			Muster& m = (*owner->bindungen)[owner->current];
+			const char old = m.Get(cx, cy);
+			m.Set(cx, cy, BlockmusterDialog::toggle(old, owner->current));
+			owner->calcRange();
+			owner->refreshUsed();
+			owner->undo.Snapshot();
+			/*  Advance per cursor direction. */
+			if ((cursordirection & CD_UP)    && cy < myG-1) cy++;
+			else if ((cursordirection & CD_DOWN)  && cy > 0) cy--;
+			if ((cursordirection & CD_LEFT)  && cx > 0) cx--;
+			else if ((cursordirection & CD_RIGHT) && cx < mxG-1) cx++;
+			update();
+			break;
+		}
+		case Qt::Key_Return:
+		case Qt::Key_Enter:
+			owner->selectBindung(shift
+			    ? (owner->current + 9) % 10
+			    : (owner->current + 1) % 10);
+			break;
+		case Qt::Key_0: owner->selectBindung(0); break;
+		case Qt::Key_1: owner->selectBindung(1); break;
+		case Qt::Key_2: owner->selectBindung(2); break;
+		case Qt::Key_3: owner->selectBindung(3); break;
+		case Qt::Key_4: owner->selectBindung(4); break;
+		case Qt::Key_5: owner->selectBindung(5); break;
+		case Qt::Key_6: owner->selectBindung(6); break;
+		case Qt::Key_7: owner->selectBindung(7); break;
+		case Qt::Key_8: owner->selectBindung(8); break;
+		case Qt::Key_9: owner->selectBindung(9); break;
+		default:
+			QWidget::keyPressEvent(_e);
+			return;
+		}
 	}
 
 	void mouseReleaseEvent (QMouseEvent* _e) override {
@@ -115,6 +192,8 @@ protected:
 		owner->calcRange();
 		owner->refreshUsed();
 		owner->undo.Snapshot();
+		cx = i; cy = j;
+		setFocus();
 		update();
 	}
 
@@ -283,6 +362,10 @@ BlockmusterDialog::BlockmusterDialog (TDBWFRM* _frm, BlockUndo& _undo,
 	root->addLayout(header);
 	root->addWidget(canvas, 1);
 	root->addWidget(btns);
+
+	if (frm->cursorhandler)
+		canvas->cursordirection = frm->cursorhandler->GetCursorDirection();
+	canvas->setFocus();
 
 	selectBindung(0);
 	calcRange();
