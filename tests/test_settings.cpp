@@ -49,6 +49,47 @@ private slots:
 		         QStringLiteral("fallback"));
 	}
 
+	void environment_language_round_trip()
+	{
+		/*  Matches the EnvOptionsDialog ↔ main.cpp contract:
+		    Environment/Language (int) is -1/absent ⇒ auto-detect
+		    from locale, 0 ⇒ English, 1 ⇒ German. Save 1, read it
+		    back verbatim, and confirm a fresh Settings instance
+		    sees the same value (persistence across object
+		    boundaries within the same session). */
+		{
+			Settings s;
+			s.SetCategory(QStringLiteral("Environment"));
+			s.Save(QStringLiteral("Language"), 1);
+		}
+		Settings s;
+		s.SetCategory(QStringLiteral("Environment"));
+		QCOMPARE(s.Load(QStringLiteral("Language"), -1), 1);
+	}
+
+	void mru_group_round_trip()
+	{
+		/*  MRU (mainwindow.cpp) bypasses the Settings wrapper and
+		    uses QSettings directly under the "mru" group. This test
+		    locks in that path: six string slots, empty slots hidden,
+		    re-reading rebuilds the same list. */
+		{
+			QSettings w;
+			w.beginGroup(QStringLiteral("mru"));
+			w.setValue(QStringLiteral("0"), QStringLiteral("/tmp/a.dbw"));
+			w.setValue(QStringLiteral("1"), QStringLiteral("/tmp/b.dbw"));
+			w.endGroup();
+		}
+		QSettings r;
+		r.beginGroup(QStringLiteral("mru"));
+		QCOMPARE(r.value(QStringLiteral("0")).toString(),
+		         QStringLiteral("/tmp/a.dbw"));
+		QCOMPARE(r.value(QStringLiteral("1")).toString(),
+		         QStringLiteral("/tmp/b.dbw"));
+		QVERIFY(r.value(QStringLiteral("2")).toString().isEmpty());
+		r.endGroup();
+	}
+
 	void category_namespaces_values()
 	{
 		Settings s;

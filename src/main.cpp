@@ -11,11 +11,14 @@
 
 #include <QApplication>
 #include <QFileInfo>
+#include <QLocale>
 #include <QMessageBox>
 
 #include "datamodule.h"
+#include "language.h"
 #include "mainwindow.h"
 #include "loadoptions.h"
+#include "settings.h"
 
 int main (int argc, char* argv[])
 {
@@ -25,6 +28,23 @@ int main (int argc, char* argv[])
 	QApplication::setOrganizationDomain("brunoldsoftware.ch");
 	QApplication::setApplicationName("DB-WEAVE");
 	QApplication::setApplicationVersion("0.1.0");
+
+	/*  Pick the UI language. Precedence matches legacy
+	    EnvOptionsDialog logic: an explicit preference saved under
+	    Environment/Language wins, otherwise fall back to the OS
+	    locale (GE for de-*, EN for everything else). Must run
+	    before any QString is built from LANG_STR -- concretely
+	    before TDBWFRM's ctor wires up menu text or print headers. */
+	{
+		Settings settings;
+		settings.SetCategory(AnsiString("Environment"));
+		int lang = settings.Load(AnsiString("Language"), -1);
+		if (lang < 0) {
+			const QString tag = QLocale::system().name().toLower();
+			lang = tag.startsWith(QStringLiteral("de")) ? 1 : 0;
+		}
+		active_language = (lang == 1) ? GE : EN;
+	}
 
 	/*  Reconstruct the legacy VCL form-auto-creation pattern: both
 	    `Data` and `DBWFRM` are globals referenced throughout the
