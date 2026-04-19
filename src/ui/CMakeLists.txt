@@ -59,6 +59,8 @@ add_library(dbweave_ui STATIC
     einzugassistentdialog.cpp
     fixeinzugdialog.cpp
     farbverlaufdialog.cpp
+    blockmuster.cpp
+    blockmusterdialog.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)

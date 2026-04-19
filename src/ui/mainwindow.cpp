@@ -110,6 +110,11 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	/*  Scratch buffers for RcRecalcAll. */
 	xbuf = new char[Data->MAXX1];
 	ybuf = new char[Data->MAXY2];
+
+	/*  Blockmuster undo ring. Allocated once per mainwindow; the
+	    Muster array it references lives as member state so no
+	    ownership transfer is needed. */
+	blockundo = new BlockUndo(&blockmuster, currentbm);
 	std::memset(xbuf, 0, Data->MAXX1);
 	std::memset(ybuf, 0, Data->MAXY2);
 
@@ -321,9 +326,11 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	QAction* actEzAssist    = patternMenu->addAction(QStringLiteral("Threading &wizard..."));
 	QAction* actFixEinzug   = patternMenu->addAction(QStringLiteral("&User defined threading..."));
 	QAction* actFarbverlauf = patternMenu->addAction(QStringLiteral("Color &blending..."));
+	QAction* actBlockmuster = patternMenu->addAction(QStringLiteral("&Substitute with block patterns..."));
 	connect(actEzAssist,    &QAction::triggered, this, [this]{ EinzugAssistentClick(); });
 	connect(actFixEinzug,   &QAction::triggered, this, [this]{ EditFixeinzug();        });
 	connect(actFarbverlauf, &QAction::triggered, this, [this]{ FarbverlaufClick();     });
+	connect(actBlockmuster, &QAction::triggered, this, [this]{ EditBlockmusterClick(); });
 
 	/*  Rapport (extend pattern) entries. */
 	patternMenu->addSeparator();
@@ -555,6 +562,7 @@ TDBWFRM::~TDBWFRM()
 	delete[] xbuf;          xbuf          = nullptr;
 	delete[] ybuf;          ybuf          = nullptr;
 	delete[] fixeinzug;     fixeinzug     = nullptr;
+	delete   blockundo;     blockundo     = nullptr;
 	/*  QAction members are owned by `this` via QObject parenting. */
 }
 

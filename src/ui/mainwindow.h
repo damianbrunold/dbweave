@@ -31,6 +31,7 @@
 #include "dbw3_base.h"      /* FeldBase hierarchy */
 #include "hilfslinien.h"    /* Hilfslinien container */
 #include "loadoptions.h"    /* LOADSTAT / LOADPARTS */
+#include "blockmuster.h"    /* Muster / BlockUndo */
 
 class QPainter;
 class PatternCanvas;
@@ -240,6 +241,19 @@ public:
 	short* fixeinzug = nullptr;
 	short  firstfree = 1;
 	int    fixsize   = 0;
+
+	/*  Blockmuster (substitution) editor state. The 10 Muster slots
+	    hold the Grundmuster (index 0) plus 9 optional patterns; the
+	    EditBlockmusterClick dialog opens these for editing, and on
+	    OK the main window replays each base-pattern cell as a block
+	    of the matching substitution pattern. einzugZ/trittfolgeZ
+	    control whether the block-expand lays out Z or S. blockundo
+	    is the 100-slot undo ring the dialog uses.                  */
+	Muster           blockmuster[10];
+	int              currentbm    = 0;
+	bool             einzugZ      = true;
+	bool             trittfolgeZ  = true;
+	class BlockUndo* blockundo    = nullptr;
 
 	/*  Schedule a repaint of the pattern canvas. QWidget::update() on
 	    the main window only invalidates the window chrome; children
@@ -597,10 +611,14 @@ public:
 	void __fastcall ViewInfosClick ();
 
 	/*  Editing-assistant dialogs (Phase 7 batch 4). */
-	void __fastcall EinzugAssistentClick ();
-	void __fastcall EditFixeinzug        ();
-	void __fastcall UpdateEinzugFixiert  ();
-	void __fastcall FarbverlaufClick     ();
+	void __fastcall EinzugAssistentClick   ();
+	void __fastcall EditFixeinzug          ();
+	void __fastcall UpdateEinzugFixiert    ();
+	void __fastcall FarbverlaufClick       ();
+	void __fastcall EditBlockmusterClick   ();
+	void __fastcall BlockExpandEinzug      (int _count);
+	void __fastcall BlockExpandTrittfolge  (int _count);
+	void __fastcall BlockExpandAufknuepfung(int _x, int _y);
 
 	/*  --- Most-recently-used files ------------------------------
 	    Up to 6 paths stored via QSettings under
