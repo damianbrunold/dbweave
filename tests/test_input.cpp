@@ -39,10 +39,17 @@ class TestInput : public QObject
 		DBWFRM->einzug.pos.width  = GEW_W;
 		DBWFRM->einzug.pos.height = 40;
 
+		/*  A one-cell-tall blatteinzug strip lives between einzug and
+		    gewebe so tests can click into it. */
+		DBWFRM->blatteinzug.gw = CELL; DBWFRM->blatteinzug.gh = CELL;
+		DBWFRM->blatteinzug.pos.x0 = 0;
+		DBWFRM->blatteinzug.pos.y0 = 40;
+		DBWFRM->blatteinzug.pos.width  = GEW_W;
+		DBWFRM->blatteinzug.pos.height = CELL;
+
 		/*  Park the other fields off-canvas so HitCheck skips them. */
 		DBWFRM->aufknuepfung.pos  = GRIDPOS();
 		DBWFRM->trittfolge.pos    = GRIDPOS();
-		DBWFRM->blatteinzug.pos   = GRIDPOS();
 		DBWFRM->kettfarben.pos    = GRIDPOS();
 		DBWFRM->schussfarben.pos  = GRIDPOS();
 	}
@@ -222,6 +229,16 @@ private slots:
 		DBWFRM->selection.end   = PT(2, 1);   /* 3x2 -> non-square */
 		DBWFRM->RotateSelection();
 		QCOMPARE((int)DBWFRM->gewebe.feld.Get(0, 0), 1);
+	}
+
+	void click_on_blatteinzug_toggles_cell()
+	{
+		/*  Blatteinzug strip y-range is 40..50. Interior pixel at
+		    (25, 45) hits cell i=2, j=0 (since blatteinzug is 1 row
+		    tall). The strip cell should toggle on click. */
+		const int was = (int)DBWFRM->blatteinzug.feld.Get(2);
+		DBWFRM->handleCanvasMousePress(25, 45, /*shift=*/false);
+		QVERIFY((int)DBWFRM->blatteinzug.feld.Get(2) != was);
 	}
 
 	void rotate_90deg_moves_corner_cell()

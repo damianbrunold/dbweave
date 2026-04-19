@@ -106,6 +106,7 @@ void PatternCanvas::recomputeLayout (int _gw, int _gh)
 
 	constexpr int MARGIN  = 10;
 	constexpr int SB_SIZE = 16;   /* thickness of a scrollbar channel */
+	constexpr int DIV     = 3;    /* pixel gap between adjacent fields / strips */
 	const int W = width();
 	const int H = height();
 	if (W < 4*GW || H < 4*GH) return;
@@ -166,6 +167,13 @@ void PatternCanvas::recomputeLayout (int _gw, int _gh)
 	const int colW      = ez_cells * GW;
 	const int colX      = MARGIN;
 
+	/*  Vertical dividers between stacked strips. Legacy inserts a
+	    `divider` pixel gap between each pair of visible strips
+	    (farbe/einzug/blatteinzug/gewebe).                       */
+	const int fh_div = showFarbe       ? DIV : 0;
+	const int e_div  = showEinzug      ? DIV : 0;
+	const int b_div  = showBlatteinzug ? DIV : 0;
+
 	frm->kettfarben.gw = GW; frm->kettfarben.gh = GH;
 	frm->kettfarben.pos.x0     = colX;
 	frm->kettfarben.pos.y0     = MARGIN;
@@ -174,26 +182,26 @@ void PatternCanvas::recomputeLayout (int _gw, int _gh)
 
 	frm->einzug.gw = GW; frm->einzug.gh = GH;
 	frm->einzug.pos.x0     = colX;
-	frm->einzug.pos.y0     = frm->kettfarben.pos.y0 + frm->kettfarben.pos.height;
+	frm->einzug.pos.y0     = frm->kettfarben.pos.y0 + frm->kettfarben.pos.height + fh_div;
 	frm->einzug.pos.width  = showEinzug ? colW : 0;
 	frm->einzug.pos.height = showEinzug ? af_h : 0;
 
 	frm->blatteinzug.gw = GW; frm->blatteinzug.gh = GH;
 	frm->blatteinzug.pos.x0     = colX;
-	frm->blatteinzug.pos.y0     = frm->einzug.pos.y0 + frm->einzug.pos.height;
+	frm->blatteinzug.pos.y0     = frm->einzug.pos.y0 + frm->einzug.pos.height + e_div;
 	frm->blatteinzug.pos.width  = showBlatteinzug ? colW : 0;
 	frm->blatteinzug.pos.height = showBlatteinzug ? GH   : 0;
 
 	const int stripsAboveGewebeH =
-	    frm->kettfarben.pos.height
-	  + frm->einzug.pos.height
-	  + frm->blatteinzug.pos.height;
+	    frm->kettfarben.pos.height + fh_div
+	  + frm->einzug.pos.height      + e_div
+	  + frm->blatteinzug.pos.height + b_div;
 	const int tf_area_h = usableH - 2*MARGIN - stripsAboveGewebeH;
 	const int tf_rows   = std::max(0, tf_area_h / GH);
 
 	frm->gewebe.gw = GW; frm->gewebe.gh = GH;
 	frm->gewebe.pos.x0     = colX;
-	frm->gewebe.pos.y0     = frm->blatteinzug.pos.y0 + frm->blatteinzug.pos.height + MARGIN;
+	frm->gewebe.pos.y0     = frm->blatteinzug.pos.y0 + frm->blatteinzug.pos.height + b_div;
 	frm->gewebe.pos.width  = colW;
 	frm->gewebe.pos.height = tf_rows * GH;
 
@@ -315,11 +323,25 @@ bool PatternCanvas::hoverHDivider (int _x, int _y) const
 
 bool PatternCanvas::hoverVDivider (int _x, int _y) const
 {
-	const int top    = frm->einzug.pos.y0 + frm->einzug.pos.height;
+	/*  The vertical (einzug / gewebe sizing) divider lives in the
+	    narrow pixel gap immediately above gewebe. When blatteinzug
+	    is visible that gap is between blatteinzug.bottom and
+	    gewebe.top; otherwise it's the gap between einzug.bottom
+	    (or kettfarben.bottom when einzug is hidden) and
+	    gewebe.top. Hit-testing only this narrow band keeps clicks
+	    on the strips themselves from being swallowed by the drag
+	    handle.                                                   */
 	const int bottom = frm->gewebe.pos.y0;
+	int top = bottom;
+	if (frm->blatteinzug.pos.height > 0)
+		top = frm->blatteinzug.pos.y0 + frm->blatteinzug.pos.height;
+	else if (frm->einzug.pos.height > 0)
+		top = frm->einzug.pos.y0 + frm->einzug.pos.height;
+	else if (frm->kettfarben.pos.height > 0)
+		top = frm->kettfarben.pos.y0 + frm->kettfarben.pos.height;
 	if (top >= bottom) return false;
-	if (_y < top - 2 || _y > bottom + 2) return false;
-	const int left   = frm->einzug.pos.x0;
+	if (_y < top - 1 || _y > bottom + 1) return false;
+	const int left   = frm->gewebe.pos.x0;
 	const int right  = frm->trittfolge.pos.x0 + frm->trittfolge.pos.width;
 	return _x >= left && _x <= right;
 }
@@ -501,6 +523,25 @@ void PatternCanvas::paintEvent (QPaintEvent* /*_e*/)
 		paintField(frm->trittfolge,   &TDBWFRM::DrawTrittfolge,   &TDBWFRM::DrawTrittfolgeRahmen);
 
 	paintField(frm->gewebe,           &TDBWFRM::DrawGewebe,       &TDBWFRM::DrawGewebeRahmen);
+
+	/*  Outer frames. DrawXRahmen only paints top/left borders per
+	    cell, so the last column / row is unframed. Match legacy's
+	    plural DrawX() by closing each field with a btn-shadow
+	    rectangle. */
+	auto frameField = [&](const FeldBase& fb) {
+		if (fb.pos.width <= 0 || fb.pos.height <= 0) return;
+		p.setPen(QPen(legacyBtnShadow()));
+		p.setBrush(Qt::NoBrush);
+		p.drawRect(fb.pos.x0, fb.pos.y0, fb.pos.width, fb.pos.height);
+	};
+	if (frm->ViewEinzug && frm->ViewEinzug->isChecked()) {
+		frameField(frm->einzug);
+		if (frm->ViewTrittfolge && frm->ViewTrittfolge->isChecked())
+			frameField(frm->aufknuepfung);
+	}
+	if (frm->ViewTrittfolge && frm->ViewTrittfolge->isChecked())
+		frameField(frm->trittfolge);
+	frameField(frm->gewebe);
 
 	/*  Colour strips + blatteinzug. Renderers faithful to legacy
 	    redraw.cpp:DrawKettfarben / DrawSchussfarben /
