@@ -155,6 +155,9 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	QAction* actSaveAs = fileMenu->addAction(QStringLiteral("Save &As..."));
 	QAction* actLoadParts = fileMenu->addAction(QStringLiteral("&Load parts..."));
 	fileMenu->addSeparator();
+	QAction* actFileProps = fileMenu->addAction(QStringLiteral("Propert&ies..."));
+	connect(actFileProps, &QAction::triggered, this, [this]{ FilePropsClick(); });
+	fileMenu->addSeparator();
 	/*  Recent-files submenu. Six QActions are built up front so
 	    their captions can be rewritten from UpdateMRUMenu without
 	    rebuilding the menu structure.                            */
@@ -336,6 +339,9 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	/*  View-toggle items reuse the QActions that already live on
 	    TDBWFRM (allocated earlier in the ctor). Put them into the
 	    menu and wire them to refresh the canvas when toggled. */
+	viewMenu->addSeparator();
+	QAction* actInfos = viewMenu->addAction(QStringLiteral("Pattern i&nfo..."));
+	connect(actInfos, &QAction::triggered, this, [this]{ ViewInfosClick(); });
 	viewMenu->addSeparator();
 	if (ViewFarbpalette) viewMenu->addAction(ViewFarbpalette);
 	viewMenu->addSeparator();

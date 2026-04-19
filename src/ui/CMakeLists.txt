@@ -53,6 +53,9 @@ add_library(dbweave_ui STATIC
     techinfodialog.cpp
     envoptionsdialog.cpp
     xoptionsdialog.cpp
+    properties.cpp
+    propertiesdialog.cpp
+    entwurfsinfodialog.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)
@@ -67,6 +70,7 @@ target_link_libraries(dbweave_ui
         Qt6::Core
         Qt6::Gui
         Qt6::Widgets
+        Qt6::PrintSupport
         dbweave_compat
         dbweave_domain
 )

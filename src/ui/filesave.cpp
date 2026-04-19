@@ -31,6 +31,7 @@
 #include "fileformat.h"
 #include "palette.h"
 #include "hilfslinien.h"
+#include "properties.h"
 
 /*  @dbw3:file format version tag -- matches legacy FILEFORMATVERSION
     for 3.7+ files. "0001" is the older style; we always emit "0002". */
@@ -60,6 +61,8 @@ bool __fastcall TDBWFRM::Save ()
 		writer.WriteField("fmt", FILEFORMATVERSION);
 		writer.WriteField("ver", DBWEAVE_PORT_VERSION);
 		writer.EndSection();
+
+		if (Data->properties) Data->properties->Save(&writer);
 
 		writer.BeginSection("data", "Daten");
 

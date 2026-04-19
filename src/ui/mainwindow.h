@@ -592,6 +592,10 @@ public:
 	void __fastcall SetAusmasse (int _x1, int _y1, int _x2, int _y2,
 	                             int _vx2, int _vy1);
 
+	/*  Document metadata dialogs. */
+	void __fastcall FilePropsClick ();
+	void __fastcall ViewInfosClick ();
+
 	/*  --- Most-recently-used files ------------------------------
 	    Up to 6 paths stored via QSettings under
 	    "Brunold Software / DB-WEAVE / mru/{0..5}". The actions and

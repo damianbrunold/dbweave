@@ -17,6 +17,7 @@
 #include "palette.h"
 #include "rapport.h"
 #include "hilfslinien.h"
+#include "properties.h"
 #include "assert_compat.h"
 
 #include <QFileInfo>
@@ -88,7 +89,7 @@ bool FhLoader::Load (LOADSTAT& _stat, LOADPARTS _loadparts)
 				NO_FIELDS
 			BEGIN_SECTION_MAP
 				_SECTION_MAP("version", LoadVersion)
-				SECTION_MAP ("properties", LoadVersion)   /* SkipSection-compatible: reads fields, discards */
+				SECTION_MAP ("properties", LoadProperties)
 				SECTION_MAP ("data", LoadData)
 				SECTION_MAP ("view", LoadView)
 				SECTION_MAP ("printsettings", LoadVersion)
@@ -156,6 +157,11 @@ void FhLoader::LoadVersion (FfReader* _reader)
 	END_LOAD_MAP
 	delete[] fmt;
 	delete[] ver;
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadProperties (FfReader* _reader)
+{
+	if (Data->properties) Data->properties->Load(_reader);
 }
 /*-----------------------------------------------------------------*/
 void FhLoader::LoadData (FfReader* _reader)

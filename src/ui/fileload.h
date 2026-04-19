@@ -55,6 +55,7 @@ private:
 
 	bool LoadSignatur (FfReader* _reader);
 	void LoadVersion  (FfReader* _reader);
+	void LoadProperties (FfReader* _reader);
 	void LoadData     (FfReader* _reader);
 	void LoadDataSize (FfReader* _reader);
 	void LoadDataFields (FfReader* _reader);
