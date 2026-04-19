@@ -22,6 +22,17 @@ ui_*.h
 /.qt/
 CTestTestfile.cmake
 
+# In-tree build leftovers (cmake places some artefacts next to the
+# source targets even though the build dir is separate). These are
+# always throw-away.
+*_autogen/
+dbweave_autogen/
+/src/dbweave
+/src/*/libdbweave_*.a
+/tests/test_*
+!/tests/test_*.cpp
+/Testing/
+
 # IDEs
 .vscode/
 .idea/
