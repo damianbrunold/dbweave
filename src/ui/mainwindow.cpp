@@ -57,21 +57,28 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 		a->setChecked(checked);
 		return a;
 	};
-	EzMinimalZ  = mk();
+	/*  Default einzug / trittfolge rearrangement style is MinimalZ
+	    (left-leaning minimum-shaft arrangement). Matches legacy:
+	    under EzBelassen / TfBelassen the Rearrange passes are
+	    no-ops, which leaves stale shafts / treadles behind after
+	    toggle-clears. The "Minimal" variants run MergeSchaefte /
+	    MergeTritte on every SetGewebe and keep the loom state
+	    clean.                                                    */
+	EzMinimalZ  = mk(/*checked=*/true);
 	EzMinimalS  = mk();
 	EzGeradeZ   = mk();
 	EzGeradeS   = mk();
 	EzChorig2   = mk();
 	EzChorig3   = mk();
-	EzBelassen  = mk(/*checked=*/true);
+	EzBelassen  = mk();
 	EzFixiert   = mk();
 
-	TfMinimalZ    = mk();
+	TfMinimalZ    = mk(/*checked=*/true);
 	TfMinimalS    = mk();
 	TfGeradeZ     = mk();
 	TfGeradeS     = mk();
 	TfGesprungen  = mk();
-	TfBelassen    = mk(/*checked=*/true);
+	TfBelassen    = mk();
 
 	ViewSchlagpatrone = mk();
 	ViewEinzug        = mk(/*checked=*/true);

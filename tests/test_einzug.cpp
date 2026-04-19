@@ -143,7 +143,10 @@ private slots:
 
 	void rearrange_dispatches_on_checked_action()
 	{
-		/*  With EzBelassen default-checked, Rearrange() is a no-op. */
+		/*  Force EzBelassen: Rearrange() is a no-op under that
+		    style. */
+		DBWFRM->EzMinimalZ->setChecked(false);
+		DBWFRM->EzBelassen->setChecked(true);
 		DBWFRM->einzug.feld.Set(0, (short)5);
 		DBWFRM->einzughandler->Rearrange();
 		QCOMPARE(DBWFRM->einzug.feld.Get(0), (short)5);

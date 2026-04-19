@@ -100,9 +100,10 @@ private slots:
 
 	void undo_preserves_einzugstil_action_checked_state()
 	{
-		/*  Default einzugstil is EzBelassen. Switch to EzGeradeZ
-		    before snapshotting, then flip away, then undo: the
-		    stored einzugstil should re-check EzGeradeZ.          */
+		/*  Start from a known style and switch to EzGeradeZ before
+		    snapshotting, then flip away; undo should re-check
+		    EzGeradeZ.                                              */
+		DBWFRM->EzMinimalZ->setChecked(false);
 		DBWFRM->EzBelassen->setChecked(false);
 		DBWFRM->EzGeradeZ->setChecked(true);
 		DBWFRM->undo->Snapshot();

@@ -101,7 +101,9 @@ private slots:
 
 	void rearrange_tritte_belassen_is_noop()
 	{
-		/*  TfBelassen is default-checked. */
+		/*  Force TfBelassen (default is TfMinimalZ). */
+		DBWFRM->TfMinimalZ->setChecked(false);
+		DBWFRM->TfBelassen->setChecked(true);
 		DBWFRM->trittfolge.feld.Set(5, 0, (char)3);
 		DBWFRM->freietritte[5] = false;
 		DBWFRM->RearrangeTritte();
