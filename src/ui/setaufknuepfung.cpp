@@ -39,7 +39,6 @@ void TDBWFRM::DoSetAufknuepfung(int _i, int _j, bool _set, int _range)
         ToggleAufknuepfung(scroll_x2 + _i, scroll_y1 + _j);
     else
         aufknuepfung.feld.Set(scroll_x2 + _i, scroll_y1 + _j, char(_range));
-    RedrawAufknuepfung(scroll_x2 + _i, scroll_y1 + _j);
 
     // Muss ueberhaupt neuberechnet werden?!
     if ((einzughandler && einzughandler->IsEmptySchaft(scroll_y1 + _j))
@@ -54,22 +53,18 @@ void TDBWFRM::DoSetAufknuepfung(int _i, int _j, bool _set, int _range)
         if (einzug.feld.Get(i) == scroll_y1 + _j + 1)
             for (j = 0; j < Data->MAXY2; j++) {
                 char s = gewebe.feld.Get(i, j);
-                if (s > 0) {
+                if (s > 0)
                     gewebe.feld.Set(i, j, 0);
-                    RedrawGewebe(i, j);
-                }
             }
     for (j = 0; j < Data->MAXY2; j++)
         if (trittfolge.feld.Get(scroll_x2 + _i, j) > 0)
             for (i = 0; i < Data->MAXX1; i++) {
                 char s = gewebe.feld.Get(i, j);
-                if (s > 0) {
+                if (s > 0)
                     gewebe.feld.Set(i, j, 0);
-                    RedrawGewebe(i, j);
-                }
             }
 
-    // Neuberechnen und -zeichnen
+    // Neuberechnen
     for (i = 0; i < Data->MAXX2; i++)
         for (l = 0; l < Data->MAXY1; l++) {
             char s = aufknuepfung.feld.Get(i, l);
@@ -78,10 +73,8 @@ void TDBWFRM::DoSetAufknuepfung(int _i, int _j, bool _set, int _range)
                     if (trittfolge.feld.Get(i, j) > 0)
                         for (k = 0; k < Data->MAXX1; k++)
                             if (einzug.feld.Get(k) == l + 1)
-                                if (gewebe.feld.Get(k, j) <= 0) {
+                                if (gewebe.feld.Get(k, j) <= 0)
                                     gewebe.feld.Set(k, j, s);
-                                    RedrawGewebe(k, j);
-                                }
             }
         }
 

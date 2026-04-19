@@ -654,7 +654,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
                                    "Copies the treadling into the threading",
                                    "Kopiert die Trittfolge in den Einzug");
     connect(actEzAssist, &QAction::triggered, this, [this] { EinzugAssistentClick(); });
-    connect(actClearEinzug, &QAction::triggered, this, [this] { _ClearEinzug(); refresh(); });
+    connect(actClearEinzug, &QAction::triggered, this, [this] { refresh(); });
     connect(actCopyEzTf, &QAction::triggered, this, [this] { CopyEinzugTrittfolgeClick(); });
     connect(EzFixiert, &QAction::triggered, this, [this] { EditFixeinzug(); });
 
@@ -1631,10 +1631,6 @@ void TDBWFRM::SetAppTitle()
     setWindowTitle(shown + QStringLiteral(" - DB-WEAVE"));
 }
 void TDBWFRM::UpdateScrollbars() { }
-void TDBWFRM::InvalidateFeld(const GRIDPOS&)
-{
-    refresh();
-}
 
 void TDBWFRM::RearrangeSchaefte()
 {
@@ -1670,14 +1666,4 @@ bool TDBWFRM::IsInRapport(int _i, int _j)
 
 /*  DrawGewebe / DrawEinzug / DrawAufknuepfung / DrawTrittfolge,
     the four *Rahmen painters, DrawGewebeFarbeffekt /
-    DrawGewebeSimulation, and DrawGewebeKette / Schuss /
-    DeleteGewebeKette / Schuss all live in draw.cpp. */
-void TDBWFRM::_ClearEinzug() { }
-void TDBWFRM::_ClearAufknuepfung() { }
-void TDBWFRM::_ClearSchlagpatrone() { }
-void TDBWFRM::_DrawEinzug() { }
-void TDBWFRM::_DrawAufknuepfung() { }
-void TDBWFRM::_DrawSchlagpatrone() { }
-void TDBWFRM::ClearGewebe(int, int) { }
-void TDBWFRM::RedrawGewebe(int, int) { }
-void TDBWFRM::RedrawAufknuepfung(int, int) { }
+    DrawGewebeSimulation all live in draw.cpp. */

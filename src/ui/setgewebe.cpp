@@ -124,9 +124,6 @@ void TDBWFRM::DoSetGewebe(int _i, int _j, bool _set, int _range)
     else
         UpdateRange(_i + scroll_x1, _j + scroll_y2, _range > 0);
 
-    // Feld loeschen (wird spaeter neugezeichnet)
-    ClearGewebe(_i + scroll_x1, _j + scroll_y2);
-
     // Einzug loeschen
     int oldeinzug = einzug.feld.Get(_i + scroll_x1);
     einzug.feld.Set(_i + scroll_x1, 0);
@@ -192,10 +189,8 @@ void TDBWFRM::DoSetGewebe(int _i, int _j, bool _set, int _range)
     if (oldeinzug != 0) {
         if (freieschaefte[oldeinzug - 1]) {
             if (!ViewSchlagpatrone || !ViewSchlagpatrone->isChecked()) {
-                for (i = 0; i < Data->MAXX2; i++) {
+                for (i = 0; i < Data->MAXX2; i++)
                     aufknuepfung.feld.Set(i, oldeinzug - 1, 0);
-                    RedrawAufknuepfung(i, oldeinzug - 1);
-                }
             } else {
                 for (j = 0; j < Data->MAXY2; j++) {
                     trittfolge.feld.Set(oldeinzug - 1, j, 0);
@@ -219,10 +214,8 @@ void TDBWFRM::DoSetGewebe(int _i, int _j, bool _set, int _range)
                     break;
                 }
             if (bEmptyTritt && (!ViewSchlagpatrone || !ViewSchlagpatrone->isChecked()))
-                for (j = 0; j < Data->MAXY1; j++) {
+                for (j = 0; j < Data->MAXY1; j++)
                     aufknuepfung.feld.Set(i, j, 0);
-                    RedrawAufknuepfung(i, j);
-                }
             if (bEmptyTritt)
                 freietritte[i] = true;
         }
@@ -293,20 +286,16 @@ void TDBWFRM::DoSetGewebe(int _i, int _j, bool _set, int _range)
         for (i = 0; i < Data->MAXX1; i++)
             if (einzug.feld.Get(i))
                 for (k = 0; k < Data->MAXX2; k++)
-                    if (trittfolge.feld.Get(k, _j + scroll_y2) > 0) {
+                    if (trittfolge.feld.Get(k, _j + scroll_y2) > 0)
                         aufknuepfung.feld.Set(k, einzug.feld.Get(i) - 1,
                                               gewebe.feld.Get(i, _j + scroll_y2));
-                        RedrawAufknuepfung(k, einzug.feld.Get(i) - 1);
-                    }
         // Kettfaden
         if (einzug.feld.Get(_i + scroll_x1))
             for (j = 0; j < Data->MAXY2; j++)
                 for (k = 0; k < Data->MAXX2; k++)
-                    if (trittfolge.feld.Get(k, j) > 0) {
+                    if (trittfolge.feld.Get(k, j) > 0)
                         aufknuepfung.feld.Set(k, einzug.feld.Get(_i + scroll_x1) - 1,
                                               gewebe.feld.Get(_i + scroll_x1, j));
-                        RedrawAufknuepfung(k, einzug.feld.Get(_i + scroll_x1) - 1);
-                    }
     }
 }
 /*-----------------------------------------------------------------*/

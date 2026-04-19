@@ -424,14 +424,6 @@ public:
     void DrawEinzug(int _i, int _j);
     void DrawAufknuepfung(int _i, int _j);
     void DrawTrittfolge(int _i, int _j);
-    void DrawGewebeKette(int _i);
-    void DeleteGewebeKette(int _i);
-    void _ClearEinzug();
-    void _ClearAufknuepfung();
-    void _ClearSchlagpatrone();
-    void _DrawEinzug();
-    void _DrawAufknuepfung();
-    void _DrawSchlagpatrone();
     void RecalcFreieSchaefte();
     void RecalcFreieTritte();
 
@@ -650,14 +642,6 @@ public:
     void _ExtendTritte(int _max);
     void RearrangeSchaefte();
     void UpdateScrollbars();
-    void InvalidateFeld(const GRIDPOS& _pos);
-
-    /*  --- Redraw primitives stubs (bodies land with rendering). */
-    void ClearGewebe(int _i, int _j);
-    void RedrawGewebe(int _i, int _j);
-    void RedrawAufknuepfung(int _i, int _j);
-    void DrawGewebeSchuss(int _j);
-    void DeleteGewebeSchuss(int _j);
 
     /*  --- Field "Rahmen" (frame + strongline) painters ---------- */
     void DrawEinzugRahmen(int _i, int _j);

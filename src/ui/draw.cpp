@@ -206,42 +206,6 @@ void TDBWFRM::DrawGewebeSimulation(int _i, int _j, int _x, int _y, int _xx, int 
     }
 }
 /*-----------------------------------------------------------------*/
-void TDBWFRM::DrawGewebeSchuss(int _j)
-{
-    if (gewebe.gw <= 0)
-        return;
-    for (int i = 0; i < gewebe.pos.width / gewebe.gw; i++)
-        DrawGewebe(i, _j);
-}
-/*-----------------------------------------------------------------*/
-void TDBWFRM::DrawGewebeKette(int _i)
-{
-    if (gewebe.gh <= 0)
-        return;
-    for (int j = 0; j < gewebe.pos.height / gewebe.gh; j++)
-        DrawGewebe(_i, j);
-}
-/*-----------------------------------------------------------------*/
-void TDBWFRM::DeleteGewebeSchuss(int _j)
-{
-    if (gewebe.gw <= 0)
-        return;
-    for (int i = 0; i < gewebe.pos.width / gewebe.gw; i++) {
-        DrawGewebeRahmen(i, _j);
-        DrawGewebe(i, _j);
-    }
-}
-/*-----------------------------------------------------------------*/
-void TDBWFRM::DeleteGewebeKette(int _i)
-{
-    if (gewebe.gh <= 0)
-        return;
-    for (int j = 0; j < gewebe.pos.height / gewebe.gh; j++) {
-        DrawGewebeRahmen(_i, j);
-        DrawGewebe(_i, j);
-    }
-}
-/*-----------------------------------------------------------------*/
 void TDBWFRM::DrawEinzug(int _i, int _j)
 {
     QPainter* p = currentPainter;

@@ -92,9 +92,7 @@ void RcRecalcAll::Recalc()
     frm->RecalcFreieTritte();
 
     frm->SetModified();
-    frm->InvalidateFeld(frm->einzug.pos);
-    frm->InvalidateFeld(frm->aufknuepfung.pos);
-    frm->InvalidateFeld(frm->trittfolge.pos);
+    frm->refresh();
 }
 /*-----------------------------------------------------------------*/
 void RcRecalcAll::CalcK()
@@ -117,8 +115,7 @@ void RcRecalcAll::RecalcSchlagpatrone()
     RecalcAufknuepfung();
     frm->RecalcFreieTritte();
     frm->SetModified();
-    frm->InvalidateFeld(frm->aufknuepfung.pos);
-    frm->InvalidateFeld(frm->trittfolge.pos);
+    frm->refresh();
 }
 /*-----------------------------------------------------------------*/
 void RcRecalcAll::RecalcTrittfolgeAufknuepfung()
@@ -131,8 +128,7 @@ void RcRecalcAll::RecalcTrittfolgeAufknuepfung()
         frm->RearrangeTritte();
     frm->RecalcFreieTritte();
     frm->SetModified();
-    frm->InvalidateFeld(frm->aufknuepfung.pos);
-    frm->InvalidateFeld(frm->trittfolge.pos);
+    frm->refresh();
 }
 /*-----------------------------------------------------------------*/
 bool RcRecalcAll::KettfadenEqual(int _a, int _b)
