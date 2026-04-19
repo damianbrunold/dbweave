@@ -555,6 +555,27 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	addSpecial(QStringLiteral("B"), ANBINDUNG, QStringLiteral("Binding (Anbindung)"));
 	addSpecial(QStringLiteral("U"), ABBINDUNG, QStringLiteral("Unbinding (Abbindung)"));
 
+	/*  Tools menu: select the active drawing tool used on the gewebe
+	    canvas. POINT is the default single-cell-per-click mode; the
+	    other entries activate a rubber-band two-point drag that
+	    rasterises into gewebe.feld on release. */
+	QMenu* toolsMenu = menuBar()->addMenu(QStringLiteral("&Tools"));
+	auto* toolGroup = new QActionGroup(this);
+	toolGroup->setExclusive(true);
+	auto addTool = [&](const QString& label, TOOL _t) {
+		QAction* a = toolsMenu->addAction(label);
+		a->setCheckable(true);
+		toolGroup->addAction(a);
+		if (_t == TOOL_POINT) a->setChecked(true);
+		connect(a, &QAction::triggered, this, [this, _t]{ tool = _t; });
+	};
+	addTool(QStringLiteral("&Point"),           TOOL_POINT);
+	addTool(QStringLiteral("&Line"),            TOOL_LINE);
+	addTool(QStringLiteral("&Rectangle"),       TOOL_RECTANGLE);
+	addTool(QStringLiteral("&Filled rectangle"), TOOL_FILLEDRECTANGLE);
+	addTool(QStringLiteral("&Ellipse"),         TOOL_ELLIPSE);
+	addTool(QStringLiteral("Fille&d ellipse"),  TOOL_FILLEDELLIPSE);
+
 	/*  Options menu. */
 	QMenu* optMenu = menuBar()->addMenu(QStringLiteral("&Options"));
 	QAction* actEnvOpt = optMenu->addAction(QStringLiteral("&Environment..."));

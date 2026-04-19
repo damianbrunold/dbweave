@@ -667,6 +667,21 @@ public:
 	void __fastcall BereicheFillPattern   (int _x, int _y);
 
 	/*  Palette-index selection helpers (setcolors.cpp). */
+	/*  Drawing tools (tools.cpp). */
+	TOOL             tool = TOOL_POINT;
+	/*  Tool-drag preview: when the user is dragging with a non-
+	    POINT tool, these record the anchor cell and the current
+	    hover cell, both in data coordinates. paintEvent overlays a
+	    rubber-band-style shape between them. */
+	bool             tool_active = false;
+	int              tool_i0 = 0, tool_j0 = 0;   /* anchor */
+	int              tool_i1 = 0, tool_j1 = 0;   /* current */
+
+	void __fastcall DrawTool          (int _i, int _j, int _i1, int _j1);
+	void __fastcall DrawToolLine      (int _i, int _j, int _i1, int _j1);
+	void __fastcall DrawToolRectangle (int _i, int _j, int _i1, int _j1, bool _filled);
+	void __fastcall DrawToolEllipse   (int _i, int _j, int _i1, int _j1, bool _filled);
+
 	int  __fastcall SelectColorIndex    (int _index);
 	bool __fastcall SelectColor         (COLORREF& _col);
 	void __fastcall SetKettfarbeClick   ();

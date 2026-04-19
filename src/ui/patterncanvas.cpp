@@ -639,6 +639,58 @@ void PatternCanvas::paintEvent (QPaintEvent* /*_e*/)
 	    even when inside a selection.                          */
 	frm->DrawSelection();
 
+	/*  Tool-drag preview overlay: when the user is dragging with a
+	    non-POINT tool, outline the prospective shape in red between
+	    the anchor cell (tool_i0/j0) and the current cell
+	    (tool_i1/j1). Coordinates are in data space; translate back
+	    to viewport pixels via the gewebe field geometry. */
+	if (frm->tool_active
+	 && frm->gewebe.gw > 0 && frm->gewebe.gh > 0
+	 && frm->gewebe.pos.width > 0 && frm->gewebe.pos.height > 0) {
+		const int gw = frm->gewebe.gw;
+		const int gh = frm->gewebe.gh;
+		const int cols = frm->gewebe.pos.width  / gw;
+		const int rows = frm->gewebe.pos.height / gh;
+		auto cellRect = [&](int _di, int _dj) {
+			int vi = _di - frm->scroll_x1;
+			int vj = _dj - frm->scroll_y2;
+			if (frm->righttoleft) vi = cols - 1 - vi;
+			if (frm->toptobottom) vj = rows - 1 - vj;
+			const int x = frm->gewebe.pos.x0 + vi * gw;
+			const int y = frm->gewebe.pos.y0 + frm->gewebe.pos.height - (vj + 1) * gh;
+			return QRect(x, y, gw, gh);
+		};
+		const QRect r0 = cellRect(frm->tool_i0, frm->tool_j0);
+		const QRect r1 = cellRect(frm->tool_i1, frm->tool_j1);
+		p.setPen(QPen(Qt::red, 2));
+		p.setBrush(Qt::NoBrush);
+		switch (frm->tool) {
+		case TOOL_LINE:
+			p.drawLine(r0.center(), r1.center());
+			break;
+		case TOOL_RECTANGLE:
+		case TOOL_FILLEDRECTANGLE: {
+			const int x  = std::min(r0.left(), r1.left());
+			const int y  = std::min(r0.top(),  r1.top());
+			const int xx = std::max(r0.right(),  r1.right());
+			const int yy = std::max(r0.bottom(), r1.bottom());
+			p.drawRect(QRect(x, y, xx - x, yy - y));
+			break;
+		}
+		case TOOL_ELLIPSE:
+		case TOOL_FILLEDELLIPSE: {
+			const int x  = std::min(r0.left(), r1.left());
+			const int y  = std::min(r0.top(),  r1.top());
+			const int xx = std::max(r0.right(),  r1.right());
+			const int yy = std::max(r0.bottom(), r1.bottom());
+			p.drawEllipse(QRect(x, y, xx - x, yy - y));
+			break;
+		}
+		default:
+			break;
+		}
+	}
+
 	/*  Cursor outline sits on top of everything so it's visible
 	    no matter which view mode is active. Skipped during the
 	    "off" phase of the blink cycle. */

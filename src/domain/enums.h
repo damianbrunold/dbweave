@@ -33,6 +33,20 @@ enum DARSTELLUNG
 	NUMBER
 };
 /*-----------------------------------------------------------------*/
+/*  TOOL selects the behaviour of a mouse-drag on the gewebe canvas.
+    TOOL_POINT is the default paint-single-cell-by-click mode; the
+    remaining modes treat the drag as a two-point geometric shape
+    (anchor + release cell) rasterised onto gewebe on release.    */
+enum TOOL
+{
+	TOOL_POINT = 0,
+	TOOL_LINE,
+	TOOL_RECTANGLE,
+	TOOL_FILLEDRECTANGLE,
+	TOOL_ELLIPSE,
+	TOOL_FILLEDELLIPSE
+};
+/*-----------------------------------------------------------------*/
 enum FELD
 {
 	INVALID,

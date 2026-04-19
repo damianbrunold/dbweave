@@ -100,6 +100,20 @@ void __fastcall TDBWFRM::handleCanvasMousePress (int _x, int _y, bool _shift, bo
 
 	switch (f) {
 	case GEWEBE:
+		/*  Non-POINT drawing tool: capture the anchor cell; the
+		    paintEvent will draw a live preview between tool_i0/j0
+		    and tool_i1/j1, and the release will rasterise the
+		    shape into gewebe. No rubber-band selection in this
+		    mode. */
+		if (tool != TOOL_POINT) {
+			tool_active = true;
+			tool_i0 = tool_i1 = di;
+			tool_j0 = tool_j1 = dj;
+			ClearSelection();
+			refresh();
+			return;
+		}
+		/*  fall through */
 	case EINZUG:
 	case AUFKNUEPFUNG:
 	case TRITTFOLGE:
@@ -141,6 +155,15 @@ void __fastcall TDBWFRM::handleCanvasMouseMove (int _x, int _y, bool _shift)
 
 	switch (f) {
 	case GEWEBE:
+		if (tool_active) {
+			/*  Update preview cell; PatternCanvas paints the
+			    overlay. */
+			tool_i1 = di;
+			tool_j1 = dj;
+			refresh();
+			return;
+		}
+		/*  fall through */
 	case EINZUG:
 	case AUFKNUEPFUNG:
 	case TRITTFOLGE:
@@ -175,6 +198,25 @@ void __fastcall TDBWFRM::handleCanvasMouseMove (int _x, int _y, bool _shift)
 
 void __fastcall TDBWFRM::handleCanvasMouseRelease ()
 {
+	/*  Tool-drag release: rasterise the shape between anchor and
+	    current cell via DrawTool, clear the preview, and bail out
+	    before the default click-without-drag path. Data-coord
+	    anchors are translated back to viewport-relative indices
+	    because DrawTool* add scroll_x1/scroll_y2 themselves. */
+	if (tool_active) {
+		const int vi0 = tool_i0 - scroll_x1;
+		const int vj0 = tool_j0 - scroll_y2;
+		const int vi1 = tool_i1 - scroll_x1;
+		const int vj1 = tool_j1 - scroll_y2;
+		tool_active = false;
+		DrawTool(vi0, vj0, vi1, vj1);
+		mousedown         = false;
+		md_feld           = INVALID;
+		bSelectionCleared = false;
+		md_ctrl           = false;
+		return;
+	}
+
 	/*  Click-without-drag: the press installed a transient 1x1
 	    selection at the click cell. On release, always drop that
 	    transient selection (otherwise the next click sees a
