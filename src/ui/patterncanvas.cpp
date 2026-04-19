@@ -13,6 +13,8 @@
 #include "mainwindow.h"
 #include "cursor.h"
 #include "datamodule.h"
+#include "palette.h"
+#include "colors_compat.h"
 
 #include <QPainter>
 #include <QPaintEvent>
@@ -73,11 +75,10 @@ PatternCanvas::~PatternCanvas() = default;
 
 void PatternCanvas::resizeEvent (QResizeEvent* /*_e*/)
 {
-	/*  Auto-layout runs only on the first resize event so tests that
-	    manually place fields aren't stomped; zoom handlers re-trigger
-	    the layout explicitly via recomputeLayout(). */
-	if (has_laid_out) return;
-	has_laid_out = true;
+	/*  Re-layout on every resize so fields and scrollbars reflow
+	    whenever the window changes size. Tests that want to
+	    override field positions do so by mutating frm->*.pos
+	    directly without going through the widget's resize path. */
 	recomputeLayout();
 }
 
@@ -127,7 +128,15 @@ void PatternCanvas::recomputeLayout (int _gw, int _gh)
 	frm->aufknuepfung.pos.width  = af_w;
 	frm->aufknuepfung.pos.height = af_h;
 
-	const int ez_area_w = usableW - af_w - 3*MARGIN;
+	/*  The left column (from top down) is:
+	      einzug               af_h        tall
+	      blatteinzug          GH          tall
+	      kettfarben           GH          tall
+	      gewebe               rest        tall
+	    and the right column is aufknuepfung (af_h) + gap + trittfolge
+	    (same y + height as gewebe). schussfarben is a 1-cell-wide
+	    vertical strip between gewebe and trittfolge.             */
+	const int ez_area_w = usableW - af_w - 3*MARGIN - GW /*schussfarben*/;
 	const int ez_cells  = std::max(0, ez_area_w / GW);
 	frm->einzug.gw = GW; frm->einzug.gh = GH;
 	frm->einzug.pos.x0     = MARGIN;
@@ -135,19 +144,42 @@ void PatternCanvas::recomputeLayout (int _gw, int _gh)
 	frm->einzug.pos.width  = ez_cells * GW;
 	frm->einzug.pos.height = af_h;
 
-	const int tf_area_h = usableH - af_h - 3*MARGIN;
+	frm->blatteinzug.gw = GW; frm->blatteinzug.gh = GH;
+	frm->blatteinzug.pos.x0     = frm->einzug.pos.x0;
+	frm->blatteinzug.pos.y0     = frm->einzug.pos.y0 + frm->einzug.pos.height;
+	frm->blatteinzug.pos.width  = frm->einzug.pos.width;
+	frm->blatteinzug.pos.height = GH;
+
+	frm->kettfarben.gw = GW; frm->kettfarben.gh = GH;
+	frm->kettfarben.pos.x0     = frm->einzug.pos.x0;
+	frm->kettfarben.pos.y0     = frm->blatteinzug.pos.y0 + frm->blatteinzug.pos.height;
+	frm->kettfarben.pos.width  = frm->einzug.pos.width;
+	frm->kettfarben.pos.height = GH;
+
+	const int stripsH = frm->blatteinzug.pos.height + frm->kettfarben.pos.height;
+	const int tf_area_h = usableH - af_h - 3*MARGIN - stripsH;
 	const int tf_rows   = std::max(0, tf_area_h / GH);
-	frm->trittfolge.gw = GW; frm->trittfolge.gh = GH;
-	frm->trittfolge.pos.x0     = frm->aufknuepfung.pos.x0;
-	frm->trittfolge.pos.y0     = frm->aufknuepfung.pos.y0 + af_h + MARGIN;
-	frm->trittfolge.pos.width  = af_w;
-	frm->trittfolge.pos.height = tf_rows * GH;
 
 	frm->gewebe.gw = GW; frm->gewebe.gh = GH;
 	frm->gewebe.pos.x0     = frm->einzug.pos.x0;
-	frm->gewebe.pos.y0     = frm->trittfolge.pos.y0;
+	frm->gewebe.pos.y0     = frm->kettfarben.pos.y0 + frm->kettfarben.pos.height + MARGIN;
 	frm->gewebe.pos.width  = frm->einzug.pos.width;
-	frm->gewebe.pos.height = frm->trittfolge.pos.height;
+	frm->gewebe.pos.height = tf_rows * GH;
+
+	frm->schussfarben.gw = GW; frm->schussfarben.gh = GH;
+	frm->schussfarben.pos.x0     = frm->gewebe.pos.x0 + frm->gewebe.pos.width;
+	frm->schussfarben.pos.y0     = frm->gewebe.pos.y0;
+	frm->schussfarben.pos.width  = GW;
+	frm->schussfarben.pos.height = frm->gewebe.pos.height;
+
+	frm->trittfolge.gw = GW; frm->trittfolge.gh = GH;
+	frm->trittfolge.pos.x0     = frm->schussfarben.pos.x0 + frm->schussfarben.pos.width + MARGIN;
+	frm->trittfolge.pos.y0     = frm->gewebe.pos.y0;
+	frm->trittfolge.pos.width  = af_w;
+	frm->trittfolge.pos.height = frm->gewebe.pos.height;
+
+	/*  Re-anchor aufknuepfung to line up horizontally with trittfolge. */
+	frm->aufknuepfung.pos.x0 = frm->trittfolge.pos.x0;
 
 	/*  Clamp scroll offsets so the new viewport never shows past
 	    the data extent. */
@@ -432,6 +464,71 @@ void PatternCanvas::paintEvent (QPaintEvent* /*_e*/)
 		paintField(frm->trittfolge,   &TDBWFRM::DrawTrittfolge,   &TDBWFRM::DrawTrittfolgeRahmen);
 
 	paintField(frm->gewebe,           &TDBWFRM::DrawGewebe,       &TDBWFRM::DrawGewebeRahmen);
+
+	/*  Colour strips + blatteinzug. These don't have DrawX cell
+	    primitives yet so we paint directly on the current painter.
+	    Palette colours come via Data->palette->GetColor. */
+	auto palCol = [](int _idx) {
+		return qColorFromTColor((TColor)Data->palette->GetColor(_idx));
+	};
+	auto stripRect = [](const GRIDPOS& g) {
+		return QRect(g.x0, g.y0, g.width, g.height);
+	};
+
+	/*  kettfarben: horizontal strip, one palette-coloured cell per
+	    warp thread. */
+	if (frm->kettfarben.gw > 0 && frm->kettfarben.pos.width > 0 && Data && Data->palette) {
+		const int cols = frm->kettfarben.pos.width / frm->kettfarben.gw;
+		p.setPen(Qt::NoPen);
+		for (int i = 0; i < cols; i++) {
+			const int c = frm->kettfarben.feld.Get(frm->scroll_x1 + i);
+			p.setBrush(palCol(c));
+			p.drawRect(frm->kettfarben.pos.x0 + i * frm->kettfarben.gw,
+			           frm->kettfarben.pos.y0,
+			           frm->kettfarben.gw, frm->kettfarben.gh);
+		}
+		p.setPen(palette().color(QPalette::Dark));
+		p.setBrush(Qt::NoBrush);
+		p.drawRect(stripRect(frm->kettfarben.pos));
+	}
+
+	/*  schussfarben: vertical strip right of gewebe, one palette-
+	    coloured cell per weft thread. y axis is flipped (j=0 at
+	    bottom). */
+	if (frm->schussfarben.gh > 0 && frm->schussfarben.pos.height > 0 && Data && Data->palette) {
+		const int rows = frm->schussfarben.pos.height / frm->schussfarben.gh;
+		p.setPen(Qt::NoPen);
+		for (int j = 0; j < rows; j++) {
+			const int c = frm->schussfarben.feld.Get(frm->scroll_y2 + j);
+			p.setBrush(palCol(c));
+			const int y = frm->schussfarben.pos.y0 + frm->schussfarben.pos.height
+			            - (j + 1) * frm->schussfarben.gh;
+			p.drawRect(frm->schussfarben.pos.x0, y,
+			           frm->schussfarben.gw, frm->schussfarben.gh);
+		}
+		p.setPen(palette().color(QPalette::Dark));
+		p.setBrush(Qt::NoBrush);
+		p.drawRect(stripRect(frm->schussfarben.pos));
+	}
+
+	/*  blatteinzug: horizontal strip, filled black square where
+	    the reed-threading is set, button-face otherwise.        */
+	if (frm->blatteinzug.gw > 0 && frm->blatteinzug.pos.width > 0) {
+		const int cols = frm->blatteinzug.pos.width / frm->blatteinzug.gw;
+		const QColor bg   = palette().color(QPalette::Button);
+		const QColor mark = palette().color(QPalette::Text);
+		p.setPen(Qt::NoPen);
+		for (int i = 0; i < cols; i++) {
+			const bool on = frm->blatteinzug.feld.Get(frm->scroll_x1 + i);
+			p.setBrush(on ? mark : bg);
+			p.drawRect(frm->blatteinzug.pos.x0 + i * frm->blatteinzug.gw,
+			           frm->blatteinzug.pos.y0,
+			           frm->blatteinzug.gw, frm->blatteinzug.gh);
+		}
+		p.setPen(palette().color(QPalette::Dark));
+		p.setBrush(Qt::NoBrush);
+		p.drawRect(stripRect(frm->blatteinzug.pos));
+	}
 
 	/*  Rapport boundary markers overlay the einzug / trittfolge
 	    strips (not the gewebe). Gated on RappViewRapport.        */

@@ -55,10 +55,6 @@ protected:
 
 private:
 	TDBWFRM* frm;
-	/*  Auto-layout runs only on the first resize; tests that manually
-	    place field positions set this to true after calling resize()
-	    so subsequent resize events don't stomp their layout.         */
-	bool has_laid_out = false;
 
 	/*  Four scrollbars matching legacy sb_horz1 / sb_horz2 / sb_vert1
 	    / sb_vert2: one per (scroll_x1, scroll_x2, scroll_y1, scroll_y2)

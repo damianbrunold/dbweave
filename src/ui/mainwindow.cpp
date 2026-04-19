@@ -259,17 +259,35 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	auto icon = [this](QStyle::StandardPixmap sp) {
 		return this->style()->standardIcon(sp);
 	};
-	actOpen  ->setIcon(icon(QStyle::SP_DialogOpenButton));
-	actSave  ->setIcon(icon(QStyle::SP_DialogSaveButton));
-	actUndo  ->setIcon(icon(QStyle::SP_ArrowBack));
-	actRedo  ->setIcon(icon(QStyle::SP_ArrowForward));
-	actCut   ->setIcon(icon(QStyle::SP_DialogDiscardButton));
-	actCopy  ->setIcon(icon(QStyle::SP_FileIcon));
-	actPaste ->setIcon(icon(QStyle::SP_FileDialogNewFolder));
-	actDelete->setIcon(icon(QStyle::SP_TrashIcon));
+	/*  Prefer system-theme icons (freedesktop names) and fall back
+	    to Qt standard pixmaps when the theme doesn't carry the
+	    action. Some transforms have no sensible standard icon --
+	    for those the button just shows the action text.         */
+	auto themed = [&](const char* name, QStyle::StandardPixmap fallback) {
+		QIcon i = QIcon::fromTheme(QLatin1String(name));
+		return i.isNull() ? icon(fallback) : i;
+	};
+	actOpen   ->setIcon(themed("document-open",  QStyle::SP_DialogOpenButton));
+	actSave   ->setIcon(themed("document-save",  QStyle::SP_DialogSaveButton));
+	actUndo   ->setIcon(themed("edit-undo",      QStyle::SP_ArrowBack));
+	actRedo   ->setIcon(themed("edit-redo",      QStyle::SP_ArrowForward));
+	actCut    ->setIcon(themed("edit-cut",       QStyle::SP_DialogDiscardButton));
+	actCopy   ->setIcon(themed("edit-copy",      QStyle::SP_FileIcon));
+	actPaste  ->setIcon(themed("edit-paste",     QStyle::SP_FileDialogNewFolder));
+	actDelete ->setIcon(themed("edit-delete",    QStyle::SP_TrashIcon));
+	actInvert ->setIcon(themed("edit-select-invert", QStyle::SP_BrowserReload));
+	actMirrorH->setIcon(themed("object-flip-horizontal", QStyle::SP_ArrowLeft));
+	actMirrorV->setIcon(themed("object-flip-vertical",   QStyle::SP_ArrowUp));
+	actRotate ->setIcon(themed("object-rotate-right",    QStyle::SP_BrowserReload));
+	actZoomIn    ->setIcon(themed("zoom-in",       QStyle::SP_FileDialogContentsView));
+	actZoomOut   ->setIcon(themed("zoom-out",      QStyle::SP_FileDialogDetailedView));
+	actZoomNormal->setIcon(themed("zoom-original", QStyle::SP_FileDialogListView));
 
 	QToolBar* mainBar = addToolBar(QStringLiteral("Main"));
 	mainBar->setObjectName(QStringLiteral("mainToolBar"));
+	/*  Show text beside the icon so actions without a theme icon
+	    still read clearly, and ones with an icon are compact. */
+	mainBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 	mainBar->addAction(actOpen);
 	mainBar->addAction(actSave);
 	mainBar->addSeparator();
@@ -364,10 +382,6 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 		});
 		cursorTimer->start();
 	}
-
-	/*  Note: main.cpp explicitly calls seedDemo() after construction
-	    so the freshly-launched app shows cloth. Tests skip it and
-	    get a clean TDBWFRM.                                         */
 }
 
 TDBWFRM::~TDBWFRM()
@@ -510,52 +524,3 @@ void __fastcall TDBWFRM::RecalcFreieTritte()                       {}
 void __fastcall TDBWFRM::ClearGewebe(int, int)                     {}
 void __fastcall TDBWFRM::RedrawGewebe(int, int)                    {}
 void __fastcall TDBWFRM::RedrawAufknuepfung(int, int)              {}
-
-
-void __fastcall TDBWFRM::seedDemo()
-{
-	/*  2/2 twill on 4 shafts x 4 treadles. Threading: straight draw
-	    (shaft = i % 4 + 1). Treadling: straight (treadle = j % 4).
-	    Tie-up: diagonal 1,1,0,0 pattern that produces the classic
-	    diagonal-stripe cloth.                                    */
-	constexpr int N    = 80;  /* warp + weft span */
-	constexpr int REP  = 4;
-
-	for (int i = 0; i < N; i++) einzug.feld.Set(i, (short)((i % REP) + 1));
-
-	for (int shaft = 0; shaft < REP; shaft++)
-		for (int treadle = 0; treadle < REP; treadle++)
-			if (((shaft - treadle + REP) % REP) < 2)
-				aufknuepfung.feld.Set(treadle, shaft, (char)1);
-
-	for (int j = 0; j < N; j++) {
-		trittfolge.feld.Set(j % REP, j, (char)1);
-		trittfolge.isempty.Set(j, false);
-	}
-
-	/*  Compute gewebe = which warp/weft crossings come up on top. */
-	for (int i = 0; i < N; i++) {
-		const int shaft = einzug.feld.Get(i) - 1;
-		if (shaft < 0) continue;
-		for (int j = 0; j < N; j++) {
-			for (int t = 0; t < REP; t++) {
-				if (trittfolge.feld.Get(t, j) > 0 &&
-				    aufknuepfung.feld.Get(t, shaft) > 0) {
-					gewebe.feld.Set(i, j, (char)1);
-					break;
-				}
-			}
-		}
-	}
-
-	kette    = SZ(0, N - 1);
-	schuesse = SZ(0, N - 1);
-
-	/*  Mark the 4 shafts and 4 treadles as "in use" so
-	    EliminateEmptyTritt / EliminateEmptySchaft don't prune them. */
-	for (int s = 0; s < REP; s++) freieschaefte[s] = false;
-	for (int t = 0; t < REP; t++) freietritte[t]   = false;
-
-	/*  Recompute the rapport so the cloth view looks correct. */
-	if (rapporthandler) rapporthandler->CalcRapport();
-}
