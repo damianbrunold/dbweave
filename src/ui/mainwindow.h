@@ -616,6 +616,7 @@ public:
 	void __fastcall UpdateEinzugFixiert    ();
 	void __fastcall FarbverlaufClick       ();
 	void __fastcall EditBlockmusterClick   ();
+	void __fastcall DefineColorsClick      ();
 	void __fastcall BlockExpandEinzug      (int _count);
 	void __fastcall BlockExpandTrittfolge  (int _count);
 	void __fastcall BlockExpandAufknuepfung(int _x, int _y);

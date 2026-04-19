@@ -16,7 +16,8 @@
 #include "palette.h"
 
 #include <QCheckBox>
-#include <QColorDialog>
+#include <QMenu>
+#include "choosecolordialog.h"
 #include <QDialogButtonBox>
 #include <QFormLayout>
 #include <QGridLayout>
@@ -209,12 +210,46 @@ FarbverlaufDialog::FarbverlaufDialog (TDBWFRM* _frm, QWidget* _parent)
 }
 
 /*-----------------------------------------------------------------*/
+/*  Popup-menu matching legacy PopupMenuFarbwahl: choose the colour
+    via HSV picker, RGB picker, palette picker, or copy the other
+    endpoint. Returns _col unchanged if the user cancels. `other`
+    is the peer endpoint for the Copy-from action. */
+static COLORREF pickColorMenu (QWidget* _parent, COLORREF _col, COLORREF _other)
+{
+	QMenu menu(_parent);
+	QAction* aHSV = menu.addAction(QStringLiteral("Choose color with &HSV model"));
+	QAction* aRGB = menu.addAction(QStringLiteral("Choose color with &RGB model"));
+	QAction* aPal = menu.addAction(QStringLiteral("Choose color from &palette"));
+	menu.addSeparator();
+	QAction* aCopy = menu.addAction(QStringLiteral("&Copy other color"));
+
+	QAction* chosen = menu.exec(QCursor::pos());
+	if (!chosen) return _col;
+
+	if (chosen == aHSV) {
+		ChooseHSVDialog dlg(_parent);
+		dlg.SelectColor(_col);
+		if (dlg.exec() == QDialog::Accepted) return dlg.GetSelectedColor();
+	} else if (chosen == aRGB) {
+		ChooseRGBDialog dlg(_parent);
+		dlg.SelectColor(_col);
+		if (dlg.exec() == QDialog::Accepted) return dlg.GetSelectedColor();
+	} else if (chosen == aPal) {
+		ChoosePaletteDialog dlg(_parent);
+		dlg.SelectColor(_col);
+		if (dlg.exec() == QDialog::Accepted) return dlg.GetSelectedColor();
+	} else if (chosen == aCopy) {
+		return _other;
+	}
+	return _col;
+}
+
 COLORREF FarbverlaufDialog::pickColor (COLORREF _col)
 {
-	QColor in = qcol(_col);
-	QColor out = QColorDialog::getColor(in, this, QStringLiteral("Choose colour"));
-	if (!out.isValid()) return _col;
-	return RGB(out.red(), out.green(), out.blue());
+	/*  The "other" endpoint for the Copy action: whichever of the
+	    two isn't _col. */
+	COLORREF other = (_col == startcolor) ? endcolor : startcolor;
+	return pickColorMenu(this, _col, other);
 }
 
 void FarbverlaufDialog::updateSwatch (QWidget* _w, COLORREF _col)

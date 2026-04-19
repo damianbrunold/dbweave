@@ -326,7 +326,9 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	QAction* actEzAssist    = patternMenu->addAction(QStringLiteral("Threading &wizard..."));
 	QAction* actFixEinzug   = patternMenu->addAction(QStringLiteral("&User defined threading..."));
 	QAction* actFarbverlauf = patternMenu->addAction(QStringLiteral("Color &blending..."));
+	QAction* actDefColors   = patternMenu->addAction(QStringLiteral("&Define colors..."));
 	QAction* actBlockmuster = patternMenu->addAction(QStringLiteral("&Substitute with block patterns..."));
+	connect(actDefColors, &QAction::triggered, this, [this]{ DefineColorsClick(); });
 	connect(actEzAssist,    &QAction::triggered, this, [this]{ EinzugAssistentClick(); });
 	connect(actFixEinzug,   &QAction::triggered, this, [this]{ EditFixeinzug();        });
 	connect(actFarbverlauf, &QAction::triggered, this, [this]{ FarbverlaufClick();     });
