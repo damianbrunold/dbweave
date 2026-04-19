@@ -11,6 +11,7 @@
 
 #include "fileload.h"
 #include "mainwindow.h"
+#include "patterncanvas.h"
 #include "datamodule.h"
 #include "fileformat.h"
 #include "loadmap.h"
@@ -130,6 +131,24 @@ bool FhLoader::Load(LOADSTAT& _stat, LOADPARTS _loadparts)
                 used = true;
         mainfrm->freietritte[i] = !used;
     }
+
+    /*  LoadViewGeneral sets ViewSchlagpatrone->setChecked() directly,
+        which bypasses the triggered signal — so trittfolge.einzeltritt
+        never flips, and the Trittfolge / Pegplan menu visibility
+        doesn't update. Sync both here.                              */
+    const bool pegplan
+        = mainfrm->ViewSchlagpatrone && mainfrm->ViewSchlagpatrone->isChecked();
+    mainfrm->trittfolge.einzeltritt = !pegplan;
+    mainfrm->UpdateSchlagpatroneMode();
+
+    /*  Re-apply layout-dependent toggles. hvisible / wvisible and the
+        ViewEinzug / ViewTrittfolge / ViewFarbe / ViewBlatteinzug /
+        ViewHlines visibilities all feed into PatternCanvas's strip
+        sizing; without a recomputeLayout() they'd keep the stale
+        dimensions from before the load.                              */
+    if (mainfrm->pattern_canvas)
+        mainfrm->pattern_canvas->recomputeLayout();
+    mainfrm->refresh();
 
     mainfrm->file->Close();
     _stat = FILE_LOADED;
