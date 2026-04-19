@@ -27,35 +27,35 @@ class FixeinzugCanvas;
 
 class FixeinzugDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	explicit FixeinzugDialog (TDBWFRM* _frm, QWidget* _parent = nullptr);
-	~FixeinzugDialog() override;
+    explicit FixeinzugDialog(TDBWFRM* _frm, QWidget* _parent = nullptr);
+    ~FixeinzugDialog() override;
 
-	/*  Scratch-buffer the user is editing, and the resulting size
-	    (max non-zero index + 1). Accept() writes both back into
-	    TDBWFRM::fixeinzug / fixsize / firstfree and rapports the
-	    scratch across the rest of MAXX1. */
-	short* scratch   = nullptr;
-	int    size      = 0;
-	short  firstfree = 0;
+    /*  Scratch-buffer the user is editing, and the resulting size
+        (max non-zero index + 1). Accept() writes both back into
+        TDBWFRM::fixeinzug / fixsize / firstfree and rapports the
+        scratch across the rest of MAXX1. */
+    short* scratch = nullptr;
+    int size = 0;
+    short firstfree = 0;
 
 private slots:
-	void onGrab   ();
-	void onDelete ();
-	void onRevert ();
-	void onClose  ();
+    void onGrab();
+    void onDelete();
+    void onRevert();
+    void onClose();
 
 protected:
-	void accept () override;
+    void accept() override;
 
 private:
-	TDBWFRM*         frm    = nullptr;
-	FixeinzugCanvas* canvas = nullptr;
-	QScrollBar*      sbH    = nullptr;
+    TDBWFRM* frm = nullptr;
+    FixeinzugCanvas* canvas = nullptr;
+    QScrollBar* sbH = nullptr;
 
-	void calcRange ();
-	short calcFirstFree () const;
+    void calcRange();
+    short calcFirstFree() const;
 };
 
 #endif

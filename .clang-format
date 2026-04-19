@@ -1,24 +1,56 @@
-# Qt coding style (Phase 12 cleanup). A thin profile on top of the
-# upstream "Qt" preset. Invoke `clang-format -i <file>` to normalise
-# anything you touch; Phase 12 intentionally does not sweep the tree
-# wholesale because a per-file reformat would bury the substantive
-# shim-removal diff. The profile lines below just pin choices where
-# the Qt preset would otherwise differ from the habits this tree
-# already carries (pointer alignment, tab vs space, column cap).
+# Qt-ish coding style for DB-WEAVE (Phase 12 sweep).
+#
+# clang-format has no built-in "Qt" preset, so we start from WebKit
+# (which is the closest sibling: braces attach on control
+# statements, open on a new line for functions/classes, 4-space
+# indent) and pin the deltas we care about explicitly.
+#
+# Apply with `clang-format -i` on anything you touch, or sweep the
+# whole tree:
+#     find src tests -type f \( -name '*.cpp' -o -name '*.h' \) -print0 \
+#         | xargs -0 clang-format -i
 
-BasedOnStyle: Qt
+BasedOnStyle: WebKit
 Language: Cpp
 Standard: c++17
 
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
-
-PointerAlignment: Left
-SpaceAfterCStyleCast: false
-SpaceBeforeParens: ControlStatements
 ColumnLimit: 100
 
+# Braces: attach to control statements, open on new line for defs.
+# WebKit already does this; keep it explicit for clarity.
+BreakBeforeBraces: Linux
+
+# Pointers and references hug the type: int* p  /  const QString& s.
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# Spaces / casts.
+SpaceAfterCStyleCast: false
+SpaceBeforeParens: ControlStatements
+
+# No one-line shortcuts; we want each statement on its own line.
 AllowShortFunctionsOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+
+# Access modifiers flush with the class body indent.
+AccessModifierOffset: -4
+
+# Alignment niceties.
+AlignAfterOpenBracket: Align
+AlignConsecutiveMacros: false
+AlignEscapedNewlines: Left
+AlignOperands: true
+AlignTrailingComments: true
+
+# Keep #include blocks as the author grouped them; we deliberately
+# order platform / Qt / local headers in that sequence.
+IncludeBlocks: Preserve
+SortIncludes: Never
+
+# Preserve empty lines the author put in to separate logical blocks.
+MaxEmptyLinesToKeep: 2

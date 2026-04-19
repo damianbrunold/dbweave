@@ -23,204 +23,233 @@
 #include "rapportdialog.h"
 #include "undoredo.h"
 /*-----------------------------------------------------------------*/
-void TDBWFRM::RapportSchuss (int _ry, bool _withcolors)
+void TDBWFRM::RapportSchuss(int _ry, bool _withcolors)
 {
-	int j, j1, j2, sj1, sj2;
+    int j, j1, j2, sj1, sj2;
 
-	// Schussbereich bestimmen
-	CalcRangeSchuesse();
-	j1 = schuesse.a;
-	j2 = schuesse.b;
-	if (j1==-1) return;
-	if (j2==-1) return;
+    // Schussbereich bestimmen
+    CalcRangeSchuesse();
+    j1 = schuesse.a;
+    j2 = schuesse.b;
+    if (j1 == -1)
+        return;
+    if (j2 == -1)
+        return;
 
-	// Schussrapport bestimmen
-	CalcRapport();
-	sj1 = rapport.sr.a;
-	sj2 = rapport.sr.b;
-	if (sj1==0 && sj2==-1) {
-		sj1 = j1;
-		sj2 = j2;
-	}
+    // Schussrapport bestimmen
+    CalcRapport();
+    sj1 = rapport.sr.a;
+    sj2 = rapport.sr.b;
+    if (sj1 == 0 && sj2 == -1) {
+        sj1 = j1;
+        sj2 = j2;
+    }
 
-	// Alles ausserhalb Rapport loeschen
-	for (j=j1; j<sj1; j++) ClearSchussfaden (j);
-	for (j=sj2+1; j<=j2; j++) ClearSchussfaden (j);
+    // Alles ausserhalb Rapport loeschen
+    for (j = j1; j < sj1; j++)
+        ClearSchussfaden(j);
+    for (j = sj2 + 1; j <= j2; j++)
+        ClearSchussfaden(j);
 
-	// Rapportieren
-	//xxxx momentan rapportiere ich nur nach oben...
-	int maxj;
-	if (_ry!=-1) maxj = sj1+(sj2-sj1+1)*_ry;
-	else maxj = Data->MAXY2;
-	if (maxj>=Data->MAXY2) maxj = Data->MAXY2;
-	for (j=sj2+1; j<maxj; j++)
-		CopySchussfaden (sj1+(j-sj2-1)%(sj2-sj1+1), j, _withcolors);
+    // Rapportieren
+    // xxxx momentan rapportiere ich nur nach oben...
+    int maxj;
+    if (_ry != -1)
+        maxj = sj1 + (sj2 - sj1 + 1) * _ry;
+    else
+        maxj = Data->MAXY2;
+    if (maxj >= Data->MAXY2)
+        maxj = Data->MAXY2;
+    for (j = sj2 + 1; j < maxj; j++)
+        CopySchussfaden(sj1 + (j - sj2 - 1) % (sj2 - sj1 + 1), j, _withcolors);
 
-	// Schussbereich nachfuehren
-	//xxx koennte optimaler sein...
-	CalcRangeSchuesse();
+    // Schussbereich nachfuehren
+    // xxx koennte optimaler sein...
+    CalcRangeSchuesse();
 }
 /*-----------------------------------------------------------------*/
-void TDBWFRM::RapportKette (int _rx, bool _withcolors)
+void TDBWFRM::RapportKette(int _rx, bool _withcolors)
 {
-	int i, i1, i2, ki1, ki2;
+    int i, i1, i2, ki1, ki2;
 
-	// Kettbereich bestimmen
-	CalcRangeKette();
-	i1 = kette.a;
-	i2 = kette.b;
-	if (i1==-1) return;
-	if (i2==-1) return;
+    // Kettbereich bestimmen
+    CalcRangeKette();
+    i1 = kette.a;
+    i2 = kette.b;
+    if (i1 == -1)
+        return;
+    if (i2 == -1)
+        return;
 
-	// Kettrapport bestimmen
-	CalcRapport();
-	ki1 = rapport.kr.a;
-	ki2 = rapport.kr.b;
-	if (ki1==0 && ki2==-1) {
-		ki1 = i1;
-		ki2 = i2;
-	}
+    // Kettrapport bestimmen
+    CalcRapport();
+    ki1 = rapport.kr.a;
+    ki2 = rapport.kr.b;
+    if (ki1 == 0 && ki2 == -1) {
+        ki1 = i1;
+        ki2 = i2;
+    }
 
-	// Alles ausserhalb Rapport loeschen
-	for (i=i1; i<ki1; i++) ClearKettfaden (i);
-	for (i=ki2+1; i<=i2; i++) ClearKettfaden (i);
+    // Alles ausserhalb Rapport loeschen
+    for (i = i1; i < ki1; i++)
+        ClearKettfaden(i);
+    for (i = ki2 + 1; i <= i2; i++)
+        ClearKettfaden(i);
 
-	// Rapportieren
-	//xxxx momentan rapportiere ich nur nach rechts...
-	int maxi;
-	if (_rx!=-1) maxi = ki1+(ki2-ki1+1)*_rx;
-	else maxi = Data->MAXX1;
-	if (maxi>=Data->MAXX1) maxi = Data->MAXX1;
-	for (i=ki2+1; i<maxi; i++)
-		CopyKettfaden (ki1+(i-ki2-1)%(ki2-ki1+1), i, _withcolors);
+    // Rapportieren
+    // xxxx momentan rapportiere ich nur nach rechts...
+    int maxi;
+    if (_rx != -1)
+        maxi = ki1 + (ki2 - ki1 + 1) * _rx;
+    else
+        maxi = Data->MAXX1;
+    if (maxi >= Data->MAXX1)
+        maxi = Data->MAXX1;
+    for (i = ki2 + 1; i < maxi; i++)
+        CopyKettfaden(ki1 + (i - ki2 - 1) % (ki2 - ki1 + 1), i, _withcolors);
 
-	// Kettbereich nachfuehren
-	//xxx koennte optimaler sein...
-	CalcRangeKette();
+    // Kettbereich nachfuehren
+    // xxx koennte optimaler sein...
+    CalcRangeKette();
 }
 /*-----------------------------------------------------------------*/
-void TDBWFRM::CopyKettfaden (int _von, int _nach, bool _withcolors)
+void TDBWFRM::CopyKettfaden(int _von, int _nach, bool _withcolors)
 {
-	// Blatteinzug kopieren
-	//xxxx ?? muss ich das?!
-//    blatteinzug.Set (_nach, blatteinzug.Get (_von));
+    // Blatteinzug kopieren
+    // xxxx ?? muss ich das?!
+    //    blatteinzug.Set (_nach, blatteinzug.Get (_von));
 
-	// Farbe
-	if (_withcolors) kettfarben.feld.Set (_nach, kettfarben.feld.Get (_von));
+    // Farbe
+    if (_withcolors)
+        kettfarben.feld.Set(_nach, kettfarben.feld.Get(_von));
 
-	// Einzug kopieren
-	einzug.feld.Set (_nach, einzug.feld.Get (_von));
+    // Einzug kopieren
+    einzug.feld.Set(_nach, einzug.feld.Get(_von));
 
-	// Gewebe kopieren
-	if (schuesse.a!=-1 && schuesse.b!=-1) {
-		for (int j=schuesse.a; j<=schuesse.b; j++)
-			gewebe.feld.Set (_nach, j, gewebe.feld.Get (_von, j));
-	}
+    // Gewebe kopieren
+    if (schuesse.a != -1 && schuesse.b != -1) {
+        for (int j = schuesse.a; j <= schuesse.b; j++)
+            gewebe.feld.Set(_nach, j, gewebe.feld.Get(_von, j));
+    }
 }
 /*-----------------------------------------------------------------*/
-void TDBWFRM::CopySchussfaden (int _von, int _nach, bool _withcolors)
+void TDBWFRM::CopySchussfaden(int _von, int _nach, bool _withcolors)
 {
-	// IsTrittfolgeEmpty kopieren
-	trittfolge.isempty.Set (_nach, trittfolge.isempty.Get(_von));
+    // IsTrittfolgeEmpty kopieren
+    trittfolge.isempty.Set(_nach, trittfolge.isempty.Get(_von));
 
-	// Tritt kopieren
-	for (int i=0; i<Data->MAXX2; i++)
-		trittfolge.feld.Set (i, _nach, trittfolge.feld.Get (i, _von));
+    // Tritt kopieren
+    for (int i = 0; i < Data->MAXX2; i++)
+        trittfolge.feld.Set(i, _nach, trittfolge.feld.Get(i, _von));
 
-	// Farbe kopieren
-	if (_withcolors) schussfarben.feld.Set (_nach, schussfarben.feld.Get (_von));
+    // Farbe kopieren
+    if (_withcolors)
+        schussfarben.feld.Set(_nach, schussfarben.feld.Get(_von));
 
-	// Gewebe kopieren
-	if (kette.a!=-1 && kette.b!=-1) {
-		for (int i=kette.a; i<=kette.b; i++)
-			gewebe.feld.Set (i, _nach, gewebe.feld.Get (i, _von));
-	}
+    // Gewebe kopieren
+    if (kette.a != -1 && kette.b != -1) {
+        for (int i = kette.a; i <= kette.b; i++)
+            gewebe.feld.Set(i, _nach, gewebe.feld.Get(i, _von));
+    }
 }
 /*-----------------------------------------------------------------*/
-void TDBWFRM::ClearKettfaden (int _i)
+void TDBWFRM::ClearKettfaden(int _i)
 {
-	einzug.feld.Set (_i, 0);
-	if (schuesse.b!=-1) for (int j=schuesse.a; j<=schuesse.b; j++) gewebe.feld.Set (_i, j, 0);
+    einzug.feld.Set(_i, 0);
+    if (schuesse.b != -1)
+        for (int j = schuesse.a; j <= schuesse.b; j++)
+            gewebe.feld.Set(_i, j, 0);
 }
 /*-----------------------------------------------------------------*/
-void TDBWFRM::ClearSchussfaden (int _j)
+void TDBWFRM::ClearSchussfaden(int _j)
 {
-	for (int i=0; i<Data->MAXX2; i++) trittfolge.feld.Set (i, _j, 0);
-	trittfolge.isempty.Set (_j, true);
-	if (kette.b!=-1) for (int i=kette.a; i<=kette.b; i++) gewebe.feld.Set (i, _j, 0);
+    for (int i = 0; i < Data->MAXX2; i++)
+        trittfolge.feld.Set(i, _j, 0);
+    trittfolge.isempty.Set(_j, true);
+    if (kette.b != -1)
+        for (int i = kette.a; i <= kette.b; i++)
+            gewebe.feld.Set(i, _j, 0);
 }
 /*-----------------------------------------------------------------*/
 void TDBWFRM::RappRapportierenClick()
 {
-	RapportDialog dlg(this);
-	dlg.setRepeatAll(false);
-	const int kx = kette.b - kette.a + 1;
-	const int rx = rapport.kr.b - rapport.kr.a + 1;
-	if (kx != 0 && rx != 0) dlg.setHorz(kx / rx);
-	const int ky = schuesse.b - schuesse.a + 1;
-	const int ry = rapport.sr.b - rapport.sr.a + 1;
-	if (ky != 0 && ry != 0) dlg.setVert(ky / ry);
+    RapportDialog dlg(this);
+    dlg.setRepeatAll(false);
+    const int kx = kette.b - kette.a + 1;
+    const int rx = rapport.kr.b - rapport.kr.a + 1;
+    if (kx != 0 && rx != 0)
+        dlg.setHorz(kx / rx);
+    const int ky = schuesse.b - schuesse.a + 1;
+    const int ry = rapport.sr.b - rapport.sr.a + 1;
+    if (ky != 0 && ry != 0)
+        dlg.setVert(ky / ry);
 
-	if (dlg.exec() != QDialog::Accepted) return;
+    if (dlg.exec() != QDialog::Accepted)
+        return;
 
-	int rxn = dlg.horz();
-	int ryn = dlg.vert();
-	if (dlg.repeatAll()) rxn = ryn = -1;
-	const bool rappcolors = dlg.repeatColors();
-	RapportKette  (rxn == 0 ? 1 : rxn, rappcolors);
-	RapportSchuss (ryn == 0 ? 1 : ryn, rappcolors);
+    int rxn = dlg.horz();
+    int ryn = dlg.vert();
+    if (dlg.repeatAll())
+        rxn = ryn = -1;
+    const bool rappcolors = dlg.repeatColors();
+    RapportKette(rxn == 0 ? 1 : rxn, rappcolors);
+    RapportSchuss(ryn == 0 ? 1 : ryn, rappcolors);
 
-	CalcRangeSchuesse();
-	CalcRangeKette();
-	CalcRapport();
+    CalcRangeSchuesse();
+    CalcRangeKette();
+    CalcRapport();
 
-	UpdateStatusBar();
-	SetModified();
-	refresh();
-	if (undo) undo->Snapshot();
+    UpdateStatusBar();
+    SetModified();
+    refresh();
+    if (undo)
+        undo->Snapshot();
 }
 /*-----------------------------------------------------------------*/
 void TDBWFRM::RappReduzierenClick()
 {
-	RapportKette  (1, false);
-	RapportSchuss (1, false);
-	if (EzFixiert && EzFixiert->isChecked()) RecalcAll();
+    RapportKette(1, false);
+    RapportSchuss(1, false);
+    if (EzFixiert && EzFixiert->isChecked())
+        RecalcAll();
 
-	CalcRangeSchuesse();
-	CalcRangeKette();
-	CalcRapport();
+    CalcRangeSchuesse();
+    CalcRangeKette();
+    CalcRapport();
 
-	UpdateStatusBar();
-	SetModified();
-	refresh();
-	if (undo) undo->Snapshot();
+    UpdateStatusBar();
+    SetModified();
+    refresh();
+    if (undo)
+        undo->Snapshot();
 }
 /*-----------------------------------------------------------------*/
 void TDBWFRM::RappOverrideClick()
 {
-	if (!rapport.overridden) {
-		if (selection.Valid() && selection.feld == GEWEBE) {
-			RANGE save = selection;
-			selection.Normalize();
-			if (RappViewRapport && RappViewRapport->isChecked()) ClearRapport();
-			rapport.overridden = true;
-			RAPPORT old = rapport;
-			rapport.kr.a = selection.begin.i;
-			rapport.kr.b = selection.end.i;
-			rapport.sr.a = selection.begin.j;
-			rapport.sr.b = selection.end.j;
-			if (RappViewRapport && RappViewRapport->isChecked()) {
-				DrawRapport();
-				if (rapporthandler)
-					rapporthandler->DrawDifferences(old, rapport);
-			}
-			ClearSelection();
-			(void)save;
-		}
-	} else {
-		rapport.overridden = false;
-		UpdateRapport();
-	}
-	UpdateStatusBar();
-	refresh();
+    if (!rapport.overridden) {
+        if (selection.Valid() && selection.feld == GEWEBE) {
+            RANGE save = selection;
+            selection.Normalize();
+            if (RappViewRapport && RappViewRapport->isChecked())
+                ClearRapport();
+            rapport.overridden = true;
+            RAPPORT old = rapport;
+            rapport.kr.a = selection.begin.i;
+            rapport.kr.b = selection.end.i;
+            rapport.sr.a = selection.begin.j;
+            rapport.sr.b = selection.end.j;
+            if (RappViewRapport && RappViewRapport->isChecked()) {
+                DrawRapport();
+                if (rapporthandler)
+                    rapporthandler->DrawDifferences(old, rapport);
+            }
+            ClearSelection();
+            (void)save;
+        }
+    } else {
+        rapport.overridden = false;
+        UpdateRapport();
+    }
+    UpdateStatusBar();
+    refresh();
 }

@@ -18,22 +18,24 @@
 class ZentralSymmChecker
 {
 private:
-	char* data;
-	char* temp;
-	int sizex, sizey;
+    char* data;
+    char* temp;
+    int sizex, sizey;
+
 private:
-	bool IsSymmetric();
-	void RollLeft();
-	void RollUp();
+    bool IsSymmetric();
+    void RollLeft();
+    void RollUp();
+
 public:
- ZentralSymmChecker();
- ZentralSymmChecker (int _sizex, int _sizey);
-	virtual ~ZentralSymmChecker();
-	void Init (int _sizex, int _sizey);
-	void SetData (int _i, int _j, char _val);
-	char GetData (int _i, int _j);
-	bool IsAlreadySymmetric();
-	bool SearchSymmetry();
+    ZentralSymmChecker();
+    ZentralSymmChecker(int _sizex, int _sizey);
+    virtual ~ZentralSymmChecker();
+    void Init(int _sizex, int _sizey);
+    void SetData(int _i, int _j, char _val);
+    char GetData(int _i, int _j);
+    bool IsAlreadySymmetric();
+    bool SearchSymmetry();
 };
 /*-----------------------------------------------------------------*/
 #endif

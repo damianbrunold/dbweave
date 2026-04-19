@@ -27,45 +27,45 @@ class TDBWFRM;
 
 class EntwurfsinfoDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	explicit EntwurfsinfoDialog (TDBWFRM* _frm, QWidget* _parent = nullptr);
+    explicit EntwurfsinfoDialog(TDBWFRM* _frm, QWidget* _parent = nullptr);
 
-	void initInfos ();
+    void initInfos();
 
 private slots:
-	void onCategoryChanged (int _row);
-	void onPrint  ();
-	void onExport ();
+    void onCategoryChanged(int _row);
+    void onPrint();
+    void onExport();
 
 private:
-	TDBWFRM*     frm = nullptr;
+    TDBWFRM* frm = nullptr;
 
-	QListWidget* categories = nullptr;
-	QTextEdit*   text       = nullptr;
+    QListWidget* categories = nullptr;
+    QTextEdit* text = nullptr;
 
-	QStringList  ausmasse;
-	QStringList  farben;
-	QStringList  litzen;
-	QStringList  flottierungen;
+    QStringList ausmasse;
+    QStringList farben;
+    QStringList litzen;
+    QStringList flottierungen;
 
-	bool read_ausmasse      = false;
-	bool read_farben        = false;
-	bool read_litzen        = false;
-	bool read_flottierungen = false;
+    bool read_ausmasse = false;
+    bool read_farben = false;
+    bool read_litzen = false;
+    bool read_flottierungen = false;
 
-	void buildAusmasse      ();
-	void buildFarben        ();
-	void buildLitzen        ();
-	void buildFlottierungen ();
+    void buildAusmasse();
+    void buildFarben();
+    void buildLitzen();
+    void buildFlottierungen();
 
-	void onAusmasse      (bool _clear = true);
-	void onFarben        (bool _clear = true);
-	void onLitzen        (bool _clear = true);
-	void onFlottierungen (bool _clear = true);
+    void onAusmasse(bool _clear = true);
+    void onFarben(bool _clear = true);
+    void onLitzen(bool _clear = true);
+    void onFlottierungen(bool _clear = true);
 
-	void insertHeader  ();
-	void insertHeading (const QString& _heading);
+    void insertHeader();
+    void insertHeading(const QString& _heading);
 };
 
 #endif

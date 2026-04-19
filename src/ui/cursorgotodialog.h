@@ -23,23 +23,23 @@ class QRadioButton;
 
 class CursorGotoDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	/*  _initial picks which radio is pre-selected; _pegplan flips
-	    the Trittfolge caption to "Pegplan" and disables the
-	    Aufknuepfung choice to match legacy.                    */
-	explicit CursorGotoDialog (QWidget* _parent, FELD _initial, bool _pegplan);
+    /*  _initial picks which radio is pre-selected; _pegplan flips
+        the Trittfolge caption to "Pegplan" and disables the
+        Aufknuepfung choice to match legacy.                    */
+    explicit CursorGotoDialog(QWidget* _parent, FELD _initial, bool _pegplan);
 
-	FELD selected() const;
+    FELD selected() const;
 
 private:
-	QRadioButton* rBindung       = nullptr;
-	QRadioButton* rEinzug        = nullptr;
-	QRadioButton* rTrittfolge    = nullptr;
-	QRadioButton* rAufknuepfung  = nullptr;
-	QRadioButton* rKettfarben    = nullptr;
-	QRadioButton* rSchussfarben  = nullptr;
+    QRadioButton* rBindung = nullptr;
+    QRadioButton* rEinzug = nullptr;
+    QRadioButton* rTrittfolge = nullptr;
+    QRadioButton* rAufknuepfung = nullptr;
+    QRadioButton* rKettfarben = nullptr;
+    QRadioButton* rSchussfarben = nullptr;
 };
 
 #endif

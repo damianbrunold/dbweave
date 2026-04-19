@@ -30,30 +30,30 @@ class PreviewCanvas;
 
 class ImportBmpDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	explicit ImportBmpDialog (const QString& _filename, QWidget* _parent = nullptr);
+    explicit ImportBmpDialog(const QString& _filename, QWidget* _parent = nullptr);
 
-	/*  Populated on accept(); 0 × 0 on cancel. Row-major, index
-	    (i, j) lives at data[i + j*x]. */
-	int        x = 0;
-	int        y = 0;
-	QByteArray data;
+    /*  Populated on accept(); 0 × 0 on cancel. Row-major, index
+        (i, j) lives at data[i + j*x]. */
+    int x = 0;
+    int y = 0;
+    QByteArray data;
 
 protected:
-	void accept () override;
+    void accept() override;
 
 private:
-	QImage         bitmap;
-	QSpinBox*      spinRes = nullptr;
-	PreviewCanvas* preview = nullptr;
+    QImage bitmap;
+    QSpinBox* spinRes = nullptr;
+    PreviewCanvas* preview = nullptr;
 
-	QRgb  bkground = 0;
-	QRgb  colors[9] = { };
-	int   used     = 0;
+    QRgb bkground = 0;
+    QRgb colors[9] = {};
+    int used = 0;
 
-	void buildColorTable ();
-	int  rangeOf (QRgb _col) const;
+    void buildColorTable();
+    int rangeOf(QRgb _col) const;
 };
 
 #endif

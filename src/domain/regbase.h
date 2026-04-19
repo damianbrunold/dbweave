@@ -13,11 +13,11 @@
 #ifndef DBWEAVE_DOMAIN_REGBASE_H
 #define DBWEAVE_DOMAIN_REGBASE_H
 /*-----------------------------------------------------------------*/
-#define DBW_REGBASE_      "Software\\Brunold Software\\DB-WEAVE"
-#define DBW_REGBASE37_    "Software\\Brunold Software\\DB-WEAVE\\4"
-#define DBW_REGBASE      "Software\\Brunold Software\\DB-WEAVE\\"
-#define DBW_REGSETTINGS  "Software\\Brunold Software\\DB-WEAVE\\Settings\\"
-#define DBW_REGMRU       "Software\\Brunold Software\\DB-WEAVE\\MRU\\"
+#define DBW_REGBASE_ "Software\\Brunold Software\\DB-WEAVE"
+#define DBW_REGBASE37_ "Software\\Brunold Software\\DB-WEAVE\\4"
+#define DBW_REGBASE "Software\\Brunold Software\\DB-WEAVE\\"
+#define DBW_REGSETTINGS "Software\\Brunold Software\\DB-WEAVE\\Settings\\"
+#define DBW_REGMRU "Software\\Brunold Software\\DB-WEAVE\\MRU\\"
 /*-----------------------------------------------------------------*/
 #endif
 /*-----------------------------------------------------------------*/

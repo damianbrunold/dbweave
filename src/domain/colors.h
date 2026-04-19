@@ -15,8 +15,8 @@
 /*----------------------------------------------------------------*/
 #define UNDEFINED -1.0
 /*----------------------------------------------------------------*/
-void RGB2HSV (int r, int g, int b, float& h, float& s, float& v);
-void HSV2RGB (float h, float s, float v, int& r, int& g, int& b);
+void RGB2HSV(int r, int g, int b, float& h, float& s, float& v);
+void HSV2RGB(float h, float s, float v, int& r, int& g, int& b);
 /*----------------------------------------------------------------*/
 #endif
 /*----------------------------------------------------------------*/

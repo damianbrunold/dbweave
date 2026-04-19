@@ -18,39 +18,57 @@
 #include <QPlainTextEdit>
 #include <QVBoxLayout>
 
-PropertiesDialog::PropertiesDialog (QWidget* _parent)
-	: QDialog(_parent)
+PropertiesDialog::PropertiesDialog(QWidget* _parent)
+    : QDialog(_parent)
 {
-	setWindowTitle(QStringLiteral("Properties"));
-	setModal(true);
+    setWindowTitle(QStringLiteral("Properties"));
+    setModal(true);
 
-	edAuthor       = new QLineEdit(this);
-	edOrganization = new QLineEdit(this);
-	edRemarks      = new QPlainTextEdit(this);
+    edAuthor = new QLineEdit(this);
+    edOrganization = new QLineEdit(this);
+    edRemarks = new QPlainTextEdit(this);
 
-	auto* form = new QFormLayout();
-	form->addRow(QStringLiteral("&Author:"),       edAuthor);
-	form->addRow(QStringLiteral("&Organization:"), edOrganization);
-	form->addRow(QStringLiteral("&Notes:"),        edRemarks);
+    auto* form = new QFormLayout();
+    form->addRow(QStringLiteral("&Author:"), edAuthor);
+    form->addRow(QStringLiteral("&Organization:"), edOrganization);
+    form->addRow(QStringLiteral("&Notes:"), edRemarks);
 
-	auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-	connect(btns, &QDialogButtonBox::accepted, this, &QDialog::accept);
-	connect(btns, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+    connect(btns, &QDialogButtonBox::accepted, this, &QDialog::accept);
+    connect(btns, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
-	auto* root = new QVBoxLayout(this);
-	root->addLayout(form);
-	root->addWidget(btns);
+    auto* root = new QVBoxLayout(this);
+    root->addLayout(form);
+    root->addWidget(btns);
 
-	resize(420, 320);
+    resize(420, 320);
 }
 
-QString PropertiesDialog::author       () const { return edAuthor      ->text(); }
-QString PropertiesDialog::organization () const { return edOrganization->text(); }
-QString PropertiesDialog::remarks      () const { return edRemarks     ->toPlainText(); }
+QString PropertiesDialog::author() const
+{
+    return edAuthor->text();
+}
+QString PropertiesDialog::organization() const
+{
+    return edOrganization->text();
+}
+QString PropertiesDialog::remarks() const
+{
+    return edRemarks->toPlainText();
+}
 
-void PropertiesDialog::setAuthor       (const QString& _s) { edAuthor      ->setText(_s); }
-void PropertiesDialog::setOrganization (const QString& _s) { edOrganization->setText(_s); }
-void PropertiesDialog::setRemarks      (const QString& _s) { edRemarks     ->setPlainText(_s); }
+void PropertiesDialog::setAuthor(const QString& _s)
+{
+    edAuthor->setText(_s);
+}
+void PropertiesDialog::setOrganization(const QString& _s)
+{
+    edOrganization->setText(_s);
+}
+void PropertiesDialog::setRemarks(const QString& _s)
+{
+    edRemarks->setPlainText(_s);
+}
 
 /*-----------------------------------------------------------------*/
 /*  TDBWFRM::FilePropsClick — verbatim port of legacy dbw3_form.cpp
@@ -61,19 +79,22 @@ void PropertiesDialog::setRemarks      (const QString& _s) { edRemarks     ->set
 #include "properties.h"
 #include "cursor.h"
 
-void TDBWFRM::FilePropsClick ()
+void TDBWFRM::FilePropsClick()
 {
-	if (!Data->properties) return;
-	if (cursorhandler) cursorhandler->DisableCursor();
-	PropertiesDialog dlg(this);
-	dlg.setAuthor       (QString::fromUtf8(Data->properties->Author()));
-	dlg.setOrganization (QString::fromUtf8(Data->properties->Organization()));
-	dlg.setRemarks      (QString::fromUtf8(Data->properties->Remarks()));
-	if (dlg.exec() == QDialog::Accepted) {
-		Data->properties->SetAuthor       (dlg.author().toUtf8().constData());
-		Data->properties->SetOrganization (dlg.organization().toUtf8().constData());
-		Data->properties->SetRemarks      (dlg.remarks().toUtf8().constData());
-		SetModified();
-	}
-	if (cursorhandler) cursorhandler->EnableCursor();
+    if (!Data->properties)
+        return;
+    if (cursorhandler)
+        cursorhandler->DisableCursor();
+    PropertiesDialog dlg(this);
+    dlg.setAuthor(QString::fromUtf8(Data->properties->Author()));
+    dlg.setOrganization(QString::fromUtf8(Data->properties->Organization()));
+    dlg.setRemarks(QString::fromUtf8(Data->properties->Remarks()));
+    if (dlg.exec() == QDialog::Accepted) {
+        Data->properties->SetAuthor(dlg.author().toUtf8().constData());
+        Data->properties->SetOrganization(dlg.organization().toUtf8().constData());
+        Data->properties->SetRemarks(dlg.remarks().toUtf8().constData());
+        SetModified();
+    }
+    if (cursorhandler)
+        cursorhandler->EnableCursor();
 }

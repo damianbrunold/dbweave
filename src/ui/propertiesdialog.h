@@ -22,22 +22,22 @@ class QPlainTextEdit;
 
 class PropertiesDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	explicit PropertiesDialog (QWidget* _parent = nullptr);
+    explicit PropertiesDialog(QWidget* _parent = nullptr);
 
-	QString author      () const;
-	QString organization() const;
-	QString remarks     () const;
+    QString author() const;
+    QString organization() const;
+    QString remarks() const;
 
-	void setAuthor       (const QString& _s);
-	void setOrganization (const QString& _s);
-	void setRemarks      (const QString& _s);
+    void setAuthor(const QString& _s);
+    void setOrganization(const QString& _s);
+    void setRemarks(const QString& _s);
 
 private:
-	QLineEdit*      edAuthor       = nullptr;
-	QLineEdit*      edOrganization = nullptr;
-	QPlainTextEdit* edRemarks      = nullptr;
+    QLineEdit* edAuthor = nullptr;
+    QLineEdit* edOrganization = nullptr;
+    QPlainTextEdit* edRemarks = nullptr;
 };
 
 #endif

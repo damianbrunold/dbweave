@@ -19,25 +19,25 @@
 class RpRapportImpl : public RpRapport
 {
 private:
-	TDBWFRM* frm;
-	TData*   data;
+    TDBWFRM* frm;
+    TData* data;
 
 public:
- RpRapportImpl (TDBWFRM* _frm, TData* _data);
-	virtual ~RpRapportImpl();
+    RpRapportImpl(TDBWFRM* _frm, TData* _data);
+    virtual ~RpRapportImpl();
 
-	virtual bool IsInRapport (int _i, int _j);
-	virtual void UpdateRapport();
-	virtual void CalcRapport();
-	virtual void DrawRapport();
-	virtual void ClearRapport();
-	virtual void DrawDifferences (const RAPPORT& _old, const RAPPORT& _new);
+    virtual bool IsInRapport(int _i, int _j);
+    virtual void UpdateRapport();
+    virtual void CalcRapport();
+    virtual void DrawRapport();
+    virtual void ClearRapport();
+    virtual void DrawDifferences(const RAPPORT& _old, const RAPPORT& _new);
 
 protected:
-	void CalcKettrapport();
-	void CalcSchussrapport();
-	bool TrittfolgeEqual (int _j1, int _j2);
-	bool EinzugEqual (int _i1, int _i2);
+    void CalcKettrapport();
+    void CalcSchussrapport();
+    bool TrittfolgeEqual(int _j1, int _j2);
+    bool EinzugEqual(int _i1, int _i2);
 };
 /*------------------------------------------------------------------*/
 #endif

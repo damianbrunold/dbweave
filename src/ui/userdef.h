@@ -20,12 +20,11 @@
 
 #define MAXUSERDEF 10
 
-struct UserdefPattern
-{
-	AnsiString description;
-	int        sizex = 0;
-	int        sizey = 0;
-	AnsiString data;
+struct UserdefPattern {
+    AnsiString description;
+    int sizex = 0;
+    int sizey = 0;
+    AnsiString data;
 };
 
 #endif

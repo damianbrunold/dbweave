@@ -29,53 +29,53 @@ class QTabWidget;
 
 class XOptionsDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	explicit XOptionsDialog (QWidget* _parent = nullptr);
+    explicit XOptionsDialog(QWidget* _parent = nullptr);
 
-	/*  Public accessors used by TDBWFRM::ShowOptions to pull the
-	    dialog state back after OK. Organised by tab.           */
+    /*  Public accessors used by TDBWFRM::ShowOptions to pull the
+        dialog state back after OK. Organised by tab.           */
 
-	/* Sizes tab */
-	QSpinBox*     upSchaefte    = nullptr;
-	QSpinBox*     upTritte      = nullptr;
-	QSpinBox*     upKette       = nullptr;
-	QSpinBox*     upSchuesse    = nullptr;
-	QSpinBox*     upSchaefteVis = nullptr;
-	QSpinBox*     upTritteVis   = nullptr;
+    /* Sizes tab */
+    QSpinBox* upSchaefte = nullptr;
+    QSpinBox* upTritte = nullptr;
+    QSpinBox* upKette = nullptr;
+    QSpinBox* upSchuesse = nullptr;
+    QSpinBox* upSchaefteVis = nullptr;
+    QSpinBox* upTritteVis = nullptr;
 
-	/* Grid tab */
-	QSpinBox*     SchenienHorz  = nullptr;
-	QSpinBox*     SchenienVert  = nullptr;
+    /* Grid tab */
+    QSpinBox* SchenienHorz = nullptr;
+    QSpinBox* SchenienVert = nullptr;
 
-	/* Settings tab */
-	QRadioButton* Einzeltritt   = nullptr;
-	QRadioButton* Multitritt    = nullptr;
-	QRadioButton* RisingShed    = nullptr;
-	QRadioButton* SinkingShed   = nullptr;
+    /* Settings tab */
+    QRadioButton* Einzeltritt = nullptr;
+    QRadioButton* Multitritt = nullptr;
+    QRadioButton* RisingShed = nullptr;
+    QRadioButton* SinkingShed = nullptr;
 
-	/* Symbols tab */
-	QComboBox*    cbEinzug        = nullptr;
-	QComboBox*    cbAufknuepfung  = nullptr;
-	QComboBox*    cbTrittfolge    = nullptr;
-	QComboBox*    cbSchlagpatrone = nullptr;
-	QComboBox*    cbAushebung     = nullptr;
-	QComboBox*    cbAnbindung     = nullptr;
-	QComboBox*    cbAbbindung     = nullptr;
+    /* Symbols tab */
+    QComboBox* cbEinzug = nullptr;
+    QComboBox* cbAufknuepfung = nullptr;
+    QComboBox* cbTrittfolge = nullptr;
+    QComboBox* cbSchlagpatrone = nullptr;
+    QComboBox* cbAushebung = nullptr;
+    QComboBox* cbAnbindung = nullptr;
+    QComboBox* cbAbbindung = nullptr;
 
-	/* View tab */
-	QCheckBox*    EinzugUnten     = nullptr;
-	QCheckBox*    RightToLeft     = nullptr;
-	QCheckBox*    TopToBottom     = nullptr;
-	QCheckBox*    FEWithRaster    = nullptr;
-	QCheckBox*    AltFarbpalette  = nullptr;
-	QCheckBox*    AltLiftplanstyle = nullptr;
+    /* View tab */
+    QCheckBox* EinzugUnten = nullptr;
+    QCheckBox* RightToLeft = nullptr;
+    QCheckBox* TopToBottom = nullptr;
+    QCheckBox* FEWithRaster = nullptr;
+    QCheckBox* AltFarbpalette = nullptr;
+    QCheckBox* AltLiftplanstyle = nullptr;
 
 private:
-	QTabWidget* tabs = nullptr;
+    QTabWidget* tabs = nullptr;
 
-	void loadCombo (QComboBox* _cb, bool _withNumber = false);
+    void loadCombo(QComboBox* _cb, bool _withNumber = false);
 };
 
 #endif

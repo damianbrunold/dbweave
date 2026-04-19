@@ -13,27 +13,33 @@
 #ifndef DBWEAVE_DOMAIN_SETTINGS_H
 #define DBWEAVE_DOMAIN_SETTINGS_H
 /*-----------------------------------------------------------------*/
-#include "vcl_compat.h"     /* AnsiString -> QString */
-#include "registry_compat.h"  /* TRegistry -> QSettings */
+#include "vcl_compat.h"      /* AnsiString -> QString */
+#include "registry_compat.h" /* TRegistry -> QSettings */
 /*-----------------------------------------------------------------*/
 class Settings
 {
 protected:
-	AnsiString category;
-	TRegistry* registry;
+    AnsiString category;
+    TRegistry* registry;
 
 public:
- Settings();
-	virtual ~Settings();
+    Settings();
+    virtual ~Settings();
 
-	void SetCategory (const AnsiString& _category) { category = _category; }
-	AnsiString Category() const { return category; }
+    void SetCategory(const AnsiString& _category)
+    {
+        category = _category;
+    }
+    AnsiString Category() const
+    {
+        return category;
+    }
 
-	int Load (const AnsiString& _name, int _default=0);
-	AnsiString Load (const AnsiString& _name, const AnsiString& _default=QString());
+    int Load(const AnsiString& _name, int _default = 0);
+    AnsiString Load(const AnsiString& _name, const AnsiString& _default = QString());
 
-	void Save (const AnsiString& _name, int _value);
-	void Save (const AnsiString& _name, const AnsiString& _value);
+    void Save(const AnsiString& _name, int _value);
+    void Save(const AnsiString& _name, const AnsiString& _value);
 };
 /*-----------------------------------------------------------------*/
 #endif

@@ -22,8 +22,8 @@
 
 #include <memory>
 
-#include "loom.h"           /* StWeaveController base */
-#include "loomsettings.h"   /* PORTINIT */
+#include "loom.h"         /* StWeaveController base */
+#include "loomsettings.h" /* PORTINIT */
 
 class SerialPort;
 
@@ -31,18 +31,18 @@ class SerialPort;
 class StSerialController : public StWeaveController
 {
 public:
-	StSerialController ();
-	~StSerialController () override;
+    StSerialController();
+    ~StSerialController() override;
 
-	bool Initialize (const INITDATA& _data) override;
-	void Terminate  () override;
+    bool Initialize(const INITDATA& _data) override;
+    void Terminate() override;
 
 protected:
-	SerialPort* serialport = nullptr;
-	PORTINIT    init_arm_patronic;
-	PORTINIT    init_arm_designer;
-	PORTINIT    init_slips;
-	PORTINIT    init_avlcdiii;
+    SerialPort* serialport = nullptr;
+    PORTINIT init_arm_patronic;
+    PORTINIT init_arm_designer;
+    PORTINIT init_slips;
+    PORTINIT init_avlcdiii;
 };
 
 /*-----------------------------------------------------------------*/
@@ -51,13 +51,13 @@ protected:
 class StPatronicController : public StSerialController
 {
 public:
-	bool Initialize (const INITDATA& _data) override;
-	WEAVE_STATUS WeaveSchuss (std::uint32_t _shafts) override;
-	void Terminate () override;
+    bool Initialize(const INITDATA& _data) override;
+    WEAVE_STATUS WeaveSchuss(std::uint32_t _shafts) override;
+    void Terminate() override;
 
 private:
-	bool checkSuccess (bool _checkAbort, bool _timeout);
-	bool waitForAck ();
+    bool checkSuccess(bool _checkAbort, bool _timeout);
+    bool waitForAck();
 };
 
 /*-----------------------------------------------------------------*/
@@ -66,16 +66,22 @@ private:
 class StPatronicIndirectController : public StSerialController
 {
 public:
-	StPatronicIndirectController () { position = 1; }
-	bool Initialize (const INITDATA& _data) override;
-	WEAVE_STATUS WeaveSchuss (std::uint32_t _shafts) override;
-	void Terminate () override;
-	void SetSpecialData (int _data) override { position = _data; }
+    StPatronicIndirectController()
+    {
+        position = 1;
+    }
+    bool Initialize(const INITDATA& _data) override;
+    WEAVE_STATUS WeaveSchuss(std::uint32_t _shafts) override;
+    void Terminate() override;
+    void SetSpecialData(int _data) override
+    {
+        position = _data;
+    }
 
 private:
-	int position = 1;
-	bool checkSuccess ();
-	bool waitForAck ();
+    int position = 1;
+    bool checkSuccess();
+    bool waitForAck();
 };
 
 /*-----------------------------------------------------------------*/
@@ -84,13 +90,13 @@ private:
 class StDesignerController : public StSerialController
 {
 public:
-	bool Initialize (const INITDATA& _data) override;
-	WEAVE_STATUS WeaveSchuss (std::uint32_t _shafts) override;
+    bool Initialize(const INITDATA& _data) override;
+    WEAVE_STATUS WeaveSchuss(std::uint32_t _shafts) override;
 
 private:
-	void waitFachGeschlossen ();
-	void waitFachOffen ();
-	void sendMuster (std::uint32_t _shafts);
+    void waitFachGeschlossen();
+    void waitFachOffen();
+    void sendMuster(std::uint32_t _shafts);
 };
 
 /*-----------------------------------------------------------------*/
@@ -100,16 +106,16 @@ private:
 class StSlipsController : public StSerialController
 {
 public:
-	bool Initialize (const INITDATA& _data) override;
-	WEAVE_STATUS WeaveSchuss (std::uint32_t _shafts) override;
-	void Terminate () override;
-	void SetBytes (int _bytes);
+    bool Initialize(const INITDATA& _data) override;
+    WEAVE_STATUS WeaveSchuss(std::uint32_t _shafts) override;
+    void Terminate() override;
+    void SetBytes(int _bytes);
 
 private:
-	int  bytes   = 4;
-	bool forward = true;
-	bool sendData (std::uint32_t _shafts);
-	void getData (int& _gear, int& _lift);
+    int bytes = 4;
+    bool forward = true;
+    bool sendData(std::uint32_t _shafts);
+    void getData(int& _gear, int& _lift);
 };
 
 /*-----------------------------------------------------------------*/
@@ -118,20 +124,20 @@ private:
 class StAvlCdIIIController : public StSerialController
 {
 public:
-	bool Initialize (const INITDATA& _data) override;
-	WEAVE_STATUS WeaveSchuss (std::uint32_t _shafts) override;
-	void Terminate () override;
+    bool Initialize(const INITDATA& _data) override;
+    WEAVE_STATUS WeaveSchuss(std::uint32_t _shafts) override;
+    void Terminate() override;
 
 private:
-	void matchReply (int _r1, int _r2, bool _timeout);
-	void matchReply (int _r,  bool _timeout);
-	bool waitForUp   ();
-	bool waitForDown ();
+    void matchReply(int _r1, int _r2, bool _timeout);
+    void matchReply(int _r, bool _timeout);
+    bool waitForUp();
+    bool waitForDown();
 };
 
 /*-----------------------------------------------------------------*/
 /*  Factory: build a controller from a LOOMINTERFACE enum. Falls
     back to the dummy for unsupported types. Returns ownership. */
-std::unique_ptr<StWeaveController> makeLoomController (LOOMINTERFACE _intrf);
+std::unique_ptr<StWeaveController> makeLoomController(LOOMINTERFACE _intrf);
 
 #endif

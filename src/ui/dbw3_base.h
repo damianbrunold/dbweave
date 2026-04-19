@@ -25,241 +25,320 @@
 #include "vcl_compat.h"
 #include "enums.h"
 #include "felddef.h"
-#include <cstdlib>   /* abs */
+#include <cstdlib> /* abs */
 
 /*-----------------------------------------------------------------*/
-const int DEFAULT_MAXX1      = 300;
-const int DEFAULT_MAXX2      = 35;
-const int DEFAULT_MAXY1      = 35;
-const int DEFAULT_MAXY2      = 300;
+const int DEFAULT_MAXX1 = 300;
+const int DEFAULT_MAXX2 = 35;
+const int DEFAULT_MAXY1 = 35;
+const int DEFAULT_MAXY2 = 300;
 const int DEFAULT_STRONGLINE = 4;
 /*-----------------------------------------------------------------*/
 const int DEFAULT_COLORH = 234;
 const int DEFAULT_COLORV = 235;
-const int DEFAULT_COLOR  = DEFAULT_COLORH;
+const int DEFAULT_COLOR = DEFAULT_COLORH;
 /*-----------------------------------------------------------------*/
 const int AUSHEBUNG = 10;
 const int ANBINDUNG = 11;
 const int ABBINDUNG = 12;
 /*-----------------------------------------------------------------*/
 // Klammer fuer Webstuhlsteuerung
-struct Klammer
-{
-	int first;
-	int last;
-	int repetitions;
-	Klammer() { first = 0; last = 1; repetitions = 0; }
-	Klammer& operator=(const Klammer& _klammer) {
-		if (&_klammer==this) return *this;
-		first = _klammer.first;
-		last = _klammer.last;
-		repetitions = _klammer.repetitions;
-		return *this;
-	}
+struct Klammer {
+    int first;
+    int last;
+    int repetitions;
+    Klammer()
+    {
+        first = 0;
+        last = 1;
+        repetitions = 0;
+    }
+    Klammer& operator=(const Klammer& _klammer)
+    {
+        if (&_klammer == this)
+            return *this;
+        first = _klammer.first;
+        last = _klammer.last;
+        repetitions = _klammer.repetitions;
+        return *this;
+    }
 };
 /*-----------------------------------------------------------------*/
 // GRIDPOS verwaltet die Ausmasse und wichtigsten Properties des
 // sichtbaren Teils eines Feldes.
-struct GRIDPOS
-{
-	int x0;
-	int y0;
-	int width;
-	int height;
-	int strongline_x;
-	int strongline_y;
-	GRIDPOS() { Init(); }
-	void Init() { strongline_x = strongline_y = DEFAULT_STRONGLINE; }
+struct GRIDPOS {
+    int x0;
+    int y0;
+    int width;
+    int height;
+    int strongline_x;
+    int strongline_y;
+    GRIDPOS()
+    {
+        Init();
+    }
+    void Init()
+    {
+        strongline_x = strongline_y = DEFAULT_STRONGLINE;
+    }
 };
 /*-----------------------------------------------------------------*/
 // GRIDSIZE fuehrt die logische Groesse des sichtbaren Teils eines
 // Feldes.
-struct GRIDSIZE
-{
-	int width;  // Breite des sichtbaren Teils des Feldes in Karos
-	int height; // Hoehe des sichtbaren Teils des Feldes in Karos
+struct GRIDSIZE {
+    int width;  // Breite des sichtbaren Teils des Feldes in Karos
+    int height; // Hoehe des sichtbaren Teils des Feldes in Karos
 
-	GRIDSIZE() { width=height=0; }
+    GRIDSIZE()
+    {
+        width = height = 0;
+    }
 };
 /*-----------------------------------------------------------------*/
 // INPUTPOS verwaltet fuer ein Feld den Ort, an dem der Keyboard-Cursor
 // ist. Dieser wird pro Feld unabhaengig gefuehrt.
-struct INPUTPOS
-{
-	signed int i; // relative Koordinaten (Karo-Felder)
-	signed int j;
+struct INPUTPOS {
+    signed int i; // relative Koordinaten (Karo-Felder)
+    signed int j;
 
-	INPUTPOS() { Init(); }
-	void Init() { i=j=0; }
+    INPUTPOS()
+    {
+        Init();
+    }
+    void Init()
+    {
+        i = j = 0;
+    }
 };
 /*-----------------------------------------------------------------*/
 // PT stellt eine Punkt-Koordinate dar.
-struct PT
-{
-	signed int i;
-	signed int j;
-	PT() { i=j=0; }
-	PT (int _i, int _j) { i=(int)_i; j=(int)_j; }
+struct PT {
+    signed int i;
+    signed int j;
+    PT()
+    {
+        i = j = 0;
+    }
+    PT(int _i, int _j)
+    {
+        i = (int)_i;
+        j = (int)_j;
+    }
 };
 /*-----------------------------------------------------------------*/
 // SZ (SIZE) stellt eine Von-Bis-Koordinate dar.
-struct SZ
-{
-	signed int a;
-	signed int b;
-	SZ() { a=b=0; }
-	SZ (int _a, int _b) { a=(int)_a; b=(int)_b; }
-	int count() const { return (int)((a==b && a==-1) ? 0 : (b-a+1)); }
+struct SZ {
+    signed int a;
+    signed int b;
+    SZ()
+    {
+        a = b = 0;
+    }
+    SZ(int _a, int _b)
+    {
+        a = (int)_a;
+        b = (int)_b;
+    }
+    int count() const
+    {
+        return (int)((a == b && a == -1) ? 0 : (b - a + 1));
+    }
 };
 /*-----------------------------------------------------------------*/
 inline bool operator==(const SZ& _s1, const SZ& _s2)
 {
-	return _s1.a==_s2.a && _s1.b==_s2.b;
+    return _s1.a == _s2.a && _s1.b == _s2.b;
 }
 /*-----------------------------------------------------------------*/
 inline bool operator!=(const SZ& _s1, const SZ& _s2)
 {
-	return !(_s1==_s2);
+    return !(_s1 == _s2);
 }
 /*-----------------------------------------------------------------*/
 // RAPPORT verwaltet den Rapport einer Patrone.
-struct RAPPORT
-{
-	bool overridden;
-	SZ kr; // Kettrapport
-	SZ sr; // Schussrapport
- RAPPORT() { overridden = false; }
+struct RAPPORT {
+    bool overridden;
+    SZ kr; // Kettrapport
+    SZ sr; // Schussrapport
+    RAPPORT()
+    {
+        overridden = false;
+    }
 };
 /*-----------------------------------------------------------------*/
 // RANGE wird verwendet, um eine Selektion zu verwalten.
-struct RANGE
-{
-	PT begin;
-	PT end;
-	FELD feld;
+struct RANGE {
+    PT begin;
+    PT end;
+    FELD feld;
 
- RANGE() { Clear(); }
-	void Clear() { begin = PT(0,0); end = PT(-1,-1); feld = INVALID; }
-	bool Valid();
-	PT LeftDown();
-	PT TopRight();
-	void Normalize();
-	int Width() const { return end.i!=-1 ? std::abs(end.i-begin.i)+1 : 1; }
-	int Height() const { return end.j!=-1 ? std::abs(end.j-begin.j)+1 : 1; }
+    RANGE()
+    {
+        Clear();
+    }
+    void Clear()
+    {
+        begin = PT(0, 0);
+        end = PT(-1, -1);
+        feld = INVALID;
+    }
+    bool Valid();
+    PT LeftDown();
+    PT TopRight();
+    void Normalize();
+    int Width() const
+    {
+        return end.i != -1 ? std::abs(end.i - begin.i) + 1 : 1;
+    }
+    int Height() const
+    {
+        return end.j != -1 ? std::abs(end.j - begin.j) + 1 : 1;
+    }
 };
 /*-----------------------------------------------------------------*/
-struct FeldBase
-{
-	INPUTPOS kbd;
-	GRIDPOS  pos;
-	int gh = 0; // Gridheight -- zero until AllocBuffers / PatternCanvas::resizeEvent
-	int gw = 0; // Gridwidth   -- zero until AllocBuffers / PatternCanvas::resizeEvent
-	virtual ~FeldBase() = default;
-	virtual void Clear() = 0;
-	virtual int SizeX() = 0;
-	virtual int SizeY() = 0;
-	virtual int ScrollX() = 0;
-	virtual int ScrollY() = 0;
+struct FeldBase {
+    INPUTPOS kbd;
+    GRIDPOS pos;
+    int gh = 0; // Gridheight -- zero until AllocBuffers / PatternCanvas::resizeEvent
+    int gw = 0; // Gridwidth   -- zero until AllocBuffers / PatternCanvas::resizeEvent
+    virtual ~FeldBase() = default;
+    virtual void Clear() = 0;
+    virtual int SizeX() = 0;
+    virtual int SizeY() = 0;
+    virtual int ScrollX() = 0;
+    virtual int ScrollY() = 0;
 };
 /*-----------------------------------------------------------------*/
-struct FeldBase2 : public FeldBase
-{
-	GRIDSIZE size;
+struct FeldBase2 : public FeldBase {
+    GRIDSIZE size;
 };
 /*-----------------------------------------------------------------*/
-struct FeldBase3 : public FeldBase2
-{
-	DARSTELLUNG darstellung;
+struct FeldBase3 : public FeldBase2 {
+    DARSTELLUNG darstellung;
 };
 /*-----------------------------------------------------------------*/
-struct FeldBlatteinzug : public FeldBase
-{
-	FeldVectorChar feld;
-	FeldBlatteinzug();
-	virtual void Clear();
-	virtual int SizeX() { return feld.Size(); }
-	virtual int SizeY() { return 1; }
-	virtual int ScrollX();
-	virtual int ScrollY();
+struct FeldBlatteinzug : public FeldBase {
+    FeldVectorChar feld;
+    FeldBlatteinzug();
+    virtual void Clear();
+    virtual int SizeX()
+    {
+        return feld.Size();
+    }
+    virtual int SizeY()
+    {
+        return 1;
+    }
+    virtual int ScrollX();
+    virtual int ScrollY();
 };
 /*-----------------------------------------------------------------*/
-struct FeldKettfarben : public FeldBase
-{
-	FeldVectorChar feld;
-	FeldKettfarben();
-	virtual void Clear();
-	virtual int SizeX() { return feld.Size(); }
-	virtual int SizeY() { return 1; }
-	virtual int ScrollX();
-	virtual int ScrollY();
+struct FeldKettfarben : public FeldBase {
+    FeldVectorChar feld;
+    FeldKettfarben();
+    virtual void Clear();
+    virtual int SizeX()
+    {
+        return feld.Size();
+    }
+    virtual int SizeY()
+    {
+        return 1;
+    }
+    virtual int ScrollX();
+    virtual int ScrollY();
 };
 /*-----------------------------------------------------------------*/
-struct FeldSchussfarben : public FeldBase
-{
-	FeldVectorChar feld;
-	FeldSchussfarben();
-	virtual void Clear();
-	virtual int SizeX() { return 1; }
-	virtual int SizeY() { return feld.Size(); }
-	virtual int ScrollX();
-	virtual int ScrollY();
+struct FeldSchussfarben : public FeldBase {
+    FeldVectorChar feld;
+    FeldSchussfarben();
+    virtual void Clear();
+    virtual int SizeX()
+    {
+        return 1;
+    }
+    virtual int SizeY()
+    {
+        return feld.Size();
+    }
+    virtual int ScrollX();
+    virtual int ScrollY();
 };
 /*-----------------------------------------------------------------*/
-struct FeldEinzug : public FeldBase3
-{
-	int maxy;
-	FeldVectorShort feld;
-	FeldEinzug();
-	virtual void Clear();
-	virtual int SizeX() { return feld.Size(); }
-	virtual int SizeY() { return maxy; }
-	virtual int ScrollX();
-	virtual int ScrollY();
+struct FeldEinzug : public FeldBase3 {
+    int maxy;
+    FeldVectorShort feld;
+    FeldEinzug();
+    virtual void Clear();
+    virtual int SizeX()
+    {
+        return feld.Size();
+    }
+    virtual int SizeY()
+    {
+        return maxy;
+    }
+    virtual int ScrollX();
+    virtual int ScrollY();
 };
 /*-----------------------------------------------------------------*/
-struct FeldAufknuepfung : public FeldBase3
-{
-	FeldGridChar feld;
-	FeldAufknuepfung();
-	bool pegplanstyle; // Schlagpatronenstil
-	virtual void Clear();
-	virtual int SizeX() { return feld.SizeX(); }
-	virtual int SizeY() { return feld.SizeY(); }
-	virtual int ScrollX();
-	virtual int ScrollY();
+struct FeldAufknuepfung : public FeldBase3 {
+    FeldGridChar feld;
+    FeldAufknuepfung();
+    bool pegplanstyle; // Schlagpatronenstil
+    virtual void Clear();
+    virtual int SizeX()
+    {
+        return feld.SizeX();
+    }
+    virtual int SizeY()
+    {
+        return feld.SizeY();
+    }
+    virtual int ScrollX();
+    virtual int ScrollY();
 };
 /*-----------------------------------------------------------------*/
-struct FeldTrittfolge : public FeldBase3
-{
-	FeldGridChar feld;
-	FeldVectorBool isempty;
-	bool einzeltritt;
-	FeldTrittfolge();
-	virtual void Clear();
-	virtual int SizeX() { return feld.SizeX(); }
-	virtual int SizeY() { return feld.SizeY(); }
-	virtual int ScrollX();
-	virtual int ScrollY();
+struct FeldTrittfolge : public FeldBase3 {
+    FeldGridChar feld;
+    FeldVectorBool isempty;
+    bool einzeltritt;
+    FeldTrittfolge();
+    virtual void Clear();
+    virtual int SizeX()
+    {
+        return feld.SizeX();
+    }
+    virtual int SizeY()
+    {
+        return feld.SizeY();
+    }
+    virtual int ScrollX();
+    virtual int ScrollY();
 };
 /*-----------------------------------------------------------------*/
-struct FeldGewebe : public FeldBase2
-{
-	FeldGridChar feld;
-	FeldGewebe();
-	virtual void Clear();
-	virtual int SizeX() { return feld.SizeX(); }
-	virtual int SizeY() { return feld.SizeY(); }
-	virtual int ScrollX();
-	virtual int ScrollY();
+struct FeldGewebe : public FeldBase2 {
+    FeldGridChar feld;
+    FeldGewebe();
+    virtual void Clear();
+    virtual int SizeX()
+    {
+        return feld.SizeX();
+    }
+    virtual int SizeY()
+    {
+        return feld.SizeY();
+    }
+    virtual int ScrollX();
+    virtual int ScrollY();
 };
 /*-----------------------------------------------------------------*/
 // Die Hilfslinien haben einen Bereich (je einen fuer
 // horizontale und einen fuer vertikale Linien), in dem
 // sie mit der Maus manipuliert werden koennen.
-struct HlineBar : GRIDPOS
-{
-	int gw;
-	int gh;
+struct HlineBar : GRIDPOS {
+    int gw;
+    int gh;
 };
 /*-----------------------------------------------------------------*/
 #endif

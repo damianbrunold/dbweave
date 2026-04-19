@@ -21,10 +21,10 @@
 
 class AboutDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	explicit AboutDialog (QWidget* _parent = nullptr);
+    explicit AboutDialog(QWidget* _parent = nullptr);
 };
 
 #endif

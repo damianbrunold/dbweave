@@ -22,16 +22,15 @@
 #ifndef DBWEAVE_UI_LANGUAGE_H
 #define DBWEAVE_UI_LANGUAGE_H
 
-#include "vcl_compat.h"   /* AnsiString -> QString */
+#include "vcl_compat.h" /* AnsiString -> QString */
 
-enum LANGUAGES { EN /*englisch*/,
-                 GE /*deutsch*/};
+enum LANGUAGES { EN /*englisch*/, GE /*deutsch*/ };
 
 /*  Globale Variable, die die eingestellte Sprache festhaelt.
     Umschalten mittels SwitchLanguage. */
 extern LANGUAGES active_language;
 
-void SwitchLanguage (LANGUAGES _language);
+void SwitchLanguage(LANGUAGES _language);
 
 /*  LANG_C_H(OBJ, LANG, CAPTION, HINT) is the legacy VCL helper that
     sets OBJ->Caption and OBJ->Hint when the named language is active.
@@ -40,15 +39,14 @@ void SwitchLanguage (LANGUAGES _language);
     call-site shape and will be replaced with explicit Qt calls when
     the first menu is wired up -- for now it stands so lang_main.cpp
     can eventually be ported mechanically. */
-#define LANG_C_H(OBJ, LANG, CAPTION, HINT) \
-    if (active_language==LANG) { \
+#define LANG_C_H(OBJ, LANG, CAPTION, HINT)       \
+    if (active_language == LANG) {               \
         (OBJ)->setText(QStringLiteral(CAPTION)); \
         (OBJ)->setToolTip(QStringLiteral(HINT)); \
     }
 
 /*  LANG_STR(EN, GE) picks one of the two string literals based on the
     active language and wraps it in a QString. */
-#define LANG_STR(STR_EN, STR_GE) \
-    AnsiString(active_language==GE ? (STR_GE) : (STR_EN))
+#define LANG_STR(STR_EN, STR_GE) AnsiString(active_language == GE ? (STR_GE) : (STR_EN))
 
 #endif

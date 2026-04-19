@@ -23,18 +23,18 @@ class TData;
 class RpRapport
 {
 public:
-	virtual ~RpRapport() {}
+    virtual ~RpRapport() { }
 
-	virtual bool IsInRapport (int _i, int _j) = 0;
-	virtual void UpdateRapport() = 0;
-	virtual void CalcRapport() = 0;
-	virtual void DrawRapport() = 0;
-	virtual void ClearRapport() = 0;
-	virtual void DrawDifferences (const RAPPORT& _old, const RAPPORT& _new) = 0;
+    virtual bool IsInRapport(int _i, int _j) = 0;
+    virtual void UpdateRapport() = 0;
+    virtual void CalcRapport() = 0;
+    virtual void DrawRapport() = 0;
+    virtual void ClearRapport() = 0;
+    virtual void DrawDifferences(const RAPPORT& _old, const RAPPORT& _new) = 0;
 
 public:
-	static RpRapport* CreateInstance (TDBWFRM* _frm, TData* _data);
-	static void ReleaseInstance (RpRapport* _rapport);
+    static RpRapport* CreateInstance(TDBWFRM* _frm, TData* _data);
+    static void ReleaseInstance(RpRapport* _rapport);
 };
 /*------------------------------------------------------------------*/
 #endif

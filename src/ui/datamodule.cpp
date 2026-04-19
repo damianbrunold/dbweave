@@ -18,27 +18,27 @@
 TData* Data = nullptr;
 
 TData::TData()
-	: MAXX1(DEFAULT_MAXX1)
-	, MAXY1(DEFAULT_MAXY1)
-	, MAXX2(DEFAULT_MAXX2)
-	, MAXY2(DEFAULT_MAXY2)
-	, properties(new FileProperties)
-	, palette(new Palette)
-	, color(DEFAULT_COLOR)
-	, defcolorh(DEFAULT_COLORH)
-	, defcolorv(DEFAULT_COLORV)
+    : MAXX1(DEFAULT_MAXX1)
+    , MAXY1(DEFAULT_MAXY1)
+    , MAXX2(DEFAULT_MAXX2)
+    , MAXY2(DEFAULT_MAXY2)
+    , properties(new FileProperties)
+    , palette(new Palette)
+    , color(DEFAULT_COLOR)
+    , defcolorh(DEFAULT_COLORH)
+    , defcolorv(DEFAULT_COLORV)
 {
 }
 
 TData::~TData()
 {
-	delete palette;
-	delete properties;
+    delete palette;
+    delete properties;
 }
 
 void TData::ReloadLanguage()
 {
-	/*  Placeholder -- the legacy implementation reloads dialog
-	    captions from the language.cpp string table. Ported later
-	    once language.cpp lands. */
+    /*  Placeholder -- the legacy implementation reloads dialog
+        captions from the language.cpp string table. Ported later
+        once language.cpp lands. */
 }

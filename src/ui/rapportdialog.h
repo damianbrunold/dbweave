@@ -24,26 +24,26 @@ class QLineEdit;
 
 class RapportDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	explicit RapportDialog (QWidget* _parent = nullptr);
+    explicit RapportDialog(QWidget* _parent = nullptr);
 
-	int  horz()       const;    /* 0 or negative = unset / "Repeat all" */
-	int  vert()       const;
-	bool repeatAll()  const;
-	bool repeatColors() const;
+    int horz() const; /* 0 or negative = unset / "Repeat all" */
+    int vert() const;
+    bool repeatAll() const;
+    bool repeatColors() const;
 
-	void setHorz (int _n);
-	void setVert (int _n);
-	void setRepeatAll    (bool _on);
-	void setRepeatColors (bool _on);
+    void setHorz(int _n);
+    void setVert(int _n);
+    void setRepeatAll(bool _on);
+    void setRepeatColors(bool _on);
 
 private:
-	QLineEdit* rappHorz    = nullptr;
-	QLineEdit* rappVert    = nullptr;
-	QCheckBox* rappAll     = nullptr;
-	QCheckBox* rappColors  = nullptr;
+    QLineEdit* rappHorz = nullptr;
+    QLineEdit* rappVert = nullptr;
+    QCheckBox* rappAll = nullptr;
+    QCheckBox* rappColors = nullptr;
 };
 
 #endif

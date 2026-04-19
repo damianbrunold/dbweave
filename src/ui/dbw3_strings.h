@@ -19,36 +19,74 @@
 /*-----------------------------------------------------------------*/
 #include "language.h"
 /*-----------------------------------------------------------------*/
-#define NOCENTRALSYMMFOUND LANG_STR("This pattern has no central symmetry", "Das Muster hat keine Zentralsymmetrie")
+#define NOCENTRALSYMMFOUND \
+    LANG_STR("This pattern has no central symmetry", "Das Muster hat keine Zentralsymmetrie")
 #define APP_TITLE_WEBEN LANG_STR(" - Loom control - ", " - Webstuhlsteuerung - ")
 #define DATEI_UNBENANNT LANG_STR("unnamed", "unbenannt")
 #define APP_TITLE "DB-WEAVE"
 #define APP_TITLE_DEMO "DB-WEAVE Demo"
 #define SERIALNR_DEMO "Demoversion"
-#define SAVE_CHANGES LANG_STR("Do you want to save the changes?", "Möchten Sie die Änderungen speichern?").toLocal8Bit().constData()
-#define CAN_OVERWRITE LANG_STR("The file '%s' already exists. Do you want to overwrite it?", "Die Datei '%s' existiert schon. Möchten Sie sie überschreiben?").toLocal8Bit().constData()
-#define CANNOTSAVE LANG_STR("The file could not be saved", "Die Datei konnte nicht gespeichert werden").toLocal8Bit().constData()
+#define SAVE_CHANGES                                                                      \
+    LANG_STR("Do you want to save the changes?", "Möchten Sie die Änderungen speichern?") \
+        .toLocal8Bit()                                                                    \
+        .constData()
+#define CAN_OVERWRITE                                                          \
+    LANG_STR("The file '%s' already exists. Do you want to overwrite it?",     \
+             "Die Datei '%s' existiert schon. Möchten Sie sie überschreiben?") \
+        .toLocal8Bit()                                                         \
+        .constData()
+#define CANNOTSAVE                                                                       \
+    LANG_STR("The file could not be saved", "Die Datei konnte nicht gespeichert werden") \
+        .toLocal8Bit()                                                                   \
+        .constData()
 #define CANNOTLOAD1 LANG_STR("The file ", "Die Datei ").toLocal8Bit().constData()
-#define CANNOTLOAD2 LANG_STR(" could not be correctly loaded.", " konnte nicht korrekt geladen werden.").toLocal8Bit().constData()
+#define CANNOTLOAD2                                                                      \
+    LANG_STR(" could not be correctly loaded.", " konnte nicht korrekt geladen werden.") \
+        .toLocal8Bit()                                                                   \
+        .constData()
 #define PR_PRINTING1 LANG_STR("Page ", "Seite ").toLocal8Bit().constData()
 #define PR_PRINTING2 LANG_STR(" is being printed.", " wird gedruckt.").toLocal8Bit().constData()
-#define STRG_DATASENT LANG_STR("The data was transmitted", "Die Daten wurden übertragen").toLocal8Bit().constData()
-#define STRG_MAXLIMIT LANG_STR("Starting from position %d you can only save %s more picks. Do you want to continue?", "Ab Position %d sind nur noch %d Schüsse frei. Möchten Sie weiterfahren?").toLocal8Bit().constData()
-#define STRG_WEBPOS LANG_STR("Current weaving position is pick %d", "Aktuelle Webposition ist Schuss %d").toLocal8Bit().constData()
+#define STRG_DATASENT \
+    LANG_STR("The data was transmitted", "Die Daten wurden übertragen").toLocal8Bit().constData()
+#define STRG_MAXLIMIT                                                                          \
+    LANG_STR(                                                                                  \
+        "Starting from position %d you can only save %s more picks. Do you want to continue?", \
+        "Ab Position %d sind nur noch %d Schüsse frei. Möchten Sie weiterfahren?")             \
+        .toLocal8Bit()                                                                         \
+        .constData()
+#define STRG_WEBPOS                                                                       \
+    LANG_STR("Current weaving position is pick %d", "Aktuelle Webposition ist Schuss %d") \
+        .toLocal8Bit()                                                                    \
+        .constData()
 #define COLINFO_PAL LANG_STR("%lu from %lu", "%lu von %lu").toLocal8Bit().constData()
 #define COLINFO_NOPAL "%lu"
 #define GOTO_TRITTFOLGE LANG_STR("Tre&adling", "&Trittfolge").toLocal8Bit().constData()
 #define GOTO_SCHLAGPATRONE LANG_STR("P&egplan", "&Schlagpatrone").toLocal8Bit().constData()
 #define HOMEPAGE "http://www.brunoldsoftware.ch"
 #define VERSION "Version "
-#define NOVALIDFILE LANG_STR("No valid DB-WEAVE file", "Keine gültige DB-WEAVE Datei").toLocal8Bit().constData()
+#define NOVALIDFILE \
+    LANG_STR("No valid DB-WEAVE file", "Keine gültige DB-WEAVE Datei").toLocal8Bit().constData()
 #define RECALCRAPPORT LANG_STR("Re&calc repeat", "Rapport neubere&chnen").toLocal8Bit().constData()
-#define SETRAPPORTTOSELECTION LANG_STR("&Set size to selection", "Rapport auf &Selektion setzen").toLocal8Bit().constData()
-#define COULD_NOT_EXPORT LANG_STR("The pattern could not be exported", "Das Muster konnte nicht exportiert werden").toLocal8Bit().constData()
-#define INVALID_KETTRANGE LANG_STR("The warp range is invalid", "Der Kettbereich ist ungültig").toLocal8Bit().constData()
-#define INVALID_SCHUSSRANGE LANG_STR("The weft range is invalid", "Der Schussbereich ist ungültig").toLocal8Bit().constData()
-#define INVALID_SCHAFTRANGE LANG_STR("The shaft range is invalid", "Der Schaftbereich ist ungültig").toLocal8Bit().constData()
-#define INVALID_TRITTRANGE LANG_STR("The treadle range is invalid", "Der Trittbereich ist ungültig").toLocal8Bit().constData()
+#define SETRAPPORTTOSELECTION \
+    LANG_STR("&Set size to selection", "Rapport auf &Selektion setzen").toLocal8Bit().constData()
+#define COULD_NOT_EXPORT                                                                       \
+    LANG_STR("The pattern could not be exported", "Das Muster konnte nicht exportiert werden") \
+        .toLocal8Bit()                                                                         \
+        .constData()
+#define INVALID_KETTRANGE \
+    LANG_STR("The warp range is invalid", "Der Kettbereich ist ungültig").toLocal8Bit().constData()
+#define INVALID_SCHUSSRANGE                                                 \
+    LANG_STR("The weft range is invalid", "Der Schussbereich ist ungültig") \
+        .toLocal8Bit()                                                      \
+        .constData()
+#define INVALID_SCHAFTRANGE                                                  \
+    LANG_STR("The shaft range is invalid", "Der Schaftbereich ist ungültig") \
+        .toLocal8Bit()                                                       \
+        .constData()
+#define INVALID_TRITTRANGE                                                    \
+    LANG_STR("The treadle range is invalid", "Der Trittbereich ist ungültig") \
+        .toLocal8Bit()                                                        \
+        .constData()
 #define CURSORMOVE LANG_STR("Cursor movement ", "Cursorbewegung").toLocal8Bit().constData()
 #define CURSORLEFT LANG_STR("left ", "links ")
 #define CURSORRIGHT LANG_STR("right ", "rechts ")
@@ -63,8 +101,12 @@
 #define RANGE_BINDUNG LANG_STR("Pattern ", "Muster ")
 #define SUBST_RANGE LANG_STR("Range substitution", "Bereichsmusterung")
 #define SUBST_BLOCK LANG_STR("Block substitution", "Blockmusterung")
-#define MAXCOLORSTEPS LANG_STR("The number of steps has to be in the range 1-150", "Die Anzahl Abstufungen muss im Bereich 1-150 sein")
-#define PALETTEIDXRANGE LANG_STR("The palette index has to be in the range 1-236", "Der Palettenindex muss im Bereich 1-236 liegen")
+#define MAXCOLORSTEPS                                            \
+    LANG_STR("The number of steps has to be in the range 1-150", \
+             "Die Anzahl Abstufungen muss im Bereich 1-150 sein")
+#define PALETTEIDXRANGE                                        \
+    LANG_STR("The palette index has to be in the range 1-236", \
+             "Der Palettenindex muss im Bereich 1-236 liegen")
 
 #define WEB_SCHUSSFADEN LANG_STR("Pick ", "Schuss ").toLocal8Bit().constData()
 #define WEB_KLAMMER LANG_STR("Brace ", "Klammer ").toLocal8Bit().constData()
@@ -74,13 +116,36 @@
 #define WEB_KL_START LANG_STR("  Beginn ", "  Anfang ").toLocal8Bit().constData()
 #define WEB_KL_STOP LANG_STR("  End ", "  Ende ").toLocal8Bit().constData()
 #define WEB_KL_REPEAT LANG_STR("  Repetitions ", "  Wiederholungen ").toLocal8Bit().constData()
-#define WEB_CANNOTSEND LANG_STR("The connection to the loom could not be established.\r\nIs the loom powered on? Is he correctly set up?", "Die Verbindung zum Webstuhl konnte nicht aufgebaut werden.\r\nIst der Webstuhl eingeschaltet? Ist er korrekt am Computer angeschlossen?").toLocal8Bit().constData()
-#define WEB_NOKLAMMERN LANG_STR("Since there are no braces set, nothing can be woven.", "Da keine Klammern gesetzt sind, kann nichts gewoben werden.").toLocal8Bit().constData()
-#define WEB_INVALIDPOS LANG_STR("The current position is not a valid weaving position.\r\nDo you want to start with the first valid position?", "Es ist keine gültige aktuelle Webposition vorhanden.\r\nSoll mit der ersten gültigen Webposition angefangen werden?").toLocal8Bit().constData()
-#define WEB_PREFIXINVALIDPOS LANG_STR("Invalid weaving position: ", "Ungültige Webposition: ").toLocal8Bit().constData()
+#define WEB_CANNOTSEND                                                                             \
+    LANG_STR("The connection to the loom could not be established.\r\nIs the loom powered on? Is " \
+             "he correctly set up?",                                                               \
+             "Die Verbindung zum Webstuhl konnte nicht aufgebaut werden.\r\nIst der Webstuhl "     \
+             "eingeschaltet? Ist er korrekt am Computer angeschlossen?")                           \
+        .toLocal8Bit()                                                                             \
+        .constData()
+#define WEB_NOKLAMMERN                                                      \
+    LANG_STR("Since there are no braces set, nothing can be woven.",        \
+             "Da keine Klammern gesetzt sind, kann nichts gewoben werden.") \
+        .toLocal8Bit()                                                      \
+        .constData()
+// clang-format off
+#define WEB_INVALIDPOS \
+    LANG_STR("The current position is not a valid weaving position.\r\nDo you want to start with the first valid position?", \
+             "Es ist keine gültige aktuelle Webposition vorhanden.\r\nSoll mit der ersten gültigen Webposition angefangen werden?") \
+        .toLocal8Bit().constData()
+// clang-format on
+#define WEB_PREFIXINVALIDPOS \
+    LANG_STR("Invalid weaving position: ", "Ungültige Webposition: ").toLocal8Bit().constData()
 
-#define USERDEFEZ_CONTINUOUS LANG_STR("The userdefined Threading has to be continuous", "Der benutzerdefinierte Einzug muss zusammenhängend sein").toLocal8Bit().constData()
-#define USERDEF_TOOLARGE LANG_STR("The pattern can at most be 50x50", "Das Muster darf maximal 50x50 gross sein.").toLocal8Bit().constData()
+#define USERDEFEZ_CONTINUOUS                                            \
+    LANG_STR("The userdefined Threading has to be continuous",          \
+             "Der benutzerdefinierte Einzug muss zusammenhängend sein") \
+        .toLocal8Bit()                                                  \
+        .constData()
+#define USERDEF_TOOLARGE                                                                      \
+    LANG_STR("The pattern can at most be 50x50", "Das Muster darf maximal 50x50 gross sein.") \
+        .toLocal8Bit()                                                                        \
+        .constData()
 #define USERDEF_FREE LANG_STR("free", "frei")
 #define USERDEF_SELMUSTER LANG_STR("Choose pattern", "Zu belegendes Muster wählen")
 #define USERDEF_PASTEMUSTER LANG_STR("Choose pattern to paste", "Einzufügendes Muster wählen")
@@ -118,7 +183,8 @@
 #define ENTW_SCHUSSFLOTT LANG_STR("Weft floats:", "Schussflottierungen:")
 #define ENTW_MAXFLOTT LANG_STR("Largest float: ", "Längste Flottierung: ")
 #define ENTW_AVGFLOTT LANG_STR("Average float: ", "Mittlere Flottierung: ")
-#define ENTW_FLOTTDIST LANG_STR("Distribution by float length:", "Verteilung nach Flottierungslänge:")
+#define ENTW_FLOTTDIST \
+    LANG_STR("Distribution by float length:", "Verteilung nach Flottierungslänge:")
 #define ENTW_FLOTT1 LANG_STR("Length ", "Länge ")
 #define ENTW_FLOTT2 LANG_STR(" floats  (", " Flottierungen  (")
 #define ENTW_KETTFLOTT LANG_STR("Warp floats:", "Kettflottierungen:")

@@ -31,23 +31,23 @@ class QWidget;
 /*-----------------------------------------------------------------*/
 class ChooseRGBDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	explicit ChooseRGBDialog (QWidget* _parent = nullptr);
+    explicit ChooseRGBDialog(QWidget* _parent = nullptr);
 
-	void     SelectColor      (COLORREF _c);
-	COLORREF GetSelectedColor () const;
+    void SelectColor(COLORREF _c);
+    COLORREF GetSelectedColor() const;
 
 private:
-	QSlider* slRed   = nullptr;
-	QSlider* slGreen = nullptr;
-	QSlider* slBlue  = nullptr;
-	QLabel*  valR    = nullptr;
-	QLabel*  valG    = nullptr;
-	QLabel*  valB    = nullptr;
-	QWidget* preview = nullptr;
+    QSlider* slRed = nullptr;
+    QSlider* slGreen = nullptr;
+    QSlider* slBlue = nullptr;
+    QLabel* valR = nullptr;
+    QLabel* valG = nullptr;
+    QLabel* valB = nullptr;
+    QWidget* preview = nullptr;
 
-	void updateAll ();
+    void updateAll();
 };
 
 /*-----------------------------------------------------------------*/
@@ -56,33 +56,33 @@ class SatValPatch;
 
 class ChooseHSVDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	explicit ChooseHSVDialog (QWidget* _parent = nullptr);
+    explicit ChooseHSVDialog(QWidget* _parent = nullptr);
 
-	void     SelectColor      (COLORREF _c);
-	COLORREF GetSelectedColor () const;
+    void SelectColor(COLORREF _c);
+    COLORREF GetSelectedColor() const;
 
-	/*  0..360, 0..255, 0..255 */
-	int hue () const;
-	int sat () const;
-	int val () const;
+    /*  0..360, 0..255, 0..255 */
+    int hue() const;
+    int sat() const;
+    int val() const;
 
-	void setHSV (int _h, int _s, int _v);
+    void setHSV(int _h, int _s, int _v);
 
 private:
-	QSlider* slHue = nullptr;
-	QSlider* slSat = nullptr;
-	QSlider* slVal = nullptr;
-	QLabel*  valH  = nullptr;
-	QLabel*  valS  = nullptr;
-	QLabel*  valV  = nullptr;
-	QWidget* preview = nullptr;
-	HueWheel*     wheel = nullptr;
-	SatValPatch*  patch = nullptr;
+    QSlider* slHue = nullptr;
+    QSlider* slSat = nullptr;
+    QSlider* slVal = nullptr;
+    QLabel* valH = nullptr;
+    QLabel* valS = nullptr;
+    QLabel* valV = nullptr;
+    QWidget* preview = nullptr;
+    HueWheel* wheel = nullptr;
+    SatValPatch* patch = nullptr;
 
-	void updateAll ();
-	void sync ();
+    void updateAll();
+    void sync();
 };
 
 /*-----------------------------------------------------------------*/
@@ -90,16 +90,16 @@ class PaletteCanvas;
 
 class ChoosePaletteDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	explicit ChoosePaletteDialog (QWidget* _parent = nullptr);
+    explicit ChoosePaletteDialog(QWidget* _parent = nullptr);
 
-	void     SelectColor (COLORREF _c);
-	COLORREF GetSelectedColor () const;
-	int      GetSelectedIndex () const;
+    void SelectColor(COLORREF _c);
+    COLORREF GetSelectedColor() const;
+    int GetSelectedIndex() const;
 
 private:
-	PaletteCanvas* canvas = nullptr;
+    PaletteCanvas* canvas = nullptr;
 };
 
 #endif

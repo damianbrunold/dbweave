@@ -19,39 +19,51 @@
 
 #include "vcl_compat.h"
 
-enum HLTYP  { HL_NONE = -1, HL_HORZ = 0, HL_VERT = 1 };
+enum HLTYP { HL_NONE = -1, HL_HORZ = 0, HL_VERT = 1 };
 enum HLFELD { HL_LEFT = 0, HL_TOP = 0, HL_RIGHT = 1, HL_BOTTOM = 1 };
 
-struct Hilfslinie
-{
-	HLTYP  typ;
-	HLFELD feld;
-	int    pos;
- Hilfslinie() { typ = HL_NONE; feld = HL_LEFT; pos = 0; }
+struct Hilfslinie {
+    HLTYP typ;
+    HLFELD feld;
+    int pos;
+    Hilfslinie()
+    {
+        typ = HL_NONE;
+        feld = HL_LEFT;
+        pos = 0;
+    }
 };
 
 class Hilfslinien
 {
 private:
-	Hilfslinie* list;
-	int max;
-	int last;
+    Hilfslinie* list;
+    int max;
+    int last;
+
 protected:
-	void Reallocate (int _newmax);
+    void Reallocate(int _newmax);
+
 public:
- Hilfslinien();
-	virtual ~Hilfslinien();
-	bool Add (HLTYP _typ, HLFELD _feld, int _pos);
-	void Update (int _index, HLFELD _feld, int _pos);
-	void Delete (int _index);
-	void Delete (Hilfslinie* _hline);
-	void DeleteAll();
-	int GetCount() const;
-	Hilfslinie* GetLine (int _index);
-	Hilfslinie* GetLine (HLTYP _typ, HLFELD _feld, int _pos);
-	void* Data() { return list; }
-	int DataSize() { return (last + 1) * (int)sizeof(Hilfslinie); }
-	void SetData (Hilfslinie* _list, int _count);
+    Hilfslinien();
+    virtual ~Hilfslinien();
+    bool Add(HLTYP _typ, HLFELD _feld, int _pos);
+    void Update(int _index, HLFELD _feld, int _pos);
+    void Delete(int _index);
+    void Delete(Hilfslinie* _hline);
+    void DeleteAll();
+    int GetCount() const;
+    Hilfslinie* GetLine(int _index);
+    Hilfslinie* GetLine(HLTYP _typ, HLFELD _feld, int _pos);
+    void* Data()
+    {
+        return list;
+    }
+    int DataSize()
+    {
+        return (last + 1) * (int)sizeof(Hilfslinie);
+    }
+    void SetData(Hilfslinie* _list, int _count);
 };
 
 #endif

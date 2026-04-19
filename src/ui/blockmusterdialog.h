@@ -36,77 +36,73 @@ class BlockmusterCanvas;
 
 class BlockmusterDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	BlockmusterDialog (TDBWFRM*      _frm,
-	                   BlockUndo&    _undo,
-	                   PMUSTERARRAY  _bindungen,
-	                   int&          _current,
-	                   const QString& _caption,
-	                   bool          _withRange);
+    BlockmusterDialog(TDBWFRM* _frm, BlockUndo& _undo, PMUSTERARRAY _bindungen, int& _current,
+                      const QString& _caption, bool _withRange);
 
-	/*  Computed on Apply: bounding box of any filled cell across
-	    all 10 Musters. Used by the caller to size the block expand
-	    (legacy's mx+1 / my+1). */
-	int mx = -1;
-	int my = -1;
+    /*  Computed on Apply: bounding box of any filled cell across
+        all 10 Musters. Used by the caller to size the block expand
+        (legacy's mx+1 / my+1). */
+    int mx = -1;
+    int my = -1;
 
-	/*  Einzug/Trittfolge direction toggles — the legacy form
-	    persisted these to TDBWFRM; we mirror the same state here
-	    so the caller can read them after Apply. */
-	bool einzugZ      = true;
-	bool trittfolgeZ  = true;
+    /*  Einzug/Trittfolge direction toggles — the legacy form
+        persisted these to TDBWFRM; we mirror the same state here
+        so the caller can read them after Apply. */
+    bool einzugZ = true;
+    bool trittfolgeZ = true;
 
 protected:
-	void accept () override;
+    void accept() override;
 
 private:
-	TDBWFRM*       frm        = nullptr;
-	BlockUndo&     undo;
-	PMUSTERARRAY   bindungen  = nullptr;
-	int&           current;
-	bool           withRange;
+    TDBWFRM* frm = nullptr;
+    BlockUndo& undo;
+    PMUSTERARRAY bindungen = nullptr;
+    int& current;
+    bool withRange;
 
-	BlockmusterCanvas* canvas = nullptr;
-	QLabel*        description = nullptr;
-	QLabel*        usedLabel   = nullptr;
+    BlockmusterCanvas* canvas = nullptr;
+    QLabel* description = nullptr;
+    QLabel* usedLabel = nullptr;
 
-	QAction*       bindungActs[10] = { };
-	QAction*       einzugZAct     = nullptr;
-	QAction*       einzugSAct     = nullptr;
-	QAction*       trittfolgeZAct = nullptr;
-	QAction*       trittfolgeSAct = nullptr;
-	QAction*       undoAct = nullptr;
-	QAction*       redoAct = nullptr;
+    QAction* bindungActs[10] = {};
+    QAction* einzugZAct = nullptr;
+    QAction* einzugSAct = nullptr;
+    QAction* trittfolgeZAct = nullptr;
+    QAction* trittfolgeSAct = nullptr;
+    QAction* undoAct = nullptr;
+    QAction* redoAct = nullptr;
 
-	void selectBindung (int _b);
-	void refreshDescription ();
-	void refreshUsed ();
-	void calcRange ();
+    void selectBindung(int _b);
+    void refreshDescription();
+    void refreshUsed();
+    void calcRange();
 
-	static char toggle (char _s, int _current);
+    static char toggle(char _s, int _current);
 
-	void editDelete ();
-	void editMirrorH ();
-	void editMirrorV ();
-	void editRotate ();
-	void editInvert ();
-	void editCentralsym ();
-	void rollUp    ();
-	void rollDown  ();
-	void rollLeft  ();
-	void rollRight ();
+    void editDelete();
+    void editMirrorH();
+    void editMirrorV();
+    void editRotate();
+    void editInvert();
+    void editCentralsym();
+    void rollUp();
+    void rollDown();
+    void rollLeft();
+    void rollRight();
 
-	void musterKoeper (int _h, int _s);
-	void musterAtlas  (int _n);
-	void musterPanama (int _h, int _s);
+    void musterKoeper(int _h, int _s);
+    void musterAtlas(int _n);
+    void musterPanama(int _h, int _s);
 
-	void grabFrom (int _from);
+    void grabFrom(int _from);
 
-	void doUndo ();
-	void doRedo ();
+    void doUndo();
+    void doRedo();
 
-	friend class BlockmusterCanvas;
+    friend class BlockmusterCanvas;
 };
 
 #endif

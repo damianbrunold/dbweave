@@ -33,81 +33,81 @@ class TDBWFRM;
 
 class LoomDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	explicit LoomDialog (TDBWFRM* _frm, QWidget* _parent = nullptr);
+    explicit LoomDialog(TDBWFRM* _frm, QWidget* _parent = nullptr);
 
 private slots:
-	void onStart   ();
-	void onStop    ();
-	void onStep    ();
-	void onReset   ();
-	void onOptions ();
-	void onGotoLast();
-	void onGotoKlammer (int _index);
+    void onStart();
+    void onStop();
+    void onStep();
+    void onReset();
+    void onOptions();
+    void onGotoLast();
+    void onGotoKlammer(int _index);
 
 private:
-	TDBWFRM*                             frm = nullptr;
-	std::unique_ptr<StWeaveController>   controller;
+    TDBWFRM* frm = nullptr;
+    std::unique_ptr<StWeaveController> controller;
 
-	/*  Loom options — persisted to QSettings under "Loom/*"
-	    so subsequent runs pick up the user's last setup. */
-	LOOMINTERFACE intrf = intrf_dummy;
-	int  optPort    = 1;
-	int  optDelay   = 0;
-	int  slipsBytes = 4;
+    /*  Loom options — persisted to QSettings under "Loom/*"
+        so subsequent runs pick up the user's last setup. */
+    LOOMINTERFACE intrf = intrf_dummy;
+    int optPort = 1;
+    int optDelay = 0;
+    int slipsBytes = 4;
 
-	/*  Klammer editor widgets: 9 rows × (first, last, repetitions)
-	    plus a "goto" button per row. */
-	QSpinBox*    klFirst[9] = { };
-	QSpinBox*    klLast [9] = { };
-	QSpinBox*    klReps [9] = { };
-	QPushButton* klGoto [9] = { };
+    /*  Klammer editor widgets: 9 rows × (first, last, repetitions)
+        plus a "goto" button per row. */
+    QSpinBox* klFirst[9] = {};
+    QSpinBox* klLast[9] = {};
+    QSpinBox* klReps[9] = {};
+    QPushButton* klGoto[9] = {};
 
-	/*  Weaving state. */
-	int  currentKlammer    = -1;
-	int  currentPosition   = 0;
-	int  currentRepetition = 1;
-	bool stopRequested     = false;
-	bool running           = false;
+    /*  Weaving state. */
+    int currentKlammer = -1;
+    int currentPosition = 0;
+    int currentRepetition = 1;
+    bool stopRequested = false;
+    bool running = false;
 
-	/*  Previous successful position (for "Goto last" button). */
-	int lastKlammer    = -1;
-	int lastPosition   = 0;
-	int lastRepetition = 1;
+    /*  Previous successful position (for "Goto last" button). */
+    int lastKlammer = -1;
+    int lastPosition = 0;
+    int lastRepetition = 1;
 
-	/*  UI widgets. */
-	QLabel*         labStatus   = nullptr;
-	QPlainTextEdit* log         = nullptr;
-	QPushButton*    bStart      = nullptr;
-	QPushButton*    bStop       = nullptr;
-	QPushButton*    bStep       = nullptr;
-	QPushButton*    bReset      = nullptr;
-	QPushButton*    bOptions    = nullptr;
-	QPushButton*    bGotoLast   = nullptr;
-	QCheckBox*      cbLoop      = nullptr;
-	QCheckBox*      cbBackwards = nullptr;
-	QCheckBox*      cbReverse   = nullptr;
-	QSpinBox*       spinWaitMs  = nullptr;
+    /*  UI widgets. */
+    QLabel* labStatus = nullptr;
+    QPlainTextEdit* log = nullptr;
+    QPushButton* bStart = nullptr;
+    QPushButton* bStop = nullptr;
+    QPushButton* bStep = nullptr;
+    QPushButton* bReset = nullptr;
+    QPushButton* bOptions = nullptr;
+    QPushButton* bGotoLast = nullptr;
+    QCheckBox* cbLoop = nullptr;
+    QCheckBox* cbBackwards = nullptr;
+    QCheckBox* cbReverse = nullptr;
+    QSpinBox* spinWaitMs = nullptr;
 
-	void rebuildController ();
-	void resetCursor ();
-	bool advanceCursor ();
-	bool retreatCursor ();
-	std::uint32_t computeShafts () const;
+    void rebuildController();
+    void resetCursor();
+    bool advanceCursor();
+    bool retreatCursor();
+    std::uint32_t computeShafts() const;
 
-	void weaveOne ();
-	void refreshStatus ();
-	void setUiRunning (bool _running);
-	void updateGotoLabels ();
+    void weaveOne();
+    void refreshStatus();
+    void setUiRunning(bool _running);
+    void updateGotoLabels();
 
-	/*  Klammer editor ↔ TDBWFRM::klammern[]. */
-	void pullKlammersFromFrm ();
-	void pushKlammersToFrm   () const;
+    /*  Klammer editor ↔ TDBWFRM::klammern[]. */
+    void pullKlammersFromFrm();
+    void pushKlammersToFrm() const;
 
-	/*  Loom/* settings load/save. */
-	void loadSettings ();
-	void saveSettings () const;
+    /*  Loom/* settings load/save. */
+    void loadSettings();
+    void saveSettings() const;
 };
 
 #endif

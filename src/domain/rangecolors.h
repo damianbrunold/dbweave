@@ -19,7 +19,7 @@ extern TColor rangecolortable[13];
 extern TColor col_anbindung;
 extern TColor col_abbindung;
 /*-----------------------------------------------------------------*/
-TColor GetRangeColor (int _s);
+TColor GetRangeColor(int _s);
 /*-----------------------------------------------------------------*/
 /*  Legacy InitRangeColors(TCanvas*) probed BITSPIXEL to pick between
     the palette-safe and nice colour sets. Modern systems are always

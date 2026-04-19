@@ -31,60 +31,64 @@
 
 static QString fileFilter()
 {
-	return QStringLiteral("DB-WEAVE files (*.dbw);;All files (*.*)");
+    return QStringLiteral("DB-WEAVE files (*.dbw);;All files (*.*)");
 }
 
-void TDBWFRM::FileOpen ()
+void TDBWFRM::FileOpen()
 {
-	const QString dir = filename.isEmpty()
-	                  ? QString()
-	                  : QFileInfo((QString)filename).absolutePath();
-	const QString chosen = QFileDialog::getOpenFileName(
-	    this, QStringLiteral("Open pattern"), dir, fileFilter());
-	if (chosen.isEmpty()) return;
+    const QString dir
+        = filename.isEmpty() ? QString() : QFileInfo((QString)filename).absolutePath();
+    const QString chosen
+        = QFileDialog::getOpenFileName(this, QStringLiteral("Open pattern"), dir, fileFilter());
+    if (chosen.isEmpty())
+        return;
 
-	/*  Close any file the loader from a previous Load left open. */
-	if (file && file->IsOpen()) file->Close();
+    /*  Close any file the loader from a previous Load left open. */
+    if (file && file->IsOpen())
+        file->Close();
 
-	filename = chosen;
-	LOADSTAT stat = UNKNOWN_FAILURE;
-	const bool ok = Load(stat, LOADALL);
-	if (!ok) {
-		QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
-		    QStringLiteral("Could not open '%1' (status %2).")
-		        .arg(chosen).arg(int(stat)));
-		return;
-	}
-	AddToMRU(chosen);
-	SetAppTitle();
-	refresh();
+    filename = chosen;
+    LOADSTAT stat = UNKNOWN_FAILURE;
+    const bool ok = Load(stat, LOADALL);
+    if (!ok) {
+        QMessageBox::warning(
+            this, QStringLiteral("DB-WEAVE"),
+            QStringLiteral("Could not open '%1' (status %2).").arg(chosen).arg(int(stat)));
+        return;
+    }
+    AddToMRU(chosen);
+    SetAppTitle();
+    refresh();
 }
 
-void TDBWFRM::FileSaveAs ()
+void TDBWFRM::FileSaveAs()
 {
-	const QString dir = filename.isEmpty()
-	                  ? QString()
-	                  : (QString)filename;
-	const QString chosen = QFileDialog::getSaveFileName(
-	    this, QStringLiteral("Save pattern as"), dir, fileFilter());
-	if (chosen.isEmpty()) return;
+    const QString dir = filename.isEmpty() ? QString() : (QString)filename;
+    const QString chosen
+        = QFileDialog::getSaveFileName(this, QStringLiteral("Save pattern as"), dir, fileFilter());
+    if (chosen.isEmpty())
+        return;
 
-	if (file && file->IsOpen()) file->Close();
-	filename = chosen;
-	FileSave();
+    if (file && file->IsOpen())
+        file->Close();
+    filename = chosen;
+    FileSave();
 }
 
-void TDBWFRM::FileSave ()
+void TDBWFRM::FileSave()
 {
-	if (filename.isEmpty()) { FileSaveAs(); return; }
-	if (!Save()) {
-		QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
-		    QStringLiteral("Could not save '%1'.").arg((QString)filename));
-		return;
-	}
-	AddToMRU((QString)filename);
-	SetModified(false);
-	SetAppTitle();
+    if (filename.isEmpty()) {
+        FileSaveAs();
+        return;
+    }
+    if (!Save()) {
+        QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
+                             QStringLiteral("Could not save '%1'.").arg((QString)filename));
+        return;
+    }
+    AddToMRU((QString)filename);
+    SetModified(false);
+    SetAppTitle();
 }
 
 /*-----------------------------------------------------------------*/
@@ -94,119 +98,132 @@ void TDBWFRM::FileSave ()
 
 static constexpr int MRU_MAX = 6;
 
-void TDBWFRM::AddToMRU (const QString& _filename)
+void TDBWFRM::AddToMRU(const QString& _filename)
 {
-	if (_filename.isEmpty()) return;
-	mru.removeAll(_filename);
-	mru.prepend(_filename);
-	while (mru.size() > MRU_MAX) mru.removeLast();
-	UpdateMRUMenu();
-	SaveMRU();
+    if (_filename.isEmpty())
+        return;
+    mru.removeAll(_filename);
+    mru.prepend(_filename);
+    while (mru.size() > MRU_MAX)
+        mru.removeLast();
+    UpdateMRUMenu();
+    SaveMRU();
 }
 
-void TDBWFRM::LoadMRU ()
+void TDBWFRM::LoadMRU()
 {
-	QSettings settings;
-	settings.beginGroup(QStringLiteral("mru"));
-	mru.clear();
-	for (int i = 0; i < MRU_MAX; i++) {
-		const QString v = settings.value(QString::number(i)).toString();
-		if (!v.isEmpty()) mru.append(v);
-	}
-	settings.endGroup();
-	UpdateMRUMenu();
+    QSettings settings;
+    settings.beginGroup(QStringLiteral("mru"));
+    mru.clear();
+    for (int i = 0; i < MRU_MAX; i++) {
+        const QString v = settings.value(QString::number(i)).toString();
+        if (!v.isEmpty())
+            mru.append(v);
+    }
+    settings.endGroup();
+    UpdateMRUMenu();
 }
 
-void TDBWFRM::SaveMRU ()
+void TDBWFRM::SaveMRU()
 {
-	QSettings settings;
-	settings.beginGroup(QStringLiteral("mru"));
-	settings.remove(QString());   /* wipe the group */
-	for (int i = 0; i < mru.size(); i++)
-		settings.setValue(QString::number(i), mru.at(i));
-	settings.endGroup();
+    QSettings settings;
+    settings.beginGroup(QStringLiteral("mru"));
+    settings.remove(QString()); /* wipe the group */
+    for (int i = 0; i < mru.size(); i++)
+        settings.setValue(QString::number(i), mru.at(i));
+    settings.endGroup();
 }
 
-void TDBWFRM::UpdateMRUMenu ()
+void TDBWFRM::UpdateMRUMenu()
 {
-	if (!mruMenu) return;
-	for (int i = 0; i < MRU_MAX; i++) {
-		QAction* a = mruActions[i];
-		if (!a) continue;
-		if (i < mru.size()) {
-			const QString path = mru.at(i);
-			const QString shown = QFileInfo(path).fileName();
-			a->setText(QStringLiteral("&%1 %2").arg(i + 1).arg(shown.isEmpty() ? path : shown));
-			a->setToolTip(path);
-			a->setVisible(true);
-		} else {
-			a->setVisible(false);
-		}
-	}
-	mruMenu->setEnabled(!mru.isEmpty());
+    if (!mruMenu)
+        return;
+    for (int i = 0; i < MRU_MAX; i++) {
+        QAction* a = mruActions[i];
+        if (!a)
+            continue;
+        if (i < mru.size()) {
+            const QString path = mru.at(i);
+            const QString shown = QFileInfo(path).fileName();
+            a->setText(QStringLiteral("&%1 %2").arg(i + 1).arg(shown.isEmpty() ? path : shown));
+            a->setToolTip(path);
+            a->setVisible(true);
+        } else {
+            a->setVisible(false);
+        }
+    }
+    mruMenu->setEnabled(!mru.isEmpty());
 }
 
-void TDBWFRM::OpenFromMRU (int _index)
+void TDBWFRM::OpenFromMRU(int _index)
 {
-	if (_index < 0 || _index >= mru.size()) return;
-	const QString path = mru.at(_index);
-	if (!QFileInfo::exists(path)) {
-		QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
-		    QStringLiteral("'%1' no longer exists.").arg(path));
-		mru.removeAt(_index);
-		UpdateMRUMenu();
-		SaveMRU();
-		return;
-	}
-	if (file && file->IsOpen()) file->Close();
-	filename = path;
-	LOADSTAT stat = UNKNOWN_FAILURE;
-	if (!Load(stat, LOADALL)) {
-		QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
-		    QStringLiteral("Could not open '%1' (status %2).").arg(path).arg(int(stat)));
-		return;
-	}
-	AddToMRU(path);
-	SetAppTitle();
-	refresh();
+    if (_index < 0 || _index >= mru.size())
+        return;
+    const QString path = mru.at(_index);
+    if (!QFileInfo::exists(path)) {
+        QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
+                             QStringLiteral("'%1' no longer exists.").arg(path));
+        mru.removeAt(_index);
+        UpdateMRUMenu();
+        SaveMRU();
+        return;
+    }
+    if (file && file->IsOpen())
+        file->Close();
+    filename = path;
+    LOADSTAT stat = UNKNOWN_FAILURE;
+    if (!Load(stat, LOADALL)) {
+        QMessageBox::warning(
+            this, QStringLiteral("DB-WEAVE"),
+            QStringLiteral("Could not open '%1' (status %2).").arg(path).arg(int(stat)));
+        return;
+    }
+    AddToMRU(path);
+    SetAppTitle();
+    refresh();
 }
 
 /*-----------------------------------------------------------------*/
 #include "loadpartsdialog.h"
 
-void TDBWFRM::LoadPartsClick ()
+void TDBWFRM::LoadPartsClick()
 {
-	LoadPartsDialog dlg(this);
-	if (dlg.exec() != QDialog::Accepted) return;
-	const LOADPARTS parts = dlg.getLoadParts();
+    LoadPartsDialog dlg(this);
+    if (dlg.exec() != QDialog::Accepted)
+        return;
+    const LOADPARTS parts = dlg.getLoadParts();
 
-	const QString dir = filename.isEmpty()
-	                  ? QString()
-	                  : QFileInfo((QString)filename).absolutePath();
-	const QString chosen = QFileDialog::getOpenFileName(
-	    this, QStringLiteral("Load parts from"), dir, fileFilter());
-	if (chosen.isEmpty()) return;
+    const QString dir
+        = filename.isEmpty() ? QString() : QFileInfo((QString)filename).absolutePath();
+    const QString chosen
+        = QFileDialog::getOpenFileName(this, QStringLiteral("Load parts from"), dir, fileFilter());
+    if (chosen.isEmpty())
+        return;
 
-	/*  Swap the working filename in so Load() reads the picked
-	    file, then restore ours afterwards so the document stays
-	    tied to its original path.                              */
-	const AnsiString savefn = filename;
-	filename = chosen;
-	if (file && file->IsOpen()) file->Close();
-	LOADSTAT stat = UNKNOWN_FAILURE;
-	const bool ok = Load(stat, parts);
-	filename = savefn;
-	if (file && file->IsOpen()) file->Close();
+    /*  Swap the working filename in so Load() reads the picked
+        file, then restore ours afterwards so the document stays
+        tied to its original path.                              */
+    const AnsiString savefn = filename;
+    filename = chosen;
+    if (file && file->IsOpen())
+        file->Close();
+    LOADSTAT stat = UNKNOWN_FAILURE;
+    const bool ok = Load(stat, parts);
+    filename = savefn;
+    if (file && file->IsOpen())
+        file->Close();
 
-	if (!ok) {
-		QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
-		    QStringLiteral("Could not load parts from '%1' (status %2).")
-		        .arg(chosen).arg(int(stat)));
-		return;
-	}
-	RecalcFreieSchaefte();
-	RecalcFreieTritte();
-	SetModified();
-	refresh();
-	if (undo) undo->Snapshot();
+    if (!ok) {
+        QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
+                             QStringLiteral("Could not load parts from '%1' (status %2).")
+                                 .arg(chosen)
+                                 .arg(int(stat)));
+        return;
+    }
+    RecalcFreieSchaefte();
+    RecalcFreieTritte();
+    SetModified();
+    refresh();
+    if (undo)
+        undo->Snapshot();
 }

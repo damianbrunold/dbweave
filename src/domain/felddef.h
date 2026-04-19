@@ -33,78 +33,93 @@ class FfWriter;
 class FeldVectorChar
 {
 private:
-	int size;
-	unsigned char* feld;
+    int size;
+    unsigned char* feld;
 
 public:
-	FeldVectorChar (int _size, unsigned char _default);
-	virtual ~FeldVectorChar();
-	void Init (unsigned char _default);
-	void Resize (int _newsize, unsigned char _default);
-	void Write (const char* _section, FfWriter* _writer);
-	void Read (FfReader* _reader, unsigned char _default);
-	unsigned char Get (int _i);
-	void Set (int _i, unsigned char _value);
-	int Size() const { return size; }
-	FeldVectorChar& operator=(const FeldVectorChar& _source);
+    FeldVectorChar(int _size, unsigned char _default);
+    virtual ~FeldVectorChar();
+    void Init(unsigned char _default);
+    void Resize(int _newsize, unsigned char _default);
+    void Write(const char* _section, FfWriter* _writer);
+    void Read(FfReader* _reader, unsigned char _default);
+    unsigned char Get(int _i);
+    void Set(int _i, unsigned char _value);
+    int Size() const
+    {
+        return size;
+    }
+    FeldVectorChar& operator=(const FeldVectorChar& _source);
 };
 
 class FeldVectorShort
 {
 private:
-	int size;
-	short* feld;
+    int size;
+    short* feld;
 
 public:
-	FeldVectorShort (int _size, short _default);
-	virtual ~FeldVectorShort();
-	void Init (short _default);
-	void Resize (int _newsize, short _default);
-	void Write (const char* _section, FfWriter* _writer);
-	void Read (FfReader* _reader, short _default);
-	short Get (int _i);
-	void Set (int _i, short _value);
-	int Size() const { return size; }
-	FeldVectorShort& operator=(const FeldVectorShort& _source);
+    FeldVectorShort(int _size, short _default);
+    virtual ~FeldVectorShort();
+    void Init(short _default);
+    void Resize(int _newsize, short _default);
+    void Write(const char* _section, FfWriter* _writer);
+    void Read(FfReader* _reader, short _default);
+    short Get(int _i);
+    void Set(int _i, short _value);
+    int Size() const
+    {
+        return size;
+    }
+    FeldVectorShort& operator=(const FeldVectorShort& _source);
 };
 
 class FeldVectorBool
 {
 private:
-	int size;
-	bool* feld;
+    int size;
+    bool* feld;
 
 public:
-	FeldVectorBool (int _size, bool _default);
-	virtual ~FeldVectorBool();
-	void Init (bool _default);
-	void Resize (int _newsize, bool _default);
-	void Write (const char* _section, FfWriter* _writer);
-	void Read (FfReader* _reader, bool _default);
-	bool Get (int _i);
-	void Set (int _i, bool value);
-	int Size() const { return size; }
-	FeldVectorBool& operator=(const FeldVectorBool& _source);
+    FeldVectorBool(int _size, bool _default);
+    virtual ~FeldVectorBool();
+    void Init(bool _default);
+    void Resize(int _newsize, bool _default);
+    void Write(const char* _section, FfWriter* _writer);
+    void Read(FfReader* _reader, bool _default);
+    bool Get(int _i);
+    void Set(int _i, bool value);
+    int Size() const
+    {
+        return size;
+    }
+    FeldVectorBool& operator=(const FeldVectorBool& _source);
 };
 
 class FeldGridChar
 {
 private:
-	int sizex, sizey;
-	char* feld;
+    int sizex, sizey;
+    char* feld;
 
 public:
-	FeldGridChar (int _sizex, int _sizey, char _default);
-	virtual ~FeldGridChar();
-	void Init (char _default);
-	void Resize (int _newsizex, int _newsizey, char _default);
-	void Write (const char* _section, FfWriter* _writer);
-	void Read (FfReader* _reader, char _default);
-	char Get (int _i, int _j);
-	void Set (int _i, int _j, char _value);
-	int SizeX() const { return sizex; }
-	int SizeY() const { return sizey; }
-	FeldGridChar& operator=(const FeldGridChar& _source);
+    FeldGridChar(int _sizex, int _sizey, char _default);
+    virtual ~FeldGridChar();
+    void Init(char _default);
+    void Resize(int _newsizex, int _newsizey, char _default);
+    void Write(const char* _section, FfWriter* _writer);
+    void Read(FfReader* _reader, char _default);
+    char Get(int _i, int _j);
+    void Set(int _i, int _j, char _value);
+    int SizeX() const
+    {
+        return sizex;
+    }
+    int SizeY() const
+    {
+        return sizey;
+    }
+    FeldGridChar& operator=(const FeldGridChar& _source);
 };
 
 #endif

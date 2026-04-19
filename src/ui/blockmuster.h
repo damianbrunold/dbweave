@@ -24,26 +24,34 @@
 class Muster
 {
 public:
-	enum { maxx = 12 };
-	enum { maxy = 12 };
+    enum { maxx = 12 };
+    enum { maxy = 12 };
+
 private:
-	char feld[maxx*maxy];
+    char feld[maxx * maxy];
+
 public:
- Muster();
-	void Set (int _i, int _j, char _value);
-	char Get (int _i, int _j);
-	void Clear();
-	bool IsEmpty();
-	int SizeX();
-	int SizeY();
-	int FirstX();
-	int FirstY();
+    Muster();
+    void Set(int _i, int _j, char _value);
+    char Get(int _i, int _j);
+    void Clear();
+    bool IsEmpty();
+    int SizeX();
+    int SizeY();
+    int FirstX();
+    int FirstY();
 
-	const char* Data() const { return feld; }
-	int DataSize() const { return maxx*maxy; }
-	void SetData (const char* _data);
+    const char* Data() const
+    {
+        return feld;
+    }
+    int DataSize() const
+    {
+        return maxx * maxy;
+    }
+    void SetData(const char* _data);
 
-	Muster& operator= (const Muster& _m);
+    Muster& operator=(const Muster& _m);
 };
 
 typedef Muster MUSTERARRAY[10];
@@ -52,30 +60,35 @@ typedef MUSTERARRAY* PMUSTERARRAY;
 class BlockUndoItem
 {
 public:
-	bool isempty;
-	Muster bindungen[10];
-	int    active;
-	BlockUndoItem* prev;
-	BlockUndoItem* next;
- BlockUndoItem() { isempty = true; prev = next = nullptr; active = 0; }
+    bool isempty;
+    Muster bindungen[10];
+    int active;
+    BlockUndoItem* prev;
+    BlockUndoItem* next;
+    BlockUndoItem()
+    {
+        isempty = true;
+        prev = next = nullptr;
+        active = 0;
+    }
 };
 
 class BlockUndo
 {
 public:
-	PMUSTERARRAY bindungen;
-	int&         active;
-	BlockUndoItem* list;
-	BlockUndoItem* current;
- BlockUndo (PMUSTERARRAY _bindungen, int& _active);
-	virtual ~BlockUndo();
-	void Allocate();
-	void Snapshot();
-	void Undo();
-	void Redo();
-	bool CanUndo();
-	bool CanRedo();
-	void Clear();
+    PMUSTERARRAY bindungen;
+    int& active;
+    BlockUndoItem* list;
+    BlockUndoItem* current;
+    BlockUndo(PMUSTERARRAY _bindungen, int& _active);
+    virtual ~BlockUndo();
+    void Allocate();
+    void Snapshot();
+    void Undo();
+    void Redo();
+    bool CanUndo();
+    bool CanRedo();
+    void Clear();
 };
 
 #endif

@@ -25,8 +25,8 @@
 #define DBWEAVE_UI_FARBVERLAUF_DIALOG_H
 
 #include <QDialog>
-#include "colors_compat.h"   /* COLORREF */
-#include "palette.h"         /* MAX_PAL_ENTRY */
+#include "colors_compat.h" /* COLORREF */
+#include "palette.h"       /* MAX_PAL_ENTRY */
 
 class QCheckBox;
 class QLineEdit;
@@ -38,39 +38,39 @@ class TDBWFRM;
 
 class FarbverlaufDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	explicit FarbverlaufDialog (TDBWFRM* _frm, QWidget* _parent = nullptr);
+    explicit FarbverlaufDialog(TDBWFRM* _frm, QWidget* _parent = nullptr);
 
 protected:
-	void accept () override;
+    void accept() override;
 
 private:
-	TDBWFRM* frm = nullptr;
+    TDBWFRM* frm = nullptr;
 
-	COLORREF startcolor = 0;
-	COLORREF endcolor   = 0;
-	COLORREF table[MAX_PAL_ENTRY];
-	int      count      = 0;
+    COLORREF startcolor = 0;
+    COLORREF endcolor = 0;
+    COLORREF table[MAX_PAL_ENTRY];
+    int count = 0;
 
-	QWidget*       swatchStart = nullptr;
-	QWidget*       swatchEnd   = nullptr;
-	QWidget*       swatchBlend = nullptr;
+    QWidget* swatchStart = nullptr;
+    QWidget* swatchEnd = nullptr;
+    QWidget* swatchBlend = nullptr;
 
-	QSpinBox*      edSteps    = nullptr;
-	QSpinBox*      edPosition = nullptr;
-	QSlider*       slWeight   = nullptr;
-	QCheckBox*     nodividers = nullptr;
-	QRadioButton*  modelRGB   = nullptr;
-	QRadioButton*  modelHSV   = nullptr;
+    QSpinBox* edSteps = nullptr;
+    QSpinBox* edPosition = nullptr;
+    QSlider* slWeight = nullptr;
+    QCheckBox* nodividers = nullptr;
+    QRadioButton* modelRGB = nullptr;
+    QRadioButton* modelHSV = nullptr;
 
-	void createFarbverlauf ();
-	void farbverlaufRGB    (int _abstufungen);
-	void farbverlaufHSV    (int _abstufungen);
+    void createFarbverlauf();
+    void farbverlaufRGB(int _abstufungen);
+    void farbverlaufHSV(int _abstufungen);
 
-	COLORREF pickColor (COLORREF _col);
-	void     updateSwatch (QWidget* _w, COLORREF _col);
-	void     repaintBlend ();
+    COLORREF pickColor(COLORREF _col);
+    void updateSwatch(QWidget* _w, COLORREF _col);
+    void repaintBlend();
 };
 
 #endif

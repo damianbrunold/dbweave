@@ -16,45 +16,53 @@
 #include <QThread>
 
 /*-----------------------------------------------------------------*/
-StWeaveController::StWeaveController () = default;
-StWeaveController::~StWeaveController () = default;
+StWeaveController::StWeaveController() = default;
+StWeaveController::~StWeaveController() = default;
 
-bool StWeaveController::Initialize (const INITDATA&)
+bool StWeaveController::Initialize(const INITDATA&)
 {
-	aborted = false;
-	return true;
+    aborted = false;
+    return true;
 }
 
-void StWeaveController::Terminate () {}
+void StWeaveController::Terminate() { }
 
-void StWeaveController::Abort () { aborted = true; }
-
-void StWeaveController::CheckAbort ()
+void StWeaveController::Abort()
 {
-	QCoreApplication::processEvents();
-	if (aborted) throw 0;   /* Matches the legacy `throw "aborted"` sentinel. */
+    aborted = true;
+}
+
+void StWeaveController::CheckAbort()
+{
+    QCoreApplication::processEvents();
+    if (aborted)
+        throw 0; /* Matches the legacy `throw "aborted"` sentinel. */
 }
 
 /*-----------------------------------------------------------------*/
-bool StDummyController::Initialize (const INITDATA& _data)
+bool StDummyController::Initialize(const INITDATA& _data)
 {
-	return StWeaveController::Initialize(_data);
+    return StWeaveController::Initialize(_data);
 }
 
-void StDummyController::Terminate ()
+void StDummyController::Terminate()
 {
-	/*  No physical port to close. */
+    /*  No physical port to close. */
 }
 
-WEAVE_STATUS StDummyController::WeaveSchuss (std::uint32_t /*_shafts*/)
+WEAVE_STATUS StDummyController::WeaveSchuss(std::uint32_t /*_shafts*/)
 {
-	/*  Simulated loom: wait for waitMs, pumping events every
-	    20 ms so the UI thread stays responsive and Abort is seen
-	    promptly. Always reports forward-progress.               */
-	QDeadlineTimer deadline(waitMs);
-	while (!deadline.hasExpired()) {
-		try { CheckAbort(); } catch (...) { return WEAVE_REPEAT; }
-		QThread::msleep(20);
-	}
-	return WEAVE_SUCCESS_NEXT;
+    /*  Simulated loom: wait for waitMs, pumping events every
+        20 ms so the UI thread stays responsive and Abort is seen
+        promptly. Always reports forward-progress.               */
+    QDeadlineTimer deadline(waitMs);
+    while (!deadline.hasExpired()) {
+        try {
+            CheckAbort();
+        } catch (...) {
+            return WEAVE_REPEAT;
+        }
+        QThread::msleep(20);
+    }
+    return WEAVE_SUCCESS_NEXT;
 }

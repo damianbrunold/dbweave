@@ -26,34 +26,34 @@ class TData;
 class RcRecalcAll
 {
 protected:
-	TData*   data;
-	TDBWFRM* frm;
-	bool     schlagpatrone;
-	int      k1, k2;
-	int      s1, s2;
+    TData* data;
+    TDBWFRM* frm;
+    bool schlagpatrone;
+    int k1, k2;
+    int s1, s2;
 
 public:
- RcRecalcAll (TDBWFRM* _frm, TData* _data, bool _schlagpatrone = false);
+    RcRecalcAll(TDBWFRM* _frm, TData* _data, bool _schlagpatrone = false);
 
-	void Recalc();
-	void RecalcEinzugFixiert();
-	void RecalcSchlagpatrone();
-	void RecalcTrittfolgeAufknuepfung();
-	void RecalcAufknuepfung();
-	void CalcK();
-	void CalcS();
+    void Recalc();
+    void RecalcEinzugFixiert();
+    void RecalcSchlagpatrone();
+    void RecalcTrittfolgeAufknuepfung();
+    void RecalcAufknuepfung();
+    void CalcK();
+    void CalcS();
 
 protected:
-	void RecalcEinzug();
-	void RecalcTrittfolge();
+    void RecalcEinzug();
+    void RecalcTrittfolge();
 
-	bool KettfadenEqual   (int _a, int _b);
-	bool SchussfadenEqual (int _a, int _b);
+    bool KettfadenEqual(int _a, int _b);
+    bool SchussfadenEqual(int _a, int _b);
 
-	bool KettfadenEmpty   (int _a);
-	bool SchussfadenEmpty (int _a);
+    bool KettfadenEmpty(int _a);
+    bool SchussfadenEmpty(int _a);
 
-	short GetSchaft (int _a);
+    short GetSchaft(int _a);
 };
 
 #endif

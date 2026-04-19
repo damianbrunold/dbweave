@@ -15,38 +15,38 @@
 /*-----------------------------------------------------------------*/
 void FeldBlatteinzug::Clear()
 {
-	for (int i=0; i<Data->MAXX1; i++)
-		feld.Set(i, (((i+1)%4)==0||((i+2)%4)==0) ? (char)1 : (char)0);
+    for (int i = 0; i < Data->MAXX1; i++)
+        feld.Set(i, (((i + 1) % 4) == 0 || ((i + 2) % 4) == 0) ? (char)1 : (char)0);
 }
 /*-----------------------------------------------------------------*/
 void FeldKettfarben::Clear()
 {
-	feld.Init (Data->defcolorh);
+    feld.Init(Data->defcolorh);
 }
 /*-----------------------------------------------------------------*/
 void FeldSchussfarben::Clear()
 {
-	feld.Init (Data->defcolorv);
+    feld.Init(Data->defcolorv);
 }
 /*-----------------------------------------------------------------*/
 void FeldEinzug::Clear()
 {
-	feld.Init (0);
+    feld.Init(0);
 }
 /*-----------------------------------------------------------------*/
 void FeldAufknuepfung::Clear()
 {
-	feld.Init (0);
+    feld.Init(0);
 }
 /*-----------------------------------------------------------------*/
 void FeldTrittfolge::Clear()
 {
-	feld.Init (0);
-	isempty.Init (true);
+    feld.Init(0);
+    isempty.Init(true);
 }
 /*-----------------------------------------------------------------*/
 void FeldGewebe::Clear()
 {
-	feld.Init (0);
+    feld.Init(0);
 }
 /*-----------------------------------------------------------------*/

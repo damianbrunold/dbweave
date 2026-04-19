@@ -28,35 +28,36 @@ class TDBWFRM;
 
 class EinzugassistentDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	explicit EinzugassistentDialog (TDBWFRM* _frm, QWidget* _parent = nullptr);
+    explicit EinzugassistentDialog(TDBWFRM* _frm, QWidget* _parent = nullptr);
 
 protected:
-	void accept () override;
+    void accept() override;
 
 private:
-	TDBWFRM* frm = nullptr;
+    TDBWFRM* frm = nullptr;
 
-	QTabWidget*   tabs  = nullptr;
+    QTabWidget* tabs = nullptr;
 
-	/*  Geradedurch (straight-through) page. */
-	QSpinBox*     gdFirstKettfaden = nullptr;
-	QSpinBox*     gdFirstSchaft    = nullptr;
-	QSpinBox*     gdSchaefte       = nullptr;
-	QRadioButton* gdZ              = nullptr;
-	QRadioButton* gdS              = nullptr;
+    /*  Geradedurch (straight-through) page. */
+    QSpinBox* gdFirstKettfaden = nullptr;
+    QSpinBox* gdFirstSchaft = nullptr;
+    QSpinBox* gdSchaefte = nullptr;
+    QRadioButton* gdZ = nullptr;
+    QRadioButton* gdS = nullptr;
 
-	/*  Abgesetzt (stepped) page. */
-	QSpinBox*     abFirstKettfaden = nullptr;
-	QSpinBox*     abFirstSchaft    = nullptr;
-	QSpinBox*     abSchaefte       = nullptr;
-	QSpinBox*     abGratlen        = nullptr;
-	QSpinBox*     abVersatz        = nullptr;
+    /*  Abgesetzt (stepped) page. */
+    QSpinBox* abFirstKettfaden = nullptr;
+    QSpinBox* abFirstSchaft = nullptr;
+    QSpinBox* abSchaefte = nullptr;
+    QSpinBox* abGratlen = nullptr;
+    QSpinBox* abVersatz = nullptr;
 
-	void recalc ();
-	void createGerade    (int _firstKettfaden, int _firstSchaft, int _schaefte, bool _steigend);
-	void createAbgesetzt (int _firstKettfaden, int _firstSchaft, int _schaefte, int _gratlen, int _versatz);
+    void recalc();
+    void createGerade(int _firstKettfaden, int _firstSchaft, int _schaefte, bool _steigend);
+    void createAbgesetzt(int _firstKettfaden, int _firstSchaft, int _schaefte, int _gratlen,
+                         int _versatz);
 };
 
 #endif

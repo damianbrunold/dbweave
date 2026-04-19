@@ -21,74 +21,89 @@ class QAction;
 class UrUndoItem
 {
 protected:
-	// Daten
-	bool active;
-	FeldVectorShort* einzug;
-	FeldGridChar*    aufknuepfung;
-	FeldGridChar*    trittfolge;
-	FeldVectorBool*  isempty;
-	FeldVectorChar*  schussfarben;
-	FeldVectorChar*  kettfarben;
-	FeldVectorChar*  blatteinzug;
-	FELD     kbd_feld;
-	INPUTPOS kbd_pos;
-	bool     pegplan;
-	QAction* einzugstil;      /* was TMenuItem* in VCL */
-	QAction* trittfolgenstil;
+    // Daten
+    bool active;
+    FeldVectorShort* einzug;
+    FeldGridChar* aufknuepfung;
+    FeldGridChar* trittfolge;
+    FeldVectorBool* isempty;
+    FeldVectorChar* schussfarben;
+    FeldVectorChar* kettfarben;
+    FeldVectorChar* blatteinzug;
+    FELD kbd_feld;
+    INPUTPOS kbd_pos;
+    bool pegplan;
+    QAction* einzugstil; /* was TMenuItem* in VCL */
+    QAction* trittfolgenstil;
 
-	// Verkettung
-	UrUndoItem* next;
-	UrUndoItem* prev;
+    // Verkettung
+    UrUndoItem* next;
+    UrUndoItem* prev;
 
-	void Allocate (TDBWFRM* _mainfrm);
+    void Allocate(TDBWFRM* _mainfrm);
 
 public:
- UrUndoItem (TDBWFRM* _mainfrm, UrUndoItem* _prev=0, UrUndoItem* _next=0);
- ~UrUndoItem();
+    UrUndoItem(TDBWFRM* _mainfrm, UrUndoItem* _prev = 0, UrUndoItem* _next = 0);
+    ~UrUndoItem();
 
-	void UpdateSize();
-	void SetData (TDBWFRM* _mainfrm);
+    void UpdateSize();
+    void SetData(TDBWFRM* _mainfrm);
 
-	bool IsEmpty() const { return !active; }
-	void Clean();
+    bool IsEmpty() const
+    {
+        return !active;
+    }
+    void Clean();
 
-	void Undo (TDBWFRM* _mainfrm);
-	void Redo (TDBWFRM* _mainfrm);
+    void Undo(TDBWFRM* _mainfrm);
+    void Redo(TDBWFRM* _mainfrm);
 
-	UrUndoItem* Next() const { return next; }
-	UrUndoItem* Prev() const { return prev; }
+    UrUndoItem* Next() const
+    {
+        return next;
+    }
+    UrUndoItem* Prev() const
+    {
+        return prev;
+    }
 
-	void SetNext (UrUndoItem* _next) { next = _next; }
-	void SetPrev (UrUndoItem* _prev) { prev = _prev; }
+    void SetNext(UrUndoItem* _next)
+    {
+        next = _next;
+    }
+    void SetPrev(UrUndoItem* _prev)
+    {
+        prev = _prev;
+    }
 };
 /*-----------------------------------------------------------------*/
 class UrUndo
 {
 protected:
-	TDBWFRM*    mainfrm;
-	int         maxundo;
-	UrUndoItem* first;
-	UrUndoItem* current;
-	bool        locked;
+    TDBWFRM* mainfrm;
+    int maxundo;
+    UrUndoItem* first;
+    UrUndoItem* current;
+    bool locked;
 
 public:
- UrUndo (TDBWFRM* _mainfrm, int _maxundo=100);
- ~UrUndo();
+    UrUndo(TDBWFRM* _mainfrm, int _maxundo = 100);
+    ~UrUndo();
 
-	void Clear();
-	void UpdateSize();
+    void Clear();
+    void UpdateSize();
 
-	bool Undo();
-	bool Redo();
+    bool Undo();
+    bool Redo();
 
-	bool CanUndo();
-	bool CanRedo();
+    bool CanUndo();
+    bool CanRedo();
 
-	void Snapshot();
+    void Snapshot();
 
 protected:
-	void Init (int _maxundo);
-	void Cleanup();
+    void Init(int _maxundo);
+    void Cleanup();
 };
 /*-----------------------------------------------------------------*/
 #endif

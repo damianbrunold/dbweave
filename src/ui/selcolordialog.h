@@ -26,36 +26,36 @@ class SelColorCanvas;
 
 class SelColorDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	explicit SelColorDialog (int _initialIndex, QWidget* _parent = nullptr);
-	~SelColorDialog () override;
+    explicit SelColorDialog(int _initialIndex, QWidget* _parent = nullptr);
+    ~SelColorDialog() override;
 
-	int selectedIndex () const;
+    int selectedIndex() const;
 
 protected:
-	void reject () override;
+    void reject() override;
 
 private slots:
-	void editRGB ();
-	void editHSV ();
-	void revertChanges ();
+    void editRGB();
+    void editHSV();
+    void revertChanges();
 
 private:
-	SelColorCanvas* canvas  = nullptr;
-	QLabel*         labIdx  = nullptr;
-	QLabel*         labH    = nullptr;
-	QLabel*         labS    = nullptr;
-	QLabel*         labV    = nullptr;
-	QLabel*         labR    = nullptr;
-	QLabel*         labG    = nullptr;
-	QLabel*         labB    = nullptr;
+    SelColorCanvas* canvas = nullptr;
+    QLabel* labIdx = nullptr;
+    QLabel* labH = nullptr;
+    QLabel* labS = nullptr;
+    QLabel* labV = nullptr;
+    QLabel* labR = nullptr;
+    QLabel* labG = nullptr;
+    QLabel* labB = nullptr;
 
-	COLORREF* oldpal = nullptr;
+    COLORREF* oldpal = nullptr;
 
-	void updateValues ();
+    void updateValues();
 
-	friend class SelColorCanvas;
+    friend class SelColorCanvas;
 };
 
 #endif

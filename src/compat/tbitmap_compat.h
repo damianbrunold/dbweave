@@ -18,27 +18,47 @@
 class TBitmap
 {
 public:
-	TBitmap() = default;
-	explicit TBitmap (const QImage& _img) : image(_img) {}
+    TBitmap() = default;
+    explicit TBitmap(const QImage& _img)
+        : image(_img)
+    {
+    }
 
-	int  Width()  const { return image.width(); }
-	int  Height() const { return image.height(); }
+    int Width() const
+    {
+        return image.width();
+    }
+    int Height() const
+    {
+        return image.height();
+    }
 
-	void SetSize (int _w, int _h)
-	{
-		image = QImage(_w, _h, QImage::Format_ARGB32);
-		image.fill(Qt::white);
-	}
+    void SetSize(int _w, int _h)
+    {
+        image = QImage(_w, _h, QImage::Format_ARGB32);
+        image.fill(Qt::white);
+    }
 
-	bool LoadFromFile (const QString& _path) { return image.load(_path); }
-	bool SaveToFile   (const QString& _path, const char* _format = nullptr) const
-	                                         { return image.save(_path, _format); }
+    bool LoadFromFile(const QString& _path)
+    {
+        return image.load(_path);
+    }
+    bool SaveToFile(const QString& _path, const char* _format = nullptr) const
+    {
+        return image.save(_path, _format);
+    }
 
-	QImage&       Image()       { return image; }
-	const QImage& Image() const { return image; }
+    QImage& Image()
+    {
+        return image;
+    }
+    const QImage& Image() const
+    {
+        return image;
+    }
 
 private:
-	QImage image;
+    QImage image;
 };
 
 #endif /* DBWEAVE_COMPAT_TBITMAP_COMPAT_H */

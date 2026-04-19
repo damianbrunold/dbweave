@@ -31,74 +31,78 @@
 using DbwHKEY = unsigned long;
 static constexpr DbwHKEY HKEY_CURRENT_USER_COMPAT = 0x80000001UL;
 #ifndef HKEY_CURRENT_USER
-#   define HKEY_CURRENT_USER HKEY_CURRENT_USER_COMPAT
+#define HKEY_CURRENT_USER HKEY_CURRENT_USER_COMPAT
 #endif
 
 class TRegistry
 {
 public:
-	DbwHKEY RootKey = HKEY_CURRENT_USER_COMPAT;
+    DbwHKEY RootKey = HKEY_CURRENT_USER_COMPAT;
 
-	TRegistry() = default;
-	~TRegistry() = default;
+    TRegistry() = default;
+    ~TRegistry() = default;
 
-	bool OpenKey (const QString& _key, bool _createIfMissing = false)
-	{
-		(void)_createIfMissing;
-		currentKey = normalise(_key);
-		return true;
-	}
+    bool OpenKey(const QString& _key, bool _createIfMissing = false)
+    {
+        (void)_createIfMissing;
+        currentKey = normalise(_key);
+        return true;
+    }
 
-	void CloseKey()
-	{
-		currentKey.clear();
-	}
+    void CloseKey()
+    {
+        currentKey.clear();
+    }
 
-	bool ValueExists (const QString& _name) const
-	{
-		return settings.contains(fullKey(_name));
-	}
+    bool ValueExists(const QString& _name) const
+    {
+        return settings.contains(fullKey(_name));
+    }
 
-	int ReadInteger (const QString& _name) const
-	{
-		return settings.value(fullKey(_name), 0).toInt();
-	}
+    int ReadInteger(const QString& _name) const
+    {
+        return settings.value(fullKey(_name), 0).toInt();
+    }
 
-	QString ReadString (const QString& _name) const
-	{
-		return settings.value(fullKey(_name), QString()).toString();
-	}
+    QString ReadString(const QString& _name) const
+    {
+        return settings.value(fullKey(_name), QString()).toString();
+    }
 
-	void WriteInteger (const QString& _name, int _value)
-	{
-		settings.setValue(fullKey(_name), _value);
-	}
+    void WriteInteger(const QString& _name, int _value)
+    {
+        settings.setValue(fullKey(_name), _value);
+    }
 
-	void WriteString (const QString& _name, const QString& _value)
-	{
-		settings.setValue(fullKey(_name), _value);
-	}
+    void WriteString(const QString& _name, const QString& _value)
+    {
+        settings.setValue(fullKey(_name), _value);
+    }
 
-	void Sync() { settings.sync(); }
+    void Sync()
+    {
+        settings.sync();
+    }
 
 private:
-	mutable QSettings settings;
-	QString           currentKey;
+    mutable QSettings settings;
+    QString currentKey;
 
-	static QString normalise (const QString& _key)
-	{
-		/*  Backslashes are the VCL registry separator; QSettings uses
-		    forward slashes. Normalise and strip any leading slash. */
-		QString k = _key;
-		k.replace(QLatin1Char('\\'), QLatin1Char('/'));
-		while (k.startsWith(QLatin1Char('/'))) k.remove(0, 1);
-		return k;
-	}
+    static QString normalise(const QString& _key)
+    {
+        /*  Backslashes are the VCL registry separator; QSettings uses
+            forward slashes. Normalise and strip any leading slash. */
+        QString k = _key;
+        k.replace(QLatin1Char('\\'), QLatin1Char('/'));
+        while (k.startsWith(QLatin1Char('/')))
+            k.remove(0, 1);
+        return k;
+    }
 
-	QString fullKey (const QString& _name) const
-	{
-		return currentKey.isEmpty() ? _name : currentKey + QLatin1Char('/') + _name;
-	}
+    QString fullKey(const QString& _name) const
+    {
+        return currentKey.isEmpty() ? _name : currentKey + QLatin1Char('/') + _name;
+    }
 };
 
 #endif /* DBWEAVE_COMPAT_REGISTRY_COMPAT_H */

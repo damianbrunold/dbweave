@@ -19,44 +19,44 @@
 class EinzugRearrangeImpl : public EinzugRearrange
 {
 protected:
-	TDBWFRM* frm;
-	TData* data;
+    TDBWFRM* frm;
+    TData* data;
 
-	int j1, j2;
-	SZ  r;
+    int j1, j2;
+    SZ r;
 
 public:
- EinzugRearrangeImpl (TDBWFRM* _frm, TData* _data);
-	virtual ~EinzugRearrangeImpl();
+    EinzugRearrangeImpl(TDBWFRM* _frm, TData* _data);
+    virtual ~EinzugRearrangeImpl();
 
-	virtual void Rearrange();
-	virtual void NormalZ();
-	virtual void NormalS();
-	virtual void GeradeZ();
-	virtual void GeradeS();
-	virtual void Chorig2();
-	virtual void Chorig3();
-	virtual void Fixiert();
-	virtual void Belassen();
+    virtual void Rearrange();
+    virtual void NormalZ();
+    virtual void NormalS();
+    virtual void GeradeZ();
+    virtual void GeradeS();
+    virtual void Chorig2();
+    virtual void Chorig3();
+    virtual void Fixiert();
+    virtual void Belassen();
 
-	virtual bool IsEmptySchaft (int _j);
-	virtual void RedrawSchaft (int _j);
-	virtual void RedrawAufknuepfungSchaft (int _j);
-	virtual void EliminateEmptySchaft();
-	virtual void SwitchSchaefte (int _a, int _b);
+    virtual bool IsEmptySchaft(int _j);
+    virtual void RedrawSchaft(int _j);
+    virtual void RedrawAufknuepfungSchaft(int _j);
+    virtual void EliminateEmptySchaft();
+    virtual void SwitchSchaefte(int _a, int _b);
 
 protected:
-	bool IsTotalEmptySchaft (int _j);
-	void CalcRange();
-	SZ CalcRapportRange();
-	bool EinzugEqual (int _i1, int _i2);
-	int GetFirstNonemptySchaft (int _j);
-	void MoveSchaft (int _von, int _nach);
-	int SplitSchaft (int _searchj, int _sourcej);
-	void MergeSchaefte();
-	bool SchaefteEqual (int _j1, int _j2);
-	void RearrangeSchaefte();
-	void RedrawSchlagpatrone (int _i);
+    bool IsTotalEmptySchaft(int _j);
+    void CalcRange();
+    SZ CalcRapportRange();
+    bool EinzugEqual(int _i1, int _i2);
+    int GetFirstNonemptySchaft(int _j);
+    void MoveSchaft(int _von, int _nach);
+    int SplitSchaft(int _searchj, int _sourcej);
+    void MergeSchaefte();
+    bool SchaefteEqual(int _j1, int _j2);
+    void RearrangeSchaefte();
+    void RedrawSchlagpatrone(int _i);
 };
 /*-----------------------------------------------------------------*/
 #endif

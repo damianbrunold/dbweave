@@ -21,53 +21,53 @@
 #include <QByteArray>
 #include <QString>
 
-#include "loomsettings.h"   /* PORT / PORTINIT enums */
+#include "loomsettings.h" /* PORT / PORTINIT enums */
 
 class QSerialPort;
 
 class SerialPort
 {
 public:
-	SerialPort ();
-	~SerialPort ();
+    SerialPort();
+    ~SerialPort();
 
-	/*  Opens the given COM port with the supplied init block. The
-	    PORT enum maps 1..8 → COM1..COM8 on Windows and /dev/ttyS0..
-	    /dev/ttyS7 on Linux; the wrapper picks the platform-native
-	    name. */
-	bool Open (PORT _port, const PORTINIT& _init);
-	bool IsOpen () const;
-	void Close ();
+    /*  Opens the given COM port with the supplied init block. The
+        PORT enum maps 1..8 → COM1..COM8 on Windows and /dev/ttyS0..
+        /dev/ttyS7 on Linux; the wrapper picks the platform-native
+        name. */
+    bool Open(PORT _port, const PORTINIT& _init);
+    bool IsOpen() const;
+    void Close();
 
-	/*  NUL-terminated send. Blocks until all bytes are flushed or
-	    a write error occurs. */
-	bool Send (const char* _buffer);
-	bool Send (const char* _buffer, int _length);
+    /*  NUL-terminated send. Blocks until all bytes are flushed or
+        a write error occurs. */
+    bool Send(const char* _buffer);
+    bool Send(const char* _buffer, int _length);
 
-	/*  Reads up to _length bytes into _buffer. On timeout, returns
-	    whatever came in so far; legacy callers only pop one char
-	    at a time via GetChar anyway. */
-	bool Receive (char* _buffer, int _length);
+    /*  Reads up to _length bytes into _buffer. On timeout, returns
+        whatever came in so far; legacy callers only pop one char
+        at a time via GetChar anyway. */
+    bool Receive(char* _buffer, int _length);
 
-	/*  Returns the next buffered byte, or '\0' if nothing is
-	    available. Maintains an internal QByteArray so the caller
-	    can poll a byte-stream byte-by-byte (matching legacy
-	    TComPort::InputCount/ReadChar). */
-	char GetChar ();
+    /*  Returns the next buffered byte, or '\0' if nothing is
+        available. Maintains an internal QByteArray so the caller
+        can poll a byte-stream byte-by-byte (matching legacy
+        TComPort::InputCount/ReadChar). */
+    char GetChar();
 
-	void PurgeInput ();
+    void PurgeInput();
 
 private:
-	QSerialPort* port = nullptr;
-	QByteArray   rxBuf;
+    QSerialPort* port = nullptr;
+    QByteArray rxBuf;
 
-	/*  Pulls any available bytes from the OS into rxBuf, waiting
-	    up to _waitMs for the first byte. */
-	void drainInto (int _waitMs);
+    /*  Pulls any available bytes from the OS into rxBuf, waiting
+        up to _waitMs for the first byte. */
+    void drainInto(int _waitMs);
 
-	/*  Resolve a PORT enum to a platform-native device name
-	    (COM* on Windows, /dev/ttyS* or /dev/ttyUSB* on Linux). */
-	static QString portName (PORT _p);
+    /*  Resolve a PORT enum to a platform-native device name
+        (COM* on Windows, /dev/ttyS* or /dev/ttyUSB* on Linux). */
+    static QString portName(PORT _p);
 };
 
 #endif

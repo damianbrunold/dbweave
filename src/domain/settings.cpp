@@ -16,75 +16,75 @@
 #include "settings.h"
 #include "regbase.h"
 /*-----------------------------------------------------------------*/
- Settings::Settings()
+Settings::Settings()
 {
-	category = QStringLiteral("General");
-	try {
-		registry = new TRegistry;
-		registry->RootKey = HKEY_CURRENT_USER;
-	} catch (...) {
-		registry = NULL;
-	}
+    category = QStringLiteral("General");
+    try {
+        registry = new TRegistry;
+        registry->RootKey = HKEY_CURRENT_USER;
+    } catch (...) {
+        registry = NULL;
+    }
 }
 /*-----------------------------------------------------------------*/
- Settings::~Settings()
+Settings::~Settings()
 {
-	delete registry;
+    delete registry;
 }
 /*-----------------------------------------------------------------*/
-int Settings::Load (const AnsiString& _name, int _default/*=0*/)
+int Settings::Load(const AnsiString& _name, int _default /*=0*/)
 {
-	dbw3_assert (registry);
-	int value = _default;
-	try {
-		AnsiString key = AnsiString(DBW_REGBASE) + category;
-		if (registry->OpenKey (key, false)) {
-			if (registry->ValueExists (_name))
-				value = registry->ReadInteger (_name);
-		}
-	} catch(...) {
-	}
-	registry->CloseKey();
-	return value;
+    dbw3_assert(registry);
+    int value = _default;
+    try {
+        AnsiString key = AnsiString(DBW_REGBASE) + category;
+        if (registry->OpenKey(key, false)) {
+            if (registry->ValueExists(_name))
+                value = registry->ReadInteger(_name);
+        }
+    } catch (...) {
+    }
+    registry->CloseKey();
+    return value;
 }
 /*-----------------------------------------------------------------*/
-AnsiString Settings::Load (const AnsiString& _name, const AnsiString& _default/*=""*/)
+AnsiString Settings::Load(const AnsiString& _name, const AnsiString& _default /*=""*/)
 {
-	dbw3_assert (registry);
-	AnsiString value = _default;
-	try {
-		AnsiString key = AnsiString(DBW_REGBASE) + category;
-		if (registry->OpenKey (key, false)) {
-			if (registry->ValueExists (_name))
-				value = registry->ReadString (_name);
-		}
-	} catch(...) {
-	}
-	registry->CloseKey();
-	return value;
+    dbw3_assert(registry);
+    AnsiString value = _default;
+    try {
+        AnsiString key = AnsiString(DBW_REGBASE) + category;
+        if (registry->OpenKey(key, false)) {
+            if (registry->ValueExists(_name))
+                value = registry->ReadString(_name);
+        }
+    } catch (...) {
+    }
+    registry->CloseKey();
+    return value;
 }
 /*-----------------------------------------------------------------*/
-void Settings::Save (const AnsiString& _name, int _value)
+void Settings::Save(const AnsiString& _name, int _value)
 {
-	try {
-		AnsiString key = AnsiString(DBW_REGBASE) + category;
-		if (registry->OpenKey (key, true)) {
-			registry->WriteInteger (_name, _value);
-		}
-	} catch(...) {
-	}
-	registry->CloseKey();
+    try {
+        AnsiString key = AnsiString(DBW_REGBASE) + category;
+        if (registry->OpenKey(key, true)) {
+            registry->WriteInteger(_name, _value);
+        }
+    } catch (...) {
+    }
+    registry->CloseKey();
 }
 /*-----------------------------------------------------------------*/
-void Settings::Save (const AnsiString& _name, const AnsiString& _value)
+void Settings::Save(const AnsiString& _name, const AnsiString& _value)
 {
-	try {
-		AnsiString key = AnsiString(DBW_REGBASE) + category;
-		if (registry->OpenKey (key, true)) {
-			registry->WriteString (_name, _value);
-		}
-	} catch(...) {
-	}
-	registry->CloseKey();
+    try {
+        AnsiString key = AnsiString(DBW_REGBASE) + category;
+        if (registry->OpenKey(key, true)) {
+            registry->WriteString(_name, _value);
+        }
+    } catch (...) {
+    }
+    registry->CloseKey();
 }
 /*-----------------------------------------------------------------*/

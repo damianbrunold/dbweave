@@ -13,7 +13,13 @@
 
 #include <QColor>
 
-inline QColor legacyBtnFace()   { return QColor(192, 192, 192); }
-inline QColor legacyBtnShadow() { return QColor(128, 128, 128); }
+inline QColor legacyBtnFace()
+{
+    return QColor(192, 192, 192);
+}
+inline QColor legacyBtnShadow()
+{
+    return QColor(128, 128, 128);
+}
 
 #endif

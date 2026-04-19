@@ -15,21 +15,24 @@
 
 LANGUAGES active_language = EN;
 
-void SwitchLanguage (LANGUAGES _language)
+void SwitchLanguage(LANGUAGES _language)
 {
-	if (active_language==_language) return;
+    if (active_language == _language)
+        return;
 
-	active_language = _language;
+    active_language = _language;
 
-	/*  The legacy implementation also invokes
-	      FarbPalette->ReloadLanguage();
-	      ToolpaletteForm->ReloadLanguage();
-	      STRGFRM->ReloadLanguage();
-	    and sets Application->HelpFile. Those sibling windows have
-	    not been ported yet, and Qt has no direct HelpFile equivalent
-	    (help is opened on-demand via QDesktopServices). Calls are
-	    re-enabled one by one as the respective forms land in
-	    Phase 6 / Phase 7. */
-	if (DBWFRM) DBWFRM->ReloadLanguage();
-	if (Data)   Data->ReloadLanguage();
+    /*  The legacy implementation also invokes
+          FarbPalette->ReloadLanguage();
+          ToolpaletteForm->ReloadLanguage();
+          STRGFRM->ReloadLanguage();
+        and sets Application->HelpFile. Those sibling windows have
+        not been ported yet, and Qt has no direct HelpFile equivalent
+        (help is opened on-demand via QDesktopServices). Calls are
+        re-enabled one by one as the respective forms land in
+        Phase 6 / Phase 7. */
+    if (DBWFRM)
+        DBWFRM->ReloadLanguage();
+    if (Data)
+        Data->ReloadLanguage();
 }

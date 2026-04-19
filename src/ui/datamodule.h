@@ -26,27 +26,27 @@
 
 #include "vcl_compat.h"
 
-class FileProperties;  // forward decl -- ported in a later slice
+class FileProperties; // forward decl -- ported in a later slice
 class Palette;
 
 class TData
 {
 public:
-	// Ausmasse der Felder. Marked volatile in legacy; we keep the
-	// qualifier although it has no semantic bite here.
-	volatile int MAXX1, MAXY1;
-	volatile int MAXX2, MAXY2;
+    // Ausmasse der Felder. Marked volatile in legacy; we keep the
+    // qualifier although it has no semantic bite here.
+    volatile int MAXX1, MAXY1;
+    volatile int MAXX2, MAXY2;
 
-	FileProperties* properties;
-	Palette*        palette;
-	unsigned char   color;
-	unsigned char   defcolorh;
-	unsigned char   defcolorv;
+    FileProperties* properties;
+    Palette* palette;
+    unsigned char color;
+    unsigned char defcolorh;
+    unsigned char defcolorv;
 
 public:
-	TData();
-	virtual ~TData();
-	void ReloadLanguage();
+    TData();
+    virtual ~TData();
+    void ReloadLanguage();
 };
 
 /*  Global pointer, populated by main(). Matches the VCL `extern PACKAGE

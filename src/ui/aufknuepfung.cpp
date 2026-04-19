@@ -26,22 +26,23 @@
 /*-----------------------------------------------------------------*/
 void TDBWFRM::MinimizeAufknuepfung()
 {
-	if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) return;
+    if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked())
+        return;
 
-	// Leere Schaefte killen
-	for (int j=0; j<Data->MAXY1; j++)
-		if (einzughandler && einzughandler->IsEmptySchaft (j)) {
-			for (int i=0; i<Data->MAXX2; i++)
-				aufknuepfung.feld.Set (i, j, 0);
-			einzughandler->RedrawAufknuepfungSchaft (j);
-		}
+    // Leere Schaefte killen
+    for (int j = 0; j < Data->MAXY1; j++)
+        if (einzughandler && einzughandler->IsEmptySchaft(j)) {
+            for (int i = 0; i < Data->MAXX2; i++)
+                aufknuepfung.feld.Set(i, j, 0);
+            einzughandler->RedrawAufknuepfungSchaft(j);
+        }
 
-	// Leere Tritte killen
-	for (int i=0; i<Data->MAXX2; i++)
-		if (IsEmptyTritt (i)) {
-			for (int j=0; j<Data->MAXY1; j++)
-				aufknuepfung.feld.Set (i, j, 0);
-			RedrawAufknuepfungTritt (i);
-		}
+    // Leere Tritte killen
+    for (int i = 0; i < Data->MAXX2; i++)
+        if (IsEmptyTritt(i)) {
+            for (int j = 0; j < Data->MAXY1; j++)
+                aufknuepfung.feld.Set(i, j, 0);
+            RedrawAufknuepfungTritt(i);
+        }
 }
 /*-----------------------------------------------------------------*/

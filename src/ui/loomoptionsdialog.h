@@ -19,32 +19,32 @@
 #define DBWEAVE_UI_LOOMOPTIONS_DIALOG_H
 
 #include <QDialog>
-#include "loom.h"      /* LOOMINTERFACE */
+#include "loom.h" /* LOOMINTERFACE */
 
 class QComboBox;
 class QSpinBox;
 
 class LoomOptionsDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	explicit LoomOptionsDialog (QWidget* _parent = nullptr);
+    explicit LoomOptionsDialog(QWidget* _parent = nullptr);
 
-	LOOMINTERFACE interf () const;
-	int           port   () const;   /*  1..8 matching legacy PORT enum */
-	int           delay  () const;
+    LOOMINTERFACE interf() const;
+    int port() const; /*  1..8 matching legacy PORT enum */
+    int delay() const;
 
-	void setInterface (LOOMINTERFACE _i);
-	void setPort      (int _p);
-	void setDelay     (int _d);
+    void setInterface(LOOMINTERFACE _i);
+    void setPort(int _p);
+    void setDelay(int _d);
 
 private slots:
-	void onInterfaceChanged (int _row);
+    void onInterfaceChanged(int _row);
 
 private:
-	QComboBox* cbInterface = nullptr;
-	QComboBox* cbPort      = nullptr;
-	QSpinBox*  spDelay     = nullptr;
+    QComboBox* cbInterface = nullptr;
+    QComboBox* cbPort = nullptr;
+    QSpinBox* spDelay = nullptr;
 };
 
 #endif

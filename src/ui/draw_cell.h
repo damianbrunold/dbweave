@@ -32,19 +32,12 @@
 #include <QColor>
 #include <QPainter>
 
-#include "enums.h"     /* DARSTELLUNG */
+#include "enums.h" /* DARSTELLUNG */
 
-void ClearCell (QPainter& _p,
-                int _x, int _y, int _xx, int _yy,
-                const QColor& _bkground);
+void ClearCell(QPainter& _p, int _x, int _y, int _xx, int _yy, const QColor& _bkground);
 
-void PaintCell (QPainter& _p,
-                DARSTELLUNG _darstellung,
-                int _x, int _y, int _xx, int _yy,
-                const QColor& _color     = QColor(Qt::black),
-                bool          _dontclear = false,
-                int           _number    = -1,
-                const QColor& _bkground  = QColor(212, 208, 200),
-                int           _fontHeight = 0);
+void PaintCell(QPainter& _p, DARSTELLUNG _darstellung, int _x, int _y, int _xx, int _yy,
+               const QColor& _color = QColor(Qt::black), bool _dontclear = false, int _number = -1,
+               const QColor& _bkground = QColor(212, 208, 200), int _fontHeight = 0);
 
 #endif /* DBWEAVE_UI_DRAW_CELL_H */

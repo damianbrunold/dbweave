@@ -21,6 +21,6 @@
 #include <QString>
 
 using AnsiString = QString;
-using String     = QString;
+using String = QString;
 
 #endif

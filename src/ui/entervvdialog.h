@@ -24,19 +24,19 @@ class QLineEdit;
 
 class EnterVVDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	explicit EnterVVDialog (QWidget* _parent = nullptr);
+    explicit EnterVVDialog(QWidget* _parent = nullptr);
 
-	/*  Returns VV1..VV6 in slots [0..5]; empty or zero fields read
-	    back as zero. Caller decides how to interpret maxi.       */
-	int value (int _slot) const;
+    /*  Returns VV1..VV6 in slots [0..5]; empty or zero fields read
+        back as zero. Caller decides how to interpret maxi.       */
+    int value(int _slot) const;
 
 private:
-	QLineEdit* vv[6] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+    QLineEdit* vv[6] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 
-	void onChange (int _slot);
+    void onChange(int _slot);
 };
 
 #endif

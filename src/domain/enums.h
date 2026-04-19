@@ -19,49 +19,46 @@
 // DARSTELLUNG wird bei den Feldern Einzug, Aufknuepfung und
 // Trittfolge verwendet, um die Symbole zu bestimmen, die fuer die
 // Darstellung eines gefuellten Feldes verwendet werden.
-enum DARSTELLUNG
-{
-	AUSGEFUELLT=0,
-	STRICH,
-	KREUZ,
-	PUNKT,
-	KREIS,
-	STEIGEND,
-	FALLEND,
-	SMALLKREUZ,
-	SMALLKREIS,
-	NUMBER
+enum DARSTELLUNG {
+    AUSGEFUELLT = 0,
+    STRICH,
+    KREUZ,
+    PUNKT,
+    KREIS,
+    STEIGEND,
+    FALLEND,
+    SMALLKREUZ,
+    SMALLKREIS,
+    NUMBER
 };
 /*-----------------------------------------------------------------*/
 /*  TOOL selects the behaviour of a mouse-drag on the gewebe canvas.
     TOOL_POINT is the default paint-single-cell-by-click mode; the
     remaining modes treat the drag as a two-point geometric shape
     (anchor + release cell) rasterised onto gewebe on release.    */
-enum TOOL
-{
-	TOOL_POINT = 0,
-	TOOL_LINE,
-	TOOL_RECTANGLE,
-	TOOL_FILLEDRECTANGLE,
-	TOOL_ELLIPSE,
-	TOOL_FILLEDELLIPSE
+enum TOOL {
+    TOOL_POINT = 0,
+    TOOL_LINE,
+    TOOL_RECTANGLE,
+    TOOL_FILLEDRECTANGLE,
+    TOOL_ELLIPSE,
+    TOOL_FILLEDELLIPSE
 };
 /*-----------------------------------------------------------------*/
-enum FELD
-{
-	INVALID,
-	GEWEBE,
-	EINZUG,
-	TRITTFOLGE,
-	AUFKNUEPFUNG,
-	SCHUSSFARBEN,
-	KETTFARBEN,
-	BLATTEINZUG,
-	ISEMPTY,      // Ab hier sind es unsichtbare Felder
-	HLINEHORZ1,   // Zwar nicht unsichtbar aber nicht per Tastatur bedienbar...
-	HLINEHORZ2,
-	HLINEVERT1,
-	HLINEVERT2
+enum FELD {
+    INVALID,
+    GEWEBE,
+    EINZUG,
+    TRITTFOLGE,
+    AUFKNUEPFUNG,
+    SCHUSSFARBEN,
+    KETTFARBEN,
+    BLATTEINZUG,
+    ISEMPTY,    // Ab hier sind es unsichtbare Felder
+    HLINEHORZ1, // Zwar nicht unsichtbar aber nicht per Tastatur bedienbar...
+    HLINEHORZ2,
+    HLINEVERT1,
+    HLINEVERT2
 };
 /*-----------------------------------------------------------------*/
 #endif

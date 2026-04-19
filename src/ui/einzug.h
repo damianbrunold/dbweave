@@ -22,27 +22,27 @@ class TData;
 class EinzugRearrange
 {
 public:
-	virtual ~EinzugRearrange() {}
+    virtual ~EinzugRearrange() { }
 
-	virtual void Rearrange() = 0;
-	virtual void NormalZ() = 0;
-	virtual void NormalS() = 0;
-	virtual void GeradeZ() = 0;
-	virtual void GeradeS() = 0;
-	virtual void Chorig2() = 0;
-	virtual void Chorig3() = 0;
-	virtual void Fixiert() = 0;
-	virtual void Belassen() = 0;
+    virtual void Rearrange() = 0;
+    virtual void NormalZ() = 0;
+    virtual void NormalS() = 0;
+    virtual void GeradeZ() = 0;
+    virtual void GeradeS() = 0;
+    virtual void Chorig2() = 0;
+    virtual void Chorig3() = 0;
+    virtual void Fixiert() = 0;
+    virtual void Belassen() = 0;
 
-	virtual bool IsEmptySchaft (int _j) = 0;
-	virtual void RedrawSchaft (int _j) = 0;
-	virtual void RedrawAufknuepfungSchaft (int _j) = 0;
-	virtual void EliminateEmptySchaft() = 0;
-	virtual void SwitchSchaefte (int _a, int _b) = 0;
+    virtual bool IsEmptySchaft(int _j) = 0;
+    virtual void RedrawSchaft(int _j) = 0;
+    virtual void RedrawAufknuepfungSchaft(int _j) = 0;
+    virtual void EliminateEmptySchaft() = 0;
+    virtual void SwitchSchaefte(int _a, int _b) = 0;
 
 public:
-	static EinzugRearrange* CreateInstance (TDBWFRM* _frm, TData* _data);
-	static void ReleaseInstance (EinzugRearrange* _einzug);
+    static EinzugRearrange* CreateInstance(TDBWFRM* _frm, TData* _data);
+    static void ReleaseInstance(EinzugRearrange* _einzug);
 };
 /*-----------------------------------------------------------------*/
 #endif

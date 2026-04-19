@@ -23,25 +23,25 @@ class TDBWFRM;
 
 class PalettePanel : public QWidget
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	explicit PalettePanel (TDBWFRM* _frm, QWidget* _parent = nullptr);
+    explicit PalettePanel(TDBWFRM* _frm, QWidget* _parent = nullptr);
 
-	QSize sizeHint()        const override;
-	QSize minimumSizeHint() const override;
+    QSize sizeHint() const override;
+    QSize minimumSizeHint() const override;
 
 protected:
-	void paintEvent    (QPaintEvent*  _e) override;
-	void mousePressEvent (QMouseEvent* _e) override;
-	void keyPressEvent (QKeyEvent*    _e) override;
+    void paintEvent(QPaintEvent* _e) override;
+    void mousePressEvent(QMouseEvent* _e) override;
+    void keyPressEvent(QKeyEvent* _e) override;
 
 private:
-	TDBWFRM* frm;
+    TDBWFRM* frm;
 
-	static constexpr int GRIDSIZE = 16;   /* 16x16 grid (256 slots) */
+    static constexpr int GRIDSIZE = 16; /* 16x16 grid (256 slots) */
 
-	int drawSize() const;     /* cell edge in px, from current widget size */
+    int drawSize() const; /* cell edge in px, from current widget size */
 };
 
 #endif

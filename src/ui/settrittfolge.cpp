@@ -15,107 +15,116 @@
 #include "datamodule.h"
 #include "undoredo.h"
 /*-----------------------------------------------------------------*/
-void TDBWFRM::SetTrittfolge (int _i, int _j, bool _set, int _range)
+void TDBWFRM::SetTrittfolge(int _i, int _j, bool _set, int _range)
 {
-	if (ViewOnlyGewebe && ViewOnlyGewebe->isChecked()) return;
+    if (ViewOnlyGewebe && ViewOnlyGewebe->isChecked())
+        return;
 
-	DoSetTrittfolge (_i, _j, _set, _range);
+    DoSetTrittfolge(_i, _j, _set, _range);
 
-	// ggf. Punkt replizieren!
-	if (RappViewRapport && RappViewRapport->isChecked() &&
-	    (_j+scroll_y2)>=rapport.sr.a && (_j+scroll_y2)<=rapport.sr.b)
-	{
-		int j = _j+scroll_y2;
+    // ggf. Punkt replizieren!
+    if (RappViewRapport && RappViewRapport->isChecked() && (_j + scroll_y2) >= rapport.sr.a
+        && (_j + scroll_y2) <= rapport.sr.b) {
+        int j = _j + scroll_y2;
 
-		if (j>schuesse.a) {
-			while (j>schuesse.a) j -= rapport.sr.count();
-			j += rapport.sr.count();
-		}
+        if (j > schuesse.a) {
+            while (j > schuesse.a)
+                j -= rapport.sr.count();
+            j += rapport.sr.count();
+        }
 
-		while (j<=schuesse.b) {
-			if (j!=_j+scroll_y2) {
-				// Tritt kopieren
-				for (int ii=0; ii<Data->MAXX2; ii++)
-					trittfolge.feld.Set (ii, j, trittfolge.feld.Get (ii, _j+scroll_y2));
-				trittfolge.isempty.Set (j, trittfolge.isempty.Get (_j+scroll_y2));
+        while (j <= schuesse.b) {
+            if (j != _j + scroll_y2) {
+                // Tritt kopieren
+                for (int ii = 0; ii < Data->MAXX2; ii++)
+                    trittfolge.feld.Set(ii, j, trittfolge.feld.Get(ii, _j + scroll_y2));
+                trittfolge.isempty.Set(j, trittfolge.isempty.Get(_j + scroll_y2));
 
-				// Schussfaden kopieren
-				for (int ii=0; ii<Data->MAXX1; ii++)
-					gewebe.feld.Set (ii, j, gewebe.feld.Get (ii, _j+scroll_y2));
-			}
-			j += rapport.sr.count();
-		}
-		RecalcFreieTritte();
-	}
+                // Schussfaden kopieren
+                for (int ii = 0; ii < Data->MAXX1; ii++)
+                    gewebe.feld.Set(ii, j, gewebe.feld.Get(ii, _j + scroll_y2));
+            }
+            j += rapport.sr.count();
+        }
+        RecalcFreieTritte();
+    }
 
-	UpdateRapport();
-	SetModified();
-	refresh();
+    UpdateRapport();
+    SetModified();
+    refresh();
 
-	dbw3_assert (undo!=0);
-	if (undo) undo->Snapshot();
+    dbw3_assert(undo != 0);
+    if (undo)
+        undo->Snapshot();
 }
 /*-----------------------------------------------------------------*/
-void TDBWFRM::DoSetTrittfolge (int _i, int _j, bool _set, int _range)
+void TDBWFRM::DoSetTrittfolge(int _i, int _j, bool _set, int _range)
 {
-	// Tritt neu setzen
-	if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) {
-		char oldstate = trittfolge.feld.Get(scroll_x2+_i,scroll_y2+_j);
-		if (!_set) trittfolge.feld.Set (scroll_x2+_i, scroll_y2+_j, char(oldstate<=0 ? currentrange : -oldstate));
-		else trittfolge.feld.Set (scroll_x2+_i, scroll_y2+_j, char(_range));
-		if ((!_set && oldstate<0) || (_set && _range!=0)) {
-			dbw3_assert (scroll_x2+_i<Data->MAXX2);
-			freietritte[scroll_x2+_i] = false;
-		} else {
-			dbw3_assert (scroll_x2+_i<Data->MAXX2);
-			freietritte[scroll_x2+_i] = true;
-			for (int j=0; j<Data->MAXY2; j++)
-				if (trittfolge.feld.Get (scroll_x1+_i, j)>0) {
-					freietritte[scroll_x2+_i] = false;
-					break;
-				}
-		}
-	} else if (!trittfolge.einzeltritt) {
-		char oldstate = trittfolge.feld.Get(scroll_x2+_i,scroll_y2+_j);
-		trittfolge.feld.Set (scroll_x2+_i, scroll_y2+_j, char(oldstate<=0 ? 1 : -oldstate));
-		if (oldstate<0) {
-			dbw3_assert (scroll_x2+_i<Data->MAXX2);
-			freietritte[scroll_x2+_i] = false;
-		} else {
-			dbw3_assert (scroll_x2+_i<Data->MAXX2);
-			freietritte[scroll_x2+_i] = true;
-			for (int j=0; j<Data->MAXY2; j++)
-				if (trittfolge.feld.Get (scroll_x1+_i, j)>0) {
-					freietritte[scroll_x2+_i] = false;
-					break;
-				}
-		}
-	} else {
-		bool bSet = trittfolge.feld.Get (scroll_x2+_i, scroll_y2+_j);
-		for (int i=0; i<Data->MAXX2; i++) trittfolge.feld.Set (i, scroll_y2+_j, 0);
-		trittfolge.feld.Set (scroll_x2+_i, scroll_y2+_j, bSet ? (char)0 : (char)1);
-		RecalcFreieTritte();
-	}
+    // Tritt neu setzen
+    if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) {
+        char oldstate = trittfolge.feld.Get(scroll_x2 + _i, scroll_y2 + _j);
+        if (!_set)
+            trittfolge.feld.Set(scroll_x2 + _i, scroll_y2 + _j,
+                                char(oldstate <= 0 ? currentrange : -oldstate));
+        else
+            trittfolge.feld.Set(scroll_x2 + _i, scroll_y2 + _j, char(_range));
+        if ((!_set && oldstate < 0) || (_set && _range != 0)) {
+            dbw3_assert(scroll_x2 + _i < Data->MAXX2);
+            freietritte[scroll_x2 + _i] = false;
+        } else {
+            dbw3_assert(scroll_x2 + _i < Data->MAXX2);
+            freietritte[scroll_x2 + _i] = true;
+            for (int j = 0; j < Data->MAXY2; j++)
+                if (trittfolge.feld.Get(scroll_x1 + _i, j) > 0) {
+                    freietritte[scroll_x2 + _i] = false;
+                    break;
+                }
+        }
+    } else if (!trittfolge.einzeltritt) {
+        char oldstate = trittfolge.feld.Get(scroll_x2 + _i, scroll_y2 + _j);
+        trittfolge.feld.Set(scroll_x2 + _i, scroll_y2 + _j, char(oldstate <= 0 ? 1 : -oldstate));
+        if (oldstate < 0) {
+            dbw3_assert(scroll_x2 + _i < Data->MAXX2);
+            freietritte[scroll_x2 + _i] = false;
+        } else {
+            dbw3_assert(scroll_x2 + _i < Data->MAXX2);
+            freietritte[scroll_x2 + _i] = true;
+            for (int j = 0; j < Data->MAXY2; j++)
+                if (trittfolge.feld.Get(scroll_x1 + _i, j) > 0) {
+                    freietritte[scroll_x2 + _i] = false;
+                    break;
+                }
+        }
+    } else {
+        bool bSet = trittfolge.feld.Get(scroll_x2 + _i, scroll_y2 + _j);
+        for (int i = 0; i < Data->MAXX2; i++)
+            trittfolge.feld.Set(i, scroll_y2 + _j, 0);
+        trittfolge.feld.Set(scroll_x2 + _i, scroll_y2 + _j, bSet ? (char)0 : (char)1);
+        RecalcFreieTritte();
+    }
 
-	RecalcTrittfolgeEmpty (_j+scroll_y2);
+    RecalcTrittfolgeEmpty(_j + scroll_y2);
 
-	// Faden neu berechnen
-	int i, j, k;
-	for (i=0; i<Data->MAXX1; i++) gewebe.feld.Set (i, _j+scroll_y2, 0);
-	for (i=0; i<Data->MAXX2; i++) {
-		char t = trittfolge.feld.Get(i, _j+scroll_y2);
-		if (t>0)
-			for (j=0; j<Data->MAXY1; j++) {
-				char s = aufknuepfung.feld.Get (i, j);
-				if (s>0)
-					for (k=0; k<Data->MAXX1; k++)
-						if (einzug.feld.Get (k)==j+1)
-							gewebe.feld.Set (k, _j+scroll_y2, (ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) ? t : s);
-			}
-	}
+    // Faden neu berechnen
+    int i, j, k;
+    for (i = 0; i < Data->MAXX1; i++)
+        gewebe.feld.Set(i, _j + scroll_y2, 0);
+    for (i = 0; i < Data->MAXX2; i++) {
+        char t = trittfolge.feld.Get(i, _j + scroll_y2);
+        if (t > 0)
+            for (j = 0; j < Data->MAXY1; j++) {
+                char s = aufknuepfung.feld.Get(i, j);
+                if (s > 0)
+                    for (k = 0; k < Data->MAXX1; k++)
+                        if (einzug.feld.Get(k) == j + 1)
+                            gewebe.feld.Set(
+                                k, _j + scroll_y2,
+                                (ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) ? t : s);
+            }
+    }
 
-	// Belegter Bereich nachfuehren
-	CalcRangeKette();
-	CalcRangeSchuesse();
+    // Belegter Bereich nachfuehren
+    CalcRangeKette();
+    CalcRangeSchuesse();
 }
 /*-----------------------------------------------------------------*/

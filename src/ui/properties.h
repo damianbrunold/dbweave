@@ -22,31 +22,30 @@
 class FfWriter;
 class FfReader;
 
-struct FileProperties
-{
+struct FileProperties {
 private:
-	char* author;
-	char* organization;
-	char* remarks;
+    char* author;
+    char* organization;
+    char* remarks;
 
-	void RemoveNL (char* _data);
-	void InsertNL (char* _data);
+    void RemoveNL(char* _data);
+    void InsertNL(char* _data);
 
 public:
- FileProperties();
-	virtual ~FileProperties();
+    FileProperties();
+    virtual ~FileProperties();
 
-	void SetAuthor       (const char* _author);
-	void SetOrganization (const char* _organization);
-	void SetRemarks      (const char* _remarks);
+    void SetAuthor(const char* _author);
+    void SetOrganization(const char* _organization);
+    void SetRemarks(const char* _remarks);
 
-	const char* Author       () const;
-	const char* Organization () const;
-	const char* Remarks      () const;
+    const char* Author() const;
+    const char* Organization() const;
+    const char* Remarks() const;
 
-	void Save (FfWriter* _writer);
-	void Load (FfReader* _reader);
-	void Init ();
+    void Save(FfWriter* _writer);
+    void Load(FfReader* _reader);
+    void Init();
 };
 
 #endif

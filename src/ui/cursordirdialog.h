@@ -26,23 +26,23 @@ class QToolButton;
 
 class CursorDirDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	explicit CursorDirDialog (QWidget* _parent, CURSORDIRECTION _cd);
+    explicit CursorDirDialog(QWidget* _parent, CURSORDIRECTION _cd);
 
-	CURSORDIRECTION cursordirection = CD_NONE;
+    CURSORDIRECTION cursordirection = CD_NONE;
 
 protected:
-	void mouseReleaseEvent (QMouseEvent* _e) override;
+    void mouseReleaseEvent(QMouseEvent* _e) override;
 
 private:
-	QToolButton* cdUp    = nullptr;
-	QToolButton* cdDown  = nullptr;
-	QToolButton* cdLeft  = nullptr;
-	QToolButton* cdRight = nullptr;
+    QToolButton* cdUp = nullptr;
+    QToolButton* cdDown = nullptr;
+    QToolButton* cdLeft = nullptr;
+    QToolButton* cdRight = nullptr;
 
-	void readFromButtons();
+    void readFromButtons();
 };
 
 #endif

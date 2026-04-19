@@ -22,19 +22,20 @@
 #include "datamodule.h"
 #include "undoredo.h"
 /*-----------------------------------------------------------------*/
-void TDBWFRM::SetBlatteinzug (int _i)
+void TDBWFRM::SetBlatteinzug(int _i)
 {
-	DoSetBlatteinzug (_i);
-	refresh();    /* legacy painted inline; defer to paintEvent */
+    DoSetBlatteinzug(_i);
+    refresh(); /* legacy painted inline; defer to paintEvent */
 
-	dbw3_assert (undo!=0);
-	if (undo) undo->Snapshot();
+    dbw3_assert(undo != 0);
+    if (undo)
+        undo->Snapshot();
 }
 /*-----------------------------------------------------------------*/
-void TDBWFRM::DoSetBlatteinzug (int _i)
+void TDBWFRM::DoSetBlatteinzug(int _i)
 {
-	// Feld setzen
-	blatteinzug.feld.Set (_i+scroll_x1, !blatteinzug.feld.Get(_i+scroll_x1));
-	SetModified();
+    // Feld setzen
+    blatteinzug.feld.Set(_i + scroll_x1, !blatteinzug.feld.Get(_i + scroll_x1));
+    SetModified();
 }
 /*-----------------------------------------------------------------*/

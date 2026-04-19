@@ -43,39 +43,39 @@ class FfReader;
 class FhLoader
 {
 private:
-	TDBWFRM*  mainfrm;
-	LOADPARTS loadparts;
+    TDBWFRM* mainfrm;
+    LOADPARTS loadparts;
 
 public:
-	explicit FhLoader (TDBWFRM* _mainfrm);
-	bool Load (LOADSTAT& _stat, LOADPARTS _loadparts = LOADALL);
+    explicit FhLoader(TDBWFRM* _mainfrm);
+    bool Load(LOADSTAT& _stat, LOADPARTS _loadparts = LOADALL);
 
 private:
-	bool Need (LOADOPTION _part) const;
+    bool Need(LOADOPTION _part) const;
 
-	bool LoadSignatur (FfReader* _reader);
-	void LoadVersion  (FfReader* _reader);
-	void LoadProperties (FfReader* _reader);
-	void LoadData     (FfReader* _reader);
-	void LoadDataSize (FfReader* _reader);
-	void LoadDataFields (FfReader* _reader);
-	void LoadDataEinzug (FfReader* _reader);
-	void LoadDataAufknuepfung (FfReader* _reader);
-	void LoadDataTrittfolge (FfReader* _reader);
-	void LoadDataTrittfolgeTrittfolge (FfReader* _reader);
-	void LoadDataTrittfolgeIsEmpty (FfReader* _reader);
-	void LoadDataSchussfarben (FfReader* _reader);
-	void LoadDataKettfarben (FfReader* _reader);
-	void LoadDataBlatteinzug (FfReader* _reader);
-	void LoadDataPalette (FfReader* _reader);
-	void LoadDataHilfslinien (FfReader* _reader);
-	void LoadDataWebstuhl    (FfReader* _reader);
-	void LoadDataWebstuhlKlammer (FfReader* _reader, int _index);
-	void LoadView (FfReader* _reader);
-	void LoadViewGeneral (FfReader* _reader);
-	void LoadViewGewebe  (FfReader* _reader);
-	void LoadViewEinzug  (FfReader* _reader);
-	void LoadViewTrittfolge (FfReader* _reader);
+    bool LoadSignatur(FfReader* _reader);
+    void LoadVersion(FfReader* _reader);
+    void LoadProperties(FfReader* _reader);
+    void LoadData(FfReader* _reader);
+    void LoadDataSize(FfReader* _reader);
+    void LoadDataFields(FfReader* _reader);
+    void LoadDataEinzug(FfReader* _reader);
+    void LoadDataAufknuepfung(FfReader* _reader);
+    void LoadDataTrittfolge(FfReader* _reader);
+    void LoadDataTrittfolgeTrittfolge(FfReader* _reader);
+    void LoadDataTrittfolgeIsEmpty(FfReader* _reader);
+    void LoadDataSchussfarben(FfReader* _reader);
+    void LoadDataKettfarben(FfReader* _reader);
+    void LoadDataBlatteinzug(FfReader* _reader);
+    void LoadDataPalette(FfReader* _reader);
+    void LoadDataHilfslinien(FfReader* _reader);
+    void LoadDataWebstuhl(FfReader* _reader);
+    void LoadDataWebstuhlKlammer(FfReader* _reader, int _index);
+    void LoadView(FfReader* _reader);
+    void LoadViewGeneral(FfReader* _reader);
+    void LoadViewGewebe(FfReader* _reader);
+    void LoadViewEinzug(FfReader* _reader);
+    void LoadViewTrittfolge(FfReader* _reader);
 };
 
 #endif

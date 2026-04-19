@@ -26,26 +26,26 @@ class QCheckBox;
 
 class LoadPartsDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	explicit LoadPartsDialog (QWidget* _parent = nullptr);
+    explicit LoadPartsDialog(QWidget* _parent = nullptr);
 
-	LOADPARTS getLoadParts() const;
+    LOADPARTS getLoadParts() const;
 
 private:
-	QCheckBox* alle          = nullptr;
-	QCheckBox* einzug        = nullptr;
-	QCheckBox* trittfolge    = nullptr;
-	QCheckBox* aufknuepfung  = nullptr;
-	QCheckBox* kettfarben    = nullptr;
-	QCheckBox* schussfarben  = nullptr;
-	QCheckBox* blatteinzug   = nullptr;
-	QCheckBox* hilfslinien   = nullptr;
-	QCheckBox* farbpalette   = nullptr;
-	QCheckBox* benedefeinzug = nullptr;
-	QCheckBox* blockmuster   = nullptr;
-	QCheckBox* bereichmuster = nullptr;
+    QCheckBox* alle = nullptr;
+    QCheckBox* einzug = nullptr;
+    QCheckBox* trittfolge = nullptr;
+    QCheckBox* aufknuepfung = nullptr;
+    QCheckBox* kettfarben = nullptr;
+    QCheckBox* schussfarben = nullptr;
+    QCheckBox* blatteinzug = nullptr;
+    QCheckBox* hilfslinien = nullptr;
+    QCheckBox* farbpalette = nullptr;
+    QCheckBox* benedefeinzug = nullptr;
+    QCheckBox* blockmuster = nullptr;
+    QCheckBox* bereichmuster = nullptr;
 };
 
 #endif

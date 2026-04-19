@@ -27,30 +27,30 @@ class QRadioButton;
 /*-----------------------------------------------------------------*/
 class UserdefEnterNameDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	explicit UserdefEnterNameDialog (const QString& _default, QWidget* _parent = nullptr);
-	QString name () const;
+    explicit UserdefEnterNameDialog(const QString& _default, QWidget* _parent = nullptr);
+    QString name() const;
 
 private:
-	QLineEdit* edName = nullptr;
+    QLineEdit* edName = nullptr;
 };
 
 /*  Helper matching legacy free GetUserdefName() — returns the
     chosen name, or an empty string on Cancel. */
-QString getUserdefName (QWidget* _parent, const QString& _default);
+QString getUserdefName(QWidget* _parent, const QString& _default);
 
 /*-----------------------------------------------------------------*/
 class UserdefSelectDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	UserdefSelectDialog (const UserdefPattern _slots[MAXUSERDEF],
-	                     const QString& _title, QWidget* _parent = nullptr);
-	int selectedIndex () const;
+    UserdefSelectDialog(const UserdefPattern _slots[MAXUSERDEF], const QString& _title,
+                        QWidget* _parent = nullptr);
+    int selectedIndex() const;
 
 private:
-	QRadioButton* radios[MAXUSERDEF] = { };
+    QRadioButton* radios[MAXUSERDEF] = {};
 };
 
 #endif

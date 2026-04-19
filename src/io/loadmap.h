@@ -29,108 +29,107 @@
 #include <cstdlib>
 #include <cstring>
 /*-----------------------------------------------------------------*/
-#define	BEGIN_LOAD_MAP \
-	dbw3_assert (_reader); \
-	FfToken* token = _reader->GetToken(); \
-	while (token) {
+#define BEGIN_LOAD_MAP                    \
+    dbw3_assert(_reader);                 \
+    FfToken* token = _reader->GetToken(); \
+    while (token) {
 /*-----------------------------------------------------------------*/
-#define	BEGIN_FIELD_MAP \
-		if (token->GetType()==FfField) {
+#define BEGIN_FIELD_MAP if (token->GetType() == FfField) {
 /*-----------------------------------------------------------------*/
-#define NO_FIELDS \
-			_reader->SkipField();
+#define NO_FIELDS _reader->SkipField();
 /*-----------------------------------------------------------------*/
 #define _FIELD_MAP(fieldname, function) \
-			if (IsTokenEqual (token, fieldname)) function (_reader);
+    if (IsTokenEqual(token, fieldname)) \
+        function(_reader);
 /*-----------------------------------------------------------------*/
-#define FIELD_MAP(fieldname, function) \
-			else _FIELD_MAP(fieldname, function)
+#define FIELD_MAP(fieldname, function) else _FIELD_MAP(fieldname, function)
 /*-----------------------------------------------------------------*/
-#define _FIELD_MAP_STRING(fieldname, variable) \
-			if (IsTokenEqual (token, fieldname)) { \
-				delete[] variable; \
-				FfToken* t = _reader->GetToken(); \
-				if (!t || t->GetType()!=FfValue) throw int(0); \
-				FfTokenValue* val = (FfTokenValue*)t; \
-				variable = new char[val->length+1]; \
-				std::strcpy (variable, (char*)val->data); \
-				delete t; \
-			}
+#define _FIELD_MAP_STRING(fieldname, variable)   \
+    if (IsTokenEqual(token, fieldname)) {        \
+        delete[] variable;                       \
+        FfToken* t = _reader->GetToken();        \
+        if (!t || t->GetType() != FfValue)       \
+            throw int(0);                        \
+        FfTokenValue* val = (FfTokenValue*)t;    \
+        variable = new char[val->length + 1];    \
+        std::strcpy(variable, (char*)val->data); \
+        delete t;                                \
+    }
 /*-----------------------------------------------------------------*/
-#define FIELD_MAP_STRING(fieldname, variable) \
-			else _FIELD_MAP_STRING(fieldname, variable)
+#define FIELD_MAP_STRING(fieldname, variable) else _FIELD_MAP_STRING(fieldname, variable)
 /*-----------------------------------------------------------------*/
-#define _FIELD_MAP_INT(fieldname, variable, cast) \
-			if (IsTokenEqual (token, fieldname)) { \
-				FfToken* t = _reader->GetToken(); \
-				if (!t || t->GetType()!=FfValue) throw int(0); \
-				FfTokenValue* val = (FfTokenValue*)t; \
-				variable = (cast)std::atoi((char*)val->data); \
-				delete t; \
-			}
+#define _FIELD_MAP_INT(fieldname, variable, cast)     \
+    if (IsTokenEqual(token, fieldname)) {             \
+        FfToken* t = _reader->GetToken();             \
+        if (!t || t->GetType() != FfValue)            \
+            throw int(0);                             \
+        FfTokenValue* val = (FfTokenValue*)t;         \
+        variable = (cast)std::atoi((char*)val->data); \
+        delete t;                                     \
+    }
 /*-----------------------------------------------------------------*/
-#define FIELD_MAP_INT(fieldname, variable, cast) \
-			else _FIELD_MAP_INT(fieldname, variable, cast)
+#define FIELD_MAP_INT(fieldname, variable, cast) else _FIELD_MAP_INT(fieldname, variable, cast)
 /*-----------------------------------------------------------------*/
-#define _FIELD_MAP_DOUBLE(fieldname, variable) \
-			if (IsTokenEqual (token, fieldname)) { \
-				FfToken* t = _reader->GetToken(); \
-				if (!t || t->GetType()!=FfValue) throw int(0); \
-				FfTokenValue* val = (FfTokenValue*)t; \
-				variable = std::atof((char*)val->data); \
-				delete t; \
-			}
+#define _FIELD_MAP_DOUBLE(fieldname, variable)  \
+    if (IsTokenEqual(token, fieldname)) {       \
+        FfToken* t = _reader->GetToken();       \
+        if (!t || t->GetType() != FfValue)      \
+            throw int(0);                       \
+        FfTokenValue* val = (FfTokenValue*)t;   \
+        variable = std::atof((char*)val->data); \
+        delete t;                               \
+    }
 /*-----------------------------------------------------------------*/
-#define FIELD_MAP_DOUBLE(fieldname, variable) \
-			else _FIELD_MAP_DOUBLE(fieldname, variable)
+#define FIELD_MAP_DOUBLE(fieldname, variable) else _FIELD_MAP_DOUBLE(fieldname, variable)
 /*-----------------------------------------------------------------*/
-#define _FIELD_MAP_BINARY(fieldname, variable) \
-			if (IsTokenEqual (token, fieldname)) { \
-				FfToken* t = _reader->GetToken(); \
-				if (!t || t->GetType()!=FfValue) throw int(0); \
-				FfTokenValue* val = (FfTokenValue*)t; \
-				delete[] variable; \
-				variable = new char[val->length/2+1]; \
-				FieldHexToBinary (variable, val->data, val->length); \
-				delete t; \
-			}
+#define _FIELD_MAP_BINARY(fieldname, variable)              \
+    if (IsTokenEqual(token, fieldname)) {                   \
+        FfToken* t = _reader->GetToken();                   \
+        if (!t || t->GetType() != FfValue)                  \
+            throw int(0);                                   \
+        FfTokenValue* val = (FfTokenValue*)t;               \
+        delete[] variable;                                  \
+        variable = new char[val->length / 2 + 1];           \
+        FieldHexToBinary(variable, val->data, val->length); \
+        delete t;                                           \
+    }
 /*-----------------------------------------------------------------*/
-#define FIELD_MAP_BINARY(fieldname, variable) \
-			else _FIELD_MAP_BINARY(fieldname, variable)
+#define FIELD_MAP_BINARY(fieldname, variable) else _FIELD_MAP_BINARY(fieldname, variable)
 /*-----------------------------------------------------------------*/
-#define DEFAULT_FIELD \
-			else \
-				_reader->SkipField();
+#define DEFAULT_FIELD else _reader->SkipField();
 /*-----------------------------------------------------------------*/
-#define	BEGIN_SECTION_MAP \
-		} else if (token->GetType()==FfSection) {
+#define BEGIN_SECTION_MAP                   \
+    }                                       \
+    else if (token->GetType() == FfSection) \
+    {
 /*-----------------------------------------------------------------*/
-#define NO_SECTIONS \
-			_reader->SkipSection();
+#define NO_SECTIONS _reader->SkipSection();
 /*-----------------------------------------------------------------*/
-#define	_SECTION_MAP(section, function) \
-			if (IsTokenEqual (token, section)) function (_reader);
+#define _SECTION_MAP(section, function) \
+    if (IsTokenEqual(token, section))   \
+        function(_reader);
 /*-----------------------------------------------------------------*/
-#define	SECTION_MAP(section, function) \
-			else if (IsTokenEqual (token, section)) function (_reader);
+#define SECTION_MAP(section, function) else if (IsTokenEqual(token, section)) function(_reader);
 /*-----------------------------------------------------------------*/
-#define	DEFAULT_SECTION \
-			else \
-				_reader->SkipSection();
+#define DEFAULT_SECTION else _reader->SkipSection();
 /*-----------------------------------------------------------------*/
-#define BEGIN_DEFAULT_MAP \
-		} else if (token->GetType()==FfEndSection) { \
-			delete token; \
-			break; \
-		} else { \
-			delete token; \
-			throw int(0); \
-		}
+#define BEGIN_DEFAULT_MAP                      \
+    }                                          \
+    else if (token->GetType() == FfEndSection) \
+    {                                          \
+        delete token;                          \
+        break;                                 \
+    }                                          \
+    else                                       \
+    {                                          \
+        delete token;                          \
+        throw int(0);                          \
+    }
 /*-----------------------------------------------------------------*/
-#define	END_LOAD_MAP \
-		delete token; \
-		token = _reader->GetToken(); \
-	}
+#define END_LOAD_MAP             \
+    delete token;                \
+    token = _reader->GetToken(); \
+    }
 /*-----------------------------------------------------------------*/
 #endif
 /*-----------------------------------------------------------------*/

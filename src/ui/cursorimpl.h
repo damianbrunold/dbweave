@@ -19,113 +19,122 @@
 class TDBWFRM;
 class TData;
 /*-----------------------------------------------------------------*/
-struct CrSharedCoord
-{
-	int x1;
-	int x2;
-	int y1;
-	int y2;
- CrSharedCoord() { Init(); }
-	void Init() { x1 = x2 = y1 = y2 = 0; }
+struct CrSharedCoord {
+    int x1;
+    int x2;
+    int y1;
+    int y2;
+    CrSharedCoord()
+    {
+        Init();
+    }
+    void Init()
+    {
+        x1 = x2 = y1 = y2 = 0;
+    }
 };
 /*-----------------------------------------------------------------*/
 typedef int CrShareFlags;
-enum { CrShareX1=1, CrShareX2=2, CrShareY1=4, CrShareY2=8 };
+enum { CrShareX1 = 1, CrShareX2 = 2, CrShareY1 = 4, CrShareY2 = 8 };
 /*-----------------------------------------------------------------*/
 class CrFeld
 {
 private:
-	TDBWFRM* frm;
-	TData* data;
+    TDBWFRM* frm;
+    TData* data;
 
 public:
-	FELD feld;
-	FeldBase& fb;
-	CrSharedCoord& sharedcoord;
-	CrShareFlags   shareflags;
-	CURSORDIRECTION cursordirection;
+    FELD feld;
+    FeldBase& fb;
+    CrSharedCoord& sharedcoord;
+    CrShareFlags shareflags;
+    CURSORDIRECTION cursordirection;
 
-	// Doppelte Verkettung
-	CrFeld* prev;
-	CrFeld* next;
+    // Doppelte Verkettung
+    CrFeld* prev;
+    CrFeld* next;
 
 public:
- CrFeld (FELD _feld, TDBWFRM* _frm, TData* _data, FeldBase& _fb, CrSharedCoord& _sharedcoord, CrShareFlags _shareflags, CrFeld* _prev);
-	virtual ~CrFeld();
+    CrFeld(FELD _feld, TDBWFRM* _frm, TData* _data, FeldBase& _fb, CrSharedCoord& _sharedcoord,
+           CrShareFlags _shareflags, CrFeld* _prev);
+    virtual ~CrFeld();
 
-	bool IsVisible() const;
+    bool IsVisible() const;
 
-	void Toggle (TShiftState _shift);
-	void Set (bool _set, TShiftState _shift);
-	void SetCursor (int _i, int _j);
-	void CheckCursorPos();
+    void Toggle(TShiftState _shift);
+    void Set(bool _set, TShiftState _shift);
+    void SetCursor(int _i, int _j);
+    void CheckCursorPos();
 
-	void MoveCursorLeft (int _step, bool _select);
-	void MoveCursorRight (int _step, bool _select);
-	void MoveCursorUp (int _step, bool _select);
-	void MoveCursorDown (int _step, bool _select);
+    void MoveCursorLeft(int _step, bool _select);
+    void MoveCursorRight(int _step, bool _select);
+    void MoveCursorUp(int _step, bool _select);
+    void MoveCursorDown(int _step, bool _select);
 
-	void DrawCursor();
-	void DeleteCursor();
-	void ToggleCursor();
+    void DrawCursor();
+    void DeleteCursor();
+    void ToggleCursor();
 
-	void SyncSharedCoord();
+    void SyncSharedCoord();
 
 protected:
-	void DisableCursor();
-	void EnableCursor();
-	void UpdateSharedCoord (int _i, int _j);
+    void DisableCursor();
+    void EnableCursor();
+    void UpdateSharedCoord(int _i, int _j);
 };
 /*-----------------------------------------------------------------*/
 class CrCursorHandlerImpl : public CrCursorHandler
 {
 private:
-	TDBWFRM* frm;
-	TData* data;
+    TDBWFRM* frm;
+    TData* data;
 
-	CrFeld* feld;
-	CrSharedCoord sharedcoord;
-	bool locked;
+    CrFeld* feld;
+    CrSharedCoord sharedcoord;
+    bool locked;
 
 public:
- CrCursorHandlerImpl (TDBWFRM* _frm, TData* _data);
-	virtual ~CrCursorHandlerImpl();
+    CrCursorHandlerImpl(TDBWFRM* _frm, TData* _data);
+    virtual ~CrCursorHandlerImpl();
 
-	virtual void Init();
+    virtual void Init();
 
-	virtual void ToggleField (TShiftState _shift);
-	virtual void SetField (bool _set, TShiftState _shift);
-	virtual void SetCursor (FELD _feld, int _i, int _j, bool _clearselection=true);
-	virtual void CheckCursorPos();
+    virtual void ToggleField(TShiftState _shift);
+    virtual void SetField(bool _set, TShiftState _shift);
+    virtual void SetCursor(FELD _feld, int _i, int _j, bool _clearselection = true);
+    virtual void CheckCursorPos();
 
-	virtual void MoveCursorLeft (int _step, bool _select);
-	virtual void MoveCursorRight (int _step, bool _select);
-	virtual void MoveCursorUp (int _step, bool _select);
-	virtual void MoveCursorDown (int _step, bool _select);
+    virtual void MoveCursorLeft(int _step, bool _select);
+    virtual void MoveCursorRight(int _step, bool _select);
+    virtual void MoveCursorUp(int _step, bool _select);
+    virtual void MoveCursorDown(int _step, bool _select);
 
-	virtual void GotoNextField();
-	virtual void GotoPrevField();
-	virtual void GotoField (FELD _feld);
-	virtual void SetInvisible (FELD _feld);
+    virtual void GotoNextField();
+    virtual void GotoPrevField();
+    virtual void GotoField(FELD _feld);
+    virtual void SetInvisible(FELD _feld);
 
-	virtual void DrawCursor();
-	virtual void DeleteCursor();
-	virtual void ToggleCursor();
+    virtual void DrawCursor();
+    virtual void DeleteCursor();
+    virtual void ToggleCursor();
 
-	virtual void SetCursorDirection (CURSORDIRECTION _cd);
-	virtual CURSORDIRECTION GetCursorDirection();
+    virtual void SetCursorDirection(CURSORDIRECTION _cd);
+    virtual CURSORDIRECTION GetCursorDirection();
 
-	virtual void SetCursorLocked (bool _locked=true);
+    virtual void SetCursorLocked(bool _locked = true);
 
-	virtual void DisableCursor();
-	virtual void EnableCursor();
+    virtual void DisableCursor();
+    virtual void EnableCursor();
 
-	virtual void CheckLocked();
+    virtual void CheckLocked();
 
-	virtual FELD CurrentFeld() const { return feld ? feld->feld : INVALID; }
+    virtual FELD CurrentFeld() const
+    {
+        return feld ? feld->feld : INVALID;
+    }
 
 protected:
-	CrFeld* GetFeld (FELD _feld);
+    CrFeld* GetFeld(FELD _feld);
 };
 /*-----------------------------------------------------------------*/
 #endif

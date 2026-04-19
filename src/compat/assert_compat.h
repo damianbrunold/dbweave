@@ -21,8 +21,14 @@
 #include <QtGlobal>
 #include <QDebug>
 
-#define dbw3_assert(c)      Q_ASSERT(c)
-#define dbw3_trace(c)       do { qDebug() << (c); } while (0)
-#define dbw3_trace2(lvl, c) do { qDebug() << "[" << (lvl) << "]" << (c); } while (0)
+#define dbw3_assert(c) Q_ASSERT(c)
+#define dbw3_trace(c)    \
+    do {                 \
+        qDebug() << (c); \
+    } while (0)
+#define dbw3_trace2(lvl, c)                     \
+    do {                                        \
+        qDebug() << "[" << (lvl) << "]" << (c); \
+    } while (0)
 
 #endif /* DBWEAVE_COMPAT_ASSERT_COMPAT_H */

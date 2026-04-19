@@ -22,10 +22,10 @@
 
 class TechinfoDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	explicit TechinfoDialog (QWidget* _parent = nullptr);
+    explicit TechinfoDialog(QWidget* _parent = nullptr);
 };
 
 #endif

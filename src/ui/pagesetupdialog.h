@@ -23,29 +23,29 @@ class QLineEdit;
 
 class PageSetupDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	explicit PageSetupDialog (QWidget* _parent = nullptr);
+    explicit PageSetupDialog(QWidget* _parent = nullptr);
 
-	/*  Margins in millimetre-tenths (matching TDBWFRM::Borders). */
-	void setMargins (int _leftTenths, int _rightTenths, int _topTenths, int _bottomTenths);
-	int  leftTenths   () const;
-	int  rightTenths  () const;
-	int  topTenths    () const;
-	int  bottomTenths () const;
+    /*  Margins in millimetre-tenths (matching TDBWFRM::Borders). */
+    void setMargins(int _leftTenths, int _rightTenths, int _topTenths, int _bottomTenths);
+    int leftTenths() const;
+    int rightTenths() const;
+    int topTenths() const;
+    int bottomTenths() const;
 
-	void setHeader (const QString& _s);
-	void setFooter (const QString& _s);
-	QString headerText () const;
-	QString footerText () const;
+    void setHeader(const QString& _s);
+    void setFooter(const QString& _s);
+    QString headerText() const;
+    QString footerText() const;
 
 private:
-	QDoubleSpinBox* left   = nullptr;
-	QDoubleSpinBox* right  = nullptr;
-	QDoubleSpinBox* top    = nullptr;
-	QDoubleSpinBox* bottom = nullptr;
-	QLineEdit*      header = nullptr;
-	QLineEdit*      footer = nullptr;
+    QDoubleSpinBox* left = nullptr;
+    QDoubleSpinBox* right = nullptr;
+    QDoubleSpinBox* top = nullptr;
+    QDoubleSpinBox* bottom = nullptr;
+    QLineEdit* header = nullptr;
+    QLineEdit* footer = nullptr;
 };
 
 #endif

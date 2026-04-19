@@ -24,17 +24,17 @@ class QComboBox;
 
 class EnvOptionsDialog : public QDialog
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	explicit EnvOptionsDialog (QWidget* _parent = nullptr);
+    explicit EnvOptionsDialog(QWidget* _parent = nullptr);
 
 protected:
-	void accept() override;
+    void accept() override;
 
 private:
-	QComboBox* cbLanguage = nullptr;
-	QCheckBox* showSplash = nullptr;
+    QComboBox* cbLanguage = nullptr;
+    QCheckBox* showSplash = nullptr;
 };
 
 #endif

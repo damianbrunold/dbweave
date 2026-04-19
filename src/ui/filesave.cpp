@@ -38,115 +38,125 @@
 #define FILEFORMATVERSION "0002"
 #define DBWEAVE_PORT_VERSION "0.1.0 (Qt 6 port)"
 
-bool TDBWFRM::Save ()
+bool TDBWFRM::Save()
 {
-	if (filename.isEmpty()) return false;
+    if (filename.isEmpty())
+        return false;
 
-	try {
-		const QByteArray fn = filename.toLocal8Bit();
-		if (!file->IsOpen()) {
-			file->Open(fn.constData(), FfOpenRead | FfOpenWrite | FfOpenOverwrite);
-		} else {
-			file->SeekBegin();
-		}
-		if (!file->IsOpen()) return false;
+    try {
+        const QByteArray fn = filename.toLocal8Bit();
+        if (!file->IsOpen()) {
+            file->Open(fn.constData(), FfOpenRead | FfOpenWrite | FfOpenOverwrite);
+        } else {
+            file->SeekBegin();
+        }
+        if (!file->IsOpen())
+            return false;
 
-		FfWriter writer;
-		writer.BreakFields(true);
-		writer.Assign(file);
+        FfWriter writer;
+        writer.BreakFields(true);
+        writer.Assign(file);
 
-		writer.WriteSignature();
+        writer.WriteSignature();
 
-		writer.BeginSection("version", "Dateiformat und Applikationsversion");
-		writer.WriteField("fmt", FILEFORMATVERSION);
-		writer.WriteField("ver", DBWEAVE_PORT_VERSION);
-		writer.EndSection();
+        writer.BeginSection("version", "Dateiformat und Applikationsversion");
+        writer.WriteField("fmt", FILEFORMATVERSION);
+        writer.WriteField("ver", DBWEAVE_PORT_VERSION);
+        writer.EndSection();
 
-		if (Data->properties) Data->properties->Save(&writer);
+        if (Data->properties)
+            Data->properties->Save(&writer);
 
-		writer.BeginSection("data", "Daten");
+        writer.BeginSection("data", "Daten");
 
-		writer.BeginSection("size");
-		writer.WriteFieldInt("maxx1", Data->MAXX1);
-		writer.WriteFieldInt("maxy1", Data->MAXY1);
-		writer.WriteFieldInt("maxx2", Data->MAXX2);
-		writer.WriteFieldInt("maxy2", Data->MAXY2);
-		writer.EndSection();
+        writer.BeginSection("size");
+        writer.WriteFieldInt("maxx1", Data->MAXX1);
+        writer.WriteFieldInt("maxy1", Data->MAXY1);
+        writer.WriteFieldInt("maxx2", Data->MAXX2);
+        writer.WriteFieldInt("maxy2", Data->MAXY2);
+        writer.EndSection();
 
-		writer.BeginSection("fields");
-		einzug.feld.Write       ("einzug",       &writer);
-		aufknuepfung.feld.Write ("aufknuepfung", &writer);
-		writer.BeginSection("trittfolge");
-			trittfolge.feld.Write    ("trittfolge", &writer);
-			trittfolge.isempty.Write ("isempty",    &writer);
-		writer.EndSection();
-		kettfarben.feld.Write   ("kettfarben",   &writer);
-		schussfarben.feld.Write ("schussfarben", &writer);
-		blatteinzug.feld.Write  ("blatteinzug",  &writer);
-		writer.EndSection();
+        writer.BeginSection("fields");
+        einzug.feld.Write("einzug", &writer);
+        aufknuepfung.feld.Write("aufknuepfung", &writer);
+        writer.BeginSection("trittfolge");
+        trittfolge.feld.Write("trittfolge", &writer);
+        trittfolge.isempty.Write("isempty", &writer);
+        writer.EndSection();
+        kettfarben.feld.Write("kettfarben", &writer);
+        schussfarben.feld.Write("schussfarben", &writer);
+        blatteinzug.feld.Write("blatteinzug", &writer);
+        writer.EndSection();
 
-		if (Data->palette) Data->palette->Save(&writer, /*format37=*/true);
+        if (Data->palette)
+            Data->palette->Save(&writer, /*format37=*/true);
 
-		/*  Webstuhl: just the 9 klammer brace entries. The legacy
-		    also wrote STRGFRM weave_position / last_position /
-		    schussselected etc.; those belong to the loom-control
-		    window which isn't ported yet and are skipped here.    */
-		writer.BeginSection("webstuhl");
-		for (int i = 0; i < 9; i++) {
-			const QByteArray name = QStringLiteral("klammer%1").arg(i).toLatin1();
-			writer.BeginSection(name.constData());
-			writer.WriteFieldInt("first",       klammern[i].first);
-			writer.WriteFieldInt("last",        klammern[i].last);
-			writer.WriteFieldInt("repetitions", klammern[i].repetitions);
-			writer.EndSection();
-		}
-		writer.EndSection();
+        /*  Webstuhl: just the 9 klammer brace entries. The legacy
+            also wrote STRGFRM weave_position / last_position /
+            schussselected etc.; those belong to the loom-control
+            window which isn't ported yet and are skipped here.    */
+        writer.BeginSection("webstuhl");
+        for (int i = 0; i < 9; i++) {
+            const QByteArray name = QStringLiteral("klammer%1").arg(i).toLatin1();
+            writer.BeginSection(name.constData());
+            writer.WriteFieldInt("first", klammern[i].first);
+            writer.WriteFieldInt("last", klammern[i].last);
+            writer.WriteFieldInt("repetitions", klammern[i].repetitions);
+            writer.EndSection();
+        }
+        writer.EndSection();
 
-		writer.BeginSection("hilfslinien");
-		writer.WriteFieldInt   ("count", hlines.GetCount());
-		writer.WriteFieldBinary("list",  hlines.Data(), hlines.DataSize());
-		writer.EndSection();
+        writer.BeginSection("hilfslinien");
+        writer.WriteFieldInt("count", hlines.GetCount());
+        writer.WriteFieldBinary("list", hlines.Data(), hlines.DataSize());
+        writer.EndSection();
 
-		writer.EndSection();   /* data */
+        writer.EndSection(); /* data */
 
-		/*  View state -- only the fields the port actually drives.
-		    aufknuepfung / schlagpatrone / blatteinzug / kettfarben /
-		    schussfarben subsections are omitted (their darstellung
-		    toggles aren't yet wired to QActions).                  */
-		writer.BeginSection("view", "Ansicht");
-		writer.BeginSection("general");
-		writer.WriteFieldInt("zoom",        currentzoom);
-		writer.WriteFieldInt("hebung",      sinkingshed ? 0 : 1);
-		writer.WriteFieldInt("viewpegplan", (ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) ? 1 : 0);
-		writer.WriteFieldInt("viewrapport", (RappViewRapport   && RappViewRapport  ->isChecked()) ? 1 : 0);
-		writer.WriteFieldInt("viewhlines",  (ViewHlines        && ViewHlines       ->isChecked()) ? 1 : 0);
-		writer.WriteFieldInt("righttoleft", righttoleft ? 1 : 0);
-		writer.WriteFieldInt("toptobottom", toptobottom ? 1 : 0);
-		writer.EndSection();
-		writer.BeginSection("gewebe");
-		int g = 0;
-		if (GewebeFarbeffekt && GewebeFarbeffekt->isChecked()) g = 1;
-		else if (GewebeSimulation && GewebeSimulation->isChecked()) g = 2;
-		else if (GewebeNone && GewebeNone->isChecked()) g = 3;
-		writer.WriteFieldInt("state",    g);
-		writer.WriteFieldInt("withgrid", fewithraster ? 1 : 0);
-		writer.EndSection();
-		writer.BeginSection("einzug");
-		writer.WriteFieldInt("visible",  (ViewEinzug && ViewEinzug->isChecked()) ? 1 : 0);
-		writer.WriteFieldInt("hvisible", hvisible);
-		writer.EndSection();
-		writer.BeginSection("trittfolge");
-		writer.WriteFieldInt("visible",  (ViewTrittfolge && ViewTrittfolge->isChecked()) ? 1 : 0);
-		writer.WriteFieldInt("wvisible", wvisible);
-		writer.EndSection();
-		writer.EndSection();   /* view */
+        /*  View state -- only the fields the port actually drives.
+            aufknuepfung / schlagpatrone / blatteinzug / kettfarben /
+            schussfarben subsections are omitted (their darstellung
+            toggles aren't yet wired to QActions).                  */
+        writer.BeginSection("view", "Ansicht");
+        writer.BeginSection("general");
+        writer.WriteFieldInt("zoom", currentzoom);
+        writer.WriteFieldInt("hebung", sinkingshed ? 0 : 1);
+        writer.WriteFieldInt("viewpegplan",
+                             (ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) ? 1 : 0);
+        writer.WriteFieldInt("viewrapport",
+                             (RappViewRapport && RappViewRapport->isChecked()) ? 1 : 0);
+        writer.WriteFieldInt("viewhlines", (ViewHlines && ViewHlines->isChecked()) ? 1 : 0);
+        writer.WriteFieldInt("righttoleft", righttoleft ? 1 : 0);
+        writer.WriteFieldInt("toptobottom", toptobottom ? 1 : 0);
+        writer.EndSection();
+        writer.BeginSection("gewebe");
+        int g = 0;
+        if (GewebeFarbeffekt && GewebeFarbeffekt->isChecked())
+            g = 1;
+        else if (GewebeSimulation && GewebeSimulation->isChecked())
+            g = 2;
+        else if (GewebeNone && GewebeNone->isChecked())
+            g = 3;
+        writer.WriteFieldInt("state", g);
+        writer.WriteFieldInt("withgrid", fewithraster ? 1 : 0);
+        writer.EndSection();
+        writer.BeginSection("einzug");
+        writer.WriteFieldInt("visible", (ViewEinzug && ViewEinzug->isChecked()) ? 1 : 0);
+        writer.WriteFieldInt("hvisible", hvisible);
+        writer.EndSection();
+        writer.BeginSection("trittfolge");
+        writer.WriteFieldInt("visible", (ViewTrittfolge && ViewTrittfolge->isChecked()) ? 1 : 0);
+        writer.WriteFieldInt("wvisible", wvisible);
+        writer.EndSection();
+        writer.EndSection(); /* view */
 
-		file->SetEndOfFile();
-		file->Close();
-		return true;
+        file->SetEndOfFile();
+        file->Close();
+        return true;
 
-	} catch (...) {
-		if (file->IsOpen()) file->Close();
-		return false;
-	}
+    } catch (...) {
+        if (file->IsOpen())
+            file->Close();
+        return false;
+    }
 }

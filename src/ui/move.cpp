@@ -22,94 +22,120 @@
 #include "cursor.h"
 #include "undoredo.h"
 
-void TDBWFRM::SchaftMoveUpClick ()
+void TDBWFRM::SchaftMoveUpClick()
 {
-	dbw3_assert(kbd_field == EINZUG || kbd_field == AUFKNUEPFUNG);
-	dbw3_assert(einzughandler);
-	dbw3_assert(cursorhandler);
-	if (!(kbd_field == EINZUG || kbd_field == AUFKNUEPFUNG)) return;
+    dbw3_assert(kbd_field == EINZUG || kbd_field == AUFKNUEPFUNG);
+    dbw3_assert(einzughandler);
+    dbw3_assert(cursorhandler);
+    if (!(kbd_field == EINZUG || kbd_field == AUFKNUEPFUNG))
+        return;
 
-	int currentschaft;
-	if (kbd_field == EINZUG) currentschaft = einzug.kbd.j + scroll_y1;
-	else                     currentschaft = aufknuepfung.kbd.j + scroll_y1;
-	if (currentschaft == -1) return;
+    int currentschaft;
+    if (kbd_field == EINZUG)
+        currentschaft = einzug.kbd.j + scroll_y1;
+    else
+        currentschaft = aufknuepfung.kbd.j + scroll_y1;
+    if (currentschaft == -1)
+        return;
 
-	if (currentschaft < Data->MAXY1 - 1) {
-		einzughandler->SwitchSchaefte(currentschaft, currentschaft + 1);
-		cursorhandler->MoveCursorUp(1, false);
-		if (EzBelassen) EzBelassen->setChecked(true);
+    if (currentschaft < Data->MAXY1 - 1) {
+        einzughandler->SwitchSchaefte(currentschaft, currentschaft + 1);
+        cursorhandler->MoveCursorUp(1, false);
+        if (EzBelassen)
+            EzBelassen->setChecked(true);
 
-		SetModified();
-		refresh();
-		if (undo) undo->Snapshot();
-	}
+        SetModified();
+        refresh();
+        if (undo)
+            undo->Snapshot();
+    }
 }
 
-void TDBWFRM::SchaftMoveDownClick ()
+void TDBWFRM::SchaftMoveDownClick()
 {
-	dbw3_assert(kbd_field == EINZUG || kbd_field == AUFKNUEPFUNG);
-	dbw3_assert(einzughandler);
-	dbw3_assert(cursorhandler);
-	if (!(kbd_field == EINZUG || kbd_field == AUFKNUEPFUNG)) return;
+    dbw3_assert(kbd_field == EINZUG || kbd_field == AUFKNUEPFUNG);
+    dbw3_assert(einzughandler);
+    dbw3_assert(cursorhandler);
+    if (!(kbd_field == EINZUG || kbd_field == AUFKNUEPFUNG))
+        return;
 
-	int currentschaft;
-	if (kbd_field == EINZUG) currentschaft = einzug.kbd.j + scroll_y1;
-	else                     currentschaft = aufknuepfung.kbd.j + scroll_y1;
-	if (currentschaft == -1) return;
+    int currentschaft;
+    if (kbd_field == EINZUG)
+        currentschaft = einzug.kbd.j + scroll_y1;
+    else
+        currentschaft = aufknuepfung.kbd.j + scroll_y1;
+    if (currentschaft == -1)
+        return;
 
-	if (currentschaft > 0) {
-		einzughandler->SwitchSchaefte(currentschaft, currentschaft - 1);
-		cursorhandler->MoveCursorDown(1, false);
-		if (EzBelassen) EzBelassen->setChecked(true);
+    if (currentschaft > 0) {
+        einzughandler->SwitchSchaefte(currentschaft, currentschaft - 1);
+        cursorhandler->MoveCursorDown(1, false);
+        if (EzBelassen)
+            EzBelassen->setChecked(true);
 
-		SetModified();
-		refresh();
-		if (undo) undo->Snapshot();
-	}
+        SetModified();
+        refresh();
+        if (undo)
+            undo->Snapshot();
+    }
 }
 
-void TDBWFRM::TrittMoveLeftClick ()
+void TDBWFRM::TrittMoveLeftClick()
 {
-	dbw3_assert(kbd_field == TRITTFOLGE || kbd_field == AUFKNUEPFUNG);
-	dbw3_assert(cursorhandler);
-	if (!(kbd_field == TRITTFOLGE || kbd_field == AUFKNUEPFUNG)) return;
-	if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) return;
+    dbw3_assert(kbd_field == TRITTFOLGE || kbd_field == AUFKNUEPFUNG);
+    dbw3_assert(cursorhandler);
+    if (!(kbd_field == TRITTFOLGE || kbd_field == AUFKNUEPFUNG))
+        return;
+    if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked())
+        return;
 
-	int currenttritt;
-	if (kbd_field == TRITTFOLGE) currenttritt = trittfolge.kbd.i + scroll_x2;
-	else                         currenttritt = aufknuepfung.kbd.i + scroll_x2;
-	if (currenttritt == -1) return;
+    int currenttritt;
+    if (kbd_field == TRITTFOLGE)
+        currenttritt = trittfolge.kbd.i + scroll_x2;
+    else
+        currenttritt = aufknuepfung.kbd.i + scroll_x2;
+    if (currenttritt == -1)
+        return;
 
-	if (currenttritt > 0) {
-		SwitchTritte(currenttritt, currenttritt - 1);
-		cursorhandler->MoveCursorLeft(1, false);
-		if (TfBelassen) TfBelassen->setChecked(true);
+    if (currenttritt > 0) {
+        SwitchTritte(currenttritt, currenttritt - 1);
+        cursorhandler->MoveCursorLeft(1, false);
+        if (TfBelassen)
+            TfBelassen->setChecked(true);
 
-		SetModified();
-		refresh();
-		if (undo) undo->Snapshot();
-	}
+        SetModified();
+        refresh();
+        if (undo)
+            undo->Snapshot();
+    }
 }
 
-void TDBWFRM::TrittMoveRightClick ()
+void TDBWFRM::TrittMoveRightClick()
 {
-	dbw3_assert(kbd_field == TRITTFOLGE || kbd_field == AUFKNUEPFUNG);
-	dbw3_assert(cursorhandler);
-	if (!(kbd_field == TRITTFOLGE || kbd_field == AUFKNUEPFUNG)) return;
-	if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) return;
+    dbw3_assert(kbd_field == TRITTFOLGE || kbd_field == AUFKNUEPFUNG);
+    dbw3_assert(cursorhandler);
+    if (!(kbd_field == TRITTFOLGE || kbd_field == AUFKNUEPFUNG))
+        return;
+    if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked())
+        return;
 
-	int currenttritt;
-	if (kbd_field == TRITTFOLGE) currenttritt = trittfolge.kbd.i + scroll_x2;
-	else                         currenttritt = aufknuepfung.kbd.i + scroll_x2;
-	if (currenttritt == -1) return;
+    int currenttritt;
+    if (kbd_field == TRITTFOLGE)
+        currenttritt = trittfolge.kbd.i + scroll_x2;
+    else
+        currenttritt = aufknuepfung.kbd.i + scroll_x2;
+    if (currenttritt == -1)
+        return;
 
-	if (currenttritt < Data->MAXX2 - 1) {
-		SwitchTritte(currenttritt, currenttritt + 1);
-		cursorhandler->MoveCursorRight(1, false);
-		if (TfBelassen) TfBelassen->setChecked(true);
+    if (currenttritt < Data->MAXX2 - 1) {
+        SwitchTritte(currenttritt, currenttritt + 1);
+        cursorhandler->MoveCursorRight(1, false);
+        if (TfBelassen)
+            TfBelassen->setChecked(true);
 
-		SetModified();
-		refresh();
-		if (undo) undo->Snapshot();
-	}
+        SetModified();
+        refresh();
+        if (undo)
+            undo->Snapshot();
+    }
 }
