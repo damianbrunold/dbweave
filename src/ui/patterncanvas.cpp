@@ -152,7 +152,10 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
 
     frm->aufknuepfung.gw = GW;
     frm->aufknuepfung.gh = GH;
-    frm->aufknuepfung.pos.x0 = usableW - af_w - MARGIN;
+    /*  Aufknuepfung.y0 is finalised after showHlines is known so we
+        can push it down by the same BAR + DIV the left column uses.
+        Initialise with MARGIN here; the final assignment lives
+        below.                                                      */
     frm->aufknuepfung.pos.y0 = MARGIN;
     frm->aufknuepfung.pos.width = af_w;
     frm->aufknuepfung.pos.height = af_h;
@@ -171,14 +174,17 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
     const bool showEinzug = !frm->ViewEinzug || frm->ViewEinzug->isChecked();
     const bool showBlatteinzug = !frm->ViewBlatteinzug || frm->ViewBlatteinzug->isChecked();
     const bool showTrittfolge = !frm->ViewTrittfolge || frm->ViewTrittfolge->isChecked();
+    const bool showHlines = frm->ViewHlines && frm->ViewHlines->isChecked();
+    const int BAR = GW; /* hilfslinien bar thickness, zoom-scaled */
 
     const int schussfarbenW = showFarbe ? GW : 0;
     const int trittfolgeW = showTrittfolge ? af_w : 0;
 
     /*  Width available for the einzug/gewebe/blatteinzug/kettfarben
         column. The right column eats aufknuepfung width + schuss-
-        farben + trittfolge + gaps. */
-    const int rightW = trittfolgeW + (showFarbe ? schussfarbenW + MARGIN : 0);
+        farben + trittfolge + gaps + hilfslinien vertical bar.     */
+    const int rightW = trittfolgeW + (showFarbe ? schussfarbenW + MARGIN : 0)
+                       + (showHlines ? BAR + MARGIN : 0);
     const int ez_area_w = usableW - rightW - 3 * MARGIN;
     /*  Cap the visible gewebe / strip width at Data->MAXX1 cells.
         Without this, enlarging the window produces a strip wider
@@ -197,10 +203,17 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
     const int e_div = showEinzug ? DIV : 0;
     const int b_div = showBlatteinzug ? DIV : 0;
 
+    /*  Legacy places the two horizontal hilfslinien bars at the top
+        of the client area; every strip below is pushed down by
+        BAR+DIV when ViewHlines is active. The two vertical bars sit
+        far-right, between schussfarben and the vertical scrollbar
+        (that width is already reserved via rightW above).          */
+    const int hlh_div = showHlines ? BAR + DIV : 0;
+
     frm->kettfarben.gw = GW;
     frm->kettfarben.gh = GH;
     frm->kettfarben.pos.x0 = colX;
-    frm->kettfarben.pos.y0 = MARGIN;
+    frm->kettfarben.pos.y0 = MARGIN + hlh_div;
     frm->kettfarben.pos.width = showFarbe ? colW : 0;
     frm->kettfarben.pos.height = showFarbe ? GH : 0;
 
@@ -255,6 +268,55 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
     frm->aufknuepfung.pos.y0 = frm->einzug.pos.y0;
     frm->aufknuepfung.pos.width = showTrittfolge ? af_w : 0;
     frm->aufknuepfung.pos.height = showEinzug ? af_h : 0;
+
+    /*  Shift schussfarben / hlinevert to the far right so there's
+        room for the vertical bar. When ViewHlines is off the bar is
+        zero-width and everything stays where it was.               */
+    if (showHlines) {
+        const int hlvX = usableW - BAR - MARGIN;
+        frm->hlinevert1.gw = BAR;
+        frm->hlinevert1.gh = GH;
+        frm->hlinevert1.x0 = hlvX;
+        frm->hlinevert1.y0 = frm->einzug.pos.y0;
+        frm->hlinevert1.width = showEinzug ? BAR : 0;
+        frm->hlinevert1.height = showEinzug ? frm->einzug.pos.height : 0;
+
+        frm->hlinevert2.gw = BAR;
+        frm->hlinevert2.gh = GH;
+        frm->hlinevert2.x0 = hlvX;
+        frm->hlinevert2.y0 = frm->gewebe.pos.y0;
+        frm->hlinevert2.width = BAR;
+        frm->hlinevert2.height = frm->gewebe.pos.height;
+
+        /*  Pull schussfarben to the left of the vertical bar. */
+        frm->schussfarben.pos.x0 = hlvX - DIV - frm->schussfarben.pos.width;
+
+        /*  Horizontal bars sit at the very top, above their
+            respective columns.                                */
+        frm->hlinehorz1.gw = GW;
+        frm->hlinehorz1.gh = BAR;
+        frm->hlinehorz1.x0 = frm->kettfarben.pos.x0;
+        frm->hlinehorz1.y0 = MARGIN;
+        frm->hlinehorz1.width = frm->gewebe.pos.width;
+        frm->hlinehorz1.height = BAR;
+
+        frm->hlinehorz2.gw = GW;
+        frm->hlinehorz2.gh = BAR;
+        frm->hlinehorz2.x0 = frm->trittfolge.pos.x0;
+        frm->hlinehorz2.y0 = MARGIN;
+        frm->hlinehorz2.width = showTrittfolge ? frm->trittfolge.pos.width : 0;
+        frm->hlinehorz2.height = showTrittfolge ? BAR : 0;
+    } else {
+        auto clearBar = [](HlineBar& b) {
+            b.x0 = b.y0 = 0;
+            b.width = b.height = 0;
+            b.gw = b.gh = 0;
+        };
+        clearBar(frm->hlinehorz1);
+        clearBar(frm->hlinehorz2);
+        clearBar(frm->hlinevert1);
+        clearBar(frm->hlinevert2);
+    }
 
     /*  Clamp scroll offsets so the new viewport never shows past
         the data extent. */
@@ -694,8 +756,36 @@ void PatternCanvas::paintEvent(QPaintEvent* /*_e*/)
 
     /*  Hilfslinien (guide lines) drawn after rapport so they sit on
         top of cell fills but under the cursor outline. */
-    if (frm->ViewHlines && frm->ViewHlines->isChecked())
+    if (frm->ViewHlines && frm->ViewHlines->isChecked()) {
+        /*  Paint the four grab bars. Each bar is a btnFace rectangle
+            with a dkGray border; horizontal bars have short ticks at
+            every cell boundary pointing downwards, vertical bars
+            have short ticks pointing rightwards. Port of legacy
+            DrawHlineBars.                                          */
+        const QColor dkGray(105, 105, 105);
+        auto paintBar = [&](const HlineBar& b, bool horizontal) {
+            if (b.width <= 0 || b.height <= 0)
+                return;
+            p.setBrush(kLegacyBtnFace);
+            p.setPen(QPen(dkGray));
+            p.drawRect(b.x0, b.y0, b.width, b.height);
+            if (horizontal && b.gw > 0) {
+                for (int x = b.x0; x < b.x0 + b.width; x += b.gw) {
+                    p.drawLine(x, b.y0 + b.height - 5, x, b.y0 + b.height - 1);
+                }
+            } else if (!horizontal && b.gh > 0) {
+                for (int y = b.y0; y < b.y0 + b.height; y += b.gh) {
+                    p.drawLine(b.x0 + 1, y, b.x0 + 5, y);
+                }
+            }
+        };
+        paintBar(frm->hlinehorz1, true);
+        paintBar(frm->hlinehorz2, true);
+        paintBar(frm->hlinevert1, false);
+        paintBar(frm->hlinevert2, false);
+
         frm->DrawHilfslinien();
+    }
 
     /*  Rubber-band selection rectangle sits on top of the cells
         and guide lines; cursor paints after so it remains visible

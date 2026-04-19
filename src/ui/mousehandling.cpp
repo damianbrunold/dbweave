@@ -27,6 +27,7 @@
 
 #include "mainwindow.h"
 #include "cursor.h"
+#include "hilfslinien.h"
 #include "enums.h"
 
 static bool HitCheck(const GRIDPOS& _grid, int _x, int _y, int _scrollx, int _scrolly, int& _i,
@@ -79,6 +80,20 @@ void TDBWFRM::Physical2Logical(int _x, int _y, FELD& _feld, int& _i, int& _j)
     else if (HitCheck(schussfarben.pos, _x, _y, 0, scroll_y2, _i, _j, schussfarben.gw,
                       schussfarben.gh))
         _feld = SCHUSSFARBEN;
+    /*  Hilfslinien grab bars. The horizontal bars only care about
+        the x coordinate (for the cell column), the vertical bars
+        only about y. Use the bar's gw/gh which matches the grid
+        pitch of the adjacent field.                              */
+    else if (HitCheck(hlinehorz1, _x, _y, scroll_x1, 0, _i, _j, hlinehorz1.gw, hlinehorz1.gh,
+                      rtl))
+        _feld = HLINEHORZ1;
+    else if (HitCheck(hlinehorz2, _x, _y, scroll_x2, 0, _i, _j, hlinehorz2.gw, hlinehorz2.gh))
+        _feld = HLINEHORZ2;
+    else if (HitCheck(hlinevert1, _x, _y, 0, scroll_y1, _i, _j, hlinevert1.gw, hlinevert1.gh,
+                      false, ttb))
+        _feld = HLINEVERT1;
+    else if (HitCheck(hlinevert2, _x, _y, 0, scroll_y2, _i, _j, hlinevert2.gw, hlinevert2.gh))
+        _feld = HLINEVERT2;
 }
 
 /*  Data-coord cell indices for the hit field. Scroll offset differs
@@ -178,6 +193,37 @@ void TDBWFRM::handleCanvasMousePress(int _x, int _y, bool _shift, bool _ctrl)
     case BLATTEINZUG:
         SetBlatteinzug(i);
         lastblatteinzugi = i;
+        break;
+    case HLINEHORZ1:
+        /*  Horizontal bar above einzug/gewebe: clicks toggle a
+            VERTICAL guide line at column (i + scroll_x1) on the LEFT
+            side.                                                    */
+        if (hlines.GetLine(HL_VERT, HL_LEFT, i + scroll_x1))
+            hlines.Delete(hlines.GetLine(HL_VERT, HL_LEFT, i + scroll_x1));
+        else
+            hlines.Add(HL_VERT, HL_LEFT, i + scroll_x1);
+        SetModified();
+        break;
+    case HLINEHORZ2:
+        if (hlines.GetLine(HL_VERT, HL_RIGHT, i + scroll_x2))
+            hlines.Delete(hlines.GetLine(HL_VERT, HL_RIGHT, i + scroll_x2));
+        else
+            hlines.Add(HL_VERT, HL_RIGHT, i + scroll_x2);
+        SetModified();
+        break;
+    case HLINEVERT1:
+        if (hlines.GetLine(HL_HORZ, HL_TOP, j + scroll_y1))
+            hlines.Delete(hlines.GetLine(HL_HORZ, HL_TOP, j + scroll_y1));
+        else
+            hlines.Add(HL_HORZ, HL_TOP, j + scroll_y1);
+        SetModified();
+        break;
+    case HLINEVERT2:
+        if (hlines.GetLine(HL_HORZ, HL_BOTTOM, j + scroll_y2))
+            hlines.Delete(hlines.GetLine(HL_HORZ, HL_BOTTOM, j + scroll_y2));
+        else
+            hlines.Add(HL_HORZ, HL_BOTTOM, j + scroll_y2);
+        SetModified();
         break;
     default:
         break;
