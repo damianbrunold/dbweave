@@ -146,6 +146,23 @@ private slots:
 		QCOMPARE(DBWFRM->currentrange, 7);
 	}
 
+	void space_toggles_gewebe_cell()
+	{
+		/*  Legacy CrFeld::Toggle: Space always toggles. On an
+		    empty cell it writes currentrange; on a set cell it
+		    flips the sign (visually empty). Legacy auto-advances
+		    the cursor per cursordirection (CD_DEFAULT == CD_UP),
+		    so we put the cursor back on the cell between presses
+		    to exercise the toggle-clear semantics.             */
+		DBWFRM->currentrange = 3;
+		DBWFRM->cursorhandler->SetCursor(GEWEBE, 2, 2);
+		DBWFRM->handleCanvasKeyPress(Qt::Key_Space, 0);
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(2, 2), 3);
+		DBWFRM->cursorhandler->SetCursor(GEWEBE, 2, 2);
+		DBWFRM->handleCanvasKeyPress(Qt::Key_Space, 0);
+		QVERIFY((int)DBWFRM->gewebe.feld.Get(2, 2) <= 0);
+	}
+
 	void digit_zero_clears_cell_under_cursor()
 	{
 		DBWFRM->cursorhandler->SetCursor(GEWEBE, 2, 2);

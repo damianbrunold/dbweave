@@ -34,16 +34,14 @@
 #include <Qt>
 #include <algorithm>
 
-/*  Apply a state-apply op at the current cursor position of the
-    active field. Used by Space and digit-0 to paint / clear; the
-    legacy cursor->ToggleField and SetField dispatch here in the
-    CrFeld subclasses -- the port routes through TDBWFRM::Set*
-    directly because the cursor's Set/Toggle are still stubs.    */
+/*  CrFeld::Set equivalent -- unconditional write at the current
+    cursor position. Used by digit 1..9 (write currentrange) and
+    digit 0 (write 0 -- hard clear). Self-toggle fields (EINZUG /
+    BLATTEINZUG) and colour strips only react when _set is true,
+    matching the legacy CrFeld::Set (which only has cases for
+    GEWEBE / AUFKNUEPFUNG / TRITTFOLGE).                         */
 static void applyAtCursor (TDBWFRM* frm, bool _set, int _range)
 {
-	/*  fb.kbd.{i,j} are viewport-local; Set* editor ops expect
-	    viewport-local indices (they add scroll internally), so no
-	    scroll addition is needed here.                          */
 	switch (frm->kbd_field) {
 	case GEWEBE:
 		frm->SetGewebe(frm->gewebe.kbd.i, frm->gewebe.kbd.j, _set, _range);
@@ -70,6 +68,7 @@ static void applyAtCursor (TDBWFRM* frm, bool _set, int _range)
 		break;
 	}
 }
+
 
 void __fastcall TDBWFRM::handleCanvasKeyPress (int _key, int _modifiers)
 {
@@ -105,10 +104,19 @@ void __fastcall TDBWFRM::handleCanvasKeyPress (int _key, int _modifiers)
 		refresh();
 		return;
 
-	case Qt::Key_Space:
-		applyAtCursor(this, /*_set=*/!shift, currentrange);
+	case Qt::Key_Space: {
+		/*  Verbatim legacy dispatch: Space -> ToggleField(shift)
+		    -> CrFeld::Toggle (see src/ui/cursor.cpp). Shift+Space
+		    on KETTFARBEN / SCHUSSFARBEN picks the colour under the
+		    cursor into Data->color.                             */
+		int bits = 0;
+		if (shift)                            bits |= ssShift;
+		if (_modifiers & Qt::ControlModifier) bits |= ssCtrl;
+		if (_modifiers & Qt::AltModifier)     bits |= ssAlt;
+		cursorhandler->ToggleField(TShiftState(bits));
 		refresh();
 		return;
+	}
 
 	case Qt::Key_Return:
 	case Qt::Key_Enter:

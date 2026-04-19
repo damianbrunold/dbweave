@@ -383,12 +383,66 @@ void __fastcall CrFeld::EnableCursor()
 	DrawCursor();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall CrFeld::Toggle (TShiftState /*_shift*/)
+void __fastcall CrFeld::Toggle (TShiftState _shift)
 {
-	/*  STUB: dispatches to SetGewebe / SetEinzug / SetAufknuepfung /
-	    SetTrittfolge / SetBlatteinzug / SetKettfarben /
-	    SetSchussfarben. Those editor operations are not ported yet;
-	    this body will be filled in alongside them.                */
+	/*  Verbatim port of legacy cursor.cpp:CrFeld::Toggle. Space
+	    routes here via CrCursorHandler::ToggleField. Skipped:
+	      * OptionsLockGewebe (not ported yet) -- gewebe is always
+	        editable in the port.
+	      * FarbPalette / Statusbar invalidation after colour-pick
+	        -- refresh() in the caller redraws the whole canvas. */
+	switch (feld) {
+	case BLATTEINZUG:
+		frm->SetBlatteinzug (fb.kbd.i);
+		MoveCursorRight (1, false);
+		return;
+	case KETTFARBEN:
+		if (_shift.Contains(ssShift) || _shift.Contains(ssCtrl)) {
+			Data->color = (unsigned char)frm->kettfarben.feld.Get(fb.kbd.i + frm->scroll_x1);
+		} else {
+			frm->SetKettfarben (fb.kbd.i);
+			MoveCursorRight (1, false);
+		}
+		return;
+	case EINZUG:
+		frm->SetEinzug (fb.kbd.i, fb.kbd.j);
+		break;
+	case GEWEBE:
+		frm->SetGewebe (fb.kbd.i, fb.kbd.j, false, 1);
+		break;
+	case AUFKNUEPFUNG:
+		frm->SetAufknuepfung (fb.kbd.i, fb.kbd.j, false, 1);
+		break;
+	case TRITTFOLGE:
+		frm->SetTrittfolge (fb.kbd.i, fb.kbd.j, false, 1);
+		break;
+	case SCHUSSFARBEN:
+		if (_shift.Contains(ssShift) || _shift.Contains(ssCtrl)) {
+			Data->color = (unsigned char)frm->schussfarben.feld.Get(frm->scroll_y2 + fb.kbd.j);
+		} else {
+			frm->SetSchussfarben (fb.kbd.j);
+		}
+		break;
+	default: break;
+	}
+
+	/*  Cursor auto-advance after Toggle. Both branches are
+	    identical in the legacy source; kept as-is. */
+	if (frm->toptobottom && (feld == EINZUG || feld == AUFKNUEPFUNG)) {
+		if      (cursordirection & CD_UP)   MoveCursorUp   (1, false);
+		else if (cursordirection & CD_DOWN) MoveCursorDown (1, false);
+	} else {
+		if      (cursordirection & CD_UP)   MoveCursorUp   (1, false);
+		else if (cursordirection & CD_DOWN) MoveCursorDown (1, false);
+	}
+	if (frm->righttoleft && (feld == EINZUG || feld == GEWEBE ||
+	                         feld == BLATTEINZUG || feld == KETTFARBEN)) {
+		if      (cursordirection & CD_LEFT)  MoveCursorRight(1, false);
+		else if (cursordirection & CD_RIGHT) MoveCursorLeft (1, false);
+	} else {
+		if      (cursordirection & CD_LEFT)  MoveCursorLeft (1, false);
+		else if (cursordirection & CD_RIGHT) MoveCursorRight(1, false);
+	}
 }
 /*-----------------------------------------------------------------*/
 void __fastcall CrFeld::Set (bool /*_set*/, TShiftState /*_shift*/)
