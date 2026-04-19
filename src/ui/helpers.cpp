@@ -20,6 +20,7 @@
 #include "datamodule.h"
 #include "undoredo.h"
 #include <algorithm>
+#include <cstring>
 /*-----------------------------------------------------------------*/
 using std::max;
 /*-----------------------------------------------------------------*/
@@ -161,12 +162,20 @@ static void resizeFreie (bool*& _arr, int _newsize)
 	_arr = p;
 }
 /*-----------------------------------------------------------------*/
+static void resizeScratch (char*& _buf, int _newsize)
+{
+	delete[] _buf;
+	_buf = new char[_newsize];
+	std::memset(_buf, 0, _newsize);
+}
+
 void __fastcall TDBWFRM::AllocBuffersX1()
 {
 	einzug.feld.Resize       (Data->MAXX1, 0);
 	kettfarben.feld.Resize   (Data->MAXX1, Data->defcolorh);
 	blatteinzug.feld.Resize  (Data->MAXX1, 0);
 	gewebe.feld.Resize       (Data->MAXX1, Data->MAXY2, 0);
+	resizeScratch(xbuf, Data->MAXX1);
 }
 /*-----------------------------------------------------------------*/
 void __fastcall TDBWFRM::AllocBuffersX2()
@@ -189,6 +198,7 @@ void __fastcall TDBWFRM::AllocBuffersY2()
 	trittfolge.isempty.Resize(Data->MAXY2, true);
 	schussfarben.feld.Resize (Data->MAXY2, Data->defcolorv);
 	gewebe.feld.Resize       (Data->MAXX1, Data->MAXY2, 0);
+	resizeScratch(ybuf, Data->MAXY2);
 }
 /*-----------------------------------------------------------------*/
 void __fastcall TDBWFRM::AllocBuffers (bool _clear)

@@ -39,6 +39,7 @@ add_library(dbweave_ui STATIC
     utilities.cpp
     steigung.cpp
     palettepanel.cpp
+    recalc.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)

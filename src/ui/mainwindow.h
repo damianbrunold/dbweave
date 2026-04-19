@@ -198,6 +198,13 @@ public:
 	bool* freieschaefte = nullptr;
 	bool* freietritte   = nullptr;
 
+	/*  Scratch buffers used by RcRecalcAll: xbuf[i] marks warp i
+	    as seen (non-empty) during RecalcEinzug; ybuf[j] does the
+	    same for wefts during RecalcTrittfolge. Sized to MAXX1 and
+	    MAXY2 respectively, owned, reallocated by AllocBuffers.  */
+	char* xbuf = nullptr;
+	char* ybuf = nullptr;
+
 	/*  Undo stack + handlers, owned. */
 	UrUndo*          undo           = nullptr;
 	RpRapport*       rapporthandler = nullptr;
@@ -296,6 +303,16 @@ public:
 	void __fastcall _DrawSchlagpatrone();
 	void __fastcall RecalcFreieSchaefte();
 	void __fastcall RecalcFreieTritte();
+
+	/*  Full einzug / trittfolge / aufknuepfung recompute from the
+	    current gewebe content. Used by bereiche, importbmp,
+	    insertbindung, rapportieren, and Edit operations that
+	    mutate the gewebe wholesale. Wrappers around RcRecalcAll
+	    with the ViewSchlagpatrone flag threaded through.        */
+	void __fastcall RecalcAll();
+	void __fastcall RecalcSchlagpatrone();
+	void __fastcall RecalcTrittfolgeAufknuepfung();
+	void __fastcall RecalcFixEinzug();
 
 	/*  --- Selection --------------------------------------------
 	    The RANGE tracks a rubber-band rectangle on GEWEBE / EINZUG

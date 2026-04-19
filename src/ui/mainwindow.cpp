@@ -22,6 +22,8 @@
 
 #include <QDockWidget>
 
+#include <cstring>
+
 #include <QActionGroup>
 #include <QApplication>
 #include <QKeySequence>
@@ -102,6 +104,12 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	freietritte   = new bool[Data->MAXX2];
 	for (int j = 0; j < Data->MAXY1; j++) freieschaefte[j] = true;
 	for (int i = 0; i < Data->MAXX2; i++) freietritte[i]   = true;
+
+	/*  Scratch buffers for RcRecalcAll. */
+	xbuf = new char[Data->MAXX1];
+	ybuf = new char[Data->MAXY2];
+	std::memset(xbuf, 0, Data->MAXX1);
+	std::memset(ybuf, 0, Data->MAXY2);
 
 	/*  Seed a blank document with the same defaults the legacy
 	    Clear methods produce: blatteinzug -> 2-2 reed pattern,
@@ -420,6 +428,8 @@ TDBWFRM::~TDBWFRM()
 	delete file; file = nullptr;
 	delete[] freieschaefte; freieschaefte = nullptr;
 	delete[] freietritte;   freietritte   = nullptr;
+	delete[] xbuf;          xbuf          = nullptr;
+	delete[] ybuf;          ybuf          = nullptr;
 	delete[] fixeinzug;     fixeinzug     = nullptr;
 	/*  QAction members are owned by `this` via QObject parenting. */
 }
@@ -546,8 +556,6 @@ void __fastcall TDBWFRM::_ClearSchlagpatrone()                     {}
 void __fastcall TDBWFRM::_DrawEinzug()                             {}
 void __fastcall TDBWFRM::_DrawAufknuepfung()                       {}
 void __fastcall TDBWFRM::_DrawSchlagpatrone()                      {}
-void __fastcall TDBWFRM::RecalcFreieSchaefte()                     {}
-void __fastcall TDBWFRM::RecalcFreieTritte()                       {}
 void __fastcall TDBWFRM::ClearGewebe(int, int)                     {}
 void __fastcall TDBWFRM::RedrawGewebe(int, int)                    {}
 void __fastcall TDBWFRM::RedrawAufknuepfung(int, int)              {}
