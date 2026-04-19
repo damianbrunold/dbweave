@@ -22,28 +22,31 @@ void TDBWFRM::SetAufknuepfung(int _i, int _j, bool _set, int _range)
         return;
 
     DoSetAufknuepfung(_i, _j, _set, _range);
+    if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked())
+        return;
+
+    RecalcGewebe();
+    CalcRange();
+    UpdateRapport();
+    SetModified();
+    refresh();
 
     dbw3_assert(undo != 0);
     if (undo)
         undo->Snapshot();
 }
 /*-----------------------------------------------------------------*/
+/*  DoSetAufknuepfung only toggles / sets the aufknuepfung cell. The
+    caller runs RecalcGewebe + CalcRange + UpdateRapport once after
+    all related writes.                                             */
 void TDBWFRM::DoSetAufknuepfung(int _i, int _j, bool _set, int _range)
 {
     if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked())
         return;
 
-    // Punkt toggeln
     if (!_set)
         ToggleAufknuepfung(scroll_x2 + _i, scroll_y1 + _j);
     else
         aufknuepfung.feld.Set(scroll_x2 + _i, scroll_y1 + _j, char(_range));
-
-    RecalcGewebe();
-    CalcRange();
-    UpdateRapport();
-
-    SetModified();
-    refresh();
 }
 /*-----------------------------------------------------------------*/

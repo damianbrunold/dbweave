@@ -37,20 +37,21 @@ void TDBWFRM::SetEinzug(int _i, int _j)
             i += rapport.kr.count();
         }
 
+        const short neweinzug = einzug.feld.Get(scroll_x1 + _i);
         while (i <= kette.b) {
-            if (i != _i + scroll_x1) {
-                // Einzug kopieren
-                short neweinzug = einzug.feld.Get(scroll_x1 + _i);
+            if (i != _i + scroll_x1)
                 einzug.feld.Set(i, neweinzug);
-
-                // Kettfaden kopieren
-                for (int jj = 0; jj < Data->MAXY2; jj++)
-                    gewebe.feld.Set(i, jj, gewebe.feld.Get(_i + scroll_x1, jj));
-            }
             i += rapport.kr.count();
         }
     }
 
+    /*  Single recalc across the final einzug. RecalcGewebe rebuilds
+        gewebe from einzug x aufknuepfung x trittfolge for every warp,
+        so the replicated columns get their gewebe columns rebuilt
+        automatically.                                              */
+    RecalcGewebe();
+    CalcRangeKette();
+    CalcRangeSchuesse();
     UpdateRapport();
     SetModified();
     refresh();
@@ -60,19 +61,14 @@ void TDBWFRM::SetEinzug(int _i, int _j)
         undo->Snapshot();
 }
 /*-----------------------------------------------------------------*/
+/*  DoSetEinzug only writes the einzug cell. The caller runs
+    RecalcGewebe + CalcRange* once after all related writes.        */
 void TDBWFRM::DoSetEinzug(int _i, int _j)
 {
-    // Einzug neu setzen
     short oldeinzug = einzug.feld.Get(scroll_x1 + _i);
     short neweinzug = (short)(scroll_y1 + _j + 1);
     if (oldeinzug == neweinzug)
         neweinzug = 0;
     einzug.feld.Set(scroll_x1 + _i, neweinzug);
-
-    RecalcGewebe();
-
-    // Belegter Bereich nachfuehren
-    CalcRangeKette();
-    CalcRangeSchuesse();
 }
 /*-----------------------------------------------------------------*/

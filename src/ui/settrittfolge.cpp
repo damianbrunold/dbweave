@@ -35,18 +35,17 @@ void TDBWFRM::SetTrittfolge(int _i, int _j, bool _set, int _range)
 
         while (j <= schuesse.b) {
             if (j != _j + scroll_y2) {
-                // Tritt kopieren
                 for (int ii = 0; ii < Data->MAXX2; ii++)
                     trittfolge.feld.Set(ii, j, trittfolge.feld.Get(ii, _j + scroll_y2));
-
-                // Schussfaden kopieren
-                for (int ii = 0; ii < Data->MAXX1; ii++)
-                    gewebe.feld.Set(ii, j, gewebe.feld.Get(ii, _j + scroll_y2));
             }
             j += rapport.sr.count();
         }
     }
 
+    /*  Single recalc across the final trittfolge. */
+    RecalcGewebe();
+    CalcRangeKette();
+    CalcRangeSchuesse();
     UpdateRapport();
     SetModified();
     refresh();
@@ -56,9 +55,10 @@ void TDBWFRM::SetTrittfolge(int _i, int _j, bool _set, int _range)
         undo->Snapshot();
 }
 /*-----------------------------------------------------------------*/
+/*  DoSetTrittfolge only writes the trittfolge cell(s). The caller
+    runs RecalcGewebe + CalcRange* once after all related writes.  */
 void TDBWFRM::DoSetTrittfolge(int _i, int _j, bool _set, int _range)
 {
-    // Tritt neu setzen
     if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) {
         char oldstate = trittfolge.feld.Get(scroll_x2 + _i, scroll_y2 + _j);
         if (!_set)
@@ -75,11 +75,5 @@ void TDBWFRM::DoSetTrittfolge(int _i, int _j, bool _set, int _range)
             trittfolge.feld.Set(i, scroll_y2 + _j, 0);
         trittfolge.feld.Set(scroll_x2 + _i, scroll_y2 + _j, bSet ? (char)0 : (char)1);
     }
-
-    RecalcGewebe();
-
-    // Belegter Bereich nachfuehren
-    CalcRangeKette();
-    CalcRangeSchuesse();
 }
 /*-----------------------------------------------------------------*/

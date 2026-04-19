@@ -64,8 +64,7 @@ void TDBWFRM::FillKoeper()
                         DoSetGewebe(ii - scroll_x1, j - scroll_y2, false, currentrange);
                 }
             }
-            if (!(ViewSchlagpatrone && ViewSchlagpatrone->isChecked()))
-                RearrangeTritte();
+            RecalcAll();
             CalcRangeKette();
             CalcRangeSchuesse();
             CalcRapport();
@@ -108,8 +107,7 @@ void TDBWFRM::FillKoeper()
                         DoSetGewebe(i - scroll_x1, jj - scroll_y2, false, currentrange);
                 }
             }
-            if (!(ViewSchlagpatrone && ViewSchlagpatrone->isChecked()))
-                RearrangeTritte();
+            RecalcAll();
             CalcRangeKette();
             CalcRangeSchuesse();
             CalcRapport();

@@ -59,23 +59,19 @@ void TDBWFRM::SetGewebe(int _i, int _j, bool _set, int _range)
                 j0 += rapport.sr.count();
         }
 
+        /*  Replicate the gewebe cell to every other rapport position.
+            einzug / trittfolge are rebuilt from the resulting gewebe
+            by the single RecalcAll() below, so no manual einzug /
+            trittfolge fixup is needed here.                        */
         int i = i0;
         while (i <= kette.b) {
             int j = j0;
             while (j <= schuesse.b) {
                 if (i != _i + scroll_x1 || j != _j + scroll_y2) {
-                    // Gewebepunkt toggeln
                     if (!_set)
                         ToggleGewebe(i, j);
                     else
                         gewebe.feld.Set(i, j, char(_range));
-
-                    // Einzug kopieren
-                    einzug.feld.Set(i, einzug.feld.Get(_i + scroll_x1));
-
-                    // Tritt kopieren
-                    for (int ii = 0; ii < Data->MAXX2; ii++)
-                        trittfolge.feld.Set(ii, j, trittfolge.feld.Get(ii, _j + scroll_y2));
                 }
                 j += rapport.sr.count();
             }
@@ -83,12 +79,10 @@ void TDBWFRM::SetGewebe(int _i, int _j, bool _set, int _range)
         }
     }
 
-    RearrangeSchaefte();
-
-    if (!ViewSchlagpatrone || !ViewSchlagpatrone->isChecked()) {
-        EliminateEmptyTritt();
-        RearrangeTritte();
-    }
+    /*  Single recalc over the final gewebe -- running it inside
+        DoSetGewebe would see only the first cell and allocate stray
+        shafts / treadles for the unreplicated rapport copies.      */
+    RecalcAll();
 
     UpdateRapport();
 
@@ -101,9 +95,12 @@ void TDBWFRM::SetGewebe(int _i, int _j, bool _set, int _range)
         undo->Snapshot();
 }
 /*-----------------------------------------------------------------*/
+/*  DoSetGewebe only mutates the single gewebe cell + updates the
+    range. The caller is responsible for running RecalcAll() once
+    after all related cell writes (rapport replication, FillKoeper
+    diagonal replication, ...) have completed.                     */
 void TDBWFRM::DoSetGewebe(int _i, int _j, bool _set, int _range)
 {
-    // Feld toggeln
     char oldstate = gewebe.feld.Get(_i + scroll_x1, _j + scroll_y2);
     if (!_set)
         gewebe.feld.Set(_i + scroll_x1, _j + scroll_y2,
@@ -114,15 +111,5 @@ void TDBWFRM::DoSetGewebe(int _i, int _j, bool _set, int _range)
         UpdateRange(_i + scroll_x1, _j + scroll_y2, oldstate <= 0);
     else
         UpdateRange(_i + scroll_x1, _j + scroll_y2, _range > 0);
-
-    /*  The legacy hand-rolled rebuild (find-identical-column /
-        reuse-shaft / per-column aufknuepfung writes / pegplan-branch
-        trittfolge writes) is superseded by a full RcRecalcAll pass. RecalcEinzug /
-        RecalcTrittfolge already reuse matching shafts / treadles via
-        KettfadenEqual / SchussfadenEqual and rebuild the aufknuepfung
-        from scratch. Identity assignment in the einzug / trittfolge
-        strips may renumber compared to legacy's "closest match" rule;
-        the underlying weave is unchanged.                           */
-    RecalcAll();
 }
 /*-----------------------------------------------------------------*/
