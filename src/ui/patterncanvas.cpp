@@ -64,10 +64,22 @@ PatternCanvas::PatternCanvas(TDBWFRM* _frm, QWidget* _parent)
     for (QScrollBar* b : { sbHorz1, sbHorz2, sbVert1, sbVert2 })
         b->hide();
 
+    /*  Scrollbar wiring mirrors legacy scrolling.cpp:
+          sb_horz1 (kettfarben/einzug/gewebe/blatteinzug along warp)
+            -- flips on righttoleft so the thumb visually tracks the
+            near edge (right side when righttoleft is on).
+          sb_horz2 (aufknuepfung/trittfolge along treadle) -- no flip.
+          sb_vert1 (einzug/aufknuepfung along shaft) -- flips unless
+            toptobottom is on (cell j=0 is at the BOTTOM by default;
+            the scrollbar thumb at the TOP should show the highest j).
+          sb_vert2 (gewebe/trittfolge along weft) -- always flips;
+            legacy ignores toptobottom here because the gewebe /
+            trittfolge grids stay bottom-up regardless.            */
     connect(sbHorz1, &QScrollBar::valueChanged, this, [this](int v) {
-        if (frm->scroll_x1 == v)
+        const int inv = frm->righttoleft ? sbHorz1->maximum() - v : v;
+        if (frm->scroll_x1 == inv)
             return;
-        frm->scroll_x1 = v;
+        frm->scroll_x1 = inv;
         update();
     });
     connect(sbHorz2, &QScrollBar::valueChanged, this, [this](int v) {
@@ -77,10 +89,7 @@ PatternCanvas::PatternCanvas(TDBWFRM* _frm, QWidget* _parent)
         update();
     });
     connect(sbVert1, &QScrollBar::valueChanged, this, [this](int v) {
-        /*  Legacy inverts sb_vert1 / sb_vert2 so that the top of the
-            bar corresponds to the top of the viewport (y grows down)
-            while scroll_y1 / y2 are cell indices growing upward. */
-        const int inv = sbVert1->maximum() - v;
+        const int inv = frm->toptobottom ? v : sbVert1->maximum() - v;
         if (frm->scroll_y1 == inv)
             return;
         frm->scroll_y1 = inv;
@@ -347,8 +356,15 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
         one; use blockSignals() while we push the current scroll_*
         back so the feedback loop doesn't re-trigger update(). */
 
+    /*  `invert` mirrors the legacy scrolling.cpp convention: if set,
+        bar value 0 maps to the highest scroll_* index. Per-bar policy:
+          sbHorz1: invert when righttoleft
+          sbHorz2: never invert
+          sbVert1: invert unless toptobottom
+          sbVert2: always invert                                    */
     auto setupHorz
-        = [&](QScrollBar* sb, int x, int y, int w, int maxScroll, int pageCells, int& scrollVal) {
+        = [&](QScrollBar* sb, int x, int y, int w, int maxScroll, int pageCells, int& scrollVal,
+              bool invert) {
               if (w <= 0 || pageCells <= 0) {
                   sb->hide();
                   return;
@@ -358,13 +374,14 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
               sb->setRange(0, maxScroll);
               sb->setPageStep(pageCells);
               sb->setSingleStep(1);
-              sb->setValue(scrollVal);
+              sb->setValue(invert ? maxScroll - scrollVal : scrollVal);
               sb->blockSignals(false);
               sb->setVisible(maxScroll > 0);
           };
 
     auto setupVert
-        = [&](QScrollBar* sb, int x, int y, int h, int maxScroll, int pageCells, int& scrollVal) {
+        = [&](QScrollBar* sb, int x, int y, int h, int maxScroll, int pageCells, int& scrollVal,
+              bool invert) {
               if (h <= 0 || pageCells <= 0) {
                   sb->hide();
                   return;
@@ -374,21 +391,19 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
               sb->setRange(0, maxScroll);
               sb->setPageStep(pageCells);
               sb->setSingleStep(1);
-              /*  Invert because the bar top maps to high scroll_y values
-                  in the legacy (y grows up). */
-              sb->setValue(maxScroll - scrollVal);
+              sb->setValue(invert ? maxScroll - scrollVal : scrollVal);
               sb->blockSignals(false);
               sb->setVisible(maxScroll > 0);
           };
 
     setupHorz(sbHorz1, frm->gewebe.pos.x0, H - SB_SIZE, frm->gewebe.pos.width, maxX1, gewebe_cols,
-              frm->scroll_x1);
+              frm->scroll_x1, frm->righttoleft);
     setupHorz(sbHorz2, frm->trittfolge.pos.x0, H - SB_SIZE, frm->trittfolge.pos.width, maxX2,
-              tf_cols, frm->scroll_x2);
+              tf_cols, frm->scroll_x2, false);
     setupVert(sbVert1, W - SB_SIZE, frm->aufknuepfung.pos.y0, frm->aufknuepfung.pos.height, maxY1,
-              ezaf_rows, frm->scroll_y1);
+              ezaf_rows, frm->scroll_y1, !frm->toptobottom);
     setupVert(sbVert2, W - SB_SIZE, frm->gewebe.pos.y0, frm->gewebe.pos.height, maxY2, gewebe_rows,
-              frm->scroll_y2);
+              frm->scroll_y2, true);
 }
 
 /*  Divider hit-test: the 10 px MARGIN gap between gewebe and
