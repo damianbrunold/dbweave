@@ -316,6 +316,15 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	};
 	for (int n = 5; n <= 10; n++) addAtlas(n);
 
+	/*  Editing assistants. */
+	patternMenu->addSeparator();
+	QAction* actEzAssist    = patternMenu->addAction(QStringLiteral("Threading &wizard..."));
+	QAction* actFixEinzug   = patternMenu->addAction(QStringLiteral("&User defined threading..."));
+	QAction* actFarbverlauf = patternMenu->addAction(QStringLiteral("Color &blending..."));
+	connect(actEzAssist,    &QAction::triggered, this, [this]{ EinzugAssistentClick(); });
+	connect(actFixEinzug,   &QAction::triggered, this, [this]{ EditFixeinzug();        });
+	connect(actFarbverlauf, &QAction::triggered, this, [this]{ FarbverlaufClick();     });
+
 	/*  Rapport (extend pattern) entries. */
 	patternMenu->addSeparator();
 	QAction* actRappExtend   = patternMenu->addAction(QStringLiteral("&Extend pattern..."));

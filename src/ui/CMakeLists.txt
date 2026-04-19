@@ -56,6 +56,9 @@ add_library(dbweave_ui STATIC
     properties.cpp
     propertiesdialog.cpp
     entwurfsinfodialog.cpp
+    einzugassistentdialog.cpp
+    fixeinzugdialog.cpp
+    farbverlaufdialog.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)

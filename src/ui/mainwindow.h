@@ -596,6 +596,12 @@ public:
 	void __fastcall FilePropsClick ();
 	void __fastcall ViewInfosClick ();
 
+	/*  Editing-assistant dialogs (Phase 7 batch 4). */
+	void __fastcall EinzugAssistentClick ();
+	void __fastcall EditFixeinzug        ();
+	void __fastcall UpdateEinzugFixiert  ();
+	void __fastcall FarbverlaufClick     ();
+
 	/*  --- Most-recently-used files ------------------------------
 	    Up to 6 paths stored via QSettings under
 	    "Brunold Software / DB-WEAVE / mru/{0..5}". The actions and
