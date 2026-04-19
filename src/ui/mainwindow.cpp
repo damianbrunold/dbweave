@@ -30,6 +30,7 @@
 
 #include <QActionGroup>
 #include <QApplication>
+#include <QFileInfo>
 #include <QIcon>
 #include <QKeySequence>
 #include <QLabel>
@@ -1458,9 +1459,24 @@ void TDBWFRM::RecalcGewebe()
     setCursor(old);
     refresh();
 }
-void TDBWFRM::SetModified(bool) { }
+void TDBWFRM::SetModified(bool _modified)
+{
+    modified = _modified;
+    SetAppTitle();
+}
 void TDBWFRM::SetCursor(int, int) { }
-void TDBWFRM::SetAppTitle() { }
+void TDBWFRM::SetAppTitle()
+{
+    const QString untitled = LANG_STR("Untitled", "Unbenannt");
+    QString shown;
+    if (filename.isEmpty())
+        shown = untitled;
+    else
+        shown = QFileInfo((QString)filename).fileName();
+    if (modified)
+        shown += QStringLiteral("*");
+    setWindowTitle(shown + QStringLiteral(" - DB-WEAVE"));
+}
 void TDBWFRM::UpdateScrollbars() { }
 void TDBWFRM::InvalidateFeld(const GRIDPOS&)
 {

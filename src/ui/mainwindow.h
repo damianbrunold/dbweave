@@ -349,6 +349,22 @@ public:
     void SetAppTitle();
     void UpdateStatusBar();
 
+    /*  Tracks whether the current document has unsaved edits. Flipped
+        on by SetModified() and off by Save() / successful Load(). The
+        window title reflects this with a trailing `*`, and the close
+        handler prompts the user before discarding changes.         */
+    bool modified = false;
+
+    /*  Port of legacy FormCloseQuery. Prompts Yes/No/Cancel when the
+        document has unsaved changes; returns true if it's OK to
+        close (either nothing to save, saved successfully, or user
+        discarded changes). Called from closeEvent and also before
+        FileOpen / FileNew replace the current document.             */
+    bool AskSave();
+protected:
+    void closeEvent(class QCloseEvent* _event) override;
+public:
+
     /*  Status-bar labels; created in the ctor and addPermanent-ed
         onto statusBar() so they stay right-aligned. UpdateStatusBar
         populates them on every refresh().                         */

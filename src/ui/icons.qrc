@@ -1,5 +1,8 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource prefix="/icons">
+    <file alias="app/dbweave.svg">../../resources/dbweave.svg</file>
+    <file alias="app/dbweave-16.png">../../resources/icons/dbweave-16.png</file>
+    <file alias="app/dbweave-32.png">../../resources/icons/dbweave-32.png</file>
     <file alias="16/line_size1.png">../../resources/icons/16/line_size1.png</file>
     <file alias="16/line_size2.png">../../resources/icons/16/line_size2.png</file>
     <file alias="16/line_size3.png">../../resources/icons/16/line_size3.png</file>

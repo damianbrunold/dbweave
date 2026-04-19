@@ -11,6 +11,7 @@
 
 #include <QApplication>
 #include <QFileInfo>
+#include <QIcon>
 #include <QLocale>
 #include <QMessageBox>
 
@@ -40,6 +41,18 @@ int main(int argc, char* argv[])
     QApplication::setOrganizationDomain("brunoldsoftware.ch");
     QApplication::setApplicationName("DB-WEAVE");
     QApplication::setApplicationVersion("0.1.0");
+
+    /*  Application icon. Ship both the 16/32 legacy PNGs (extracted
+        from DBW.ICO) and the modern SVG so Qt can pick the best
+        match for the platform's chrome (window titlebar, task
+        switcher, dock).                                           */
+    {
+        QIcon appIcon;
+        appIcon.addFile(QStringLiteral(":/icons/app/dbweave-16.png"), QSize(16, 16));
+        appIcon.addFile(QStringLiteral(":/icons/app/dbweave-32.png"), QSize(32, 32));
+        appIcon.addFile(QStringLiteral(":/icons/app/dbweave.svg"));
+        QApplication::setWindowIcon(appIcon);
+    }
 
     /*  Pick the UI language. Precedence matches legacy
         EnvOptionsDialog logic: an explicit preference saved under
@@ -81,6 +94,7 @@ int main(int argc, char* argv[])
         }
     }
     DBWFRM->resize(1024, 768);
+    DBWFRM->SetAppTitle();
 
     DBWFRM->show();
 

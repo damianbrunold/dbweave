@@ -24,6 +24,7 @@
 #include "language.h"
 
 #include <QAction>
+#include <QCloseEvent>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QMenu>
@@ -38,6 +39,8 @@ static QString fileFilter()
 
 void TDBWFRM::FileOpen()
 {
+    if (!AskSave())
+        return;
     const QString dir
         = filename.isEmpty() ? QString() : QFileInfo((QString)filename).absolutePath();
     const QString chosen = QFileDialog::getOpenFileName(
@@ -62,7 +65,7 @@ void TDBWFRM::FileOpen()
         return;
     }
     AddToMRU(chosen);
-    SetAppTitle();
+    SetModified(false);
     refresh();
 }
 
@@ -96,6 +99,40 @@ void TDBWFRM::FileSave()
     AddToMRU((QString)filename);
     SetModified(false);
     SetAppTitle();
+}
+
+/*-----------------------------------------------------------------*/
+/*  Port of legacy TDBWFRM::AskSave. Returns true when it's safe to
+    discard the current document (no unsaved changes, user saved,
+    or user explicitly discarded). Returns false when the user
+    cancelled the prompt.                                          */
+bool TDBWFRM::AskSave()
+{
+    if (!modified)
+        return true;
+    const QString msg = LANG_STR(
+        "The pattern has unsaved changes. Save them now?",
+        "Das Muster hat ungespeicherte Änderungen. Jetzt speichern?");
+    QMessageBox::StandardButton choice = QMessageBox::question(
+        this, QStringLiteral("DB-WEAVE"), msg,
+        QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, QMessageBox::Yes);
+    if (choice == QMessageBox::Cancel)
+        return false;
+    if (choice == QMessageBox::No)
+        return true;
+    /*  Yes: run the save path. FileSave delegates to FileSaveAs when
+        no filename is set yet. If the user cancels the file-dialog
+        we stay modified; report that as "not OK to close".          */
+    FileSave();
+    return !modified;
+}
+
+void TDBWFRM::closeEvent(QCloseEvent* _event)
+{
+    if (AskSave())
+        _event->accept();
+    else
+        _event->ignore();
 }
 
 /*-----------------------------------------------------------------*/
@@ -163,6 +200,8 @@ void TDBWFRM::OpenFromMRU(int _index)
 {
     if (_index < 0 || _index >= mru.size())
         return;
+    if (!AskSave())
+        return;
     const QString path = mru.at(_index);
     if (!QFileInfo::exists(path)) {
         QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
@@ -187,7 +226,7 @@ void TDBWFRM::OpenFromMRU(int _index)
         return;
     }
     AddToMRU(path);
-    SetAppTitle();
+    SetModified(false);
     refresh();
 }
 
