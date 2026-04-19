@@ -15,6 +15,7 @@
 #include "datamodule.h"
 #include "palette.h"
 #include "colors_compat.h"
+#include "legacy_colors.h"
 
 #include <QPainter>
 #include <QPaintEvent>
@@ -27,14 +28,24 @@
 
 #include <algorithm>
 
+/*  Legacy greys live in legacy_colors.h so draw.cpp shares them. */
+#define kLegacyBtnFace   legacyBtnFace()
+#define kLegacyBtnShadow legacyBtnShadow()
+
 PatternCanvas::PatternCanvas (TDBWFRM* _frm, QWidget* _parent)
 	: QWidget(_parent)
 	, frm(_frm)
 {
-	/*  Legacy filled the form background with the system button-face
-	    colour (clBtnFace). Set the widget palette so QWidget's default
-	    paint matches.                                               */
+	/*  Fill the widget with the legacy light-grey background and pin
+	    the palette so the status bar / toolbar system look doesn't
+	    leak into the canvas through QPalette::Button etc. */
 	setAutoFillBackground(true);
+	QPalette pal = palette();
+	pal.setColor(QPalette::Window, kLegacyBtnFace);
+	pal.setColor(QPalette::Button, kLegacyBtnFace);
+	pal.setColor(QPalette::Base,   kLegacyBtnFace);
+	pal.setColor(QPalette::Dark,   kLegacyBtnShadow);
+	setPalette(pal);
 	/*  Accept keyboard focus so arrow-key navigation works the
 	    moment the canvas is clicked. */
 	setFocusPolicy(Qt::StrongFocus);
@@ -441,9 +452,10 @@ void PatternCanvas::paintEvent (QPaintEvent* /*_e*/)
 	QPainter p(this);
 	p.setRenderHint(QPainter::Antialiasing, false);
 
-	/*  Legacy filled the whole form with clBtnFace (palette button).
-	    Match that here so cells paint on top of a neutral grey.    */
-	p.fillRect(rect(), palette().color(QPalette::Button));
+	/*  Legacy filled the whole form with clBtnFace. Use the hard-
+	    coded legacy grey instead of the theme's QPalette::Button
+	    so the canvas stays readable on dark desktops.          */
+	p.fillRect(rect(), kLegacyBtnFace);
 
 	/*  Expose the painter to TDBWFRM so the legacy-style DrawX cell
 	    primitives can paint without each one taking a painter arg.
@@ -490,69 +502,84 @@ void PatternCanvas::paintEvent (QPaintEvent* /*_e*/)
 
 	paintField(frm->gewebe,           &TDBWFRM::DrawGewebe,       &TDBWFRM::DrawGewebeRahmen);
 
-	/*  Colour strips + blatteinzug. These don't have DrawX cell
-	    primitives yet so we paint directly on the current painter.
-	    Palette colours come via Data->palette->GetColor. */
+	/*  Colour strips + blatteinzug. Renderers faithful to legacy
+	    redraw.cpp:DrawKettfarben / DrawSchussfarben /
+	    DrawBlatteinzug -- each cell has a clBtnShadow boundary
+	    line and the outer strip is framed.                    */
 	auto palCol = [](int _idx) {
 		return qColorFromTColor((TColor)Data->palette->GetColor(_idx));
 	};
-	auto stripRect = [](const GRIDPOS& g) {
-		return QRect(g.x0, g.y0, g.width, g.height);
+	auto frameRect = [&](const GRIDPOS& g) {
+		p.setPen(QPen(kLegacyBtnShadow));
+		p.setBrush(Qt::NoBrush);
+		p.drawRect(g.x0, g.y0, g.width, g.height);
 	};
 
 	/*  kettfarben: horizontal strip, one palette-coloured cell per
-	    warp thread. */
-	if (frm->kettfarben.gw > 0 && frm->kettfarben.pos.width > 0 && Data && Data->palette) {
+	    warp thread, separated by a clBtnShadow vertical hairline. */
+	if (frm->kettfarben.gw > 0 && frm->kettfarben.pos.width > 0
+	 && Data && Data->palette) {
 		const int cols = frm->kettfarben.pos.width / frm->kettfarben.gw;
-		p.setPen(Qt::NoPen);
+		const int y0   = frm->kettfarben.pos.y0;
+		const int h    = frm->kettfarben.pos.height;
 		for (int i = 0; i < cols; i++) {
-			const int c = frm->kettfarben.feld.Get(frm->scroll_x1 + i);
-			p.setBrush(palCol(c));
-			p.drawRect(frm->kettfarben.pos.x0 + i * frm->kettfarben.gw,
-			           frm->kettfarben.pos.y0,
-			           frm->kettfarben.gw, frm->kettfarben.gh);
+			const int x = frm->kettfarben.pos.x0 + i * frm->kettfarben.gw;
+			p.setPen(Qt::NoPen);
+			p.setBrush(palCol(frm->kettfarben.feld.Get(frm->scroll_x1 + i)));
+			p.drawRect(x, y0, frm->kettfarben.gw, h);
+			p.setPen(QPen(kLegacyBtnShadow));
+			p.drawLine(x, y0, x, y0 + h);
 		}
-		p.setPen(palette().color(QPalette::Dark));
-		p.setBrush(Qt::NoBrush);
-		p.drawRect(stripRect(frm->kettfarben.pos));
+		frameRect(frm->kettfarben.pos);
 	}
 
-	/*  schussfarben: vertical strip right of gewebe, one palette-
-	    coloured cell per weft thread. y axis is flipped (j=0 at
-	    bottom). */
-	if (frm->schussfarben.gh > 0 && frm->schussfarben.pos.height > 0 && Data && Data->palette) {
+	/*  schussfarben: vertical strip right of trittfolge, one
+	    palette-coloured cell per weft thread; y axis flipped
+	    (j=0 lives at the bottom). Cell separators are horizontal
+	    clBtnShadow hairlines. */
+	if (frm->schussfarben.gh > 0 && frm->schussfarben.pos.height > 0
+	 && Data && Data->palette) {
 		const int rows = frm->schussfarben.pos.height / frm->schussfarben.gh;
-		p.setPen(Qt::NoPen);
+		const int x0   = frm->schussfarben.pos.x0;
+		const int w    = frm->schussfarben.pos.width;
 		for (int j = 0; j < rows; j++) {
-			const int c = frm->schussfarben.feld.Get(frm->scroll_y2 + j);
-			p.setBrush(palCol(c));
 			const int y = frm->schussfarben.pos.y0 + frm->schussfarben.pos.height
 			            - (j + 1) * frm->schussfarben.gh;
-			p.drawRect(frm->schussfarben.pos.x0, y,
-			           frm->schussfarben.gw, frm->schussfarben.gh);
+			p.setPen(Qt::NoPen);
+			p.setBrush(palCol(frm->schussfarben.feld.Get(frm->scroll_y2 + j)));
+			p.drawRect(x0, y, w, frm->schussfarben.gh);
+			p.setPen(QPen(kLegacyBtnShadow));
+			p.drawLine(x0, y, x0 + w, y);
 		}
-		p.setPen(palette().color(QPalette::Dark));
-		p.setBrush(Qt::NoBrush);
-		p.drawRect(stripRect(frm->schussfarben.pos));
+		frameRect(frm->schussfarben.pos);
 	}
 
-	/*  blatteinzug: horizontal strip, filled black square where
-	    the reed-threading is set, button-face otherwise.        */
+	/*  blatteinzug: horizontal strip with a split-in-half cell per
+	    reed slot. value==1 -> black mark in the TOP half,
+	    button-face in the bottom; value==0 -> mark in the BOTTOM
+	    half, button-face on top. Cells separated by clBtnShadow
+	    hairlines. Port of legacy DrawBlatteinzug().             */
 	if (frm->blatteinzug.gw > 0 && frm->blatteinzug.pos.width > 0) {
 		const int cols = frm->blatteinzug.pos.width / frm->blatteinzug.gw;
-		const QColor bg   = palette().color(QPalette::Button);
-		const QColor mark = palette().color(QPalette::Text);
-		p.setPen(Qt::NoPen);
+		const int y0   = frm->blatteinzug.pos.y0;
+		const int h    = frm->blatteinzug.pos.height;
+		const int half = h / 2;
 		for (int i = 0; i < cols; i++) {
+			const int x  = frm->blatteinzug.pos.x0 + i * frm->blatteinzug.gw;
+			const int gw = frm->blatteinzug.gw;
 			const bool on = frm->blatteinzug.feld.Get(frm->scroll_x1 + i);
-			p.setBrush(on ? mark : bg);
-			p.drawRect(frm->blatteinzug.pos.x0 + i * frm->blatteinzug.gw,
-			           frm->blatteinzug.pos.y0,
-			           frm->blatteinzug.gw, frm->blatteinzug.gh);
+			p.setPen(Qt::NoPen);
+			/*  Top half */
+			p.setBrush(on ? QColor(Qt::black) : kLegacyBtnFace);
+			p.drawRect(x, y0, gw, half);
+			/*  Bottom half */
+			p.setBrush(on ? kLegacyBtnFace : QColor(Qt::black));
+			p.drawRect(x, y0 + half, gw, h - half);
+			/*  Left-edge separator */
+			p.setPen(QPen(kLegacyBtnShadow));
+			p.drawLine(x, y0, x, y0 + h);
 		}
-		p.setPen(palette().color(QPalette::Dark));
-		p.setBrush(Qt::NoBrush);
-		p.drawRect(stripRect(frm->blatteinzug.pos));
+		frameRect(frm->blatteinzug.pos);
 	}
 
 	/*  Rapport boundary markers overlay the einzug / trittfolge

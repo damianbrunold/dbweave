@@ -96,6 +96,14 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	for (int j = 0; j < Data->MAXY1; j++) freieschaefte[j] = true;
 	for (int i = 0; i < Data->MAXX2; i++) freietritte[i]   = true;
 
+	/*  Seed a blank document with the same defaults the legacy
+	    Clear methods produce: blatteinzug -> 2-2 reed pattern,
+	    kettfarben / schussfarben -> default warp / weft colour.
+	    A subsequent file load overwrites these from disk.    */
+	blatteinzug.Clear();
+	kettfarben.Clear();
+	schussfarben.Clear();
+
 	/*  Undo stack is constructed after the fields so UrUndoItem's
 	    Allocate() can read field dimensions via `this`.            */
 	undo           = new UrUndo(this);

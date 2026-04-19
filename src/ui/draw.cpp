@@ -33,6 +33,7 @@
 #include "draw_cell.h"
 #include "rangecolors.h"
 #include "colors_compat.h"
+#include "legacy_colors.h"
 #include "palette.h"
 
 #include <QBrush>
@@ -63,7 +64,7 @@ void __fastcall TDBWFRM::DrawGewebe (int _i, int _j)
 	const int xx = x + gewebe.gw;
 	const int yy = y + gewebe.gh;
 
-	const QColor bkground = palette().color(QPalette::Button);
+	const QColor bkground = legacyBtnFace();
 
 	/*  Empty einzug OR empty trittfolge -> blank cell. */
 	if (IsEmptyEinzug(scroll_x1 + _i) || IsEmptyTrittfolge(scroll_y2 + _j)) {
@@ -116,7 +117,7 @@ void __fastcall TDBWFRM::DrawGewebeRapport (int _i, int _j, int _x, int _y, int 
 	const char s = gewebe.feld.Get(scroll_x1 + _i, scroll_y2 + _j);
 	const QColor fg = (s != ABBINDUNG && s > 0)
 	                ? QColor(Qt::red)
-	                : palette().color(QPalette::Button);
+	                : legacyBtnFace();
 	p->fillRect(QRect(_x + 1, _y + 1, _xx - _x - 1, _yy - _y - 1), fg);
 }
 /*-----------------------------------------------------------------*/
@@ -158,7 +159,7 @@ void __fastcall TDBWFRM::DrawGewebeSimulation (int _i, int _j, int _x, int _y, i
 	if (dw == 0 && gewebe.gw > 2) dw = 1;
 	if (dh == 0 && gewebe.gh > 2) dh = 1;
 
-	const QColor bkg = palette().color(QPalette::Button);
+	const QColor bkg = legacyBtnFace();
 	p->fillRect(QRect(_x, _y, _xx - _x, _yy - _y), bkg);
 
 	const char s = gewebe.feld.Get(scroll_x1 + _i, scroll_y2 + _j);
@@ -238,7 +239,7 @@ void __fastcall TDBWFRM::DrawEinzug (int _i, int _j)
 	const int xx = x + einzug.gw;
 	const int yy = y + einzug.gh;
 
-	const QColor bkground = palette().color(QPalette::Button);
+	const QColor bkground = legacyBtnFace();
 
 	/*  einzug.feld holds 1-based shaft indices; cell (_i, _j) is set
 	    when einzug[scroll_x1+_i] - 1 == scroll_y1+_j. */
@@ -268,7 +269,7 @@ void __fastcall TDBWFRM::DrawAufknuepfung (int _i, int _j)
 	const int xx = x + aufknuepfung.gw;
 	const int yy = y + aufknuepfung.gh;
 
-	const QColor bkground = palette().color(QPalette::Button);
+	const QColor bkground = legacyBtnFace();
 
 	if (!ViewSchlagpatrone || !ViewSchlagpatrone->isChecked()) {
 		const char s = aufknuepfung.feld.Get(scroll_x2 + _i, scroll_y1 + _j);
@@ -318,7 +319,7 @@ void __fastcall TDBWFRM::DrawTrittfolge (int _i, int _j)
 	const int xx = x + trittfolge.gw;
 	const int yy = y + trittfolge.gh;
 
-	const QColor bkground = palette().color(QPalette::Button);
+	const QColor bkground = legacyBtnFace();
 	const bool  pegplan   = ViewSchlagpatrone && ViewSchlagpatrone->isChecked();
 
 	const char s = trittfolge.feld.Get(scroll_x2 + _i, scroll_y2 + _j);
@@ -394,7 +395,7 @@ void __fastcall TDBWFRM::DrawEinzugRahmen (int _i, int _j)
 	const int xx = x + einzug.gw;
 	const int yy = y + einzug.gh;
 
-	p->setPen(QPen(palette().color(QPalette::Dark)));
+	p->setPen(QPen(legacyBtnShadow()));
 	p->drawLine(x, y, xx, y);
 	p->drawLine(x, y, x,  yy);
 
@@ -445,7 +446,7 @@ void __fastcall TDBWFRM::DrawAufknuepfungRahmen (int _i, int _j)
 	const int xx = x + aufknuepfung.gw;
 	const int yy = y + aufknuepfung.gh;
 
-	p->setPen(QPen(palette().color(QPalette::Dark)));
+	p->setPen(QPen(legacyBtnShadow()));
 	p->drawLine(x, y, xx, y);
 	p->drawLine(x, y, x,  yy);
 
@@ -484,7 +485,7 @@ void __fastcall TDBWFRM::DrawTrittfolgeRahmen (int _i, int _j)
 	const int xx = x + trittfolge.gw;
 	const int yy = y + trittfolge.gh;
 
-	p->setPen(QPen(palette().color(QPalette::Dark)));
+	p->setPen(QPen(legacyBtnShadow()));
 	p->drawLine(x, y, xx, y);
 	p->drawLine(x, y, x,  yy);
 
@@ -521,7 +522,7 @@ void __fastcall TDBWFRM::DrawGewebeRahmen (int _i, int _j)
 	const int xx = x + gewebe.gw;
 	const int yy = y + gewebe.gh;
 
-	p->setPen(QPen(palette().color(QPalette::Dark)));
+	p->setPen(QPen(legacyBtnShadow()));
 	p->drawLine(x, y, xx, y);
 	p->drawLine(x, y, x,  yy);
 
