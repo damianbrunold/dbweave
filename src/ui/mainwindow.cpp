@@ -84,6 +84,8 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	GewebeSimulation  = mk();
 	Inverserepeat     = mk();
 	ViewHlines        = mk(/*checked=*/true);
+	ViewFarbe         = mk(/*checked=*/true);
+	ViewBlatteinzug   = mk(/*checked=*/true);
 
 	/*  Allocate the per-shaft / per-treadle availability arrays. Both
 	    are initialised to true (all free); RecalcFreieSchaefte() /
@@ -228,6 +230,8 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	viewMenu->addAction(ViewEinzug);        ViewEinzug       ->setText(QStringLiteral("&Threading"));
 	viewMenu->addAction(ViewTrittfolge);    ViewTrittfolge   ->setText(QStringLiteral("T&readling"));
 	viewMenu->addAction(ViewSchlagpatrone); ViewSchlagpatrone->setText(QStringLiteral("&Pegplan"));
+	viewMenu->addAction(ViewBlatteinzug);   ViewBlatteinzug  ->setText(QStringLiteral("Reed t&hreading"));
+	viewMenu->addAction(ViewFarbe);         ViewFarbe        ->setText(QStringLiteral("&Colour strips"));
 	viewMenu->addSeparator();
 	viewMenu->addAction(RappViewRapport);   RappViewRapport  ->setText(QStringLiteral("&Rapport markers"));
 	viewMenu->addAction(ViewHlines);        ViewHlines       ->setText(QStringLiteral("&Guide lines"));
@@ -244,10 +248,18 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 		gewebeGroup->addAction(a);
 		gewebeMenu->addAction(a);
 	}
-	/*  Any toggle should repaint the canvas. */
+	/*  Visibility toggles need a re-layout (strip widths/heights
+	    collapse to zero) before the repaint. Render-mode toggles
+	    only need a repaint. */
+	auto relayout = [this] {
+		if (pattern_canvas) pattern_canvas->recomputeLayout();
+		refresh();
+	};
 	for (QAction* a : { ViewEinzug, ViewTrittfolge, ViewSchlagpatrone,
-	                    RappViewRapport, ViewHlines,
-	                    GewebeNormal, GewebeFarbeffekt,
+	                    ViewBlatteinzug, ViewFarbe,
+	                    RappViewRapport, ViewHlines })
+		connect(a, &QAction::triggered, this, relayout);
+	for (QAction* a : { GewebeNormal, GewebeFarbeffekt,
 	                    GewebeSimulation, GewebeNone })
 		connect(a, &QAction::triggered, this, [this] { refresh(); });
 

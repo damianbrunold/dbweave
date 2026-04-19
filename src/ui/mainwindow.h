@@ -122,6 +122,13 @@ public:
 	QAction* Inverserepeat     = nullptr;
 	QAction* ViewHlines        = nullptr;
 
+	/*  ViewFarbe toggles both colour strips together (kettfarben
+	    + schussfarben); ViewBlatteinzug toggles the reed-threading
+	    strip. Matches legacy menu layout where the colour strips
+	    share a single view toggle. */
+	QAction* ViewFarbe         = nullptr;
+	QAction* ViewBlatteinzug   = nullptr;
+
 	/*  Guide lines (Hilfslinien) + the four grab-bar rectangles.
 	    hlinehorz1/2 sit above/below the pattern grids, hlinevert1/2
 	    to the left/right. Bar positions remain zero-sized until the
@@ -466,13 +473,6 @@ public:
 	void __fastcall DoSetKettfarben  (int _i);
 	void __fastcall SetSchussfarben  (int _j);
 	void __fastcall DoSetSchussfarben (int _j);
-
-	/*  Populate a basic 2/2 twill demo pattern so a freshly-launched
-	    dbweave shows cloth instead of an empty grid. Not called from
-	    the ctor so tests get a clean TDBWFRM; main.cpp invokes it
-	    after construction. Removed once file loading is ported and
-	    the user can open a real .dbw file from the menu.           */
-	void __fastcall seedDemo();
 
 	/*  --- File I/O -------------------------------------------- */
 	/*  Resize every Feld to match the current Data->MAX* dimensions.

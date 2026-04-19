@@ -128,58 +128,83 @@ void PatternCanvas::recomputeLayout (int _gw, int _gh)
 	frm->aufknuepfung.pos.width  = af_w;
 	frm->aufknuepfung.pos.height = af_h;
 
-	/*  The left column (from top down) is:
-	      einzug               af_h        tall
-	      blatteinzug          GH          tall
-	      kettfarben           GH          tall
-	      gewebe               rest        tall
-	    and the right column is aufknuepfung (af_h) + gap + trittfolge
-	    (same y + height as gewebe). schussfarben is a 1-cell-wide
-	    vertical strip between gewebe and trittfolge.             */
-	const int ez_area_w = usableW - af_w - 3*MARGIN - GW /*schussfarben*/;
-	const int ez_cells  = std::max(0, ez_area_w / GW);
-	frm->einzug.gw = GW; frm->einzug.gh = GH;
-	frm->einzug.pos.x0     = MARGIN;
-	frm->einzug.pos.y0     = MARGIN;
-	frm->einzug.pos.width  = ez_cells * GW;
-	frm->einzug.pos.height = af_h;
+	/*  Port of legacy dbw3_form.cpp:RecalcDimensions (einzugunten
+	    = false / threading-on-top mode). Left column top-to-bottom:
+	      kettfarben   (GH)   -- hidden when ViewFarbe is off
+	      einzug       af_h   -- hidden when ViewEinzug is off
+	      blatteinzug  GH     -- hidden when ViewBlatteinzug is off
+	      gewebe       rest
+	    Right column: aufknuepfung top, trittfolge below (aligned
+	    with gewebe). schussfarben sits on the RIGHT side of
+	    trittfolge (between trittfolge and the right scrollbar). */
 
-	frm->blatteinzug.gw = GW; frm->blatteinzug.gh = GH;
-	frm->blatteinzug.pos.x0     = frm->einzug.pos.x0;
-	frm->blatteinzug.pos.y0     = frm->einzug.pos.y0 + frm->einzug.pos.height;
-	frm->blatteinzug.pos.width  = frm->einzug.pos.width;
-	frm->blatteinzug.pos.height = GH;
+	const bool showFarbe       = !frm->ViewFarbe       || frm->ViewFarbe       ->isChecked();
+	const bool showEinzug      = !frm->ViewEinzug      || frm->ViewEinzug      ->isChecked();
+	const bool showBlatteinzug = !frm->ViewBlatteinzug || frm->ViewBlatteinzug ->isChecked();
+	const bool showTrittfolge  = !frm->ViewTrittfolge  || frm->ViewTrittfolge  ->isChecked();
+
+	const int schussfarbenW = showFarbe        ? GW : 0;
+	const int trittfolgeW   = showTrittfolge   ? af_w : 0;
+
+	/*  Width available for the einzug/gewebe/blatteinzug/kettfarben
+	    column. The right column eats aufknuepfung width + schuss-
+	    farben + trittfolge + gaps. */
+	const int rightW = trittfolgeW + (showFarbe ? schussfarbenW + MARGIN : 0);
+	const int ez_area_w = usableW - rightW - 3*MARGIN;
+	const int ez_cells  = std::max(0, ez_area_w / GW);
+	const int colW      = ez_cells * GW;
+	const int colX      = MARGIN;
 
 	frm->kettfarben.gw = GW; frm->kettfarben.gh = GH;
-	frm->kettfarben.pos.x0     = frm->einzug.pos.x0;
-	frm->kettfarben.pos.y0     = frm->blatteinzug.pos.y0 + frm->blatteinzug.pos.height;
-	frm->kettfarben.pos.width  = frm->einzug.pos.width;
-	frm->kettfarben.pos.height = GH;
+	frm->kettfarben.pos.x0     = colX;
+	frm->kettfarben.pos.y0     = MARGIN;
+	frm->kettfarben.pos.width  = showFarbe ? colW : 0;
+	frm->kettfarben.pos.height = showFarbe ? GH   : 0;
 
-	const int stripsH = frm->blatteinzug.pos.height + frm->kettfarben.pos.height;
-	const int tf_area_h = usableH - af_h - 3*MARGIN - stripsH;
+	frm->einzug.gw = GW; frm->einzug.gh = GH;
+	frm->einzug.pos.x0     = colX;
+	frm->einzug.pos.y0     = frm->kettfarben.pos.y0 + frm->kettfarben.pos.height;
+	frm->einzug.pos.width  = showEinzug ? colW : 0;
+	frm->einzug.pos.height = showEinzug ? af_h : 0;
+
+	frm->blatteinzug.gw = GW; frm->blatteinzug.gh = GH;
+	frm->blatteinzug.pos.x0     = colX;
+	frm->blatteinzug.pos.y0     = frm->einzug.pos.y0 + frm->einzug.pos.height;
+	frm->blatteinzug.pos.width  = showBlatteinzug ? colW : 0;
+	frm->blatteinzug.pos.height = showBlatteinzug ? GH   : 0;
+
+	const int stripsAboveGewebeH =
+	    frm->kettfarben.pos.height
+	  + frm->einzug.pos.height
+	  + frm->blatteinzug.pos.height;
+	const int tf_area_h = usableH - 2*MARGIN - stripsAboveGewebeH;
 	const int tf_rows   = std::max(0, tf_area_h / GH);
 
 	frm->gewebe.gw = GW; frm->gewebe.gh = GH;
-	frm->gewebe.pos.x0     = frm->einzug.pos.x0;
-	frm->gewebe.pos.y0     = frm->kettfarben.pos.y0 + frm->kettfarben.pos.height + MARGIN;
-	frm->gewebe.pos.width  = frm->einzug.pos.width;
+	frm->gewebe.pos.x0     = colX;
+	frm->gewebe.pos.y0     = frm->blatteinzug.pos.y0 + frm->blatteinzug.pos.height + MARGIN;
+	frm->gewebe.pos.width  = colW;
 	frm->gewebe.pos.height = tf_rows * GH;
 
-	frm->schussfarben.gw = GW; frm->schussfarben.gh = GH;
-	frm->schussfarben.pos.x0     = frm->gewebe.pos.x0 + frm->gewebe.pos.width;
-	frm->schussfarben.pos.y0     = frm->gewebe.pos.y0;
-	frm->schussfarben.pos.width  = GW;
-	frm->schussfarben.pos.height = frm->gewebe.pos.height;
-
+	/*  Right column: aufknuepfung above (aligned vertically with
+	    einzug), trittfolge below (aligned with gewebe),
+	    schussfarben further right (aligned with gewebe). */
 	frm->trittfolge.gw = GW; frm->trittfolge.gh = GH;
-	frm->trittfolge.pos.x0     = frm->schussfarben.pos.x0 + frm->schussfarben.pos.width + MARGIN;
+	frm->trittfolge.pos.x0     = colX + colW + MARGIN;
 	frm->trittfolge.pos.y0     = frm->gewebe.pos.y0;
-	frm->trittfolge.pos.width  = af_w;
-	frm->trittfolge.pos.height = frm->gewebe.pos.height;
+	frm->trittfolge.pos.width  = trittfolgeW;
+	frm->trittfolge.pos.height = showTrittfolge ? frm->gewebe.pos.height : 0;
 
-	/*  Re-anchor aufknuepfung to line up horizontally with trittfolge. */
-	frm->aufknuepfung.pos.x0 = frm->trittfolge.pos.x0;
+	frm->schussfarben.gw = GW; frm->schussfarben.gh = GH;
+	frm->schussfarben.pos.x0     = frm->trittfolge.pos.x0 + frm->trittfolge.pos.width + (showFarbe ? MARGIN : 0);
+	frm->schussfarben.pos.y0     = frm->gewebe.pos.y0;
+	frm->schussfarben.pos.width  = schussfarbenW;
+	frm->schussfarben.pos.height = showFarbe ? frm->gewebe.pos.height : 0;
+
+	frm->aufknuepfung.pos.x0     = frm->trittfolge.pos.x0;
+	frm->aufknuepfung.pos.y0     = frm->einzug.pos.y0;
+	frm->aufknuepfung.pos.width  = showTrittfolge ? af_w : 0;
+	frm->aufknuepfung.pos.height = showEinzug ? af_h : 0;
 
 	/*  Clamp scroll offsets so the new viewport never shows past
 	    the data extent. */

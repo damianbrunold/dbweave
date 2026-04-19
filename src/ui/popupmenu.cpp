@@ -88,6 +88,8 @@ void __fastcall TDBWFRM::handleContextMenu (const QPoint& _globalPos)
 		if (ViewEinzug)        menu.addAction(ViewEinzug);
 		if (ViewTrittfolge)    menu.addAction(ViewTrittfolge);
 		if (ViewSchlagpatrone) menu.addAction(ViewSchlagpatrone);
+		if (ViewBlatteinzug)   menu.addAction(ViewBlatteinzug);
+		if (ViewFarbe)         menu.addAction(ViewFarbe);
 		menu.addSeparator();
 		if (RappViewRapport)   menu.addAction(RappViewRapport);
 		if (ViewHlines)        menu.addAction(ViewHlines);
