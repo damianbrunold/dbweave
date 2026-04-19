@@ -48,6 +48,7 @@ add_library(dbweave_ui STATIC
     cursordirdialog.cpp
     cursorgotodialog.cpp
     entervvdialog.cpp
+    loadpartsdialog.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)

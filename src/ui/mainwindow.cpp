@@ -151,6 +151,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	QAction* actOpen   = fileMenu->addAction(QStringLiteral("&Open..."));
 	QAction* actSave   = fileMenu->addAction(QStringLiteral("&Save"));
 	QAction* actSaveAs = fileMenu->addAction(QStringLiteral("Save &As..."));
+	QAction* actLoadParts = fileMenu->addAction(QStringLiteral("&Load parts..."));
 	fileMenu->addSeparator();
 	/*  Recent-files submenu. Six QActions are built up front so
 	    their captions can be rewritten from UpdateMRUMenu without
@@ -172,6 +173,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	connect(actOpen,   &QAction::triggered, this, [this] { FileOpen();   });
 	connect(actSave,   &QAction::triggered, this, [this] { FileSave();   });
 	connect(actSaveAs, &QAction::triggered, this, [this] { FileSaveAs(); });
+	connect(actLoadParts, &QAction::triggered, this, [this] { LoadPartsClick(); });
 	connect(actQuit,   &QAction::triggered, this, &TDBWFRM::close);
 
 	/*  Edit menu: clipboard + selection transforms. All operate on

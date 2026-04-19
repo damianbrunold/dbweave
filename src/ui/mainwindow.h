@@ -576,6 +576,7 @@ public:
 	void __fastcall FileOpen ();
 	void __fastcall FileSave ();
 	void __fastcall FileSaveAs ();
+	void __fastcall LoadPartsClick ();
 
 	/*  --- Most-recently-used files ------------------------------
 	    Up to 6 paths stored via QSettings under

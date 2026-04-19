@@ -20,6 +20,7 @@
 #include "mainwindow.h"
 #include "fileformat.h"
 #include "loadoptions.h"
+#include "undoredo.h"
 
 #include <QAction>
 #include <QFileDialog>
@@ -168,4 +169,44 @@ void __fastcall TDBWFRM::OpenFromMRU (int _index)
 	AddToMRU(path);
 	SetAppTitle();
 	refresh();
+}
+
+/*-----------------------------------------------------------------*/
+#include "loadpartsdialog.h"
+
+void __fastcall TDBWFRM::LoadPartsClick ()
+{
+	LoadPartsDialog dlg(this);
+	if (dlg.exec() != QDialog::Accepted) return;
+	const LOADPARTS parts = dlg.getLoadParts();
+
+	const QString dir = filename.isEmpty()
+	                  ? QString()
+	                  : QFileInfo((QString)filename).absolutePath();
+	const QString chosen = QFileDialog::getOpenFileName(
+	    this, QStringLiteral("Load parts from"), dir, fileFilter());
+	if (chosen.isEmpty()) return;
+
+	/*  Swap the working filename in so Load() reads the picked
+	    file, then restore ours afterwards so the document stays
+	    tied to its original path.                              */
+	const AnsiString savefn = filename;
+	filename = chosen;
+	if (file && file->IsOpen()) file->Close();
+	LOADSTAT stat = UNKNOWN_FAILURE;
+	const bool ok = Load(stat, parts);
+	filename = savefn;
+	if (file && file->IsOpen()) file->Close();
+
+	if (!ok) {
+		QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
+		    QStringLiteral("Could not load parts from '%1' (status %2).")
+		        .arg(chosen).arg(int(stat)));
+		return;
+	}
+	RecalcFreieSchaefte();
+	RecalcFreieTritte();
+	SetModified();
+	refresh();
+	if (undo) undo->Snapshot();
 }
