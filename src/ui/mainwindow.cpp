@@ -163,6 +163,13 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	QAction* actFileProps = fileMenu->addAction(QStringLiteral("Propert&ies..."));
 	connect(actFileProps, &QAction::triggered, this, [this]{ FilePropsClick(); });
 	fileMenu->addSeparator();
+	QAction* actImportWIF = fileMenu->addAction(QStringLiteral("Import &WIF..."));
+	QAction* actImportBmp = fileMenu->addAction(QStringLiteral("Import &picture..."));
+	QAction* actExport    = fileMenu->addAction(QStringLiteral("&Export..."));
+	connect(actImportWIF, &QAction::triggered, this, [this]{ ImportWIFClick();    });
+	connect(actImportBmp, &QAction::triggered, this, [this]{ ImportBitmapClick(); });
+	connect(actExport,    &QAction::triggered, this, [this]{ DateiExportClick();  });
+	fileMenu->addSeparator();
 	/*  Recent-files submenu. Six QActions are built up front so
 	    their captions can be rewritten from UpdateMRUMenu without
 	    rebuilding the menu structure.                            */

@@ -634,6 +634,13 @@ public:
 	void __fastcall UserdefAddSelClick  ();
 	void __fastcall UserdefRemoveClick  ();
 	int  __fastcall SelectUserdef       (const QString& _title = QString());
+
+	/*  Import / export (Phase 7 batch 8). */
+	void __fastcall ImportWIFClick      ();
+	void __fastcall ImportBitmapClick   ();
+	void __fastcall DateiExportClick    ();
+	void __fastcall DateiExportieren    (const QString& _filename);
+	void __fastcall DoExportBitmap      (const QString& _filename);
 	void __fastcall BlockExpandEinzug      (int _count);
 	void __fastcall BlockExpandTrittfolge  (int _count);
 	void __fastcall BlockExpandAufknuepfung(int _x, int _y);
