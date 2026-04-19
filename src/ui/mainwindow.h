@@ -26,6 +26,9 @@
 #include <QAction>
 #include <QColor>
 #include <QMainWindow>
+#include <QString>
+
+#include <vector>
 
 #include "vcl_compat.h"
 #include "dbw3_base.h"     /* FeldBase hierarchy */
@@ -279,10 +282,33 @@ public:
         instead of update().                                       */
     void refresh();
 
-    /*  Called by SwitchLanguage(). Body is filled in when lang_main.cpp
-        is ported (that unit is a 673-line blob of LANG_C_H assignments
-        against menu items and actions that don't exist yet). */
+    /*  Called by SwitchLanguage() when the user switches language
+        live via the Environment options dialog. Walks langEntries
+        and re-applies captions / tooltips for every registered
+        QAction and QMenu.                                        */
     void ReloadLanguage();
+
+    /*  Bilingual registry. Every translatable QAction (menu entry,
+        toolbar button) and QMenu (top-level or submenu) goes into
+        `langEntries` at construction; ReloadLanguage() walks that
+        list to switch on the fly. Entries with an empty tip leave
+        the tooltip untouched so icons-only actions don't pick up
+        stray empty tooltips.                                     */
+    struct LangEntry {
+        QAction* action = nullptr;
+        class QMenu* menu = nullptr;
+        class QWidget* widget = nullptr; /* setWindowTitle target */
+        QString en_text;
+        QString de_text;
+        QString en_tip;
+        QString de_tip;
+    };
+    std::vector<LangEntry> langEntries;
+    void registerLang(QAction* _a, const QString& _en, const QString& _de,
+                      const QString& _en_tip = QString(),
+                      const QString& _de_tip = QString());
+    void registerLangMenu(class QMenu* _m, const QString& _en, const QString& _de);
+    void registerLangWidget(class QWidget* _w, const QString& _en, const QString& _de);
 
     /*  Stubs for the recalc / house-keeping methods every editor
         operation dispatches through. Bodies land in later slices

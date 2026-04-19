@@ -20,6 +20,7 @@
 #include "cursor.h"
 #include "datamodule.h"
 #include "fileformat.h"
+#include "language.h"
 #include "assert_compat.h"
 
 #include <QDockWidget>
@@ -166,8 +167,9 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         enclosing QDockWidget owns the panel; ViewFarbpalette is a
         checkable QAction bound to toggleViewAction so the menu
         state stays in sync with the dock's visibility. */
-    paletteDock = new QDockWidget(QStringLiteral("Palette"), this);
+    paletteDock = new QDockWidget(this);
     paletteDock->setObjectName(QStringLiteral("paletteDock"));
+    registerLangWidget(paletteDock, QStringLiteral("Palette"), QStringLiteral("Palette"));
     palettePanel = new PalettePanel(this, paletteDock);
     paletteDock->setWidget(palettePanel);
     addDockWidget(Qt::RightDockWidgetArea, paletteDock);
@@ -180,58 +182,111 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         Entries whose handlers haven't been ported yet appear as
         disabled stubs -- the menu layout is visually complete.   */
 
-    auto mkAct = [this](const QString& text, const char* icon = nullptr) {
-        QAction* a = new QAction(text, this);
+    /*  Bilingual helpers. `mkAct` creates a QAction and registers
+        its EN/DE captions with langEntries so SwitchLanguage() can
+        swap them live. `addStub` does the same for disabled stubs.
+        `addMenu` / `addSubmenu` wrap QMenu creation + registration. */
+    auto mkAct = [this](const char* en, const char* de, const char* icon = nullptr,
+                        const char* en_tip = "", const char* de_tip = "") {
+        QAction* a = new QAction(this);
         if (icon)
             a->setIcon(legacyIcon(icon));
+        registerLang(a, QString::fromUtf8(en), QString::fromUtf8(de),
+                     QString::fromUtf8(en_tip), QString::fromUtf8(de_tip));
         return a;
     };
-    auto addStub = [this, &mkAct](QMenu* m, const QString& text, const char* icon = nullptr) {
-        QAction* a = mkAct(text, icon);
+    auto addStub = [this, &mkAct](QMenu* m, const char* en, const char* de,
+                                  const char* icon = nullptr) {
+        QAction* a = mkAct(en, de, icon);
         a->setEnabled(false);
+        m->addAction(a);
+        return a;
+    };
+    auto addMenu = [this](QMenuBar* bar, const char* en, const char* de) {
+        QMenu* m = bar->addMenu(QString());
+        registerLangMenu(m, QString::fromUtf8(en), QString::fromUtf8(de));
+        return m;
+    };
+    auto addSubmenu = [this](QMenu* parent, const char* en, const char* de) {
+        QMenu* m = parent->addMenu(QString());
+        registerLangMenu(m, QString::fromUtf8(en), QString::fromUtf8(de));
+        return m;
+    };
+    auto menuAct = [this, &mkAct](QMenu* m, const char* en, const char* de,
+                                  const char* icon = nullptr, const char* en_tip = "",
+                                  const char* de_tip = "") {
+        QAction* a = mkAct(en, de, icon, en_tip, de_tip);
         m->addAction(a);
         return a;
     };
 
     /*  ---------- &File (MenuDatei) --------------------------- */
-    QMenu* fileMenu = menuBar()->addMenu(QStringLiteral("&File"));
-    QAction* actFileNew = addStub(fileMenu, QStringLiteral("&New"), "sb_new");
+    QMenu* fileMenu = addMenu(menuBar(), "&File", "&Datei");
+    QAction* actFileNew = menuAct(fileMenu, "&New", "&Neu", "sb_new",
+                                  "Creates a new pattern", "Erstellt ein neues Muster");
     actFileNew->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_N));
-    addStub(fileMenu, QStringLiteral("New &from template..."));
-    QAction* actOpen = mkAct(QStringLiteral("&Open..."), "sb_open");
+    actFileNew->setEnabled(false);
+    QAction* actFileNewTpl = menuAct(fileMenu, "New &from template...",
+                                     "Neu ge&mäss Vorlage...", nullptr,
+                                     "Creates a new pattern based upon a template",
+                                     "Erstellt ein neues Muster anhand einer Vorlage");
+    actFileNewTpl->setEnabled(false);
+    QAction* actOpen = menuAct(fileMenu, "&Open...", "Ö&ffnen...", "sb_open",
+                               "Opens a pattern", "Öffnet ein Muster");
     actOpen->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_O));
-    fileMenu->addAction(actOpen);
-    QAction* actLoadParts = mkAct(QStringLiteral("&Load parts..."));
-    fileMenu->addAction(actLoadParts);
-    QAction* actSave = mkAct(QStringLiteral("&Save"), "sb_save");
+    QAction* actLoadParts = menuAct(fileMenu, "&Load parts...", "&Teile laden...", nullptr,
+                                    "Loads only parts of a pattern into the current pattern",
+                                    "Lädt Teile eines Musters in das aktuelle Muster");
+    QAction* actSave = menuAct(fileMenu, "&Save", "&Speichern", "sb_save",
+                               "Saves the pattern", "Speichert das Muster");
     actSave->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
-    fileMenu->addAction(actSave);
-    QAction* actSaveAs = mkAct(QStringLiteral("Save &as..."));
-    fileMenu->addAction(actSaveAs);
-    addStub(fileMenu, QStringLiteral("Revert &changes"));
+    QAction* actSaveAs = menuAct(fileMenu, "Save &as...", "Speichern &unter...", nullptr,
+                                 "Saves the pattern to a new file",
+                                 "Speichert das Muster unter einem neuen Namen");
+    QAction* actFileRevert = menuAct(fileMenu, "Revert &changes",
+                                     "Änderungen ver&werfen", nullptr,
+                                     "Discards any changes and restores the last saved state of the pattern",
+                                     "Verwirft alle Änderungen und kehrt zum letzten gespeicherten Zustand zurück");
+    actFileRevert->setEnabled(false);
     fileMenu->addSeparator();
-    QMenu* importMenu = fileMenu->addMenu(QStringLiteral("I&mport"));
-    QAction* actImportWIF = importMenu->addAction(QStringLiteral("&WIF Datei..."));
-    QMenu* exportMenu = fileMenu->addMenu(QStringLiteral("&Export"));
-    QAction* actExportBmp = exportMenu->addAction(QStringLiteral("&Bitmap Datei..."));
-    QAction* actExportWIF = exportMenu->addAction(QStringLiteral("&WIF Datei..."));
-    addStub(exportMenu, QStringLiteral("&DB-WEAVE 3.5 Datei..."));
+    QMenu* importMenu = addSubmenu(fileMenu, "I&mport", "I&mport");
+    QAction* actImportWIF = menuAct(importMenu, "&WIF file...", "&WIF Datei...", nullptr,
+                                    "Imports the pattern from a WIF file",
+                                    "Importiert das Muster einer WIF Datei");
+    QMenu* exportMenu = addSubmenu(fileMenu, "&Export", "E&xportieren");
+    QAction* actExportBmp = menuAct(exportMenu, "&Bitmap file...", "&Bitmap Datei...", nullptr,
+                                    "Exports the pattern to a bitmap file",
+                                    "Exportiert das Muster in eine Bilddatei");
+    QAction* actExportWIF = menuAct(exportMenu, "&WIF file...", "&WIF Datei...", nullptr,
+                                    "Exports the pattern to a WIF file",
+                                    "Exportiert das Muster in eine WIF Datei");
+    QAction* actExportDBW35 = menuAct(exportMenu, "&DB-WEAVE 3.5 file...",
+                                      "&DB-WEAVE 3.5 Datei...", nullptr,
+                                      "Exports the pattern to a DB-WEAVE 3.5 file",
+                                      "Exportiert das Muster in eine DB-WEAVE 3.5 Datei");
+    actExportDBW35->setEnabled(false);
     fileMenu->addSeparator();
-    QAction* actFileProps = mkAct(QStringLiteral("Propert&ies..."));
-    fileMenu->addAction(actFileProps);
+    QAction* actFileProps = menuAct(fileMenu, "Propert&ies...", "&Eigenschaften...", nullptr,
+                                    "Edits the properties of the pattern",
+                                    "Bearbeitet die Eigenschaften des Musters");
     fileMenu->addSeparator();
-    QAction* actPageSetup = mkAct(QStringLiteral("Page se&tup..."));
-    fileMenu->addAction(actPageSetup);
-    QAction* actPreview = mkAct(QStringLiteral("Print pre&view"), "sb_preview");
-    fileMenu->addAction(actPreview);
-    QAction* actPrint = mkAct(QStringLiteral("&Print..."), "sb_print");
+    QAction* actPageSetup = menuAct(fileMenu, "Page se&tup...", "Se&ite einrichten...", nullptr,
+                                    "Sets the page margins and headers and footers",
+                                    "Richtet die Seitenränder und Kopf- und Fusszeilen ein");
+    QAction* actPreview = menuAct(fileMenu, "Print pre&view", "Druckvorsc&hau", "sb_preview",
+                                  "Shows how the pattern will be printed",
+                                  "Zeigt wie das Muster gedruckt wird");
+    QAction* actPrint = menuAct(fileMenu, "&Print...", "&Drucken...", "sb_print",
+                                "Prints the pattern", "Druckt das Muster");
     actPrint->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_P));
-    fileMenu->addAction(actPrint);
-    QAction* actPrintRange = mkAct(QStringLiteral("Print &range..."));
+    QAction* actPrintRange = menuAct(fileMenu, "P&rint part...", "Teil dru&cken...", nullptr,
+                                     "Prints only a part of the pattern",
+                                     "Druckt nur einen Teil des Musters");
     actPrintRange->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_L));
     actPrintRange->setEnabled(false);
-    fileMenu->addAction(actPrintRange);
-    addStub(fileMenu, QStringLiteral("Printer se&tup..."));
+    QAction* actPrintSetup = menuAct(fileMenu, "Printer set&up...", "D&ruckereinstellung...",
+                                     nullptr, "Configures the printer", "Konfiguriert den Drucker");
+    actPrintSetup->setEnabled(false);
     fileMenu->addSeparator();
     /*  MRU 1..6 in-line (legacy style -- not a submenu). */
     mruMenu = nullptr;
@@ -243,8 +298,8 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         connect(a, &QAction::triggered, this, [this, i] { OpenFromMRU(i); });
     }
     fileMenu->addSeparator();
-    QAction* actQuit = mkAct(QStringLiteral("E&xit"));
-    fileMenu->addAction(actQuit);
+    QAction* actQuit = menuAct(fileMenu, "E&xit", "&Beenden", nullptr,
+                               "Exits the program", "Beendet das Programm");
 
     connect(actOpen, &QAction::triggered, this, [this] { FileOpen(); });
     connect(actSave, &QAction::triggered, this, [this] { FileSave(); });
@@ -260,108 +315,161 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     connect(actQuit, &QAction::triggered, this, &TDBWFRM::close);
 
     /*  ---------- &Edit (MenuBearbeiten) --------------------- */
-    QMenu* editMenu = menuBar()->addMenu(QStringLiteral("&Edit"));
-    QAction* actUndo = mkAct(QStringLiteral("&Undo"), "mn_undo");
+    QMenu* editMenu = addMenu(menuBar(), "&Edit", "&Bearbeiten");
+    QAction* actUndo = menuAct(editMenu, "&Undo", "&Rückgängig", "mn_undo",
+                               "Undoes the last action", "Macht die letzte Änderung rückgängig");
     actUndo->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Z));
-    editMenu->addAction(actUndo);
-    QAction* actRedo = mkAct(QStringLiteral("&Redo"), "mn_redo");
+    QAction* actRedo = menuAct(editMenu, "&Redo", "&Wiederholen", "mn_redo",
+                               "Redoes the last undone action",
+                               "Führt die letzte rückgängig gemachte Änderung durch");
     actRedo->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Y));
-    editMenu->addAction(actRedo);
     editMenu->addSeparator();
-    QAction* actCut = mkAct(QStringLiteral("Cu&t"), "mn_cut");
+    QAction* actCut = menuAct(editMenu, "Cu&t", "A&usschneiden", "mn_cut",
+                              "Cuts the selection to the clipboard",
+                              "Schneidet die Selektion aus und kopiert sie in die Zwischenablage");
     actCut->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_X));
-    editMenu->addAction(actCut);
-    QAction* actCopy = mkAct(QStringLiteral("&Copy"), "mn_copy");
+    QAction* actCopy = menuAct(editMenu, "&Copy", "&Kopieren", "mn_copy",
+                               "Copies the selection to the clipboard",
+                               "Kopiert die Selektion in die Zwischenablage");
     actCopy->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
-    editMenu->addAction(actCopy);
-    QAction* actPaste = mkAct(QStringLiteral("&Paste"), "mn_paste");
+    QAction* actPaste = menuAct(editMenu, "&Paste", "&Einfügen", "mn_paste",
+                                "Pastes the contents of the clipboard at the current cursor location",
+                                "Fügt den Inhalt der Zwischenablage an der aktuellen Cursorposition ein");
     actPaste->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_V));
-    editMenu->addAction(actPaste);
-    QAction* actPasteTransparent = mkAct(QStringLiteral("P&aste transparently"));
+    QAction* actPasteTransparent = menuAct(
+        editMenu, "P&aste transparently", "&Transparent einfügen", nullptr,
+        "Pastes the contents of the clipboard transparently at the current cursor location",
+        "Fügt den Inhalt der Zwischenablage transparent an der aktuellen Cursorposition ein");
     actPasteTransparent->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_B));
-    editMenu->addAction(actPasteTransparent);
     editMenu->addSeparator();
-    QAction* actInvert = mkAct(QStringLiteral("&Invert"), "sb_invert");
+    QAction* actInvert = menuAct(editMenu, "&Invert", "&Invertieren", "sb_invert",
+                                 "Inverts the selection", "Invertiert die Selektion");
     actInvert->setShortcut(QKeySequence(Qt::Key_I));
-    editMenu->addAction(actInvert);
-    QAction* actMirrorH = mkAct(QStringLiteral("Mirror &horizontal"), "sb_mirrorh");
+    QAction* actMirrorH = menuAct(editMenu, "Mirror &horizontal", "Spiegeln &horizontal",
+                                  "sb_mirrorh",
+                                  "Mirrors the selection in horizontal direction",
+                                  "Spiegelt die Selektion in horizontaler Richtung");
     actMirrorH->setShortcut(QKeySequence(Qt::Key_H));
-    editMenu->addAction(actMirrorH);
-    QAction* actMirrorV = mkAct(QStringLiteral("Mirror &vertical"), "sb_mirrorv");
+    QAction* actMirrorV = menuAct(editMenu, "Mirror &vertical", "Spiegeln &vertikal",
+                                  "sb_mirrorv",
+                                  "Mirrors the selection in vertical direction",
+                                  "Spiegelt die Selektion in vertikaler Richtung");
     actMirrorV->setShortcut(QKeySequence(Qt::Key_V));
-    editMenu->addAction(actMirrorV);
-    QAction* actRotate = mkAct(QStringLiteral("Rotat&e"), "sb_rotate");
+    QAction* actRotate = menuAct(editMenu, "Rotat&e", "R&otieren", "sb_rotate",
+                                 "Rotates the square selection in clockwise direction",
+                                 "Rotiert die quadratische Selektion im Uhrzeigersinn");
     actRotate->setShortcut(QKeySequence(Qt::Key_R));
-    editMenu->addAction(actRotate);
-    QAction* actCentralsym = mkAct(QStringLiteral("Ma&ke central symmetric"), "sb_centralsym");
+    QAction* actCentralsym = menuAct(editMenu, "Ma&ke central symmetric", "&Zentralsymmetrisch",
+                                     "sb_centralsym",
+                                     "Tries to make the selection central symmetric",
+                                     "Versucht die Selektion zentralsymmetrisch zu machen");
     actCentralsym->setShortcut(QKeySequence(Qt::Key_Z));
-    editMenu->addAction(actCentralsym);
-    QAction* actDelete = mkAct(QStringLiteral("&Delete"));
+    QAction* actDelete = menuAct(editMenu, "&Delete", "&Löschen", nullptr,
+                                 "Deletes the selection", "Löscht die Selektion");
     actDelete->setShortcut(QKeySequence(Qt::Key_Delete));
-    editMenu->addAction(actDelete);
 
-    QMenu* rollMenu = editMenu->addMenu(QStringLiteral("R&oll"));
-    QAction* actRollUp = rollMenu->addAction(QStringLiteral("&Up"));
+    QMenu* rollMenu = addSubmenu(editMenu, "R&oll", "Rolle&n");
+    QAction* actRollUp = menuAct(rollMenu, "Roll &up", "Nach &oben", nullptr,
+                                 "Rolls the selection upwards", "Rollt die Selektion aufwärts");
     actRollUp->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Up));
-    QAction* actRollDown = rollMenu->addAction(QStringLiteral("&Down"));
+    QAction* actRollDown = menuAct(rollMenu, "Roll &down", "Nach &unten", nullptr,
+                                   "Rolls the selection downwards", "Rollt die Selektion abwärts");
     actRollDown->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Down));
-    QAction* actRollLeft = rollMenu->addAction(QStringLiteral("&Left"));
+    QAction* actRollLeft = menuAct(rollMenu, "Roll &left", "Nach &links", nullptr,
+                                   "Rolls the selection to the left",
+                                   "Rollt die Selektion nach links");
     actRollLeft->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Left));
-    QAction* actRollRight = rollMenu->addAction(QStringLiteral("&Right"));
+    QAction* actRollRight = menuAct(rollMenu, "Roll &right", "Nach &rechts", nullptr,
+                                    "Rolls the selection to the right",
+                                    "Rollt die Selektion nach rechts");
     actRollRight->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Right));
 
-    QMenu* slopeMenu = editMenu->addMenu(QStringLiteral("&Slope"));
-    QAction* actSteigInc = slopeMenu->addAction(QStringLiteral("&Increase"));
+    QMenu* slopeMenu = addSubmenu(editMenu, "&Slope", "&Steigung");
+    QAction* actSteigInc = menuAct(slopeMenu, "&Increase", "&Erhöhen", nullptr,
+                                   "Increases the slope of the selection",
+                                   "Erhöht die Steigung der Selektion");
     actSteigInc->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_H));
-    QAction* actSteigDec = slopeMenu->addAction(QStringLiteral("&Decrease"));
+    QAction* actSteigDec = menuAct(slopeMenu, "&Decrease", "&Vermindern", nullptr,
+                                   "Decreases the slope of the selection",
+                                   "Vermindert die Steigung der Selektion");
     actSteigDec->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_J));
     editMenu->addSeparator();
 
-    QMenu* moveMenu = editMenu->addMenu(QStringLiteral("&Move"));
-    QAction* actSchaftUp = moveMenu->addAction(QStringLiteral("Shaft &up"));
-    actSchaftUp->setIcon(legacyIcon("sb_schaftup"));
+    QMenu* moveMenu = addSubmenu(editMenu, "&Move", "Ver&schieben");
+    QAction* actSchaftUp = menuAct(moveMenu, "Harness &up", "Schaft nach &oben", "sb_schaftup",
+                                   "Moves the selected harness up",
+                                   "Verschiebt den aktuellen Schaft nach oben");
     actSchaftUp->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_F7));
-    QAction* actSchaftDown = moveMenu->addAction(QStringLiteral("Shaft &down"));
-    actSchaftDown->setIcon(legacyIcon("sb_schaftdown"));
+    QAction* actSchaftDown = menuAct(moveMenu, "Harness &down", "Schaft nach &unten",
+                                     "sb_schaftdown",
+                                     "Moves the selected harness down",
+                                     "Verschiebt den aktuellen Schaft nach unten");
     actSchaftDown->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_F8));
-    QAction* actTrittLeft = moveMenu->addAction(QStringLiteral("Treadle &left"));
-    actTrittLeft->setIcon(legacyIcon("sb_trittleft"));
+    QAction* actTrittLeft = menuAct(moveMenu, "Treadle &left", "Tritt nach &links",
+                                    "sb_trittleft",
+                                    "Moves the selected treadle left",
+                                    "Verschiebt den aktuellen Tritt nach links");
     actTrittLeft->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_F5));
-    QAction* actTrittRight = moveMenu->addAction(QStringLiteral("Treadle &right"));
-    actTrittRight->setIcon(legacyIcon("sb_trittright"));
+    QAction* actTrittRight = menuAct(moveMenu, "Treadle &right", "Tritt nach &rechts",
+                                     "sb_trittright",
+                                     "Moves the selected treadle right",
+                                     "Verschiebt den aktuellen Tritt nach rechts");
     actTrittRight->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_F6));
 
-    QMenu* insMenu = editMenu->addMenu(QStringLiteral("I&nsert"));
-    QAction* actInsSchaft = insMenu->addAction(QStringLiteral("&Shaft"));
+    QMenu* insMenu = addSubmenu(editMenu, "I&nsert", "Ein&fügen");
+    QAction* actInsSchaft = menuAct(insMenu, "&Harness", "&Schaft", nullptr,
+                                    "Inserts a harness at the current cursor position",
+                                    "Fügt einen Schaft an der aktuellen Cursorposition ein");
     actInsSchaft->setShortcut(QKeySequence(Qt::SHIFT | Qt::Key_S));
-    QAction* actInsTritt = insMenu->addAction(QStringLiteral("&Treadle"));
+    QAction* actInsTritt = menuAct(insMenu, "&Treadle", "&Tritt", nullptr,
+                                   "Inserts a treadle at the current cursor position",
+                                   "Fügt einen Tritt an der aktuellen Cursorposition ein");
     actInsTritt->setShortcut(QKeySequence(Qt::SHIFT | Qt::Key_T));
-    QAction* actInsKette = insMenu->addAction(QStringLiteral("&End, Warp thread"));
+    QAction* actInsKette = menuAct(insMenu, "&End, Warp thread", "&Kettfaden", nullptr,
+                                   "Inserts a warp thread at the current cursor position",
+                                   "Fügt einen Kettfaden an der aktuellen Cursorposition ein");
     actInsKette->setShortcut(QKeySequence(Qt::SHIFT | Qt::Key_K));
-    QAction* actInsSchuss = insMenu->addAction(QStringLiteral("&Pick, Weft thread"));
+    QAction* actInsSchuss = menuAct(insMenu, "&Pick, Weft thread", "Schuss&faden", nullptr,
+                                    "Inserts a weft thread at the current cursor position",
+                                    "Fügt einen Schussfaden an der aktuellen Cursorposition ein");
     actInsSchuss->setShortcut(QKeySequence(Qt::SHIFT | Qt::Key_F));
 
-    QMenu* delMenu = editMenu->addMenu(QStringLiteral("De&lete"));
-    QAction* actDelSchaft = delMenu->addAction(QStringLiteral("&Shaft"));
+    QMenu* delMenu = addSubmenu(editMenu, "De&lete", "Lös&chen");
+    QAction* actDelSchaft = menuAct(delMenu, "&Harness", "&Schaft", nullptr,
+                                    "Deletes the harness at the current cursor position",
+                                    "Löscht den Schaft an der aktuellen Cursorposition");
     actDelSchaft->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_S));
-    QAction* actDelTritt = delMenu->addAction(QStringLiteral("&Treadle"));
+    QAction* actDelTritt = menuAct(delMenu, "&Treadle", "&Tritt", nullptr,
+                                   "Deletes the treadle at the current cursor position",
+                                   "Löscht den Tritt an der aktuellen Cursorposition");
     actDelTritt->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_T));
-    QAction* actDelKette = delMenu->addAction(QStringLiteral("&End, Warp thread"));
+    QAction* actDelKette = menuAct(delMenu, "&End, Warp thread", "&Kettfaden", nullptr,
+                                   "Deletes the warp thread at the current cursor position",
+                                   "Löscht den Kettfaden an der aktuellen Cursorposition");
     actDelKette->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_K));
-    QAction* actDelSchuss = delMenu->addAction(QStringLiteral("&Pick, Weft thread"));
+    QAction* actDelSchuss = menuAct(delMenu, "&Pick, Weft thread", "Schuss&faden", nullptr,
+                                    "Deletes the weft thread at the current cursor position",
+                                    "Löscht den Schussfaden an der aktuellen Cursorposition");
     actDelSchuss->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_F));
     editMenu->addSeparator();
 
-    QMenu* lanceeMenu = editMenu->addMenu(QStringLiteral("La&ncee"));
-    QAction* actKettLanc = lanceeMenu->addAction(QStringLiteral("&Warp lancee..."));
-    QAction* actSchussLanc = lanceeMenu->addAction(QStringLiteral("W&eft lancee..."));
+    QMenu* lanceeMenu = addSubmenu(editMenu, "La&ncee", "&Lancierung");
+    QAction* actKettLanc = menuAct(lanceeMenu, "&Warp lancee...", "&Kettlancierung...", nullptr,
+                                   "Inserts warp threads in order to create a warp lancee",
+                                   "Fügt Kettfäden ein um eine Kettlancierung zu machen");
+    QAction* actSchussLanc = menuAct(lanceeMenu, "W&eft lancee...", "&Schusslancierung...",
+                                     nullptr,
+                                     "Inserts weft threads in order to create a weft lancee",
+                                     "Fügt Schussfäden ein um eine Schusslancierung zu machen");
 
-    QAction* actFillKoeper = mkAct(QStringLiteral("T&will completion"));
+    QAction* actFillKoeper = menuAct(editMenu, "T&will completion", "&Köper ergänzen", nullptr,
+                                     "Complements the currently selected thread to a complete twill",
+                                     "Ergänzt den selektierten Faden zu einem vollständigen Köper");
     actFillKoeper->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_K));
-    editMenu->addAction(actFillKoeper);
-    QAction* actSwapSide = mkAct(QStringLiteral("S&witch side"));
+    QAction* actSwapSide = menuAct(editMenu, "S&witch side", "S&eite wechseln", nullptr,
+                                   "Switches to the other side of the pattern",
+                                   "Wechselt auf die andere Seite des Musters");
     actSwapSide->setShortcut(QKeySequence(Qt::Key_F11));
-    editMenu->addAction(actSwapSide);
 
     connect(actUndo, &QAction::triggered, this, [this] {
         if (undo && undo->Undo())
@@ -405,33 +513,49 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     connect(actSwapSide, &QAction::triggered, this, [this] { SwapSide(); });
 
     /*  ---------- &View (MenuAnsicht) ------------------------- */
-    QMenu* viewMenu = menuBar()->addMenu(QStringLiteral("&View"));
-    ViewBlatteinzug->setText(QStringLiteral("R&eed threading"));
+    QMenu* viewMenu = addMenu(menuBar(), "&View", "&Ansicht");
+    registerLang(ViewBlatteinzug, QStringLiteral("R&eed threading"),
+                 QStringLiteral("&Blatteinzug"), QStringLiteral("Toggles reed threading"),
+                 QStringLiteral("Blatteinzug sichtbar/unsichtbar"));
     viewMenu->addAction(ViewBlatteinzug);
-    ViewFarbe->setText(QStringLiteral("&Color"));
+    registerLang(ViewFarbe, QStringLiteral("&Color"), QStringLiteral("&Farbe"),
+                 QStringLiteral("Toggles color"), QStringLiteral("Farbe sichtbar/unsichtbar"));
     ViewFarbe->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_A));
     viewMenu->addAction(ViewFarbe);
-    ViewEinzug->setText(QStringLiteral("&Threading"));
+    registerLang(ViewEinzug, QStringLiteral("&Threading"), QStringLiteral("&Einzug"),
+                 QStringLiteral("Toggles threading"),
+                 QStringLiteral("Einzug sichtbar/unsichtbar"));
     ViewEinzug->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_E));
     viewMenu->addAction(ViewEinzug);
-    ViewTrittfolge->setText(QStringLiteral("T&readling"));
+    registerLang(ViewTrittfolge, QStringLiteral("Tre&adling"), QStringLiteral("&Trittfolge"),
+                 QStringLiteral("Toggles treadling"),
+                 QStringLiteral("Trittfolge sichtbar/unsichtbar"));
     ViewTrittfolge->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_T));
     viewMenu->addAction(ViewTrittfolge);
-    ViewHlines->setText(QStringLiteral("&Support lines"));
+    registerLang(ViewHlines, QStringLiteral("&Support lines"), QStringLiteral("&Hilfslinien"),
+                 QStringLiteral("Toggles support-lines"),
+                 QStringLiteral("Hilfslinien sichtbar/unsichtbar"));
     viewMenu->addAction(ViewHlines);
-    ViewOnlyGewebe->setText(QStringLiteral("&Only pattern visible"));
+    registerLang(ViewOnlyGewebe, QStringLiteral("&Only pattern"), QStringLiteral("&Nur Bindung"),
+                 QStringLiteral("Displays only the pattern"),
+                 QStringLiteral("Zeigt nur die Bindung an"));
     viewMenu->addAction(ViewOnlyGewebe);
     viewMenu->addSeparator();
-    QMenu* gewebeMenu = viewMenu->addMenu(QStringLiteral("&View"));
+    QMenu* gewebeMenu = addSubmenu(viewMenu, "&View", "&Ansicht");
     auto* gewebeGroup = new QActionGroup(this);
     gewebeGroup->setExclusive(true);
-    GewebeNone->setText(QStringLiteral("&Invisible"));
+    registerLang(GewebeNone, QStringLiteral("&Invisible"), QStringLiteral("&Unsichtbar"),
+                 QStringLiteral("Suppresses the pattern"),
+                 QStringLiteral("Unterdrückt die Bindung"));
     GewebeNone->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Slash));
-    GewebeNormal->setText(QStringLiteral("&Draft"));
+    registerLang(GewebeNormal, QStringLiteral("&Draft"), QStringLiteral("&Patrone"),
+                 QStringLiteral("Draft mode"), QStringLiteral("Patronenmodus"));
     GewebeNormal->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_1));
-    GewebeFarbeffekt->setText(QStringLiteral("&Color"));
+    registerLang(GewebeFarbeffekt, QStringLiteral("&Color"), QStringLiteral("&Farbeffekt"),
+                 QStringLiteral("Color mode"), QStringLiteral("Farbeffektmodus"));
     GewebeFarbeffekt->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_2));
-    GewebeSimulation->setText(QStringLiteral("&Fabric"));
+    registerLang(GewebeSimulation, QStringLiteral("&Fabric"), QStringLiteral("&Gewebe"),
+                 QStringLiteral("Fabric mode"), QStringLiteral("Gewebesimulationsmodus"));
     GewebeSimulation->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_3));
     for (QAction* a : { GewebeNone, GewebeNormal, GewebeFarbeffekt, GewebeSimulation }) {
         a->setCheckable(true);
@@ -439,21 +563,30 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         gewebeMenu->addAction(a);
     }
     viewMenu->addSeparator();
-    QAction* actZoomIn = mkAct(QStringLiteral("&Zoom in"), "sb_zoomin");
+    QAction* actZoomIn = menuAct(viewMenu, "&Zoom in", "&Vergrössern", "sb_zoomin",
+                                 "Zoom in", "Vergrössert die Ansicht");
     actZoomIn->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_I));
-    viewMenu->addAction(actZoomIn);
-    QAction* actZoomNormal = mkAct(QStringLiteral("&Normal"));
-    viewMenu->addAction(actZoomNormal);
-    QAction* actZoomOut = mkAct(QStringLiteral("Zoo&m out"), "sb_zoomout");
+    QAction* actZoomNormal = menuAct(viewMenu, "&Normal", "&Normal", nullptr,
+                                     "Sets magnification to default value",
+                                     "Stellt die Standardgrösse ein");
+    QAction* actZoomOut = menuAct(viewMenu, "Zoo&m out", "Ver&kleinern", "sb_zoomout",
+                                  "Zoom out", "Verkleinert die Ansicht");
     actZoomOut->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_U));
-    viewMenu->addAction(actZoomOut);
     viewMenu->addSeparator();
-    QAction* actToolPalette = addStub(viewMenu, QStringLiteral("Tool pa&lette"));
+    QAction* actToolPalette = menuAct(viewMenu, "Too&lpalette", "&Werkzeugpalette", nullptr,
+                                      "Toggles the toolpalette (drawing mode)",
+                                      "Werkzeugpalette sichtbar/unsichtbar (Zeichnenmodus)");
     actToolPalette->setShortcut(QKeySequence(Qt::Key_F10));
-    QAction* actRedraw = addStub(viewMenu, QStringLiteral("Re&draw"));
+    actToolPalette->setEnabled(false);
+    QAction* actRedraw = menuAct(viewMenu, "Redraw", "Neuzeichnen", nullptr,
+                                 "Redraws everything", "Zeichnet alles neu");
     actRedraw->setShortcut(QKeySequence(Qt::Key_F5));
-    QAction* actOverview = addStub(viewMenu, QStringLiteral("Overv&iew"));
+    actRedraw->setEnabled(false);
+    QAction* actOverview = menuAct(viewMenu, "Overv&iew", "Übe&rsicht", nullptr,
+                                   "Enters an overview-mode",
+                                   "Schaltet in einen Übersichtsmodus um");
     actOverview->setShortcut(QKeySequence(Qt::Key_F4));
+    actOverview->setEnabled(false);
 
     connect(actZoomIn, &QAction::triggered, this, [this] { zoomIn(); });
     connect(actZoomOut, &QAction::triggered, this, [this] { zoomOut(); });
@@ -470,135 +603,195 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         connect(a, &QAction::triggered, this, [this] { refresh(); });
 
     /*  ---------- &Threading (MenuEinzug) -------------------- */
-    QMenu* threadMenu = menuBar()->addMenu(QStringLiteral("&Threading"));
-    QAction* actEzAssist = threadMenu->addAction(QStringLiteral("Threading assistant..."));
+    QMenu* threadMenu = addMenu(menuBar(), "&Threading", "&Einzug");
+    QAction* actEzAssist = menuAct(threadMenu, "Threading assistant...", "Einzugassistent...");
     threadMenu->addSeparator();
-    QAction* actEzSpiegeln = threadMenu->addAction(QStringLiteral("&Mirror"));
-    QAction* actClearEinzug = threadMenu->addAction(QStringLiteral("&Delete"));
+    QAction* actEzSpiegeln = menuAct(threadMenu, "&Mirror all", "&Spiegeln", nullptr,
+                                     "Mirrors the threading in horizontal direction",
+                                     "Spiegelt den Einzug in horizontaler Richtung");
+    actEzSpiegeln->setEnabled(false);
+    QAction* actClearEinzug = menuAct(threadMenu, "&Delete", "&Löschen", nullptr,
+                                      "Deletes the threading", "Löscht den Einzug");
     threadMenu->addSeparator();
     auto* ezGroup = new QActionGroup(this);
     ezGroup->setExclusive(true);
-    EzMinimalZ->setText(QStringLiteral("Normal &rising"));
-    EzMinimalS->setText(QStringLiteral("Normal &falling"));
-    EzGeradeZ->setText(QStringLiteral("&Straight rising"));
-    EzGeradeS->setText(QStringLiteral("S&traight falling"));
-    EzChorig2->setText(QStringLiteral("&2 choirs"));
-    EzChorig3->setText(QStringLiteral("&3 choirs"));
-    EzBelassen->setText(QStringLiteral("Fi&xed"));
-    EzFixiert->setText(QStringLiteral("&User defined..."));
+    registerLang(EzMinimalZ, QStringLiteral("Normal &rising"), QStringLiteral("&Normal steigend"),
+                 QStringLiteral("Arranges the threading in a rising manner"),
+                 QStringLiteral("Ordnet den Einzug steigend an"));
+    registerLang(EzMinimalS, QStringLiteral("Normal &falling"), QStringLiteral("Normal &fallend"),
+                 QStringLiteral("Arranges the threading in a falling manner"),
+                 QStringLiteral("Ordnet den Einzug fallend an"));
+    registerLang(EzGeradeZ, QStringLiteral("&Straight rising"),
+                 QStringLiteral("&Gerade steigend"),
+                 QStringLiteral("Arranges the threading straight rising"),
+                 QStringLiteral("Ordnet den Einzug gerade steigend an"));
+    registerLang(EzGeradeS, QStringLiteral("S&traight falling"),
+                 QStringLiteral("G&erade fallend"),
+                 QStringLiteral("Arranges the threading straight falling"),
+                 QStringLiteral("Ordnet den Einzug gerade fallend an"));
+    registerLang(EzChorig2, QStringLiteral("&2 choirs"), QStringLiteral("&2-chorig"),
+                 QStringLiteral("Arranges the threading in a simple 2-choir scheme"),
+                 QStringLiteral("Ordnet den Einzug in einem einfachen Zweichorsystem an"));
+    registerLang(EzChorig3, QStringLiteral("&3 choirs"), QStringLiteral("&3-chorig"),
+                 QStringLiteral("Arranges the threading in a simple 3-choir scheme"),
+                 QStringLiteral("Ordnet den Einzug in einem einfachen Dreichorsystem"));
+    registerLang(EzBelassen, QStringLiteral("Fi&xed"), QStringLiteral("Fi&xiert"),
+                 QStringLiteral("Tries to leave the threading as is"),
+                 QStringLiteral("Versucht den Einzug so zu belassen wie er ist"));
+    registerLang(EzFixiert, QStringLiteral("&User defined..."), QStringLiteral("&Benutzerdefiniert..."),
+                 QStringLiteral("Arranges the threading according to a user-supplied template"),
+                 QStringLiteral("Ordnet den Einzug gemäss einem vom Benutzer vorgegebenen Schema an"));
     for (QAction* a : { EzMinimalZ, EzMinimalS, EzGeradeZ, EzGeradeS, EzChorig2, EzChorig3,
                         EzBelassen, EzFixiert }) {
         ezGroup->addAction(a);
         threadMenu->addAction(a);
     }
     threadMenu->addSeparator();
-    QAction* actCopyEzTf = threadMenu->addAction(QStringLiteral("&Copy from treadling"));
+    QAction* actCopyEzTf = menuAct(threadMenu, "&Copy from treadling",
+                                   "&Kopieren von Trittfolge", nullptr,
+                                   "Copies the treadling into the threading",
+                                   "Kopiert die Trittfolge in den Einzug");
     connect(actEzAssist, &QAction::triggered, this, [this] { EinzugAssistentClick(); });
-    connect(actEzSpiegeln, &QAction::triggered, this, [this] {
-        /*  Legacy EzSpiegeln: mirror entire threading -- not yet
-            ported as a standalone op. Stubbed for now.          */
-    });
-    actEzSpiegeln->setEnabled(false);
     connect(actClearEinzug, &QAction::triggered, this, [this] { _ClearEinzug(); refresh(); });
     connect(actCopyEzTf, &QAction::triggered, this, [this] { CopyEinzugTrittfolgeClick(); });
     connect(EzFixiert, &QAction::triggered, this, [this] { EditFixeinzug(); });
 
     /*  ---------- Tre&adling (MenuTrittfolge) ---------------- */
-    QMenu* treadMenu = menuBar()->addMenu(QStringLiteral("Tre&adling"));
-    QAction* actTfSpiegeln = treadMenu->addAction(QStringLiteral("&Mirror"));
-    QAction* actClearTf = treadMenu->addAction(QStringLiteral("&Delete"));
+    QMenu* treadMenu = addMenu(menuBar(), "Tre&adling", "&Trittfolge");
+    QAction* actTfSpiegeln = menuAct(treadMenu, "&Mirror", "&Spiegeln", nullptr,
+                                     "Mirrors the treadling in vertical direction",
+                                     "Spiegelt die Trittfolge in vertikaler Richtung");
+    QAction* actClearTf = menuAct(treadMenu, "&Delete", "&Löschen", nullptr,
+                                  "Deletes the treadling", "Löscht die Trittfolge");
     treadMenu->addSeparator();
     auto* tfGroup = new QActionGroup(this);
     tfGroup->setExclusive(true);
-    TfMinimalZ->setText(QStringLiteral("Normal &rising"));
-    TfMinimalS->setText(QStringLiteral("Normal &falling"));
-    TfGeradeZ->setText(QStringLiteral("&Straight rising"));
-    TfGeradeS->setText(QStringLiteral("S&traight falling"));
-    TfGesprungen->setText(QStringLiteral("Cr&ossed"));
-    TfBelassen->setText(QStringLiteral("Fi&xed"));
+    registerLang(TfMinimalZ, QStringLiteral("Normal &rising"), QStringLiteral("&Normal steigend"),
+                 QStringLiteral("Arranges the treadling rising"),
+                 QStringLiteral("Ordnet die Trittfolge steigend an"));
+    registerLang(TfMinimalS, QStringLiteral("Normal &falling"), QStringLiteral("Normal &fallend"),
+                 QStringLiteral("Arranges the treadling falling"),
+                 QStringLiteral("Ordnet die Trittfolge fallend an"));
+    registerLang(TfGeradeZ, QStringLiteral("&Straight rising"),
+                 QStringLiteral("&Gerade steigend"),
+                 QStringLiteral("Arranges the treadling straight rising"),
+                 QStringLiteral("Ordnet die Trittfolge gerade steigend an"));
+    registerLang(TfGeradeS, QStringLiteral("S&traight falling"),
+                 QStringLiteral("G&erade fallend"),
+                 QStringLiteral("Arranges the treadling straight falling"),
+                 QStringLiteral("Ordnet die Trittfolge gerade fallend an"));
+    registerLang(TfGesprungen, QStringLiteral("Cr&ossed"), QStringLiteral("Gesp&rungen"),
+                 QStringLiteral("Arranges the treadling crossed"),
+                 QStringLiteral("Ordnet die Trittfolge gesprungen an"));
+    registerLang(TfBelassen, QStringLiteral("Fi&xed"), QStringLiteral("Fi&xiert"),
+                 QStringLiteral("Tries to leave the treadling as is"),
+                 QStringLiteral("Versucht die Trittfolge so zu belassen wie sie ist"));
     for (QAction* a : { TfMinimalZ, TfMinimalS, TfGeradeZ, TfGeradeS, TfGesprungen, TfBelassen }) {
         tfGroup->addAction(a);
         treadMenu->addAction(a);
     }
     treadMenu->addSeparator();
-    QAction* actCopyTfEz = treadMenu->addAction(QStringLiteral("&Copy from threading"));
+    QAction* actCopyTfEz = menuAct(treadMenu, "C&opy from threading",
+                                   "&Kopieren von Einzug", nullptr,
+                                   "Copies the threading into the treadling",
+                                   "Kopiert den Einzug in die Trittfolge");
     connect(actTfSpiegeln, &QAction::triggered, this, [this] { TfSpiegelnClick(); });
     connect(actClearTf, &QAction::triggered, this, [this] { ClearTrittfolgeClick(); });
     connect(actCopyTfEz, &QAction::triggered, this, [this] { CopyTrittfolgeEinzugClick(); });
 
     /*  ---------- &Pegplan (MenuSchlagpatrone) --------------- */
-    QMenu* spMenu = menuBar()->addMenu(QStringLiteral("&Pegplan"));
-    QAction* actSpInvert = spMenu->addAction(QStringLiteral("&Invert"));
-    actSpInvert->setIcon(legacyIcon("sb_invert"));
-    QAction* actClearSp = spMenu->addAction(QStringLiteral("&Delete"));
-    QAction* actSpSpiegeln = spMenu->addAction(QStringLiteral("&Mirror"));
-    actSpSpiegeln->setIcon(legacyIcon("sb_mirrorv"));
+    QMenu* spMenu = addMenu(menuBar(), "&Pegplan", "&Schlagpatrone");
+    QAction* actSpInvert = menuAct(spMenu, "&Invert", "&Invertieren", "sb_invert",
+                                   "Inverts the pegplan",
+                                   "Invertiert die gesamte Schlagpatrone");
+    QAction* actClearSp = menuAct(spMenu, "&Delete", "&Löschen", nullptr,
+                                  "Deletes the pegplan", "Löscht die Schlagpatrone");
+    QAction* actSpSpiegeln = menuAct(spMenu, "&Mirror", "&Spiegeln", "sb_mirrorv",
+                                     "Mirrors the pegplan in vertical direction",
+                                     "Spiegelt die Schlagpatrone in vertikaler Richtung");
     connect(actSpInvert, &QAction::triggered, this, [this] { SpInvert(); });
     connect(actClearSp, &QAction::triggered, this, [this] { ClearSchlagpatroneClick(); });
     connect(actSpSpiegeln, &QAction::triggered, this, [this] { SpSpiegelnClick(); });
 
     /*  ---------- Tie-&up (MenuAufknuepfung) ----------------- */
-    QMenu* aufMenu = menuBar()->addMenu(QStringLiteral("Tie-&up"));
-    QAction* actAufInvert = aufMenu->addAction(QStringLiteral("&Invert"));
-    actAufInvert->setIcon(legacyIcon("sb_invert"));
+    QMenu* aufMenu = addMenu(menuBar(), "Tie-&up", "A&ufknüpfung");
+    QAction* actAufInvert = menuAct(aufMenu, "&Invert", "&Invertieren", "sb_invert",
+                                    "Inverts the tie-up", "Invertiert die Aufknüpfung");
     actAufInvert->setEnabled(false);
-    QAction* actClearAuf = aufMenu->addAction(QStringLiteral("&Delete"));
+    QAction* actClearAuf = menuAct(aufMenu, "&Delete", "&Löschen", nullptr,
+                                   "Deletes the tie-up", "Löscht die Aufknüpfung");
     actClearAuf->setEnabled(false);
-    QMenu* aufRollMenu = aufMenu->addMenu(QStringLiteral("&Roll"));
-    QAction* actAufRollUp = aufRollMenu->addAction(QStringLiteral("&Up"));
+    QMenu* aufRollMenu = addSubmenu(aufMenu, "&Roll", "&Rollen");
+    QAction* actAufRollUp = menuAct(aufRollMenu, "&Up", "Nach &oben", nullptr,
+                                    "Rolls the tie-up up", "Rollt die Aufknüpfung nach oben");
     actAufRollUp->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Up));
     actAufRollUp->setEnabled(false);
-    QAction* actAufRollDown = aufRollMenu->addAction(QStringLiteral("&Down"));
+    QAction* actAufRollDown = menuAct(aufRollMenu, "&Down", "Nach &unten", nullptr,
+                                      "Rolls the tie-up down",
+                                      "Rollt die Aufknüpfung nach unten");
     actAufRollDown->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Down));
     actAufRollDown->setEnabled(false);
-    QAction* actAufRollLeft = aufRollMenu->addAction(QStringLiteral("&Left"));
+    QAction* actAufRollLeft = menuAct(aufRollMenu, "&Left", "Nach &links", nullptr,
+                                      "Rolls the tie-up left",
+                                      "Rollt die Aufknüpfung nach links");
     actAufRollLeft->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Left));
     actAufRollLeft->setEnabled(false);
-    QAction* actAufRollRight = aufRollMenu->addAction(QStringLiteral("&Right"));
+    QAction* actAufRollRight = menuAct(aufRollMenu, "&Right", "Nach &rechts", nullptr,
+                                       "Rolls the tie-up right",
+                                       "Rollt die Aufknüpfung nach rechts");
     actAufRollRight->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Right));
     actAufRollRight->setEnabled(false);
-    QMenu* aufSlopeMenu = aufMenu->addMenu(QStringLiteral("&Slope"));
-    QAction* actAufSlopeInc = aufSlopeMenu->addAction(QStringLiteral("&Increase"));
+    QMenu* aufSlopeMenu = addSubmenu(aufMenu, "&Slope", "&Steigung");
+    QAction* actAufSlopeInc = menuAct(aufSlopeMenu, "&Increase", "&Erhöhen", nullptr,
+                                      "Increases the slope of the tie-up",
+                                      "Erhöht die Steigung der Aufknüpfung");
     actAufSlopeInc->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_H));
     actAufSlopeInc->setEnabled(false);
-    QAction* actAufSlopeDec = aufSlopeMenu->addAction(QStringLiteral("&Decrease"));
+    QAction* actAufSlopeDec = menuAct(aufSlopeMenu, "&Decrease", "&Vermindern", nullptr,
+                                      "Decreases the slope of the tie-up",
+                                      "Vermindert die Steigung der Aufknüpfung");
     actAufSlopeDec->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_J));
     actAufSlopeDec->setEnabled(false);
-    QAction* actAufZentralsymm = aufMenu->addAction(QStringLiteral("Ma&ke central symmetric"));
-    actAufZentralsymm->setIcon(legacyIcon("sb_centralsym"));
+    QAction* actAufZentralsymm = menuAct(aufMenu, "Ma&ke central symmetric",
+                                         "&Zentralsymmetrisch", "sb_centralsym",
+                                         "Tries to make the tie-up central symmetric",
+                                         "Versucht die Aufknüpfung zentralsymmetrisch zu machen");
     actAufZentralsymm->setEnabled(false);
 
     /*  ---------- &Insert (MenuEinfuegen) -------------------- */
-    QMenu* insertMenu = menuBar()->addMenu(QStringLiteral("&Insert"));
-    QMenu* atlasMenu = insertMenu->addMenu(QStringLiteral("&Satin"));
+    QMenu* insertMenu = addMenu(menuBar(), "&Insert", "Ei&nfügen");
+    QMenu* atlasMenu = addSubmenu(insertMenu, "&Satin", "&Atlas");
     for (int n = 5; n <= 10; n++) {
-        QAction* a = atlasMenu->addAction(QStringLiteral("Satin &%1").arg(n));
+        const QByteArray en = QStringLiteral("Satin &%1").arg(n).toUtf8();
+        const QByteArray de = QStringLiteral("Atlas &%1").arg(n).toUtf8();
+        QAction* a = menuAct(atlasMenu, en.constData(), de.constData());
         connect(a, &QAction::triggered, this, [this, n] { AtlasEinfuegen(n); });
     }
-    QMenu* koepMenu = insertMenu->addMenu(QStringLiteral("&Twill"));
-    QMenu* koepBalMenu = koepMenu->addMenu(QStringLiteral("&Balanced twill"));
-    auto addKoeperItem = [this](QMenu* m, const QString& label, int h, int s) {
-        QAction* a = m->addAction(label);
+    QMenu* koepMenu = addSubmenu(insertMenu, "&Twill", "&Köper");
+    QMenu* koepBalMenu = addSubmenu(koepMenu, "&Balanced", "&Gleichseitig");
+    auto addKoeperItem = [this, &mkAct, &menuAct](QMenu* m, const char* en, const char* de,
+                                                  int h, int s) {
+        QAction* a = menuAct(m, en, de);
         connect(a, &QAction::triggered, this, [this, h, s] { KoeperEinfuegen(h, s); });
         return a;
     };
-    addKoeperItem(koepBalMenu, QStringLiteral("Twill &2/2"), 2, 2);
-    addKoeperItem(koepBalMenu, QStringLiteral("Twill &3/3"), 3, 3);
-    addKoeperItem(koepBalMenu, QStringLiteral("Twill &4/4"), 4, 4);
-    addKoeperItem(koepBalMenu, QStringLiteral("Twill &5/5"), 5, 5);
-    QMenu* kettkoepMenu = koepMenu->addMenu(QStringLiteral("&Warp twill"));
-    addKoeperItem(kettkoepMenu, QStringLiteral("&1  Twill 2/1"), 2, 1);
-    addKoeperItem(kettkoepMenu, QStringLiteral("&2  Twill 3/1"), 3, 1);
-    addKoeperItem(kettkoepMenu, QStringLiteral("&3  Twill 4/1"), 4, 1);
-    addKoeperItem(kettkoepMenu, QStringLiteral("&4  Twill 5/1"), 5, 1);
-    addKoeperItem(kettkoepMenu, QStringLiteral("&5  Twill 3/2"), 3, 2);
-    addKoeperItem(kettkoepMenu, QStringLiteral("&6  Twill 4/2"), 4, 2);
-    addKoeperItem(kettkoepMenu, QStringLiteral("&7  Twill 5/2"), 5, 2);
-    addKoeperItem(kettkoepMenu, QStringLiteral("&8  Twill 4/3"), 4, 3);
-    addKoeperItem(kettkoepMenu, QStringLiteral("&9  Twill 5/3"), 5, 3);
+    addKoeperItem(koepBalMenu, "Twill &2/2", "Köper &2/2", 2, 2);
+    addKoeperItem(koepBalMenu, "Twill &3/3", "Köper &3/3", 3, 3);
+    addKoeperItem(koepBalMenu, "Twill &4/4", "Köper &4/4", 4, 4);
+    addKoeperItem(koepBalMenu, "Twill &5/5", "Köper &5/5", 5, 5);
+    QMenu* kettkoepMenu = addSubmenu(koepMenu, "&Warp sided", "&Kettseitig");
+    addKoeperItem(kettkoepMenu, "&1  Twill 2/1", "&1  Köper 2/1", 2, 1);
+    addKoeperItem(kettkoepMenu, "&2  Twill 3/1", "&2  Köper 3/1", 3, 1);
+    addKoeperItem(kettkoepMenu, "&3  Twill 4/1", "&3  Köper 4/1", 4, 1);
+    addKoeperItem(kettkoepMenu, "&4  Twill 5/1", "&4  Köper 5/1", 5, 1);
+    addKoeperItem(kettkoepMenu, "&5  Twill 3/2", "&5  Köper 3/2", 3, 2);
+    addKoeperItem(kettkoepMenu, "&6  Twill 4/2", "&6  Köper 4/2", 4, 2);
+    addKoeperItem(kettkoepMenu, "&7  Twill 5/2", "&7  Köper 5/2", 5, 2);
+    addKoeperItem(kettkoepMenu, "&8  Twill 4/3", "&8  Köper 4/3", 4, 3);
+    addKoeperItem(kettkoepMenu, "&9  Twill 5/3", "&9  Köper 5/3", 5, 3);
 
     /*  ---------- &Additional (MenuWeitere) ------------------ */
-    QMenu* additionalMenu = menuBar()->addMenu(QStringLiteral("&Additional"));
+    QMenu* additionalMenu = addMenu(menuBar(), "&Additional", "&Weitere");
     MenuWeitere = additionalMenu;
     for (int i = 0; i < MAXUSERDEF; i++) {
         UserdefAct[i] = additionalMenu->addAction(QString());
@@ -609,30 +802,34 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         });
     }
     additionalMenu->addSeparator();
-    QMenu* udCfg = additionalMenu->addMenu(QStringLiteral("&Configuration"));
-    QAction* actUdAdd = udCfg->addAction(QStringLiteral("&Add current pattern..."));
-    QAction* actUdAddSel = udCfg->addAction(QStringLiteral("A&dd selection..."));
-    QAction* actUdDel = udCfg->addAction(QStringLiteral("&Remove..."));
+    QMenu* udCfg = addSubmenu(additionalMenu, "A&dministration", "&Verwaltung");
+    QAction* actUdAdd = menuAct(udCfg, "&Add current pattern...", "&Muster hinzufügen...");
+    QAction* actUdAddSel = menuAct(udCfg, "Add &selection...", "&Selektion hinzufügen...");
+    QAction* actUdDel = menuAct(udCfg, "&Remove...", "&Löschen...");
     connect(actUdAdd, &QAction::triggered, this, [this] { UserdefAddClick(); });
     connect(actUdAddSel, &QAction::triggered, this, [this] { UserdefAddSelClick(); });
     connect(actUdDel, &QAction::triggered, this, [this] { UserdefRemoveClick(); });
 
     /*  ---------- &Repeat (MenuRapport) ---------------------- */
-    QMenu* repeatMenu = menuBar()->addMenu(QStringLiteral("&Repeat"));
-    RappViewRapport->setText(QStringLiteral("&Repeat visible"));
+    QMenu* repeatMenu = addMenu(menuBar(), "&Repeat", "&Rapport");
+    registerLang(RappViewRapport, QStringLiteral("&Repeat visible"),
+                 QStringLiteral("&Rapport sichtbar"), QStringLiteral("Toggles repeat"),
+                 QStringLiteral("Rapport sichtbar/unsichtbar"));
     RappViewRapport->setIcon(legacyIcon("mn_repeatvisible"));
     RappViewRapport->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_R));
     repeatMenu->addAction(RappViewRapport);
     repeatMenu->addSeparator();
-    QAction* actRappExtend = mkAct(QStringLiteral("Repe&at..."), "mn_repeat");
+    QAction* actRappExtend = menuAct(repeatMenu, "R&epeat...", "R&apportieren...", "mn_repeat",
+                                     "Repeats the pattern", "Rapportiert das Muster");
     actRappExtend->setShortcut(QKeySequence(Qt::Key_F8));
-    repeatMenu->addAction(actRappExtend);
-    QAction* actRappReduce = mkAct(QStringLiteral("R&educe"));
+    QAction* actRappReduce = menuAct(repeatMenu, "Re&duce", "Re&duzieren", nullptr,
+                                     "Reduces the pattern to 1x1 repeat",
+                                     "Reduziert das Muster auf einen Rapport");
     actRappReduce->setShortcut(QKeySequence(Qt::Key_F7));
-    repeatMenu->addAction(actRappReduce);
-    QAction* actRappOverride = mkAct(QStringLiteral("&Set size to selection"));
-    repeatMenu->addAction(actRappOverride);
-    Inverserepeat->setText(QStringLiteral("&Invert repeat colors"));
+    QAction* actRappOverride = menuAct(repeatMenu, "&Set size to selection",
+                                       "&Grösse auf Selektion setzen");
+    registerLang(Inverserepeat, QStringLiteral("&Invert repeat colors"),
+                 QStringLiteral("Rapportfarben &umgekehrt"));
     Inverserepeat->setIcon(legacyIcon("mn_inverserepeat"));
     repeatMenu->addAction(Inverserepeat);
     connect(actRappExtend, &QAction::triggered, this, [this] { RappRapportierenClick(); });
@@ -642,49 +839,62 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     connect(Inverserepeat, &QAction::triggered, this, [this] { refresh(); });
 
     /*  ---------- &Color (MenuFarbe) ------------------------- */
-    QMenu* colorMenu = menuBar()->addMenu(QStringLiteral("&Color"));
+    QMenu* colorMenu = addMenu(menuBar(), "&Color", "&Farbe");
     if (ViewFarbpalette) {
-        ViewFarbpalette->setText(QStringLiteral("&Palette"));
+        registerLang(ViewFarbpalette, QStringLiteral("&Palette"), QStringLiteral("&Palette"),
+                     QStringLiteral("Toggles color palette"),
+                     QStringLiteral("Farbpalette sichtbar/unsichtbar"));
         ViewFarbpalette->setIcon(legacyIcon("mn_palette"));
         ViewFarbpalette->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_F));
         colorMenu->addAction(ViewFarbpalette);
     }
-    QAction* actDefColors = mkAct(QStringLiteral("Edit &colors..."));
-    colorMenu->addAction(actDefColors);
-    QAction* actFarbverlauf = mkAct(QStringLiteral("Color &blending..."), "mn_colorblend");
-    colorMenu->addAction(actFarbverlauf);
+    QAction* actDefColors = menuAct(colorMenu, "&Edit colors...", "&Farben bearbeiten...", nullptr,
+                                    "Edits the colors of the palette",
+                                    "Bearbeitet die Paletten-Farben");
+    QAction* actFarbverlauf = menuAct(colorMenu, "Color &blending...", "Farb&verlauf...",
+                                      "mn_colorblend",
+                                      "Creates a color blending", "Erstellt einen Farbverlauf");
     colorMenu->addSeparator();
-    QAction* actSetKettf = mkAct(QStringLiteral("Set &warp color..."));
-    colorMenu->addAction(actSetKettf);
-    QAction* actSetSchuf = mkAct(QStringLiteral("Set w&eft color..."));
-    colorMenu->addAction(actSetSchuf);
-    QAction* actReplColor = mkAct(QStringLiteral("&Replace color..."), "mn_colorreplace");
-    colorMenu->addAction(actReplColor);
+    QAction* actSetKettf = menuAct(colorMenu, "Set &warp color...", "&Kettfarbe setzen...", nullptr,
+                                   "Sets the warp color", "Setzt die Kettfarbe");
+    QAction* actSetSchuf = menuAct(colorMenu, "Set w&eft color...", "&Schussfarbe setzen...",
+                                   nullptr, "Sets the weft color", "Setzt die Schussfarbe");
+    QAction* actReplColor = menuAct(colorMenu, "&Replace color...", "Farbe e&rsetzen...",
+                                    "mn_colorreplace",
+                                    "Replaces the color at the cursor position globally",
+                                    "Ersetzt die Farbe an der Cursorposition global");
     colorMenu->addSeparator();
-    QAction* actKwieS = mkAct(QStringLiteral("C&opy warp colors from weft colors"));
-    colorMenu->addAction(actKwieS);
-    QAction* actSwieK = mkAct(QStringLiteral("Copy we&ft colors from warp colors"));
-    colorMenu->addAction(actSwieK);
-    QAction* actSwapCols = mkAct(QStringLiteral("&Switch warp/weft colors"));
-    colorMenu->addAction(actSwapCols);
+    QAction* actKwieS = menuAct(colorMenu, "Warp colors as weft colors",
+                                "Kett- wie Schussfarben");
+    actKwieS->setEnabled(false);
+    QAction* actSwieK = menuAct(colorMenu, "Weft colors as warp colors",
+                                "Schuss- wie Kettfarben");
+    actSwieK->setEnabled(false);
+    QAction* actSwapCols = menuAct(colorMenu, "&Switch colors", "F&arben vertauschen", nullptr,
+                                   "Switches warp and weft colors",
+                                   "Vertauscht Kett- und Schussfarben");
     connect(actDefColors, &QAction::triggered, this, [this] { DefineColorsClick(); });
     connect(actFarbverlauf, &QAction::triggered, this, [this] { FarbverlaufClick(); });
     connect(actSetKettf, &QAction::triggered, this, [this] { SetKettfarbeClick(); });
     connect(actSetSchuf, &QAction::triggered, this, [this] { SetSchussfarbeClick(); });
     connect(actReplColor, &QAction::triggered, this, [this] { ReplaceColorClick(); });
     connect(actSwapCols, &QAction::triggered, this, [this] { SwitchColorsClick(); });
-    actKwieS->setEnabled(false);
-    actSwieK->setEnabled(false);
 
     /*  ---------- Ra&nge (MenuBereich) ----------------------- */
-    QMenu* rangeMenu = menuBar()->addMenu(QStringLiteral("Ra&nge"));
-    QAction* actImportBmp = rangeMenu->addAction(QStringLiteral("Import &bitmap..."));
-    QMenu* currentRangeMenu = rangeMenu->addMenu(QStringLiteral("&Current range"));
+    QMenu* rangeMenu = addMenu(menuBar(), "Ra&nge", "Bere&iche");
+    QAction* actImportBmp = menuAct(rangeMenu, "&Import bitmap...", "&Bild importieren...", nullptr,
+                                    "Imports a bitmap", "Importiert ein Bild");
+    QMenu* currentRangeMenu = addSubmenu(rangeMenu, "&Current range", "&Aktueller Bereich");
     auto* rangeMenuGroup = new QActionGroup(this);
     rangeMenuGroup->setExclusive(true);
     QAction* menuRangeActs[9];
     for (int r = 1; r <= 9; r++) {
-        QAction* a = currentRangeMenu->addAction(QStringLiteral("Range &%1").arg(r));
+        const QByteArray en = QStringLiteral("Range &%1").arg(r).toUtf8();
+        const QByteArray de = QStringLiteral("Bereich &%1").arg(r).toUtf8();
+        const QByteArray en_tip = QStringLiteral("Activates range %1").arg(r).toUtf8();
+        const QByteArray de_tip = QStringLiteral("Aktiviert Bereich %1").arg(r).toUtf8();
+        QAction* a = menuAct(currentRangeMenu, en.constData(), de.constData(), nullptr,
+                             en_tip.constData(), de_tip.constData());
         a->setCheckable(true);
         a->setShortcut(QKeySequence(Qt::SHIFT | (Qt::Key_0 + r)));
         rangeMenuGroup->addAction(a);
@@ -699,13 +909,18 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     if (currentrange >= 1 && currentrange <= 9)
         menuRangeActs[currentrange - 1]->setChecked(true);
     currentRangeMenu->addSeparator();
-    QAction* actRAush = currentRangeMenu->addAction(QStringLiteral("&Lift out"));
+    QAction* actRAush = menuAct(currentRangeMenu, "&Lift out", "&Aushebung", nullptr,
+                                "Activates lift out range", "Aktiviert Aushebungs-Bereich");
     actRAush->setCheckable(true);
     actRAush->setShortcut(QKeySequence(Qt::SHIFT | Qt::Key_0));
-    QAction* actRAnb = currentRangeMenu->addAction(QStringLiteral("&Binding"));
+    QAction* actRAnb = menuAct(currentRangeMenu, "&Binding", "A&nbindung", nullptr,
+                               "Activates binding point range",
+                               "Aktiviert Anbindungs-Bereich");
     actRAnb->setCheckable(true);
     actRAnb->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_0));
-    QAction* actRAbb = currentRangeMenu->addAction(QStringLiteral("&Un-binding"));
+    QAction* actRAbb = menuAct(currentRangeMenu, "&Unbinding", "A&bbindung", nullptr,
+                               "Activates unbinding point range",
+                               "Aktiviert Abbindungs-Bereich");
     actRAbb->setCheckable(true);
     actRAbb->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_0));
     rangeMenuGroup->addAction(actRAush);
@@ -714,58 +929,107 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     connect(actRAush, &QAction::triggered, this, [this] { currentrange = AUSHEBUNG; refresh(); });
     connect(actRAnb, &QAction::triggered, this, [this] { currentrange = ANBINDUNG; refresh(); });
     connect(actRAbb, &QAction::triggered, this, [this] { currentrange = ABBINDUNG; refresh(); });
-    QAction* actBlockmuster = rangeMenu->addAction(QStringLiteral("&Block substitution..."));
-    QAction* actRangeSubst = rangeMenu->addAction(QStringLiteral("&Range substitution..."));
+    QAction* actBlockmuster = menuAct(rangeMenu, "&Block substitution...",
+                                      "&Blockmusterung...", nullptr,
+                                      "Creates a block substitution",
+                                      "Erstellt eine Blockmusterung");
+    QAction* actRangeSubst = menuAct(rangeMenu, "&Range substitution...",
+                                     "B&ereichsmusterung...", nullptr,
+                                     "Creates a range substitution",
+                                     "Erstellt eine Bereichsmusterung");
     connect(actImportBmp, &QAction::triggered, this, [this] { ImportBitmapClick(); });
     connect(actBlockmuster, &QAction::triggered, this, [this] { EditBlockmusterClick(); });
     connect(actRangeSubst, &QAction::triggered, this, [this] { RangePatternsClick(); });
 
     /*  ---------- E&xtras (MenuExtras) ----------------------- */
-    QMenu* extrasMenu = menuBar()->addMenu(QStringLiteral("E&xtras"));
-    QAction* actLockGewebe = addStub(extrasMenu, QStringLiteral("&Lock pattern"));
-    Q_UNUSED(actLockGewebe);
-    QMenu* cursorMenu = extrasMenu->addMenu(QStringLiteral("&Cursor"));
-    QAction* actCursorLocked = cursorMenu->addAction(QStringLiteral("&Contain"));
+    QMenu* extrasMenu = addMenu(menuBar(), "E&xtras", "E&xtras");
+    QAction* actLockGewebe = menuAct(extrasMenu, "Pattern &locked", "&Bindung gesperrt", nullptr,
+                                     "Locks the pattern; No changes can be made anymore",
+                                     "Sperrt die Bindung; Keine Änderungen mehr möglich");
+    actLockGewebe->setEnabled(false);
+    QMenu* cursorMenu = addSubmenu(extrasMenu, "&Cursor", "&Cursor");
+    QAction* actCursorLocked = menuAct(cursorMenu, "&Contained", "&In Rapport", nullptr,
+                                       "Restricts the cursor position within the repeat",
+                                       "Beschränkt die Cursorposition auf den Rapport");
     actCursorLocked->setCheckable(true);
     actCursorLocked->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Q));
     actCursorLocked->setEnabled(false);
-    QAction* actCursorDir = cursorMenu->addAction(QStringLiteral("&Movement..."));
-    QAction* actCursorGoto = cursorMenu->addAction(QStringLiteral("&Goto..."));
+    QAction* actCursorDir = menuAct(cursorMenu, "&Movement...", "&Bewegung...", nullptr,
+                                    "Configures the automatic cursor movement",
+                                    "Konfiguriert die automatische Cursorbewegung");
+    QAction* actCursorGoto = menuAct(cursorMenu, "&Go to...", "&Gehe zu...", nullptr,
+                                     "Sets the cursor to a specific field",
+                                     "Setzt den Cursor in ein spezifisches Feld");
     actCursorGoto->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_G));
     connect(actCursorDir, &QAction::triggered, this, [this] { EditCursordirectionClick(); });
     connect(actCursorGoto, &QAction::triggered, this, [this] { CursorGotoClick(); });
-    QAction* actVerhaeltnis = addStub(extrasMenu, QStringLiteral("Weft/warp &ratio..."));
-    Q_UNUSED(actVerhaeltnis);
-    ViewSchlagpatrone->setText(QStringLiteral("&Pegplan"));
+    QAction* actVerhaeltnis = menuAct(extrasMenu, "&Weft/warp-ratio...",
+                                      "Schuss/&Kett-Verhältnis...", nullptr,
+                                      "Sets the weft/warp-ratio",
+                                      "Setzt das Schuss/Kett-Verhältnis");
+    actVerhaeltnis->setEnabled(false);
+    registerLang(ViewSchlagpatrone, QStringLiteral("&Pegplan"), QStringLiteral("&Schlagpatrone"),
+                 QStringLiteral("Toggles pegplan mode"),
+                 QStringLiteral("Wechselt zwischen Schlagpatrone und Aufknüpfung/Trittfolge"));
     ViewSchlagpatrone->setShortcut(QKeySequence(Qt::Key_F9));
     extrasMenu->addAction(ViewSchlagpatrone);
     connect(ViewSchlagpatrone, &QAction::triggered, this, relayout);
-    QAction* actWeave = addStub(extrasMenu, QStringLiteral("&Weave"));
+    QAction* actWeave = menuAct(extrasMenu, "&Weave", "&Weben", nullptr,
+                                "Switches into the weaving mode",
+                                "Wechselt in den Weben-Modus");
     actWeave->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_W));
-    QAction* actViewInfos = extrasMenu->addAction(QStringLiteral("&Information..."));
+    actWeave->setEnabled(false);
+    QAction* actViewInfos = menuAct(extrasMenu, "&Information...", "&Informationen...", nullptr,
+                                    "Displays information about the current pattern",
+                                    "Zeigt Informationen über das aktuelle Muster an");
     connect(actViewInfos, &QAction::triggered, this, [this] { ViewInfosClick(); });
     extrasMenu->addSeparator();
-    QMenu* baseMenu = extrasMenu->addMenu(QStringLiteral("&Base settings"));
-    addStub(baseMenu, QStringLiteral("&American"));
-    addStub(baseMenu, QStringLiteral("S&candinavian"));
-    addStub(baseMenu, QStringLiteral("&German/Swiss"));
-    QMenu* optMenu = extrasMenu->addMenu(QStringLiteral("&Options"));
-    QAction* actXOpt = optMenu->addAction(QStringLiteral("&For this pattern..."));
-    QAction* actXOptG = optMenu->addAction(QStringLiteral("F&or every new pattern..."));
+    QMenu* baseMenu = addSubmenu(extrasMenu, "&Base settings", "&Grundeinstellung");
+    QAction* actOptAm = menuAct(baseMenu, "&American", "&Amerikanisch", nullptr,
+                                "Activates the settings commonly used in the united states",
+                                "Aktiviert die Einstellungen, die gewöhnlich in den USA verwendet werden");
+    actOptAm->setEnabled(false);
+    QAction* actOptSk = menuAct(baseMenu, "S&candinavian", "&Skandinavisch", nullptr,
+                                "Activates the settings commonly used in the scandinavian region",
+                                "Aktiviert die Einstellungen, die gewöhnlich in der skandinavischen Region verwendet werden");
+    actOptSk->setEnabled(false);
+    QAction* actOptSw = menuAct(baseMenu, "&German/Swiss", "&Deutsch/Schweizerisch", nullptr,
+                                "Activates the settings commonly used in Germany and Switzerland",
+                                "Aktiviert die Einstellungen, die gewöhnlich in Deutschland und der Schweiz verwendet werden");
+    actOptSw->setEnabled(false);
+    QMenu* optMenu = addSubmenu(extrasMenu, "&Options", "&Optionen");
+    QAction* actXOpt = menuAct(optMenu, "&For this pattern...", "&Für dieses Muster...", nullptr,
+                               "Edits options for this pattern",
+                               "Bearbeitet Optionen für dieses Muster");
+    QAction* actXOptG = menuAct(optMenu, "&Global...", "&Global...", nullptr,
+                                "Edits options for this and all new patterns",
+                                "Bearbeitet Optionen für dieses und alle neuen Muster");
     optMenu->addSeparator();
-    QAction* actEnvOpt = optMenu->addAction(QStringLiteral("&Environment..."));
+    QAction* actEnvOpt = menuAct(optMenu, "&Environment...", "&Umgebung...", nullptr,
+                                 "Edits environment options",
+                                 "Bearbeitet Umgebungsoptionen");
     connect(actXOpt, &QAction::triggered, this, [this] { XOptionsClick(); });
     connect(actXOptG, &QAction::triggered, this, [this] { XOptionsGlobalClick(); });
     connect(actEnvOpt, &QAction::triggered, this, [this] { OptEnvironmentClick(); });
 
     /*  ---------- &? (MenuHelp) ------------------------------ */
-    QMenu* helpMenu = menuBar()->addMenu(QStringLiteral("&?"));
-    QAction* actHilfe = addStub(helpMenu, QStringLiteral("&Help topics"));
+    QMenu* helpMenu = addMenu(menuBar(), "&?", "&?");
+    QAction* actHilfe = menuAct(helpMenu, "&Help topics", "&Hilfethemen");
     actHilfe->setShortcut(QKeySequence(Qt::Key_F1));
-    addStub(helpMenu, QStringLiteral("&Brunold Software Online"));
+    actHilfe->setEnabled(false);
+    QAction* actBsoftOnline = menuAct(helpMenu, "&Brunold Software Online",
+                                      "&Brunold Software Online", nullptr,
+                                      "Brings you to the website of Brunold Software",
+                                      "Bringt Sie auf die Website von Brunold Software");
+    actBsoftOnline->setEnabled(false);
     helpMenu->addSeparator();
-    QAction* actTechInfo = helpMenu->addAction(QStringLiteral("&Technical information..."));
-    QAction* actAbout = helpMenu->addAction(QStringLiteral("About &DB-WEAVE..."));
+    QAction* actTechInfo = menuAct(
+        helpMenu, "&Technical information...", "&Technische Informationen...", nullptr,
+        "Displays technical information about DB-WEAVE, your computer and the operating system used",
+        "Zeigt technische Informationen über DB-WEAVE, Ihren Computer und das verwendete Betriebssystem an");
+    QAction* actAbout = menuAct(helpMenu, "About &DB-WEAVE...", "Über &DB-WEAVE...", nullptr,
+                                "Displays information about DB-WEAVE",
+                                "Zeigt Informationen über DB-WEAVE an");
     connect(actTechInfo, &QAction::triggered, this, [this] { TechinfoDialog(this).exec(); });
     connect(actAbout, &QAction::triggered, this, [this] { AboutDialog(this).exec(); });
 
@@ -776,8 +1040,9 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         Zoom (In/Out), Move (ShaftUp/Down, TrittLeft/Right),
         Transforms (Invert/MirrorH/MirrorV/Rotate/Centralsym/
         Highlight).                                             */
-    QToolBar* mainBar = addToolBar(QStringLiteral("Toolbar"));
+    QToolBar* mainBar = addToolBar(QString());
     mainBar->setObjectName(QStringLiteral("mainToolBar"));
+    registerLangWidget(mainBar, QStringLiteral("Toolbar"), QStringLiteral("Symbolleiste"));
     mainBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
     mainBar->setIconSize(QSize(16, 16));
     mainBar->addAction(actFileNew);
@@ -816,8 +1081,9 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 
     /*  Range picker: nine checkable buttons driving currentrange.
         Lives on its own toolbar so it can be hidden independently. */
-    QToolBar* rangeBar = addToolBar(QStringLiteral("Ranges"));
+    QToolBar* rangeBar = addToolBar(QString());
     rangeBar->setObjectName(QStringLiteral("rangeToolBar"));
+    registerLangWidget(rangeBar, QStringLiteral("Ranges"), QStringLiteral("Bereiche"));
     rangeGroup = new QActionGroup(this);
     rangeGroup->setExclusive(true);
     for (int r = 1; r <= 9; r++) {
@@ -999,9 +1265,65 @@ void TDBWFRM::zoomNormal()
     SetModified();
 }
 
+void TDBWFRM::registerLang(QAction* _a, const QString& _en, const QString& _de,
+                           const QString& _en_tip, const QString& _de_tip)
+{
+    if (!_a)
+        return;
+    LangEntry e;
+    e.action = _a;
+    e.en_text = _en;
+    e.de_text = _de;
+    e.en_tip = _en_tip;
+    e.de_tip = _de_tip;
+    langEntries.push_back(e);
+    const bool de = (active_language == GE);
+    _a->setText(de ? _de : _en);
+    if (!_en_tip.isEmpty() || !_de_tip.isEmpty())
+        _a->setToolTip(de ? _de_tip : _en_tip);
+}
+
+void TDBWFRM::registerLangMenu(QMenu* _m, const QString& _en, const QString& _de)
+{
+    if (!_m)
+        return;
+    LangEntry e;
+    e.menu = _m;
+    e.en_text = _en;
+    e.de_text = _de;
+    langEntries.push_back(e);
+    _m->setTitle(active_language == GE ? _de : _en);
+}
+
+void TDBWFRM::registerLangWidget(QWidget* _w, const QString& _en, const QString& _de)
+{
+    if (!_w)
+        return;
+    LangEntry e;
+    e.widget = _w;
+    e.en_text = _en;
+    e.de_text = _de;
+    langEntries.push_back(e);
+    _w->setWindowTitle(active_language == GE ? _de : _en);
+}
+
 void TDBWFRM::ReloadLanguage()
 {
-    /*  Placeholder until lang_main.cpp is ported. */
+    const bool de = (active_language == GE);
+    for (const LangEntry& e : langEntries) {
+        if (e.action) {
+            e.action->setText(de ? e.de_text : e.en_text);
+            if (!e.en_tip.isEmpty() || !e.de_tip.isEmpty())
+                e.action->setToolTip(de ? e.de_tip : e.en_tip);
+        } else if (e.menu) {
+            e.menu->setTitle(de ? e.de_text : e.en_text);
+        } else if (e.widget) {
+            e.widget->setWindowTitle(de ? e.de_text : e.en_text);
+        }
+    }
+    /*  Window title follows the active pattern; just re-run the
+        usual app-title builder. */
+    SetAppTitle();
 }
 
 void TDBWFRM::RecalcGewebe()
