@@ -10,6 +10,7 @@
 */
 
 #include "userdefdialogs.h"
+#include "language.h"
 
 #include <QButtonGroup>
 #include <QDialogButtonBox>
@@ -22,7 +23,7 @@
 UserdefEnterNameDialog::UserdefEnterNameDialog(const QString& _default, QWidget* _parent)
     : QDialog(_parent)
 {
-    setWindowTitle(QStringLiteral("Pattern name"));
+    setWindowTitle(LANG_STR("Pattern name", "Mustername"));
     setModal(true);
 
     edName = new QLineEdit(this);
@@ -34,7 +35,8 @@ UserdefEnterNameDialog::UserdefEnterNameDialog(const QString& _default, QWidget*
     connect(btns, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
     auto* root = new QVBoxLayout(this);
-    root->addWidget(new QLabel(QStringLiteral("&Enter the pattern name:"), this));
+    root->addWidget(
+        new QLabel(LANG_STR("&Enter the pattern name:", "&Mustername eingeben:"), this));
     root->addWidget(edName);
     root->addWidget(btns);
 
@@ -59,7 +61,7 @@ UserdefSelectDialog::UserdefSelectDialog(const UserdefPattern _slots[MAXUSERDEF]
                                          const QString& _title, QWidget* _parent)
     : QDialog(_parent)
 {
-    setWindowTitle(_title.isEmpty() ? QStringLiteral("Select pattern") : _title);
+    setWindowTitle(_title.isEmpty() ? LANG_STR("Select pattern", "Muster auswählen") : _title);
     setModal(true);
 
     auto* root = new QVBoxLayout(this);
@@ -67,8 +69,9 @@ UserdefSelectDialog::UserdefSelectDialog(const UserdefPattern _slots[MAXUSERDEF]
 
     for (int i = 0; i < MAXUSERDEF; i++) {
         const QString mnemonic = (i < 9) ? QStringLiteral("&%1").arg(i + 1) : QStringLiteral("1&0");
-        const QString desc
-            = _slots[i].description.isEmpty() ? QStringLiteral("<free>") : _slots[i].description;
+        const QString desc = _slots[i].description.isEmpty()
+                                 ? LANG_STR("<free>", "<frei>")
+                                 : _slots[i].description;
         radios[i] = new QRadioButton(QStringLiteral("%1 - %2").arg(mnemonic, desc), this);
         group->addButton(radios[i], i);
         root->addWidget(radios[i]);

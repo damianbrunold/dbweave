@@ -14,6 +14,7 @@
 #include "mainwindow.h"
 #include "datamodule.h"
 #include "undoredo.h"
+#include "language.h"
 
 #include <QDialogButtonBox>
 #include <QFormLayout>
@@ -30,7 +31,7 @@ EinzugassistentDialog::EinzugassistentDialog(TDBWFRM* _frm, QWidget* _parent)
     : QDialog(_parent)
     , frm(_frm)
 {
-    setWindowTitle(QStringLiteral("Threading wizard"));
+    setWindowTitle(LANG_STR("Threading wizard", "Einzugassistent"));
     setModal(true);
 
     tabs = new QTabWidget(this);
@@ -51,20 +52,20 @@ EinzugassistentDialog::EinzugassistentDialog(TDBWFRM* _frm, QWidget* _parent)
         gdZ = new QRadioButton(QStringLiteral("&Z"), page);
         gdS = new QRadioButton(QStringLiteral("&S"), page);
         gdZ->setChecked(true);
-        auto* gb = new QGroupBox(QStringLiteral("Orientation"), page);
+        auto* gb = new QGroupBox(LANG_STR("Orientation", "Ausrichtung"), page);
         auto* gbl = new QVBoxLayout(gb);
         gbl->addWidget(gdZ);
         gbl->addWidget(gdS);
 
         auto* form = new QFormLayout();
-        form->addRow(QStringLiteral("&First warp thread:"), gdFirstKettfaden);
-        form->addRow(QStringLiteral("First &shaft:"), gdFirstSchaft);
-        form->addRow(QStringLiteral("&Number of shafts:"), gdSchaefte);
+        form->addRow(LANG_STR("&First warp thread:", "&Erster Kettfaden:"), gdFirstKettfaden);
+        form->addRow(LANG_STR("First &shaft:", "Erster &Schaft:"), gdFirstSchaft);
+        form->addRow(LANG_STR("&Number of shafts:", "&Anzahl Schäfte:"), gdSchaefte);
 
         auto* v = new QVBoxLayout(page);
         v->addLayout(form);
         v->addWidget(gb);
-        tabs->addTab(page, QStringLiteral("Straight through"));
+        tabs->addTab(page, LANG_STR("Straight through", "Geradedurch"));
     }
 
     /*  --- Abgesetzt (stepped / broken) page ------------------- */
@@ -87,12 +88,12 @@ EinzugassistentDialog::EinzugassistentDialog(TDBWFRM* _frm, QWidget* _parent)
         abVersatz->setValue(2);
 
         auto* form = new QFormLayout(page);
-        form->addRow(QStringLiteral("First &warp thread:"), abFirstKettfaden);
-        form->addRow(QStringLiteral("First &shaft:"), abFirstSchaft);
-        form->addRow(QStringLiteral("&Number of shafts:"), abSchaefte);
-        form->addRow(QStringLiteral("&Run length (Gratlänge):"), abGratlen);
-        form->addRow(QStringLiteral("&Offset (Versatz):"), abVersatz);
-        tabs->addTab(page, QStringLiteral("Stepped"));
+        form->addRow(LANG_STR("First &warp thread:", "Erster &Kettfaden:"), abFirstKettfaden);
+        form->addRow(LANG_STR("First &shaft:", "Erster &Schaft:"), abFirstSchaft);
+        form->addRow(LANG_STR("&Number of shafts:", "&Anzahl Schäfte:"), abSchaefte);
+        form->addRow(LANG_STR("&Run length (Gratlänge):", "&Gratlänge:"), abGratlen);
+        form->addRow(LANG_STR("&Offset (Versatz):", "&Versatz:"), abVersatz);
+        tabs->addTab(page, LANG_STR("Stepped", "Abgesetzt"));
     }
 
     auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
@@ -190,13 +191,15 @@ void EinzugassistentDialog::accept()
         if (glen < 1 || glen > schaefte) {
             QMessageBox::information(
                 this, QStringLiteral("DB-WEAVE"),
-                QStringLiteral("Run length must be between 1 and the number of shafts."));
+                LANG_STR("Run length must be between 1 and the number of shafts.",
+                         "Die Gratlänge muss zwischen 1 und der Anzahl Schäfte liegen."));
             return;
         }
         if (std::abs(versatz) < 1 || std::abs(versatz) > schaefte) {
             QMessageBox::information(
                 this, QStringLiteral("DB-WEAVE"),
-                QStringLiteral("Offset must be between 1 and the number of shafts."));
+                LANG_STR("Offset must be between 1 and the number of shafts.",
+                         "Der Versatz muss zwischen 1 und der Anzahl Schäfte liegen."));
             return;
         }
         createAbgesetzt(firstkf, firstsch, schaefte, glen, versatz);

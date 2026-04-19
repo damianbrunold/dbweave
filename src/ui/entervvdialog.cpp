@@ -10,6 +10,7 @@
 */
 
 #include "entervvdialog.h"
+#include "language.h"
 
 #include <QDialogButtonBox>
 #include <QHBoxLayout>
@@ -21,7 +22,7 @@
 EnterVVDialog::EnterVVDialog(QWidget* _parent)
     : QDialog(_parent)
 {
-    setWindowTitle(QStringLiteral("Thread ratio"));
+    setWindowTitle(LANG_STR("Thread ratio", "Fadenverhältnis"));
     setModal(true);
 
     /*  Six integer slots laid out as
@@ -44,7 +45,8 @@ EnterVVDialog::EnterVVDialog(QWidget* _parent)
     auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
 
     auto* root = new QVBoxLayout(this);
-    root->addWidget(new QLabel(QStringLiteral("&Enter the thread ratio:"), this));
+    root->addWidget(
+        new QLabel(LANG_STR("&Enter the thread ratio:", "&Fadenverhältnis eingeben:"), this));
     root->addLayout(row);
     root->addWidget(btns);
 

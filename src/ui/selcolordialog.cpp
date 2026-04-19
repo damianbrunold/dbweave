@@ -14,6 +14,7 @@
 #include "datamodule.h"
 #include "palette.h"
 #include "mainwindow.h"
+#include "language.h"
 
 #include <QAction>
 #include <QDialogButtonBox>
@@ -195,7 +196,7 @@ private:
 SelColorDialog::SelColorDialog(int _initialIndex, QWidget* _parent)
     : QDialog(_parent)
 {
-    setWindowTitle(QStringLiteral("Color definition"));
+    setWindowTitle(LANG_STR("Color definition", "Farbdefinition"));
     setModal(true);
 
     oldpal = new COLORREF[MAX_PAL_ENTRY];
@@ -205,12 +206,12 @@ SelColorDialog::SelColorDialog(int _initialIndex, QWidget* _parent)
 
     /*  Menu bar. */
     auto* menu = new QMenuBar(this);
-    QMenu* m = menu->addMenu(QStringLiteral("&Colors"));
-    QAction* aRGB = m->addAction(QStringLiteral("Edit &RGB..."));
-    QAction* aHSV = m->addAction(QStringLiteral("Edit &HSV..."));
+    QMenu* m = menu->addMenu(LANG_STR("&Colors", "&Farben"));
+    QAction* aRGB = m->addAction(LANG_STR("Edit &RGB...", "&RGB bearbeiten..."));
+    QAction* aHSV = m->addAction(LANG_STR("Edit &HSV...", "&HSV bearbeiten..."));
     m->addSeparator();
-    QAction* aRevert = m->addAction(QStringLiteral("Re&vert changes"));
-    QAction* aClose = m->addAction(QStringLiteral("&Close"));
+    QAction* aRevert = m->addAction(LANG_STR("Re&vert changes", "Änderungen &verwerfen"));
+    QAction* aClose = m->addAction(LANG_STR("&Close", "&Schliessen"));
     connect(aRGB, &QAction::triggered, this, &SelColorDialog::editRGB);
     connect(aHSV, &QAction::triggered, this, &SelColorDialog::editHSV);
     connect(aRevert, &QAction::triggered, this, &SelColorDialog::revertChanges);
@@ -225,21 +226,21 @@ SelColorDialog::SelColorDialog(int _initialIndex, QWidget* _parent)
     labG = new QLabel(this);
     labB = new QLabel(this);
 
-    auto* gbHSV = new QGroupBox(QStringLiteral("HSV"), this);
+    auto* gbHSV = new QGroupBox(LANG_STR("HSV", "HSV"), this);
     auto* fHSV = new QFormLayout(gbHSV);
-    fHSV->addRow(QStringLiteral("Hue:"), labH);
-    fHSV->addRow(QStringLiteral("Saturation:"), labS);
-    fHSV->addRow(QStringLiteral("Value:"), labV);
+    fHSV->addRow(LANG_STR("Hue:", "Farbton:"), labH);
+    fHSV->addRow(LANG_STR("Saturation:", "Sättigung:"), labS);
+    fHSV->addRow(LANG_STR("Value:", "Hellwert:"), labV);
 
-    auto* gbRGB = new QGroupBox(QStringLiteral("RGB"), this);
+    auto* gbRGB = new QGroupBox(LANG_STR("RGB", "RGB"), this);
     auto* fRGB = new QFormLayout(gbRGB);
-    fRGB->addRow(QStringLiteral("Red:"), labR);
-    fRGB->addRow(QStringLiteral("Green:"), labG);
-    fRGB->addRow(QStringLiteral("Blue:"), labB);
+    fRGB->addRow(LANG_STR("Red:", "Rot:"), labR);
+    fRGB->addRow(LANG_STR("Green:", "Grün:"), labG);
+    fRGB->addRow(LANG_STR("Blue:", "Blau:"), labB);
 
     auto* gbIdx = new QGroupBox(this);
     auto* fIdx = new QFormLayout(gbIdx);
-    fIdx->addRow(QStringLiteral("Index:"), labIdx);
+    fIdx->addRow(LANG_STR("Index:", "Index:"), labIdx);
 
     auto* side = new QVBoxLayout();
     side->addWidget(gbIdx);

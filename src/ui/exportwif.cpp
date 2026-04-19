@@ -20,6 +20,7 @@
 #include "datamodule.h"
 #include "palette.h"
 #include "properties.h"
+#include "language.h"
 
 #include <QFile>
 #include <QFileDialog>
@@ -336,9 +337,10 @@ void TDBWFRM::DateiExportieren(const QString& _filename)
     the file-I/O slice rounds out).                                */
 void TDBWFRM::DateiExportClick()
 {
-    const QString fn
-        = QFileDialog::getSaveFileName(this, QStringLiteral("Export"), QString(),
-                                       QStringLiteral("Bitmap (*.bmp);;PNG (*.png);;WIF (*.wif)"));
+    const QString fn = QFileDialog::getSaveFileName(
+        this, LANG_STR("Export", "Exportieren"), QString(),
+        LANG_STR("Bitmap (*.bmp);;PNG (*.png);;WIF (*.wif)",
+                 "Bitmap (*.bmp);;PNG (*.png);;WIF (*.wif)"));
     if (fn.isEmpty())
         return;
 

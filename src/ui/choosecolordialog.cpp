@@ -13,6 +13,7 @@
 
 #include "datamodule.h"
 #include "palette.h"
+#include "language.h"
 
 #include <QDialogButtonBox>
 #include <QFormLayout>
@@ -76,7 +77,7 @@ private:
 ChooseRGBDialog::ChooseRGBDialog(QWidget* _parent)
     : QDialog(_parent)
 {
-    setWindowTitle(QStringLiteral("Colors RGB"));
+    setWindowTitle(LANG_STR("Colors RGB", "Farben RGB"));
     setModal(true);
 
     slRed = new QSlider(Qt::Vertical, this);
@@ -112,13 +113,14 @@ ChooseRGBDialog::ChooseRGBDialog(QWidget* _parent)
     };
 
     auto* row = new QHBoxLayout();
-    row->addLayout(makeCol(QStringLiteral("&Red"), slRed, valR, ChannelSwatch::R));
-    row->addLayout(makeCol(QStringLiteral("&Green"), slGreen, valG, ChannelSwatch::G));
-    row->addLayout(makeCol(QStringLiteral("&Blue"), slBlue, valB, ChannelSwatch::B));
+    row->addLayout(makeCol(LANG_STR("&Red", "&Rot"), slRed, valR, ChannelSwatch::R));
+    row->addLayout(makeCol(LANG_STR("&Green", "&Grün"), slGreen, valG, ChannelSwatch::G));
+    row->addLayout(makeCol(LANG_STR("&Blue", "&Blau"), slBlue, valB, ChannelSwatch::B));
     row->addSpacing(12);
     {
         auto* col = new QVBoxLayout();
-        col->addWidget(new QLabel(QStringLiteral("Color sample"), this), 0, Qt::AlignHCenter);
+        col->addWidget(new QLabel(LANG_STR("Color sample", "Farbmuster"), this), 0,
+                       Qt::AlignHCenter);
         col->addWidget(preview, 1);
         row->addLayout(col);
     }
@@ -267,7 +269,7 @@ private:
 ChooseHSVDialog::ChooseHSVDialog(QWidget* _parent)
     : QDialog(_parent)
 {
-    setWindowTitle(QStringLiteral("Colors HSV"));
+    setWindowTitle(LANG_STR("Colors HSV", "Farben HSV"));
     setModal(true);
 
     slHue = new QSlider(Qt::Horizontal, this);
@@ -293,24 +295,27 @@ ChooseHSVDialog::ChooseHSVDialog(QWidget* _parent)
     connect(slVal, &QSlider::valueChanged, this, [this] { sync(); });
 
     auto* form = new QFormLayout();
-    form->addRow(QStringLiteral("&Hue:"), slHue);
-    form->addRow(QStringLiteral("&Saturation:"), slSat);
-    form->addRow(QStringLiteral("&Value:"), slVal);
+    form->addRow(LANG_STR("&Hue:", "&Farbton:"), slHue);
+    form->addRow(LANG_STR("&Saturation:", "&Sättigung:"), slSat);
+    form->addRow(LANG_STR("&Value:", "&Hellwert:"), slVal);
 
     auto* vals = new QFormLayout();
-    vals->addRow(QStringLiteral("Hue:"), valH);
-    vals->addRow(QStringLiteral("Saturation:"), valS);
-    vals->addRow(QStringLiteral("Value:"), valV);
+    vals->addRow(LANG_STR("Hue:", "Farbton:"), valH);
+    vals->addRow(LANG_STR("Saturation:", "Sättigung:"), valS);
+    vals->addRow(LANG_STR("Value:", "Hellwert:"), valV);
 
     auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(btns, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(btns, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
     auto* grid = new QGridLayout();
-    grid->addWidget(new QLabel(QStringLiteral("Color hues"), this), 0, 0, Qt::AlignHCenter);
-    grid->addWidget(new QLabel(QStringLiteral("Saturation and Value"), this), 0, 1,
+    grid->addWidget(new QLabel(LANG_STR("Color hues", "Farbtöne"), this), 0, 0,
                     Qt::AlignHCenter);
-    grid->addWidget(new QLabel(QStringLiteral("Color sample"), this), 0, 2, Qt::AlignHCenter);
+    grid->addWidget(new QLabel(LANG_STR("Saturation and Value", "Sättigung und Hellwert"), this),
+                    0, 1,
+                    Qt::AlignHCenter);
+    grid->addWidget(new QLabel(LANG_STR("Color sample", "Farbmuster"), this), 0, 2,
+                    Qt::AlignHCenter);
     grid->addWidget(wheel, 1, 0);
     grid->addWidget(patch, 1, 1);
     grid->addWidget(preview, 1, 2);
@@ -499,7 +504,7 @@ private:
 ChoosePaletteDialog::ChoosePaletteDialog(QWidget* _parent)
     : QDialog(_parent)
 {
-    setWindowTitle(QStringLiteral("Colors Palette"));
+    setWindowTitle(LANG_STR("Colors Palette", "Farben Palette"));
     setModal(true);
 
     canvas = new PaletteCanvas(this);

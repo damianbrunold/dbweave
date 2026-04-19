@@ -19,6 +19,7 @@
 #include "rangecolors.h"
 #include "zentralsymm.h"
 #include "colors_compat.h"
+#include "language.h"
 
 #include <QAction>
 #include <QActionGroup>
@@ -274,19 +275,19 @@ BlockmusterDialog::BlockmusterDialog(TDBWFRM* _frm, BlockUndo& _undo, PMUSTERARR
     auto* menubar = new QMenuBar(this);
 
     /*  Pattern menu: Apply / Close. */
-    QMenu* mMuster = menubar->addMenu(QStringLiteral("&Pattern"));
-    QAction* aApply = mMuster->addAction(QStringLiteral("&Apply"));
-    QAction* aClose = mMuster->addAction(QStringLiteral("&Close"));
+    QMenu* mMuster = menubar->addMenu(LANG_STR("&Pattern", "&Muster"));
+    QAction* aApply = mMuster->addAction(LANG_STR("&Apply", "&Anwenden"));
+    QAction* aClose = mMuster->addAction(LANG_STR("&Close", "&Schliessen"));
     connect(aApply, &QAction::triggered, this, &BlockmusterDialog::accept);
     connect(aClose, &QAction::triggered, this, &QDialog::reject);
 
     /*  Threading / treadling direction sub-menus; hidden unless
         called with withRange=true (block-substitution mode). */
     if (withRange) {
-        QMenu* mEz = menubar->addMenu(QStringLiteral("&Threading"));
+        QMenu* mEz = menubar->addMenu(LANG_STR("&Threading", "&Einzug"));
         auto* gEz = new QActionGroup(this);
-        einzugZAct = mEz->addAction(QStringLiteral("Straight &rising"));
-        einzugSAct = mEz->addAction(QStringLiteral("Straight &falling"));
+        einzugZAct = mEz->addAction(LANG_STR("Straight &rising", "Gerade &steigend"));
+        einzugSAct = mEz->addAction(LANG_STR("Straight &falling", "Gerade &fallend"));
         einzugZAct->setCheckable(true);
         einzugSAct->setCheckable(true);
         gEz->addAction(einzugZAct);
@@ -295,10 +296,10 @@ BlockmusterDialog::BlockmusterDialog(TDBWFRM* _frm, BlockUndo& _undo, PMUSTERARR
         connect(einzugZAct, &QAction::triggered, this, [this] { einzugZ = true; });
         connect(einzugSAct, &QAction::triggered, this, [this] { einzugZ = false; });
 
-        QMenu* mTf = menubar->addMenu(QStringLiteral("Tre&adling"));
+        QMenu* mTf = menubar->addMenu(LANG_STR("Tre&adling", "&Trittfolge"));
         auto* gTf = new QActionGroup(this);
-        trittfolgeZAct = mTf->addAction(QStringLiteral("Straight &rising"));
-        trittfolgeSAct = mTf->addAction(QStringLiteral("Straight &falling"));
+        trittfolgeZAct = mTf->addAction(LANG_STR("Straight &rising", "Gerade &steigend"));
+        trittfolgeSAct = mTf->addAction(LANG_STR("Straight &falling", "Gerade &fallend"));
         trittfolgeZAct->setCheckable(true);
         trittfolgeSAct->setCheckable(true);
         gTf->addAction(trittfolgeZAct);
@@ -309,22 +310,23 @@ BlockmusterDialog::BlockmusterDialog(TDBWFRM* _frm, BlockUndo& _undo, PMUSTERARR
     }
 
     /*  Edit menu (transforms). */
-    QMenu* mEdit = menubar->addMenu(QStringLiteral("&Edit"));
-    QAction* aDel = mEdit->addAction(QStringLiteral("&Delete"));
-    QAction* aMh = mEdit->addAction(QStringLiteral("Mirror &horizontal"));
-    QAction* aMv = mEdit->addAction(QStringLiteral("Mirror &vertical"));
-    QAction* aRot = mEdit->addAction(QStringLiteral("&Rotate"));
-    QAction* aInv = mEdit->addAction(QStringLiteral("&Invert"));
-    QAction* aSym = mEdit->addAction(QStringLiteral("&Make central symmetric"));
+    QMenu* mEdit = menubar->addMenu(LANG_STR("&Edit", "&Bearbeiten"));
+    QAction* aDel = mEdit->addAction(LANG_STR("&Delete", "&Löschen"));
+    QAction* aMh = mEdit->addAction(LANG_STR("Mirror &horizontal", "Spiegeln &horizontal"));
+    QAction* aMv = mEdit->addAction(LANG_STR("Mirror &vertical", "Spiegeln &vertikal"));
+    QAction* aRot = mEdit->addAction(LANG_STR("&Rotate", "&Rotieren"));
+    QAction* aInv = mEdit->addAction(LANG_STR("&Invert", "&Invertieren"));
+    QAction* aSym = mEdit->addAction(
+        LANG_STR("&Make central symmetric", "Zentral&symmetrisch"));
     mEdit->addSeparator();
-    QMenu* mRoll = mEdit->addMenu(QStringLiteral("&Roll"));
-    QAction* aRu = mRoll->addAction(QStringLiteral("&Up"));
-    QAction* aRd = mRoll->addAction(QStringLiteral("&Down"));
-    QAction* aRl = mRoll->addAction(QStringLiteral("&Left"));
-    QAction* aRr = mRoll->addAction(QStringLiteral("&Right"));
+    QMenu* mRoll = mEdit->addMenu(LANG_STR("&Roll", "&Rollen"));
+    QAction* aRu = mRoll->addAction(LANG_STR("&Up", "Nach &oben"));
+    QAction* aRd = mRoll->addAction(LANG_STR("&Down", "Nach &unten"));
+    QAction* aRl = mRoll->addAction(LANG_STR("&Left", "Nach &links"));
+    QAction* aRr = mRoll->addAction(LANG_STR("&Right", "Nach &rechts"));
     mEdit->addSeparator();
-    undoAct = mEdit->addAction(QStringLiteral("&Undo"));
-    redoAct = mEdit->addAction(QStringLiteral("Re&do"));
+    undoAct = mEdit->addAction(LANG_STR("&Undo", "&Rückgängig"));
+    redoAct = mEdit->addAction(LANG_STR("Re&do", "Wieder&holen"));
     connect(aDel, &QAction::triggered, this, &BlockmusterDialog::editDelete);
     connect(aMh, &QAction::triggered, this, &BlockmusterDialog::editMirrorH);
     connect(aMv, &QAction::triggered, this, &BlockmusterDialog::editMirrorV);
@@ -339,41 +341,43 @@ BlockmusterDialog::BlockmusterDialog(TDBWFRM* _frm, BlockUndo& _undo, PMUSTERARR
     connect(redoAct, &QAction::triggered, this, &BlockmusterDialog::doRedo);
 
     /*  Pattern-preset menu (Leinwand / Koeper / Atlas / Panama). */
-    QMenu* mPreset = menubar->addMenu(QStringLiteral("&Binding"));
+    QMenu* mPreset = menubar->addMenu(LANG_STR("&Binding", "&Bindung"));
     auto addPreset = [&](const QString& label, auto slot) {
         QAction* a = mPreset->addAction(label);
         connect(a, &QAction::triggered, this, slot);
     };
-    addPreset(QStringLiteral("Tabby (Leinwand)"), [this] { musterKoeper(1, 1); });
-    addPreset(QStringLiteral("Twill 2/2"), [this] { musterKoeper(2, 2); });
-    addPreset(QStringLiteral("Twill 3/3"), [this] { musterKoeper(3, 3); });
-    addPreset(QStringLiteral("Twill 4/4"), [this] { musterKoeper(4, 4); });
+    addPreset(LANG_STR("Tabby (Leinwand)", "Leinwand"), [this] { musterKoeper(1, 1); });
+    addPreset(LANG_STR("Twill 2/2", "Köper 2/2"), [this] { musterKoeper(2, 2); });
+    addPreset(LANG_STR("Twill 3/3", "Köper 3/3"), [this] { musterKoeper(3, 3); });
+    addPreset(LANG_STR("Twill 4/4", "Köper 4/4"), [this] { musterKoeper(4, 4); });
     mPreset->addSeparator();
-    addPreset(QStringLiteral("Twill 2/1"), [this] { musterKoeper(2, 1); });
-    addPreset(QStringLiteral("Twill 3/1"), [this] { musterKoeper(3, 1); });
-    addPreset(QStringLiteral("Twill 3/2"), [this] { musterKoeper(3, 2); });
-    addPreset(QStringLiteral("Twill 4/1"), [this] { musterKoeper(4, 1); });
-    addPreset(QStringLiteral("Twill 4/2"), [this] { musterKoeper(4, 2); });
-    addPreset(QStringLiteral("Twill 4/3"), [this] { musterKoeper(4, 3); });
-    addPreset(QStringLiteral("Twill 5/1"), [this] { musterKoeper(5, 1); });
-    addPreset(QStringLiteral("Twill 5/2"), [this] { musterKoeper(5, 2); });
-    addPreset(QStringLiteral("Twill 5/3"), [this] { musterKoeper(5, 3); });
+    addPreset(LANG_STR("Twill 2/1", "Köper 2/1"), [this] { musterKoeper(2, 1); });
+    addPreset(LANG_STR("Twill 3/1", "Köper 3/1"), [this] { musterKoeper(3, 1); });
+    addPreset(LANG_STR("Twill 3/2", "Köper 3/2"), [this] { musterKoeper(3, 2); });
+    addPreset(LANG_STR("Twill 4/1", "Köper 4/1"), [this] { musterKoeper(4, 1); });
+    addPreset(LANG_STR("Twill 4/2", "Köper 4/2"), [this] { musterKoeper(4, 2); });
+    addPreset(LANG_STR("Twill 4/3", "Köper 4/3"), [this] { musterKoeper(4, 3); });
+    addPreset(LANG_STR("Twill 5/1", "Köper 5/1"), [this] { musterKoeper(5, 1); });
+    addPreset(LANG_STR("Twill 5/2", "Köper 5/2"), [this] { musterKoeper(5, 2); });
+    addPreset(LANG_STR("Twill 5/3", "Köper 5/3"), [this] { musterKoeper(5, 3); });
     mPreset->addSeparator();
-    addPreset(QStringLiteral("Satin 5x5"), [this] { musterAtlas(5); });
-    addPreset(QStringLiteral("Satin 7x7"), [this] { musterAtlas(7); });
-    addPreset(QStringLiteral("Satin 9x9"), [this] { musterAtlas(9); });
+    addPreset(LANG_STR("Satin 5x5", "Atlas 5x5"), [this] { musterAtlas(5); });
+    addPreset(LANG_STR("Satin 7x7", "Atlas 7x7"), [this] { musterAtlas(7); });
+    addPreset(LANG_STR("Satin 9x9", "Atlas 9x9"), [this] { musterAtlas(9); });
     mPreset->addSeparator();
-    addPreset(QStringLiteral("Extended tabby 2/1"), [this] { musterPanama(2, 1); });
-    addPreset(QStringLiteral("Extended tabby 2/2"), [this] { musterPanama(2, 2); });
+    addPreset(LANG_STR("Extended tabby 2/1", "Panama 2/1"), [this] { musterPanama(2, 1); });
+    addPreset(LANG_STR("Extended tabby 2/2", "Panama 2/2"), [this] { musterPanama(2, 2); });
 
     /*  Bindung selector menu — 10 entries Grundmuster + 1..9. */
-    QMenu* mBind = menubar->addMenu(QStringLiteral("B&indung"));
+    QMenu* mBind = menubar->addMenu(LANG_STR("B&inding selection", "B&indung"));
     auto* gBind = new QActionGroup(this);
-    const QString labels[10] = { QStringLiteral("&Base pattern"), QStringLiteral("Pattern &1"),
-                                 QStringLiteral("Pattern &2"),    QStringLiteral("Pattern &3"),
-                                 QStringLiteral("Pattern &4"),    QStringLiteral("Pattern &5"),
-                                 QStringLiteral("Pattern &6"),    QStringLiteral("Pattern &7"),
-                                 QStringLiteral("Pattern &8"),    QStringLiteral("Pattern &9") };
+    const QString labels[10] = {
+        LANG_STR("&Base pattern", "&Grundmuster"), LANG_STR("Pattern &1", "Muster &1"),
+        LANG_STR("Pattern &2", "Muster &2"),       LANG_STR("Pattern &3", "Muster &3"),
+        LANG_STR("Pattern &4", "Muster &4"),       LANG_STR("Pattern &5", "Muster &5"),
+        LANG_STR("Pattern &6", "Muster &6"),       LANG_STR("Pattern &7", "Muster &7"),
+        LANG_STR("Pattern &8", "Muster &8"),       LANG_STR("Pattern &9", "Muster &9")
+    };
     for (int i = 0; i < 10; i++) {
         bindungActs[i] = mBind->addAction(labels[i]);
         bindungActs[i]->setCheckable(true);
@@ -384,7 +388,7 @@ BlockmusterDialog::BlockmusterDialog(TDBWFRM* _frm, BlockUndo& _undo, PMUSTERARR
     /*  Copy-from menu: 10 entries, copy the current layout from
         another Bindung slot (double-toggled to re-colour to the
         destination slot's shade). */
-    QMenu* mCopy = menubar->addMenu(QStringLiteral("&Copy from"));
+    QMenu* mCopy = menubar->addMenu(LANG_STR("&Copy from", "&Kopieren von"));
     for (int i = 0; i < 10; i++) {
         QAction* a = mCopy->addAction(labels[i]);
         connect(a, &QAction::triggered, this, [this, i] { grabFrom(i); });
@@ -398,12 +402,12 @@ BlockmusterDialog::BlockmusterDialog(TDBWFRM* _frm, BlockUndo& _undo, PMUSTERARR
     auto* header = new QHBoxLayout();
     header->addWidget(description);
     header->addStretch(1);
-    header->addWidget(new QLabel(QStringLiteral("Used patterns:"), this));
+    header->addWidget(new QLabel(LANG_STR("Used patterns:", "Verwendete Muster:"), this));
     header->addWidget(usedLabel);
 
     auto* btns = new QDialogButtonBox(this);
-    auto* pbOk = btns->addButton(QStringLiteral("&Apply"), QDialogButtonBox::AcceptRole);
-    auto* pbCa = btns->addButton(QStringLiteral("Cancel"), QDialogButtonBox::RejectRole);
+    auto* pbOk = btns->addButton(LANG_STR("&Apply", "&Anwenden"), QDialogButtonBox::AcceptRole);
+    auto* pbCa = btns->addButton(LANG_STR("Cancel", "Abbrechen"), QDialogButtonBox::RejectRole);
     connect(pbOk, &QPushButton::clicked, this, &BlockmusterDialog::accept);
     connect(pbCa, &QPushButton::clicked, this, &QDialog::reject);
 
@@ -448,9 +452,9 @@ void BlockmusterDialog::selectBindung(int _b)
 void BlockmusterDialog::refreshDescription()
 {
     if (current == 0)
-        description->setText(QStringLiteral("Base pattern"));
+        description->setText(LANG_STR("Base pattern", "Grundmuster"));
     else
-        description->setText(QStringLiteral("Pattern %1").arg(current));
+        description->setText(LANG_STR("Pattern %1", "Muster %1").arg(current));
 }
 
 void BlockmusterDialog::refreshUsed()
@@ -587,7 +591,8 @@ void BlockmusterDialog::editCentralsym()
         undo.Snapshot();
     } else {
         QMessageBox::information(this, QStringLiteral("DB-WEAVE"),
-                                 QStringLiteral("No central symmetry found."));
+                                 LANG_STR("No central symmetry found.",
+                                          "Keine Zentralsymmetrie gefunden."));
     }
 }
 
@@ -933,7 +938,7 @@ void TDBWFRM::EditBlockmusterClick()
         return;
 
     BlockmusterDialog dlg(this, *blockundo, &blockmuster, currentbm,
-                          QStringLiteral("Substitute with block patterns"),
+                          LANG_STR("Substitute with block patterns", "Blockmusterung"),
                           /*withRange=*/true);
     if (dlg.exec() == QDialog::Accepted) {
         einzugZ = dlg.einzugZ;

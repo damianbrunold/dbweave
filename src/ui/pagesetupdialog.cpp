@@ -13,6 +13,7 @@
 #include "mainwindow.h"
 #include "datamodule.h"
 #include "print.h"
+#include "language.h"
 
 #include <QDialogButtonBox>
 #include <QDoubleSpinBox>
@@ -28,7 +29,7 @@
 PageSetupDialog::PageSetupDialog(QWidget* _parent)
     : QDialog(_parent)
 {
-    setWindowTitle(QStringLiteral("Page setup"));
+    setWindowTitle(LANG_STR("Page setup", "Seite einrichten"));
     setModal(true);
 
     auto makeMargin = [this] {
@@ -46,16 +47,16 @@ PageSetupDialog::PageSetupDialog(QWidget* _parent)
     header = new QLineEdit(this);
     footer = new QLineEdit(this);
 
-    auto* gb = new QGroupBox(QStringLiteral("Margins"), this);
+    auto* gb = new QGroupBox(LANG_STR("Margins", "Ränder"), this);
     auto* gbl = new QFormLayout(gb);
-    gbl->addRow(QStringLiteral("&Left:"), left);
-    gbl->addRow(QStringLiteral("&Right:"), right);
-    gbl->addRow(QStringLiteral("&Top:"), top);
-    gbl->addRow(QStringLiteral("&Bottom:"), bottom);
+    gbl->addRow(LANG_STR("&Left:", "&Links:"), left);
+    gbl->addRow(LANG_STR("&Right:", "&Rechts:"), right);
+    gbl->addRow(LANG_STR("&Top:", "&Oben:"), top);
+    gbl->addRow(LANG_STR("&Bottom:", "&Unten:"), bottom);
 
     auto* form = new QFormLayout();
-    form->addRow(QStringLiteral("&Header:"), header);
-    form->addRow(QStringLiteral("&Footer:"), footer);
+    form->addRow(LANG_STR("&Header:", "&Kopfzeile:"), header);
+    form->addRow(LANG_STR("&Footer:", "&Fusszeile:"), footer);
 
     auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(btns, &QDialogButtonBox::accepted, this, &QDialog::accept);

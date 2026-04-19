@@ -16,6 +16,7 @@
 #include "settings.h"
 #include "undoredo.h"
 #include "assert_compat.h"
+#include "language.h"
 
 #include <QAction>
 #include <QMenu>
@@ -113,7 +114,7 @@ void TDBWFRM::InsertUserdef(int _i, bool _transparent)
 /*-----------------------------------------------------------------*/
 void TDBWFRM::PasteUserdef(bool _transparent)
 {
-    const int i = SelectUserdef(QStringLiteral("Paste user pattern"));
+    const int i = SelectUserdef(LANG_STR("Paste user pattern", "Benutzermuster einfügen"));
     if (i >= 0 && i < MAXUSERDEF)
         InsertUserdef(i, _transparent);
 }
@@ -140,12 +141,14 @@ void TDBWFRM::UserdefAddClick()
     if (kette.count() > 50 || schuesse.count() > 50) {
         QMessageBox::information(
             this, QStringLiteral("DB-WEAVE"),
-            QStringLiteral("Pattern too large to save as a user-defined pattern "
-                           "(maximum 50 × 50)."));
+            LANG_STR("Pattern too large to save as a user-defined pattern "
+                     "(maximum 50 × 50).",
+                     "Muster zu gross zum Speichern als benutzerdefiniertes Muster "
+                     "(Maximum 50 × 50)."));
         return;
     }
 
-    const int i = SelectUserdef(QStringLiteral("Select pattern slot"));
+    const int i = SelectUserdef(LANG_STR("Select pattern slot", "Musterplatz wählen"));
     if (i < 0 || i >= MAXUSERDEF)
         return;
 
@@ -182,7 +185,7 @@ void TDBWFRM::UserdefAddSelClick()
             return;
         }
 
-        const int i = SelectUserdef(QStringLiteral("Select pattern slot"));
+        const int i = SelectUserdef(LANG_STR("Select pattern slot", "Musterplatz wählen"));
         if (i >= 0 && i < MAXUSERDEF) {
             const QString fallback = QStringLiteral("Pattern %1").arg(i + 1);
             const QString seed
@@ -208,7 +211,8 @@ void TDBWFRM::UserdefAddSelClick()
 /*-----------------------------------------------------------------*/
 void TDBWFRM::UserdefRemoveClick()
 {
-    const int i = SelectUserdef(QStringLiteral("Select pattern to delete"));
+    const int i = SelectUserdef(
+        LANG_STR("Select pattern to delete", "Zu löschendes Muster wählen"));
     if (i >= 0 && i < MAXUSERDEF) {
         Settings settings;
         settings.SetCategory(AnsiString(QStringLiteral("Userdef%1").arg(i)));

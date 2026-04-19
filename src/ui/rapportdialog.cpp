@@ -10,6 +10,7 @@
 */
 
 #include "rapportdialog.h"
+#include "language.h"
 
 #include <QCheckBox>
 #include <QDialogButtonBox>
@@ -22,20 +23,20 @@
 RapportDialog::RapportDialog(QWidget* _parent)
     : QDialog(_parent)
 {
-    setWindowTitle(QStringLiteral("Repeat"));
+    setWindowTitle(LANG_STR("Repeat", "Rapportieren"));
     setModal(true);
 
     rappHorz = new QLineEdit(this);
     rappVert = new QLineEdit(this);
-    rappAll = new QCheckBox(QStringLiteral("Repeat &all"), this);
-    rappColors = new QCheckBox(QStringLiteral("Repeat &colors"), this);
+    rappAll = new QCheckBox(LANG_STR("Repeat &all", "&Alles rapportieren"), this);
+    rappColors = new QCheckBox(LANG_STR("Repeat &colors", "&Farben rapportieren"), this);
 
     rappHorz->setValidator(new QIntValidator(0, 9999, rappHorz));
     rappVert->setValidator(new QIntValidator(0, 9999, rappVert));
 
     auto* form = new QFormLayout();
-    form->addRow(QStringLiteral("&Horizontal:"), rappHorz);
-    form->addRow(QStringLiteral("&Vertical:"), rappVert);
+    form->addRow(LANG_STR("&Horizontal:", "&Horizontal:"), rappHorz);
+    form->addRow(LANG_STR("&Vertical:", "&Vertikal:"), rappVert);
 
     auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
 

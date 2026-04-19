@@ -14,6 +14,7 @@
 #include "mainwindow.h"
 #include "datamodule.h"
 #include "palette.h"
+#include "language.h"
 
 #include <QCheckBox>
 #include <QMenu>
@@ -131,7 +132,7 @@ FarbverlaufDialog::FarbverlaufDialog(TDBWFRM* _frm, QWidget* _parent)
     : QDialog(_parent)
     , frm(_frm)
 {
-    setWindowTitle(QStringLiteral("Create color blending"));
+    setWindowTitle(LANG_STR("Create color blending", "Farbverlauf erstellen"));
     setModal(true);
 
     startcolor = g_startfarbe;
@@ -175,13 +176,14 @@ FarbverlaufDialog::FarbverlaufDialog(TDBWFRM* _frm, QWidget* _parent)
     slWeight->setRange(1, 100);
     slWeight->setValue(50);
 
-    nodividers = new QCheckBox(QStringLiteral("N&o dividers"), this);
+    nodividers = new QCheckBox(LANG_STR("N&o dividers", "&Keine Trennlinien"), this);
     nodividers->setChecked(true);
 
     modelRGB = new QRadioButton(QStringLiteral("&RGB"), this);
     modelHSV = new QRadioButton(QStringLiteral("&HSV"), this);
     modelRGB->setChecked(true);
-    auto* gb = new QGroupBox(QStringLiteral("Color model for interpolation"), this);
+    auto* gb = new QGroupBox(
+        LANG_STR("Color model for interpolation", "Farbmodell für Interpolation"), this);
     {
         auto* l = new QHBoxLayout(gb);
         l->addWidget(modelRGB);
@@ -222,15 +224,15 @@ FarbverlaufDialog::FarbverlaufDialog(TDBWFRM* _frm, QWidget* _parent)
 
     /*  Layout. */
     auto* top = new QGridLayout();
-    top->addWidget(new QLabel(QStringLiteral("Start color:"), this), 0, 0);
+    top->addWidget(new QLabel(LANG_STR("Start color:", "Startfarbe:"), this), 0, 0);
     top->addWidget(swatchStart, 0, 1);
-    top->addWidget(new QLabel(QStringLiteral("End color:"), this), 0, 2);
+    top->addWidget(new QLabel(LANG_STR("End color:", "Endfarbe:"), this), 0, 2);
     top->addWidget(swatchEnd, 0, 3);
 
     auto* form = new QFormLayout();
-    form->addRow(QStringLiteral("S&teps:"), edSteps);
-    form->addRow(QStringLiteral("&Weighting:"), slWeight);
-    form->addRow(QStringLiteral("&Palette index:"), edPosition);
+    form->addRow(LANG_STR("S&teps:", "Sch&ritte:"), edSteps);
+    form->addRow(LANG_STR("&Weighting:", "&Gewichtung:"), slWeight);
+    form->addRow(LANG_STR("&Palette index:", "&Paletten-Index:"), edPosition);
 
     auto* root = new QVBoxLayout(this);
     root->addLayout(top);
@@ -252,11 +254,14 @@ FarbverlaufDialog::FarbverlaufDialog(TDBWFRM* _frm, QWidget* _parent)
 static COLORREF pickColorMenu(QWidget* _parent, COLORREF _col, COLORREF _other)
 {
     QMenu menu(_parent);
-    QAction* aHSV = menu.addAction(QStringLiteral("Choose color with &HSV model"));
-    QAction* aRGB = menu.addAction(QStringLiteral("Choose color with &RGB model"));
-    QAction* aPal = menu.addAction(QStringLiteral("Choose color from &palette"));
+    QAction* aHSV = menu.addAction(
+        LANG_STR("Choose color with &HSV model", "Farbe mit &HSV-Modell wählen"));
+    QAction* aRGB = menu.addAction(
+        LANG_STR("Choose color with &RGB model", "Farbe mit &RGB-Modell wählen"));
+    QAction* aPal = menu.addAction(
+        LANG_STR("Choose color from &palette", "Farbe aus der &Palette wählen"));
     menu.addSeparator();
-    QAction* aCopy = menu.addAction(QStringLiteral("&Copy other color"));
+    QAction* aCopy = menu.addAction(LANG_STR("&Copy other color", "&Andere Farbe kopieren"));
 
     QAction* chosen = menu.exec(QCursor::pos());
     if (!chosen)
@@ -381,8 +386,10 @@ void FarbverlaufDialog::accept()
     if (count != 0) {
         const int index = edPosition->value();
         if (index < 1 || index >= MAX_PAL_ENTRY) {
-            QMessageBox::information(this, QStringLiteral("DB-WEAVE"),
-                                     QStringLiteral("Palette index out of range."));
+            QMessageBox::information(
+                this, QStringLiteral("DB-WEAVE"),
+                LANG_STR("Palette index out of range.",
+                         "Paletten-Index ausserhalb des gültigen Bereichs."));
             return;
         }
         Data->palette->SetColor(index - 1, startcolor);

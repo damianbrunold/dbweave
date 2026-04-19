@@ -10,6 +10,7 @@
 */
 
 #include "cursordirdialog.h"
+#include "language.h"
 
 #include <QApplication>
 #include <QDialogButtonBox>
@@ -22,7 +23,7 @@ CursorDirDialog::CursorDirDialog(QWidget* _parent, CURSORDIRECTION _cd)
     : QDialog(_parent)
     , cursordirection(_cd)
 {
-    setWindowTitle(QStringLiteral("Cursor movement"));
+    setWindowTitle(LANG_STR("Cursor movement", "Cursorbewegung"));
     setModal(true);
 
     auto makeBtn = [this](const QString& label) {

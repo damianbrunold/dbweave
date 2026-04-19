@@ -23,16 +23,17 @@
 EnvOptionsDialog::EnvOptionsDialog(QWidget* _parent)
     : QDialog(_parent)
 {
-    setWindowTitle(QStringLiteral("Environment options"));
+    setWindowTitle(LANG_STR("Environment options", "Umgebungsoptionen"));
     setModal(true);
 
     cbLanguage = new QComboBox(this);
-    cbLanguage->addItem(QStringLiteral("English"));
-    cbLanguage->addItem(QStringLiteral("German"));
-    showSplash = new QCheckBox(QStringLiteral("&Display splashscreen"), this);
+    cbLanguage->addItem(LANG_STR("English", "Englisch"));
+    cbLanguage->addItem(LANG_STR("German", "Deutsch"));
+    showSplash = new QCheckBox(LANG_STR("&Display splashscreen", "&Startbildschirm anzeigen"),
+                               this);
 
     auto* form = new QFormLayout();
-    form->addRow(QStringLiteral("&Language:"), cbLanguage);
+    form->addRow(LANG_STR("&Language:", "&Sprache:"), cbLanguage);
     form->addRow(showSplash);
 
     auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);

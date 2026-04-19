@@ -10,6 +10,7 @@
 */
 
 #include "loomoptionsdialog.h"
+#include "language.h"
 
 #include <QComboBox>
 #include <QDialogButtonBox>
@@ -22,12 +23,12 @@
 LoomOptionsDialog::LoomOptionsDialog(QWidget* _parent)
     : QDialog(_parent)
 {
-    setWindowTitle(QStringLiteral("Loom options"));
+    setWindowTitle(LANG_STR("Loom options", "Websteuerungs-Optionen"));
     setModal(true);
 
     cbInterface = new QComboBox(this);
     /*  Indices match LOOMINTERFACE enum exactly (0 = dummy … 7 = AVL). */
-    cbInterface->addItem(QStringLiteral("Dummy (simulation)"));
+    cbInterface->addItem(LANG_STR("Dummy (simulation)", "Dummy (Simulation)"));
     cbInterface->addItem(QStringLiteral("ARM Patronic direct"));
     cbInterface->addItem(QStringLiteral("ARM Patronic indirect"));
     cbInterface->addItem(QStringLiteral("ARM Designer electronic"));
@@ -42,21 +43,28 @@ LoomOptionsDialog::LoomOptionsDialog(QWidget* _parent)
 
     spDelay = new QSpinBox(this);
     spDelay->setRange(0, 10);
-    spDelay->setSuffix(QStringLiteral(" (Varpapuu only)"));
+    spDelay->setSuffix(LANG_STR(" (Varpapuu only)", " (nur Varpapuu)"));
 
     auto* form = new QFormLayout();
-    form->addRow(QStringLiteral("&Loom:"), cbInterface);
-    form->addRow(QStringLiteral("&Port:"), cbPort);
-    form->addRow(QStringLiteral("&Delay:"), spDelay);
+    form->addRow(LANG_STR("&Loom:", "&Webstuhl:"), cbInterface);
+    form->addRow(LANG_STR("&Port:", "&Anschluss:"), cbPort);
+    form->addRow(LANG_STR("&Delay:", "&Verzögerung:"), spDelay);
 
 #ifndef DBWEAVE_HAVE_LOOM
-    auto* warn = new QLabel(QStringLiteral("<i>Note: the executable was built without "
-                                           "QtSerialPort support. Only the Dummy loom "
-                                           "is live; the other entries won't open a "
-                                           "serial port. Rebuild with "
-                                           "<tt>-DDBWEAVE_BUILD_LOOM=ON</tt> to enable "
-                                           "real loom drivers.</i>"),
-                            this);
+    auto* warn = new QLabel(
+        LANG_STR("<i>Note: the executable was built without "
+                 "QtSerialPort support. Only the Dummy loom "
+                 "is live; the other entries won't open a "
+                 "serial port. Rebuild with "
+                 "<tt>-DDBWEAVE_BUILD_LOOM=ON</tt> to enable "
+                 "real loom drivers.</i>",
+                 "<i>Hinweis: Diese ausführbare Datei wurde ohne "
+                 "QtSerialPort-Unterstützung gebaut. Nur die Dummy-"
+                 "Steuerung ist aktiv; die übrigen Einträge öffnen "
+                 "keinen seriellen Anschluss. Mit "
+                 "<tt>-DDBWEAVE_BUILD_LOOM=ON</tt> neu bauen, um "
+                 "echte Websteuerungen zu aktivieren.</i>"),
+        this);
     warn->setWordWrap(true);
 #endif
 

@@ -16,6 +16,7 @@
 #include "undoredo.h"
 #include "rangecolors.h"
 #include "colors_compat.h"
+#include "language.h"
 
 #include <QApplication>
 #include <QCursor>
@@ -101,7 +102,7 @@ private:
 ImportBmpDialog::ImportBmpDialog(const QString& _filename, QWidget* _parent)
     : QDialog(_parent)
 {
-    setWindowTitle(QStringLiteral("Import picture"));
+    setWindowTitle(LANG_STR("Import picture", "Bild importieren"));
     setModal(true);
 
     bitmap.load(_filename);
@@ -128,14 +129,14 @@ ImportBmpDialog::ImportBmpDialog(const QString& _filename, QWidget* _parent)
     connect(btns, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
     auto* form = new QFormLayout();
-    form->addRow(QStringLiteral("&Resolution:"), spinRes);
+    form->addRow(LANG_STR("&Resolution:", "&Auflösung:"), spinRes);
 
     auto* row = new QHBoxLayout();
     auto* lcol = new QVBoxLayout();
-    lcol->addWidget(new QLabel(QStringLiteral("Picture template:"), this));
+    lcol->addWidget(new QLabel(LANG_STR("Picture template:", "Bildvorlage:"), this));
     lcol->addWidget(bmpLabel);
     auto* rcol = new QVBoxLayout();
-    rcol->addWidget(new QLabel(QStringLiteral("Preview:"), this));
+    rcol->addWidget(new QLabel(LANG_STR("Preview:", "Vorschau:"), this));
     rcol->addWidget(preview);
     row->addLayout(lcol);
     row->addLayout(rcol);
@@ -216,8 +217,9 @@ void ImportBmpDialog::accept()
 void TDBWFRM::ImportBitmapClick()
 {
     const QString fn = QFileDialog::getOpenFileName(
-        this, QStringLiteral("Import picture"), QString(),
-        QStringLiteral("Images (*.bmp *.png *.jpg *.jpeg *.gif);;All files (*)"));
+        this, LANG_STR("Import picture", "Bild importieren"), QString(),
+        LANG_STR("Images (*.bmp *.png *.jpg *.jpeg *.gif);;All files (*)",
+                 "Bilder (*.bmp *.png *.jpg *.jpeg *.gif);;Alle Dateien (*)"));
     if (fn.isEmpty())
         return;
 

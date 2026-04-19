@@ -21,6 +21,7 @@
 #include "fileformat.h"
 #include "loadoptions.h"
 #include "undoredo.h"
+#include "language.h"
 
 #include <QAction>
 #include <QFileDialog>
@@ -31,15 +32,16 @@
 
 static QString fileFilter()
 {
-    return QStringLiteral("DB-WEAVE files (*.dbw);;All files (*.*)");
+    return LANG_STR("DB-WEAVE files (*.dbw);;All files (*.*)",
+                    "DB-WEAVE-Dateien (*.dbw);;Alle Dateien (*.*)");
 }
 
 void TDBWFRM::FileOpen()
 {
     const QString dir
         = filename.isEmpty() ? QString() : QFileInfo((QString)filename).absolutePath();
-    const QString chosen
-        = QFileDialog::getOpenFileName(this, QStringLiteral("Open pattern"), dir, fileFilter());
+    const QString chosen = QFileDialog::getOpenFileName(
+        this, LANG_STR("Open pattern", "Muster öffnen"), dir, fileFilter());
     if (chosen.isEmpty())
         return;
 
@@ -53,7 +55,10 @@ void TDBWFRM::FileOpen()
     if (!ok) {
         QMessageBox::warning(
             this, QStringLiteral("DB-WEAVE"),
-            QStringLiteral("Could not open '%1' (status %2).").arg(chosen).arg(int(stat)));
+            LANG_STR("Could not open '%1' (status %2).",
+                     "'%1' konnte nicht geöffnet werden (Status %2).")
+                .arg(chosen)
+                .arg(int(stat)));
         return;
     }
     AddToMRU(chosen);
@@ -64,8 +69,8 @@ void TDBWFRM::FileOpen()
 void TDBWFRM::FileSaveAs()
 {
     const QString dir = filename.isEmpty() ? QString() : (QString)filename;
-    const QString chosen
-        = QFileDialog::getSaveFileName(this, QStringLiteral("Save pattern as"), dir, fileFilter());
+    const QString chosen = QFileDialog::getSaveFileName(
+        this, LANG_STR("Save pattern as", "Muster speichern unter"), dir, fileFilter());
     if (chosen.isEmpty())
         return;
 
@@ -82,8 +87,10 @@ void TDBWFRM::FileSave()
         return;
     }
     if (!Save()) {
-        QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
-                             QStringLiteral("Could not save '%1'.").arg((QString)filename));
+        QMessageBox::warning(
+            this, QStringLiteral("DB-WEAVE"),
+            LANG_STR("Could not save '%1'.", "'%1' konnte nicht gespeichert werden.")
+                .arg((QString)filename));
         return;
     }
     AddToMRU((QString)filename);
@@ -159,7 +166,8 @@ void TDBWFRM::OpenFromMRU(int _index)
     const QString path = mru.at(_index);
     if (!QFileInfo::exists(path)) {
         QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
-                             QStringLiteral("'%1' no longer exists.").arg(path));
+                             LANG_STR("'%1' no longer exists.", "'%1' existiert nicht mehr.")
+                                 .arg(path));
         mru.removeAt(_index);
         UpdateMRUMenu();
         SaveMRU();
@@ -172,7 +180,10 @@ void TDBWFRM::OpenFromMRU(int _index)
     if (!Load(stat, LOADALL)) {
         QMessageBox::warning(
             this, QStringLiteral("DB-WEAVE"),
-            QStringLiteral("Could not open '%1' (status %2).").arg(path).arg(int(stat)));
+            LANG_STR("Could not open '%1' (status %2).",
+                     "'%1' konnte nicht geöffnet werden (Status %2).")
+                .arg(path)
+                .arg(int(stat)));
         return;
     }
     AddToMRU(path);
@@ -192,8 +203,8 @@ void TDBWFRM::LoadPartsClick()
 
     const QString dir
         = filename.isEmpty() ? QString() : QFileInfo((QString)filename).absolutePath();
-    const QString chosen
-        = QFileDialog::getOpenFileName(this, QStringLiteral("Load parts from"), dir, fileFilter());
+    const QString chosen = QFileDialog::getOpenFileName(
+        this, LANG_STR("Load parts from", "Teile laden aus"), dir, fileFilter());
     if (chosen.isEmpty())
         return;
 
@@ -211,10 +222,12 @@ void TDBWFRM::LoadPartsClick()
         file->Close();
 
     if (!ok) {
-        QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
-                             QStringLiteral("Could not load parts from '%1' (status %2).")
-                                 .arg(chosen)
-                                 .arg(int(stat)));
+        QMessageBox::warning(
+            this, QStringLiteral("DB-WEAVE"),
+            LANG_STR("Could not load parts from '%1' (status %2).",
+                     "Teile aus '%1' konnten nicht geladen werden (Status %2).")
+                .arg(chosen)
+                .arg(int(stat)));
         return;
     }
     RecalcFreieSchaefte();

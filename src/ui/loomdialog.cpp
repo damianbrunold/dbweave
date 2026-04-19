@@ -14,6 +14,7 @@
 
 #include "mainwindow.h"
 #include "datamodule.h"
+#include "language.h"
 
 #if defined(DBWEAVE_HAVE_LOOM)
 #include "serialcontrollers.h"
@@ -54,7 +55,7 @@ LoomDialog::LoomDialog(TDBWFRM* _frm, QWidget* _parent)
     : QDialog(_parent)
     , frm(_frm)
 {
-    setWindowTitle(QStringLiteral("Loom control"));
+    setWindowTitle(LANG_STR("Loom control", "Websteuerung"));
     setModal(true);
     resize(720, 560);
 
@@ -66,15 +67,15 @@ LoomDialog::LoomDialog(TDBWFRM* _frm, QWidget* _parent)
     spinWaitMs->setSuffix(QStringLiteral(" ms"));
     spinWaitMs->setValue(200);
 
-    bOptions = new QPushButton(QStringLiteral("&Options..."), this);
+    bOptions = new QPushButton(LANG_STR("&Options...", "&Optionen..."), this);
     connect(bOptions, &QPushButton::clicked, this, &LoomDialog::onOptions);
 
-    cbLoop = new QCheckBox(QStringLiteral("&Loop forever"), this);
-    cbBackwards = new QCheckBox(QStringLiteral("Weave &backwards"), this);
-    cbReverse = new QCheckBox(QStringLiteral("Re&verse shaft order"), this);
+    cbLoop = new QCheckBox(LANG_STR("&Loop forever", "End&los wiederholen"), this);
+    cbBackwards = new QCheckBox(LANG_STR("Weave &backwards", "&Rückwärts weben"), this);
+    cbReverse = new QCheckBox(LANG_STR("Re&verse shaft order", "Schäfte &umgekehrt"), this);
 
     /*  Top row: current loom label + options button + toggles. */
-    auto* gbLoom = new QGroupBox(QStringLiteral("Loom"), this);
+    auto* gbLoom = new QGroupBox(LANG_STR("Loom", "Webstuhl"), this);
     auto* gbl = new QFormLayout(gbLoom);
     auto* row = new QHBoxLayout();
     row->addWidget(bOptions);
@@ -82,16 +83,16 @@ LoomDialog::LoomDialog(TDBWFRM* _frm, QWidget* _parent)
     row->addWidget(cbBackwards);
     row->addWidget(cbReverse);
     row->addStretch(1);
-    gbl->addRow(QStringLiteral("&Wait per row:"), spinWaitMs);
+    gbl->addRow(LANG_STR("&Wait per row:", "&Wartezeit pro Reihe:"), spinWaitMs);
     gbl->addRow(row);
 
     /*  Klammer editor: nine rows. */
-    auto* gbKlammer = new QGroupBox(QStringLiteral("Klammer ranges"), this);
+    auto* gbKlammer = new QGroupBox(LANG_STR("Klammer ranges", "Klammerbereiche"), this);
     auto* kl = new QGridLayout(gbKlammer);
     kl->addWidget(new QLabel(QStringLiteral("#"), this), 0, 0, Qt::AlignCenter);
-    kl->addWidget(new QLabel(QStringLiteral("first"), this), 0, 1, Qt::AlignCenter);
-    kl->addWidget(new QLabel(QStringLiteral("last"), this), 0, 2, Qt::AlignCenter);
-    kl->addWidget(new QLabel(QStringLiteral("reps"), this), 0, 3, Qt::AlignCenter);
+    kl->addWidget(new QLabel(LANG_STR("first", "erster"), this), 0, 1, Qt::AlignCenter);
+    kl->addWidget(new QLabel(LANG_STR("last", "letzter"), this), 0, 2, Qt::AlignCenter);
+    kl->addWidget(new QLabel(LANG_STR("reps", "Wdh."), this), 0, 3, Qt::AlignCenter);
     kl->addWidget(new QLabel(QString(), this), 0, 4);
     for (int i = 0; i < kKlammerCount; i++) {
         kl->addWidget(new QLabel(QString::number(i + 1), this), i + 1, 0, Qt::AlignCenter);
@@ -107,7 +108,7 @@ LoomDialog::LoomDialog(TDBWFRM* _frm, QWidget* _parent)
         kl->addWidget(klFirst[i], i + 1, 1);
         kl->addWidget(klLast[i], i + 1, 2);
         kl->addWidget(klReps[i], i + 1, 3);
-        klGoto[i] = new QPushButton(QStringLiteral("Go"), this);
+        klGoto[i] = new QPushButton(LANG_STR("Go", "Los"), this);
         klGoto[i]->setMaximumWidth(48);
         kl->addWidget(klGoto[i], i + 1, 4);
         connect(klGoto[i], &QPushButton::clicked, this, [this, i] { onGotoKlammer(i); });
@@ -119,17 +120,17 @@ LoomDialog::LoomDialog(TDBWFRM* _frm, QWidget* _parent)
     log->setReadOnly(true);
     log->setMaximumBlockCount(2000);
 
-    auto* gbStatus = new QGroupBox(QStringLiteral("Status"), this);
+    auto* gbStatus = new QGroupBox(LANG_STR("Status", "Status"), this);
     auto* gsL = new QVBoxLayout(gbStatus);
     gsL->addWidget(labStatus);
     gsL->addWidget(log, 1);
 
     /*  Button row. */
-    bStart = new QPushButton(QStringLiteral("&Start"), this);
-    bStop = new QPushButton(QStringLiteral("S&top"), this);
-    bStep = new QPushButton(QStringLiteral("Step &1"), this);
-    bReset = new QPushButton(QStringLiteral("&Reset"), this);
-    bGotoLast = new QPushButton(QStringLiteral("Goto &last"), this);
+    bStart = new QPushButton(LANG_STR("&Start", "&Start"), this);
+    bStop = new QPushButton(LANG_STR("S&top", "S&topp"), this);
+    bStep = new QPushButton(LANG_STR("Step &1", "Schritt &1"), this);
+    bReset = new QPushButton(LANG_STR("&Reset", "&Zurücksetzen"), this);
+    bGotoLast = new QPushButton(LANG_STR("Goto &last", "&Letzte Position"), this);
     bStop->setEnabled(false);
     auto* btnRow = new QHBoxLayout();
     btnRow->addWidget(bStart);
@@ -314,7 +315,8 @@ void LoomDialog::weaveOne()
         return;
 
     const std::uint32_t shafts = computeShafts();
-    log->appendPlainText(QStringLiteral("Schuss %1, rep %2 → 0x%3 (shafts %4)")
+    log->appendPlainText(LANG_STR("Schuss %1, rep %2 → 0x%3 (shafts %4)",
+                                  "Schuss %1, Wdh %2 → 0x%3 (Schäfte %4)")
                              .arg(currentPosition)
                              .arg(currentRepetition)
                              .arg(quint32(shafts), 8, 16, QChar('0'))
@@ -330,7 +332,7 @@ void LoomDialog::weaveOne()
     try {
         stat = controller->WeaveSchuss(shafts);
     } catch (...) {
-        log->appendPlainText(QStringLiteral("— aborted —"));
+        log->appendPlainText(LANG_STR("— aborted —", "— abgebrochen —"));
         return;
     }
 
@@ -354,12 +356,15 @@ void LoomDialog::weaveOne()
 void LoomDialog::refreshStatus()
 {
     if (currentKlammer < 0) {
-        labStatus->setText(QStringLiteral("No klammer configured — edit ranges above first."));
+        labStatus->setText(LANG_STR(
+            "No klammer configured — edit ranges above first.",
+            "Keine Klammer konfiguriert — zuerst Bereiche oben bearbeiten."));
         return;
     }
     const Klammer& k = frm->klammern[currentKlammer];
     labStatus->setText(
-        QStringLiteral("Klammer %1/9  —  weft row %2 (range %3..%4), repetition %5/%6")
+        LANG_STR("Klammer %1/9  —  weft row %2 (range %3..%4), repetition %5/%6",
+                 "Klammer %1/9  —  Schussreihe %2 (Bereich %3..%4), Wiederholung %5/%6")
             .arg(currentKlammer + 1)
             .arg(currentPosition)
             .arg(k.first)
@@ -397,7 +402,7 @@ void LoomDialog::onStart()
     if (currentKlammer < 0)
         resetCursor();
     if (currentKlammer < 0) {
-        labStatus->setText(QStringLiteral("No klammer configured."));
+        labStatus->setText(LANG_STR("No klammer configured.", "Keine Klammer konfiguriert."));
         return;
     }
 
@@ -406,8 +411,9 @@ void LoomDialog::onStart()
     init.delay = optDelay;
     if (!controller->Initialize(init)) {
         QMessageBox::warning(
-            this, QStringLiteral("Loom control"),
-            QStringLiteral("Could not initialize the loom (check port / cabling)."));
+            this, LANG_STR("Loom control", "Websteuerung"),
+            LANG_STR("Could not initialize the loom (check port / cabling).",
+                     "Webstuhl konnte nicht initialisiert werden (Anschluss/Verkabelung prüfen)."));
         return;
     }
     if (auto* dummy = dynamic_cast<StDummyController*>(controller.get()))

@@ -10,6 +10,7 @@
 */
 
 #include "xoptionsdialog.h"
+#include "language.h"
 
 #include <QCheckBox>
 #include <QComboBox>
@@ -24,23 +25,23 @@
 void XOptionsDialog::loadCombo(QComboBox* _cb, bool _withNumber)
 {
     _cb->clear();
-    _cb->addItem(QStringLiteral("Filled"));
-    _cb->addItem(QStringLiteral("Vertical"));
-    _cb->addItem(QStringLiteral("Cross"));
-    _cb->addItem(QStringLiteral("Point"));
-    _cb->addItem(QStringLiteral("Circle"));
-    _cb->addItem(QStringLiteral("Rising"));
-    _cb->addItem(QStringLiteral("Falling"));
-    _cb->addItem(QStringLiteral("Small cross"));
-    _cb->addItem(QStringLiteral("Small circle"));
+    _cb->addItem(LANG_STR("Filled", "Ausgefüllt"));
+    _cb->addItem(LANG_STR("Vertical", "Vertikal"));
+    _cb->addItem(LANG_STR("Cross", "Kreuz"));
+    _cb->addItem(LANG_STR("Point", "Punkt"));
+    _cb->addItem(LANG_STR("Circle", "Kreis"));
+    _cb->addItem(LANG_STR("Rising", "Steigend"));
+    _cb->addItem(LANG_STR("Falling", "Fallend"));
+    _cb->addItem(LANG_STR("Small cross", "Kleines Kreuz"));
+    _cb->addItem(LANG_STR("Small circle", "Kleiner Kreis"));
     if (_withNumber)
-        _cb->addItem(QStringLiteral("Number"));
+        _cb->addItem(LANG_STR("Number", "Nummer"));
 }
 
 XOptionsDialog::XOptionsDialog(QWidget* _parent)
     : QDialog(_parent)
 {
-    setWindowTitle(QStringLiteral("Options"));
+    setWindowTitle(LANG_STR("Options", "Optionen"));
     setModal(true);
 
     tabs = new QTabWidget(this);
@@ -59,36 +60,46 @@ XOptionsDialog::XOptionsDialog(QWidget* _parent)
     upSchuesse = makeSpin(1, 10000);
     upSchaefteVis = makeSpin(0, 100);
     upTritteVis = makeSpin(0, 100);
-    auto* gbSize = new QGroupBox(QStringLiteral("Size"), tabSizes);
+    auto* gbSize = new QGroupBox(LANG_STR("Size", "Grösse"), tabSizes);
     {
         auto* f = new QFormLayout(gbSize);
-        f->addRow(QStringLiteral("&Harnesses:"), upSchaefte);
-        f->addRow(QStringLiteral("&Treadles:"), upTritte);
-        f->addRow(QStringLiteral("&Warp threads:"), upKette);
-        f->addRow(QStringLiteral("W&eft threads:"), upSchuesse);
+        f->addRow(LANG_STR("&Harnesses:", "&Schäfte:"), upSchaefte);
+        f->addRow(LANG_STR("&Treadles:", "&Tritte:"), upTritte);
+        f->addRow(LANG_STR("&Warp threads:", "&Kettfäden:"), upKette);
+        f->addRow(LANG_STR("W&eft threads:", "Schussfäd&en:"), upSchuesse);
     }
-    auto* gbVis = new QGroupBox(QStringLiteral("Visibility"), tabSizes);
+    auto* gbVis = new QGroupBox(LANG_STR("Visibility", "Sichtbarkeit"), tabSizes);
     {
         auto* f = new QFormLayout(gbVis);
-        f->addRow(QStringLiteral("&Visible harnesses:"), upSchaefteVis);
-        f->addRow(QStringLiteral("V&isible treadles:"), upTritteVis);
+        f->addRow(LANG_STR("&Visible harnesses:", "Sichtbare &Schäfte:"), upSchaefteVis);
+        f->addRow(LANG_STR("V&isible treadles:", "Sichtbare T&ritte:"), upTritteVis);
     }
     auto* sizesLay = new QVBoxLayout(tabSizes);
     sizesLay->addWidget(gbSize);
     sizesLay->addWidget(gbVis);
     sizesLay->addStretch();
-    tabs->addTab(tabSizes, QStringLiteral("Si&zes"));
+    tabs->addTab(tabSizes, LANG_STR("Si&zes", "&Grössen"));
 
     /*  --- View tab ---------------------------------------------- */
     auto* tabView = new QWidget(this);
-    EinzugUnten = new QCheckBox(QStringLiteral("&Threading below pattern"), tabView);
+    EinzugUnten = new QCheckBox(LANG_STR("&Threading below pattern", "&Einzug unter Patrone"),
+                                tabView);
     RightToLeft = new QCheckBox(
-        QStringLiteral("&Work direction in threading and pattern from right to left"), tabView);
+        LANG_STR("&Work direction in threading and pattern from right to left",
+                 "&Arbeitsrichtung in Einzug und Patrone von rechts nach links"),
+        tabView);
     TopToBottom = new QCheckBox(
-        QStringLiteral("W&ork direction in threading and tie-up from top to bottom"), tabView);
-    FEWithRaster = new QCheckBox(QStringLiteral("&Color effect with grid"), tabView);
-    AltFarbpalette = new QCheckBox(QStringLiteral("&Use alternate color palette"), tabView);
-    AltLiftplanstyle = new QCheckBox(QStringLiteral("U&se alternate pegplan view"), tabView);
+        LANG_STR("W&ork direction in threading and tie-up from top to bottom",
+                 "Arbeits&richtung in Einzug und Aufknüpfung von oben nach unten"),
+        tabView);
+    FEWithRaster = new QCheckBox(LANG_STR("&Color effect with grid", "&Farbeffekt mit Raster"),
+                                 tabView);
+    AltFarbpalette = new QCheckBox(
+        LANG_STR("&Use alternate color palette", "Alternative Farb&palette verwenden"), tabView);
+    AltLiftplanstyle = new QCheckBox(
+        LANG_STR("U&se alternate pegplan view",
+                 "Alternative Sc&hlagpatronenansicht verwenden"),
+        tabView);
     auto* viewLay = new QVBoxLayout(tabView);
     viewLay->addWidget(EinzugUnten);
     viewLay->addWidget(RightToLeft);
@@ -97,7 +108,7 @@ XOptionsDialog::XOptionsDialog(QWidget* _parent)
     viewLay->addWidget(AltFarbpalette);
     viewLay->addWidget(AltLiftplanstyle);
     viewLay->addStretch();
-    tabs->addTab(tabView, QStringLiteral("&View"));
+    tabs->addTab(tabView, LANG_STR("&View", "&Ansicht"));
 
     /*  --- Symbols tab ------------------------------------------- */
     auto* tabSymbols = new QWidget(this);
@@ -116,28 +127,28 @@ XOptionsDialog::XOptionsDialog(QWidget* _parent)
     cbAbbindung = new QComboBox(tabSymbols);
     loadCombo(cbAbbindung);
     auto* symLay = new QFormLayout(tabSymbols);
-    symLay->addRow(QStringLiteral("&Threading:"), cbEinzug);
-    symLay->addRow(QStringLiteral("Tre&adling:"), cbTrittfolge);
-    symLay->addRow(QStringLiteral("Tie-&up:"), cbAufknuepfung);
-    symLay->addRow(QStringLiteral("&Pegplan:"), cbSchlagpatrone);
-    symLay->addRow(QStringLiteral("&Lift out:"), cbAushebung);
-    symLay->addRow(QStringLiteral("&Binding:"), cbAnbindung);
-    symLay->addRow(QStringLiteral("U&nbinding:"), cbAbbindung);
-    tabs->addTab(tabSymbols, QStringLiteral("S&ymbols"));
+    symLay->addRow(LANG_STR("&Threading:", "&Einzug:"), cbEinzug);
+    symLay->addRow(LANG_STR("Tre&adling:", "&Trittfolge:"), cbTrittfolge);
+    symLay->addRow(LANG_STR("Tie-&up:", "A&ufknüpfung:"), cbAufknuepfung);
+    symLay->addRow(LANG_STR("&Pegplan:", "&Schlagpatrone:"), cbSchlagpatrone);
+    symLay->addRow(LANG_STR("&Lift out:", "A&ushebung:"), cbAushebung);
+    symLay->addRow(LANG_STR("&Binding:", "A&nbindung:"), cbAnbindung);
+    symLay->addRow(LANG_STR("U&nbinding:", "Abbi&ndung:"), cbAbbindung);
+    tabs->addTab(tabSymbols, LANG_STR("S&ymbols", "&Symbole"));
 
     /*  --- Settings tab ------------------------------------------ */
     auto* tabSettings = new QWidget(this);
-    auto* gbTritt = new QGroupBox(QStringLiteral("Treadle mode"), tabSettings);
-    Einzeltritt = new QRadioButton(QStringLiteral("&Single treadle"), gbTritt);
-    Multitritt = new QRadioButton(QStringLiteral("&Multi treadle"), gbTritt);
+    auto* gbTritt = new QGroupBox(LANG_STR("Treadle mode", "Trittmodus"), tabSettings);
+    Einzeltritt = new QRadioButton(LANG_STR("&Single treadle", "&Einzeltritt"), gbTritt);
+    Multitritt = new QRadioButton(LANG_STR("&Multi treadle", "&Multitritt"), gbTritt);
     {
         auto* l = new QVBoxLayout(gbTritt);
         l->addWidget(Einzeltritt);
         l->addWidget(Multitritt);
     }
-    auto* gbShed = new QGroupBox(QStringLiteral("Harness mode"), tabSettings);
-    RisingShed = new QRadioButton(QStringLiteral("&Rising shed"), gbShed);
-    SinkingShed = new QRadioButton(QStringLiteral("S&inking shed"), gbShed);
+    auto* gbShed = new QGroupBox(LANG_STR("Harness mode", "Schaftmodus"), tabSettings);
+    RisingShed = new QRadioButton(LANG_STR("&Rising shed", "&Obenhebend"), gbShed);
+    SinkingShed = new QRadioButton(LANG_STR("S&inking shed", "U&ntenhebend"), gbShed);
     {
         auto* l = new QVBoxLayout(gbShed);
         l->addWidget(RisingShed);
@@ -147,22 +158,22 @@ XOptionsDialog::XOptionsDialog(QWidget* _parent)
     setLay->addWidget(gbTritt);
     setLay->addWidget(gbShed);
     setLay->addStretch();
-    tabs->addTab(tabSettings, QStringLiteral("Se&ttings"));
+    tabs->addTab(tabSettings, LANG_STR("Se&ttings", "&Einstellungen"));
 
     /*  --- Grid tab ----------------------------------------------- */
     auto* tabGrid = new QWidget(this);
     SchenienHorz = makeSpin(0, 100);
     SchenienVert = makeSpin(0, 100);
-    auto* gbGrid = new QGroupBox(QStringLiteral("Gridsetting"), tabGrid);
+    auto* gbGrid = new QGroupBox(LANG_STR("Gridsetting", "Rastereinstellung"), tabGrid);
     {
         auto* f = new QFormLayout(gbGrid);
-        f->addRow(QStringLiteral("&Horizontal:"), SchenienHorz);
-        f->addRow(QStringLiteral("&Vertical:"), SchenienVert);
+        f->addRow(LANG_STR("&Horizontal:", "&Horizontal:"), SchenienHorz);
+        f->addRow(LANG_STR("&Vertical:", "&Vertikal:"), SchenienVert);
     }
     auto* gridLay = new QVBoxLayout(tabGrid);
     gridLay->addWidget(gbGrid);
     gridLay->addStretch();
-    tabs->addTab(tabGrid, QStringLiteral("&Grid"));
+    tabs->addTab(tabGrid, LANG_STR("&Grid", "&Raster"));
 
     auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(btns, &QDialogButtonBox::accepted, this, &QDialog::accept);

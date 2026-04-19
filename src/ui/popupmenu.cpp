@@ -17,6 +17,7 @@
     explicit Update step.                                        */
 
 #include "mainwindow.h"
+#include "language.h"
 
 #include <QAction>
 #include <QMenu>
@@ -45,24 +46,26 @@ void TDBWFRM::handleContextMenu(const QPoint& _globalPos)
         const bool centralOK = sel.feld == GEWEBE || sel.feld == AUFKNUEPFUNG
                                || (sel.feld == TRITTFOLGE && !singleTritt);
 
-        QAction* aCut = menu.addAction(QStringLiteral("Cu&t"));
-        QAction* aCopy = menu.addAction(QStringLiteral("&Copy"));
-        QAction* aPaste = menu.addAction(QStringLiteral("&Paste"));
-        QAction* aPasteT = menu.addAction(QStringLiteral("Paste T&ransparent"));
-        QAction* aDel = menu.addAction(QStringLiteral("&Delete"));
+        QAction* aCut = menu.addAction(LANG_STR("Cu&t", "A&usschneiden"));
+        QAction* aCopy = menu.addAction(LANG_STR("&Copy", "&Kopieren"));
+        QAction* aPaste = menu.addAction(LANG_STR("&Paste", "&Einfügen"));
+        QAction* aPasteT = menu.addAction(
+            LANG_STR("Paste T&ransparent", "&Transparent einfügen"));
+        QAction* aDel = menu.addAction(LANG_STR("&Delete", "&Löschen"));
         menu.addSeparator();
-        QAction* aInv = menu.addAction(QStringLiteral("&Invert"));
-        QAction* aMH = menu.addAction(QStringLiteral("Mirror &Horizontal"));
-        QAction* aMV = menu.addAction(QStringLiteral("Mirror &Vertical"));
-        QAction* aRot = menu.addAction(QStringLiteral("R&otate 90\xc2\xb0"));
-        QAction* aCent = menu.addAction(QStringLiteral("Central &symmetry"));
+        QAction* aInv = menu.addAction(LANG_STR("&Invert", "&Invertieren"));
+        QAction* aMH = menu.addAction(LANG_STR("Mirror &Horizontal", "Spiegeln &horizontal"));
+        QAction* aMV = menu.addAction(LANG_STR("Mirror &Vertical", "Spiegeln &vertikal"));
+        QAction* aRot = menu.addAction(LANG_STR("R&otate 90\xc2\xb0", "R&otieren 90\xc2\xb0"));
+        QAction* aCent = menu.addAction(
+            LANG_STR("Central &symmetry", "Zentral&symmetrisch"));
         aRot->setEnabled(rotateOK);
         aCent->setEnabled(centralOK);
         menu.addSeparator();
-        QAction* aRU = menu.addAction(QStringLiteral("Roll &Up"));
-        QAction* aRD = menu.addAction(QStringLiteral("Roll D&own"));
-        QAction* aRL = menu.addAction(QStringLiteral("Roll &Left"));
-        QAction* aRR = menu.addAction(QStringLiteral("Roll R&ight"));
+        QAction* aRU = menu.addAction(LANG_STR("Roll &Up", "Nach &oben rollen"));
+        QAction* aRD = menu.addAction(LANG_STR("Roll D&own", "Nach u&nten rollen"));
+        QAction* aRL = menu.addAction(LANG_STR("Roll &Left", "Nach &links rollen"));
+        QAction* aRR = menu.addAction(LANG_STR("Roll R&ight", "Nach &rechts rollen"));
 
         connect(aCut, &QAction::triggered, this, [this] { CutSelection(); });
         connect(aCopy, &QAction::triggered, this, [this] { CopySelection(); });
@@ -100,7 +103,7 @@ void TDBWFRM::handleContextMenu(const QPoint& _globalPos)
         if (ViewFarbpalette)
             menu.addAction(ViewFarbpalette);
         menu.addSeparator();
-        QMenu* sub = menu.addMenu(QStringLiteral("&Cloth display"));
+        QMenu* sub = menu.addMenu(LANG_STR("&Cloth display", "&Gewebeansicht"));
         if (GewebeNormal)
             sub->addAction(GewebeNormal);
         if (GewebeFarbeffekt)
@@ -110,8 +113,9 @@ void TDBWFRM::handleContextMenu(const QPoint& _globalPos)
         if (GewebeNone)
             sub->addAction(GewebeNone);
         menu.addSeparator();
-        QAction* aPaste = menu.addAction(QStringLiteral("&Paste"));
-        QAction* aPasteT = menu.addAction(QStringLiteral("Paste T&ransparent"));
+        QAction* aPaste = menu.addAction(LANG_STR("&Paste", "&Einfügen"));
+        QAction* aPasteT = menu.addAction(
+            LANG_STR("Paste T&ransparent", "&Transparent einfügen"));
         connect(aPaste, &QAction::triggered, this, [this] { PasteSelection(false); });
         connect(aPasteT, &QAction::triggered, this, [this] { PasteSelection(true); });
     }

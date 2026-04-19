@@ -10,6 +10,7 @@
 */
 
 #include "loadpartsdialog.h"
+#include "language.h"
 
 #include <QCheckBox>
 #include <QDialogButtonBox>
@@ -19,10 +20,12 @@
 LoadPartsDialog::LoadPartsDialog(QWidget* _parent)
     : QDialog(_parent)
 {
-    setWindowTitle(QStringLiteral("Load parts"));
+    setWindowTitle(LANG_STR("Load parts", "Teile laden"));
     setModal(true);
 
-    auto* gb = new QGroupBox(QStringLiteral("Which parts should be loaded?"), this);
+    auto* gb = new QGroupBox(LANG_STR("Which parts should be loaded?",
+                                      "Welche Teile sollen geladen werden?"),
+                             this);
     auto* gblay = new QVBoxLayout(gb);
 
     auto mk = [this, gblay](const QString& label) {
@@ -30,19 +33,19 @@ LoadPartsDialog::LoadPartsDialog(QWidget* _parent)
         gblay->addWidget(c);
         return c;
     };
-    einzug = mk(QStringLiteral("&Threading"));
-    trittfolge = mk(QStringLiteral("Tre&adling"));
-    aufknuepfung = mk(QStringLiteral("Tie-&up"));
-    kettfarben = mk(QStringLiteral("&Warp colors"));
-    schussfarben = mk(QStringLiteral("We&ft colors"));
-    blatteinzug = mk(QStringLiteral("&Reed threading"));
-    hilfslinien = mk(QStringLiteral("&Support lines"));
-    farbpalette = mk(QStringLiteral("&Color palette"));
-    benedefeinzug = mk(QStringLiteral("&Userdef. threading"));
-    blockmuster = mk(QStringLiteral("&Block patterns"));
-    bereichmuster = mk(QStringLiteral("Ra&nge patterns"));
+    einzug = mk(LANG_STR("&Threading", "&Einzug"));
+    trittfolge = mk(LANG_STR("Tre&adling", "&Trittfolge"));
+    aufknuepfung = mk(LANG_STR("Tie-&up", "A&ufknüpfung"));
+    kettfarben = mk(LANG_STR("&Warp colors", "&Kettfarben"));
+    schussfarben = mk(LANG_STR("We&ft colors", "Sch&ussfarben"));
+    blatteinzug = mk(LANG_STR("&Reed threading", "&Blatteinzug"));
+    hilfslinien = mk(LANG_STR("&Support lines", "&Hilfslinien"));
+    farbpalette = mk(LANG_STR("&Color palette", "Farb&palette"));
+    benedefeinzug = mk(LANG_STR("&Userdef. threading", "Ben&utzerdef. Einzug"));
+    blockmuster = mk(LANG_STR("&Block patterns", "Bloc&kmuster"));
+    bereichmuster = mk(LANG_STR("Ra&nge patterns", "Bereic&hmuster"));
 
-    alle = new QCheckBox(QStringLiteral("&All"), this);
+    alle = new QCheckBox(LANG_STR("&All", "&Alle"), this);
 
     auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
 

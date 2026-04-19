@@ -14,6 +14,7 @@
 #include "mainwindow.h"
 #include "datamodule.h"
 #include "palette.h"
+#include "language.h"
 
 #include <QApplication>
 #include <QColor>
@@ -49,22 +50,22 @@ EntwurfsinfoDialog::EntwurfsinfoDialog(TDBWFRM* _frm, QWidget* _parent)
     : QDialog(_parent)
     , frm(_frm)
 {
-    setWindowTitle(QStringLiteral("Pattern information"));
+    setWindowTitle(LANG_STR("Pattern information", "Musterinformationen"));
     setModal(true);
 
     categories = new QListWidget(this);
-    categories->addItem(QStringLiteral("General"));
-    categories->addItem(QStringLiteral("Colors"));
-    categories->addItem(QStringLiteral("Floats"));
-    categories->addItem(QStringLiteral("Heddles"));
+    categories->addItem(LANG_STR("General", "Allgemein"));
+    categories->addItem(LANG_STR("Colors", "Farben"));
+    categories->addItem(LANG_STR("Floats", "Flottierungen"));
+    categories->addItem(LANG_STR("Heddles", "Litzen"));
     categories->setMaximumWidth(160);
 
     text = new QTextEdit(this);
     text->setReadOnly(true);
     text->setFont(QFont(QStringLiteral("monospace")));
 
-    auto* bExport = new QPushButton(QStringLiteral("&Save..."), this);
-    auto* bPrint = new QPushButton(QStringLiteral("&Print"), this);
+    auto* bExport = new QPushButton(LANG_STR("&Save...", "&Speichern..."), this);
+    auto* bPrint = new QPushButton(LANG_STR("&Print", "&Drucken"), this);
     auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok, this);
     btns->addButton(bPrint, QDialogButtonBox::ActionRole);
     btns->addButton(bExport, QDialogButtonBox::ActionRole);
@@ -112,9 +113,9 @@ void EntwurfsinfoDialog::onCategoryChanged(int _row)
 
 void EntwurfsinfoDialog::insertHeader()
 {
-    insertHeading(QStringLiteral("DB-WEAVE - Pattern information"));
+    insertHeading(LANG_STR("DB-WEAVE - Pattern information", "DB-WEAVE - Musterinformationen"));
     if (!frm->filename.isEmpty())
-        text->append(QStringLiteral("Pattern: ") + frm->filename);
+        text->append(LANG_STR("Pattern: ", "Muster: ") + frm->filename);
     text->append(QString());
 }
 
@@ -139,14 +140,14 @@ void EntwurfsinfoDialog::buildAusmasse()
         return;
 
     if (!frm->filename.isEmpty())
-        ausmasse << QStringLiteral("Pattern name: ") + QFileInfo(frm->filename).fileName();
+        ausmasse << LANG_STR("Pattern name: ", "Mustername: ") + QFileInfo(frm->filename).fileName();
 
-    ausmasse << QStringLiteral("Pattern size: %1 x %2")
+    ausmasse << LANG_STR("Pattern size: %1 x %2", "Mustergrösse: %1 x %2")
                     .arg(frm->kette.b - frm->kette.a + 1)
                     .arg(frm->schuesse.b - frm->schuesse.a + 1);
 
     if (frm->rapport.kr.b != -1 && frm->rapport.sr.b != -1)
-        ausmasse << QStringLiteral("Pattern repeat: %1 x %2")
+        ausmasse << LANG_STR("Pattern repeat: %1 x %2", "Rapport: %1 x %2")
                         .arg(frm->rapport.kr.b - frm->rapport.kr.a + 1)
                         .arg(frm->rapport.sr.b - frm->rapport.sr.a + 1);
 
@@ -154,13 +155,13 @@ void EntwurfsinfoDialog::buildAusmasse()
     for (int i = 0; i < Data->MAXY1; i++)
         if (!frm->freieschaefte[i])
             nschaefte++;
-    ausmasse << QStringLiteral("Number of shafts: %1").arg(nschaefte);
+    ausmasse << LANG_STR("Number of shafts: %1", "Anzahl Schäfte: %1").arg(nschaefte);
 
     int ntritte = 0;
     for (int i = 0; i < Data->MAXX2; i++)
         if (!frm->freietritte[i])
             ntritte++;
-    ausmasse << QStringLiteral("Number of treadles: %1").arg(ntritte);
+    ausmasse << LANG_STR("Number of treadles: %1", "Anzahl Tritte: %1").arg(ntritte);
 
     const int total = (frm->kette.b - frm->kette.a + 1) * (frm->schuesse.b - frm->schuesse.a + 1);
     int hebungen = 0;
@@ -172,13 +173,15 @@ void EntwurfsinfoDialog::buildAusmasse()
             else
                 senkungen++;
     if (hebungen < senkungen)
-        ausmasse << QStringLiteral("The pattern is weft sided (") + fmt3g(100.0 * senkungen / total)
-                        + QStringLiteral("% sinking binding points)");
+        ausmasse << LANG_STR("The pattern is weft sided (", "Das Muster ist schussseitig (")
+                + fmt3g(100.0 * senkungen / total)
+                + LANG_STR("% sinking binding points)", "% Senkungspunkte)");
     else if (hebungen > senkungen)
-        ausmasse << QStringLiteral("The pattern is warp sided (") + fmt3g(100.0 * hebungen / total)
-                        + QStringLiteral("% rising binding points)");
+        ausmasse << LANG_STR("The pattern is warp sided (", "Das Muster ist kettseitig (")
+                + fmt3g(100.0 * hebungen / total)
+                + LANG_STR("% rising binding points)", "% Hebungspunkte)");
     else
-        ausmasse << QStringLiteral("The pattern is balanced");
+        ausmasse << LANG_STR("The pattern is balanced", "Das Muster ist ausgeglichen");
 
     ausmasse << QString();
 }
@@ -216,10 +219,10 @@ void EntwurfsinfoDialog::buildFarben()
         coltable[c] = true;
         stable[c]++;
     }
-    farben << QStringLiteral("Number of colors:");
-    farben << QStringLiteral("Total: %1").arg(farbcount);
-    farben << QStringLiteral("In warp: %1").arg(kfarbcount);
-    farben << QStringLiteral("In weft: %1").arg(sfarbcount);
+    farben << LANG_STR("Number of colors:", "Anzahl Farben:");
+    farben << LANG_STR("Total: %1", "Total: %1").arg(farbcount);
+    farben << LANG_STR("In warp: %1", "In Kette: %1").arg(kfarbcount);
+    farben << LANG_STR("In weft: %1", "In Schuss: %1").arg(sfarbcount);
     farben << QString();
 
     auto emitPalette = [&](const char* _label, int* _table, int _total, const char* _fadenLabel) {
@@ -239,8 +242,10 @@ void EntwurfsinfoDialog::buildFarben()
                     "UNDEFINED" sentinel the legacy shows as a large
                     number from the %1.3g formatter. */
                 double hDeg = (h < 0.0) ? 0.0 : h * 360.0;
-                farben << QStringLiteral("Color %1: HSV=(%2,%3,%4), "
-                                         "RGB=(%5,%6,%7), %8")
+                farben << LANG_STR("Color %1: HSV=(%2,%3,%4), "
+                                   "RGB=(%5,%6,%7), %8",
+                                   "Farbe %1: HSV=(%2,%3,%4), "
+                                   "RGB=(%5,%6,%7), %8")
                               .arg(count)
                               .arg(fmt3g(hDeg))
                               .arg(fmt3g(s))
@@ -258,8 +263,12 @@ void EntwurfsinfoDialog::buildFarben()
         farben << QString();
     };
 
-    emitPalette("Warp colors:", ktable, frm->kette.b - frm->kette.a + 1, " warp ends  (");
-    emitPalette("Weft colors:", stable, frm->schuesse.b - frm->schuesse.a + 1, " weft picks  (");
+    emitPalette(active_language == GE ? "Kettfarben:" : "Warp colors:",
+                ktable, frm->kette.b - frm->kette.a + 1,
+                active_language == GE ? " Kettfäden  (" : " warp ends  (");
+    emitPalette(active_language == GE ? "Schussfarben:" : "Weft colors:",
+                stable, frm->schuesse.b - frm->schuesse.a + 1,
+                active_language == GE ? " Schussfäden  (" : " weft picks  (");
 }
 
 /*-----------------------------------------------------------------*/
@@ -270,9 +279,9 @@ void EntwurfsinfoDialog::buildLitzen()
     for (int i = 0; i < Data->MAXX1; i++)
         if (frm->einzug.feld.Get(i) != 0)
             litzennr++;
-    litzen << QStringLiteral("Number of heddles: %1").arg(litzennr);
+    litzen << LANG_STR("Number of heddles: %1", "Anzahl Litzen: %1").arg(litzennr);
 
-    litzen << QStringLiteral("Distribution across the shafts:");
+    litzen << LANG_STR("Distribution across the shafts:", "Verteilung auf die Schäfte:");
     int schaft = 0;
     for (int j = 0; j < Data->MAXY1; j++) {
         if (!frm->freieschaefte[j]) {
@@ -281,7 +290,8 @@ void EntwurfsinfoDialog::buildLitzen()
             for (int i = 0; i < Data->MAXX1; i++)
                 if (frm->einzug.feld.Get(i) == j + 1)
                     count++;
-            litzen << QStringLiteral("Shaft %1:  %2 Heddles  (%3%)")
+            litzen << LANG_STR("Shaft %1:  %2 Heddles  (%3%)",
+                               "Schaft %1:  %2 Litzen  (%3%)")
                           .arg(schaft)
                           .arg(count)
                           .arg(litzennr ? fmt3g(100.0 * count / litzennr) : QStringLiteral("0"));
@@ -336,17 +346,18 @@ void EntwurfsinfoDialog::buildFlottierungen()
                     biggest = flot;
             }
         }
-        flottierungen << QStringLiteral("Weft floats:");
-        flottierungen << QStringLiteral("Longest float: %1").arg(biggest);
+        flottierungen << LANG_STR("Weft floats:", "Schussflottierungen:");
+        flottierungen << LANG_STR("Longest float: %1", "Längste Flottierung: %1").arg(biggest);
         double mittel = 0.0;
         for (int i = 1; i < maxflot; i++)
             if (table[i] != 0)
                 mittel = mittel + double(table[i]) * i / count;
-        flottierungen << QStringLiteral("Average float: ") + fmt3g(mittel);
-        flottierungen << QStringLiteral("Distribution:");
+        flottierungen << LANG_STR("Average float: ", "Mittlere Flottierung: ") + fmt3g(mittel);
+        flottierungen << LANG_STR("Distribution:", "Verteilung:");
         for (int i = 1; i < maxflot; i++)
             if (table[i] != 0)
-                flottierungen << QStringLiteral("Float %1:  %2 floats  (%3%)")
+                flottierungen << LANG_STR("Float %1:  %2 floats  (%3%)",
+                                          "Flottierung %1:  %2 Flottierungen  (%3%)")
                                      .arg(i)
                                      .arg(table[i])
                                      .arg(fmt3g(100.0 * table[i] / count));
@@ -391,17 +402,18 @@ void EntwurfsinfoDialog::buildFlottierungen()
                     biggest = flot;
             }
         }
-        flottierungen << QStringLiteral("Warp floats:");
-        flottierungen << QStringLiteral("Longest float: %1").arg(biggest);
+        flottierungen << LANG_STR("Warp floats:", "Kettflottierungen:");
+        flottierungen << LANG_STR("Longest float: %1", "Längste Flottierung: %1").arg(biggest);
         double mittel = 0.0;
         for (int i = 1; i < maxflot; i++)
             if (table[i] != 0)
                 mittel = mittel + double(table[i]) * i / count;
-        flottierungen << QStringLiteral("Average float: ") + fmt3g(mittel);
-        flottierungen << QStringLiteral("Distribution:");
+        flottierungen << LANG_STR("Average float: ", "Mittlere Flottierung: ") + fmt3g(mittel);
+        flottierungen << LANG_STR("Distribution:", "Verteilung:");
         for (int i = 1; i < maxflot; i++)
             if (table[i] != 0)
-                flottierungen << QStringLiteral("Float %1:  %2 floats  (%3%)")
+                flottierungen << LANG_STR("Float %1:  %2 floats  (%3%)",
+                                          "Flottierung %1:  %2 Flottierungen  (%3%)")
                                      .arg(i)
                                      .arg(table[i])
                                      .arg(fmt3g(100.0 * table[i] / count));
@@ -474,13 +486,13 @@ void EntwurfsinfoDialog::onPrint()
 
     text->clear();
     insertHeader();
-    insertHeading(QStringLiteral("General"));
+    insertHeading(LANG_STR("General", "Allgemein"));
     onAusmasse(false);
-    insertHeading(QStringLiteral("Colors"));
+    insertHeading(LANG_STR("Colors", "Farben"));
     onFarben(false);
-    insertHeading(QStringLiteral("Floats"));
+    insertHeading(LANG_STR("Floats", "Flottierungen"));
     onFlottierungen(false);
-    insertHeading(QStringLiteral("Heddles"));
+    insertHeading(LANG_STR("Heddles", "Litzen"));
     onLitzen(false);
 
     QPrinter printer;
@@ -505,9 +517,9 @@ void EntwurfsinfoDialog::onExport()
         suggested = QStringLiteral("unnamed.rtf");
     }
 
-    const QString fn
-        = QFileDialog::getSaveFileName(this, QStringLiteral("Save pattern info as"), suggested,
-                                       QStringLiteral("Word-Format (*.rtf)"));
+    const QString fn = QFileDialog::getSaveFileName(
+        this, LANG_STR("Save pattern info as", "Musterinformationen speichern unter"),
+        suggested, LANG_STR("Word-Format (*.rtf)", "Word-Format (*.rtf)"));
     if (fn.isEmpty())
         return;
 
@@ -516,13 +528,13 @@ void EntwurfsinfoDialog::onExport()
 
     text->clear();
     insertHeader();
-    insertHeading(QStringLiteral("General"));
+    insertHeading(LANG_STR("General", "Allgemein"));
     onAusmasse(false);
-    insertHeading(QStringLiteral("Colors"));
+    insertHeading(LANG_STR("Colors", "Farben"));
     onFarben(false);
-    insertHeading(QStringLiteral("Floats"));
+    insertHeading(LANG_STR("Floats", "Flottierungen"));
     onFlottierungen(false);
-    insertHeading(QStringLiteral("Heddles"));
+    insertHeading(LANG_STR("Heddles", "Litzen"));
     onLitzen(false);
 
     /*  Legacy writes TRichEdit::Lines->SaveToFile which despite the

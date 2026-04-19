@@ -25,6 +25,7 @@
 
 #include "mainwindow.h"
 #include "datamodule.h"
+#include "language.h"
 
 #include <QLabel>
 #include <QStatusBar>
@@ -34,19 +35,19 @@ static QString fieldName(FELD _f)
 {
     switch (_f) {
     case GEWEBE:
-        return QStringLiteral("Pattern");
+        return LANG_STR("Pattern", "Bindung");
     case EINZUG:
-        return QStringLiteral("Threading");
+        return LANG_STR("Threading", "Einzug");
     case AUFKNUEPFUNG:
-        return QStringLiteral("Tie-up");
+        return LANG_STR("Tie-up", "Aufknüpfung");
     case TRITTFOLGE:
-        return QStringLiteral("Treadling");
+        return LANG_STR("Treadling", "Trittfolge");
     case BLATTEINZUG:
-        return QStringLiteral("Reed threading");
+        return LANG_STR("Reed threading", "Blatteinzug");
     case KETTFARBEN:
-        return QStringLiteral("Warp colors");
+        return LANG_STR("Warp colors", "Kettfarben");
     case SCHUSSFARBEN:
-        return QStringLiteral("Weft colors");
+        return LANG_STR("Weft colors", "Schussfarben");
     default:
         return QString();
     }
@@ -101,13 +102,13 @@ void TDBWFRM::UpdateStatusBar()
     }
     QString field = fieldName(kbd_field);
     if (kbd_field == TRITTFOLGE && ViewSchlagpatrone && ViewSchlagpatrone->isChecked())
-        field = QStringLiteral("Pegplan");
+        field = LANG_STR("Pegplan", "Schlagpatrone");
 
     QString pos;
     if (x >= 0)
-        pos += QStringLiteral("  Col %1").arg(x + sx);
+        pos += LANG_STR("  Col %1", "  Sp %1").arg(x + sx);
     if (y >= 0)
-        pos += QStringLiteral("  Row %1").arg(y + sy);
+        pos += LANG_STR("  Row %1", "  Ze %1").arg(y + sy);
     sbField->setText(field + pos);
 
     /*  Selection size (only when > 1x1). */
@@ -118,20 +119,20 @@ void TDBWFRM::UpdateStatusBar()
         const int dx = sel.end.i - sel.begin.i + 1;
         const int dy = sel.end.j - sel.begin.j + 1;
         if (dx > 1 || dy > 1)
-            selText = QStringLiteral("Selection %1x%2").arg(dx).arg(dy);
+            selText = LANG_STR("Selection %1x%2", "Selektion %1x%2").arg(dx).arg(dy);
     }
     sbSelect->setText(selText);
 
     /*  Current range. */
     QString rangeText;
     if (currentrange >= 1 && currentrange <= 9)
-        rangeText = QStringLiteral("Range %1").arg(currentrange);
+        rangeText = LANG_STR("Range %1", "Bereich %1").arg(currentrange);
     else if (currentrange == AUSHEBUNG)
-        rangeText = QStringLiteral("Lift out");
+        rangeText = LANG_STR("Lift out", "Aushebung");
     else if (currentrange == ANBINDUNG)
-        rangeText = QStringLiteral("Binding");
+        rangeText = LANG_STR("Binding", "Anbindung");
     else if (currentrange == ABBINDUNG)
-        rangeText = QStringLiteral("Unbinding");
+        rangeText = LANG_STR("Unbinding", "Abbindung");
     sbRange->setText(rangeText);
 
     /*  Size + rapport. */
@@ -139,7 +140,7 @@ void TDBWFRM::UpdateStatusBar()
     if (kette.a != -1 || schuesse.a != -1) {
         const int kw = (kette.a != -1) ? (kette.b - kette.a + 1) : 0;
         const int sw = (schuesse.a != -1) ? (schuesse.b - schuesse.a + 1) : 0;
-        rap = QStringLiteral("Size %1x%2").arg(kw).arg(sw);
+        rap = LANG_STR("Size %1x%2", "Grösse %1x%2").arg(kw).arg(sw);
     }
     if (rapport.kr.b != -1 || rapport.sr.b != -1) {
         const int kw = (rapport.kr.b != -1) ? (rapport.kr.b - rapport.kr.a + 1) : 0;

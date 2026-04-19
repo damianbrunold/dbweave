@@ -10,6 +10,7 @@
 */
 
 #include "cursorgotodialog.h"
+#include "language.h"
 
 #include <QDialogButtonBox>
 #include <QLabel>
@@ -19,16 +20,17 @@
 CursorGotoDialog::CursorGotoDialog(QWidget* _parent, FELD _initial, bool _pegplan)
     : QDialog(_parent)
 {
-    setWindowTitle(QStringLiteral("Cursor Go to"));
+    setWindowTitle(LANG_STR("Cursor Go to", "Cursor-Sprung"));
     setModal(true);
 
-    rBindung = new QRadioButton(QStringLiteral("&Pattern"), this);
-    rEinzug = new QRadioButton(QStringLiteral("&Threading"), this);
-    rTrittfolge = new QRadioButton(
-        _pegplan ? QStringLiteral("Pegp&lan") : QStringLiteral("Tre&adling"), this);
-    rAufknuepfung = new QRadioButton(QStringLiteral("Tie-&up"), this);
-    rKettfarben = new QRadioButton(QStringLiteral("&Warp colors"), this);
-    rSchussfarben = new QRadioButton(QStringLiteral("We&ft colors"), this);
+    rBindung = new QRadioButton(LANG_STR("&Pattern", "&Bindung"), this);
+    rEinzug = new QRadioButton(LANG_STR("&Threading", "&Einzug"), this);
+    rTrittfolge = new QRadioButton(_pegplan ? LANG_STR("Sch&lagpatrone", "Sch&lagpatrone")
+                                            : LANG_STR("Tre&adling", "&Trittfolge"),
+                                   this);
+    rAufknuepfung = new QRadioButton(LANG_STR("Tie-&up", "A&ufknüpfung"), this);
+    rKettfarben = new QRadioButton(LANG_STR("&Warp colors", "&Kettfarben"), this);
+    rSchussfarben = new QRadioButton(LANG_STR("We&ft colors", "Sch&ussfarben"), this);
 
     /*  Legacy: in pegplan (ViewSchlagpatrone) mode the
         aufknuepfung field is hidden, so the Goto button is
@@ -61,7 +63,7 @@ CursorGotoDialog::CursorGotoDialog(QWidget* _parent, FELD _initial, bool _pegpla
     auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
 
     auto* root = new QVBoxLayout(this);
-    root->addWidget(new QLabel(QStringLiteral("Choose field:"), this));
+    root->addWidget(new QLabel(LANG_STR("Choose field:", "Feld wählen:"), this));
     root->addWidget(rBindung);
     root->addWidget(rEinzug);
     root->addWidget(rTrittfolge);

@@ -16,6 +16,7 @@
 #include "draw_cell.h"
 #include "cursor.h"
 #include "einzug.h"
+#include "language.h"
 
 #include <QAction>
 #include <QDialogButtonBox>
@@ -275,7 +276,7 @@ FixeinzugDialog::FixeinzugDialog(TDBWFRM* _frm, QWidget* _parent)
     : QDialog(_parent)
     , frm(_frm)
 {
-    setWindowTitle(QStringLiteral("User defined threading"));
+    setWindowTitle(LANG_STR("User defined threading", "Benutzerdefinierter Einzug"));
     setModal(true);
     resize(640, 300);
 
@@ -297,12 +298,13 @@ FixeinzugDialog::FixeinzugDialog(TDBWFRM* _frm, QWidget* _parent)
     /*  Menu bar hosted on a QWidget parent (QDialog has no native
         menu-bar slot). */
     auto* menubar = new QMenuBar(this);
-    QMenu* mEin = menubar->addMenu(QStringLiteral("&Threading"));
-    QAction* aGrab = mEin->addAction(QStringLiteral("Take threading from &pattern"));
-    QAction* aDel = mEin->addAction(QStringLiteral("&Delete"));
+    QMenu* mEin = menubar->addMenu(LANG_STR("&Threading", "&Einzug"));
+    QAction* aGrab = mEin->addAction(
+        LANG_STR("Take threading from &pattern", "Einzug von der &Patrone übernehmen"));
+    QAction* aDel = mEin->addAction(LANG_STR("&Delete", "&Löschen"));
     mEin->addSeparator();
-    QAction* aRevert = mEin->addAction(QStringLiteral("&Revert"));
-    QAction* aClose = mEin->addAction(QStringLiteral("&Close"));
+    QAction* aRevert = mEin->addAction(LANG_STR("&Revert", "Z&urücksetzen"));
+    QAction* aClose = mEin->addAction(LANG_STR("&Close", "&Schliessen"));
     connect(aGrab, &QAction::triggered, this, &FixeinzugDialog::onGrab);
     connect(aDel, &QAction::triggered, this, &FixeinzugDialog::onDelete);
     connect(aRevert, &QAction::triggered, this, &FixeinzugDialog::onRevert);
@@ -376,8 +378,10 @@ void FixeinzugDialog::accept()
     /*  Legacy rejects if any slot 0..size-1 is zero. */
     for (int i = 0; i < size; i++) {
         if (scratch[i] == 0) {
-            QMessageBox::information(this, QStringLiteral("DB-WEAVE"),
-                                     QStringLiteral("Threading must be continuous (no gaps)."));
+            QMessageBox::information(
+                this, QStringLiteral("DB-WEAVE"),
+                LANG_STR("Threading must be continuous (no gaps).",
+                         "Der Einzug muss lückenlos sein (keine leeren Stellen)."));
             return;
         }
     }

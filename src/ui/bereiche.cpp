@@ -22,6 +22,7 @@
 #include "undoredo.h"
 #include "cursor.h"
 #include "blockmusterdialog.h"
+#include "language.h"
 #include "assert_compat.h"
 
 #include <algorithm>
@@ -180,7 +181,7 @@ void TDBWFRM::RangePatternsClick()
     }
 
     BlockmusterDialog dlg(this, *bereichundo, &bereichmuster, currentbm,
-                          QStringLiteral("Substitute ranges with patterns"),
+                          LANG_STR("Substitute ranges with patterns", "Bereichsmusterung"),
                           /*withRange=*/false);
     if (dlg.exec() == QDialog::Accepted) {
         const int x = dlg.mx + 1;

@@ -10,6 +10,7 @@
 */
 
 #include "propertiesdialog.h"
+#include "language.h"
 
 #include <QDialogButtonBox>
 #include <QFormLayout>
@@ -21,7 +22,7 @@
 PropertiesDialog::PropertiesDialog(QWidget* _parent)
     : QDialog(_parent)
 {
-    setWindowTitle(QStringLiteral("Properties"));
+    setWindowTitle(LANG_STR("Properties", "Eigenschaften"));
     setModal(true);
 
     edAuthor = new QLineEdit(this);
@@ -29,9 +30,9 @@ PropertiesDialog::PropertiesDialog(QWidget* _parent)
     edRemarks = new QPlainTextEdit(this);
 
     auto* form = new QFormLayout();
-    form->addRow(QStringLiteral("&Author:"), edAuthor);
-    form->addRow(QStringLiteral("&Organization:"), edOrganization);
-    form->addRow(QStringLiteral("&Notes:"), edRemarks);
+    form->addRow(LANG_STR("&Author:", "&Autor:"), edAuthor);
+    form->addRow(LANG_STR("&Organization:", "&Organisation:"), edOrganization);
+    form->addRow(LANG_STR("&Notes:", "&Anmerkungen:"), edRemarks);
 
     auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(btns, &QDialogButtonBox::accepted, this, &QDialog::accept);

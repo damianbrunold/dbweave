@@ -36,6 +36,7 @@
 #include "undoredo.h"
 #include "zentralsymm.h"
 #include "assert_compat.h"
+#include "language.h"
 
 #include <QMessageBox>
 
@@ -839,8 +840,10 @@ void TDBWFRM::CentralsymSelection()
     }
 
     if (!checker.SearchSymmetry()) {
-        QMessageBox::information(this, QStringLiteral("DB-WEAVE"),
-                                 QStringLiteral("No central symmetry found in the selection."));
+        QMessageBox::information(
+            this, QStringLiteral("DB-WEAVE"),
+            LANG_STR("No central symmetry found in the selection.",
+                     "Keine Zentralsymmetrie in der Selektion gefunden."));
         selection = savesel;
         return;
     }

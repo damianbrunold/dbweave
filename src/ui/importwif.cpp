@@ -19,6 +19,7 @@
 #include "cursor.h"
 #include "undoredo.h"
 #include "rapport.h"
+#include "language.h"
 
 #include <QApplication>
 #include <QFile>
@@ -339,9 +340,9 @@ bool WifReader::read(const QString& _filename)
 /*-----------------------------------------------------------------*/
 void TDBWFRM::ImportWIFClick()
 {
-    const QString fn
-        = QFileDialog::getOpenFileName(this, QStringLiteral("Import WIF file"), QString(),
-                                       QStringLiteral("WIF files (*.wif);;All files (*)"));
+    const QString fn = QFileDialog::getOpenFileName(
+        this, LANG_STR("Import WIF file", "WIF-Datei importieren"), QString(),
+        LANG_STR("WIF files (*.wif);;All files (*)", "WIF-Dateien (*.wif);;Alle Dateien (*)"));
     if (fn.isEmpty())
         return;
 
