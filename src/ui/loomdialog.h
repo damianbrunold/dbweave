@@ -9,17 +9,12 @@
     (at your option) any later version.
 */
 
-/*  Minimal loom-control dialog (Phase 11). Drives a
-    StDummyController through the current pattern's trittfolge +
-    aufknuepfung (or, in schlagpatrone mode, trittfolge directly)
-    and logs each sent shaft bitmap. Enough to simulate weaving
-    end-to-end without a physical loom attached.
-
-    Legacy TSTRGFRM was a full 3600-line editor window
-    (steuerung_form + 6 split units). This port replaces it with a
-    compact modal dialog; the mini-editor features (position
-    selector grid, klammer editor, loom-specific options) are
-    deferred until there's real hardware to exercise them.       */
+/*  Loom-control dialog — drives a StWeaveController (Dummy or one
+    of the real serial controllers from src/loom/) through the
+    current pattern's klammer ranges. Combines the roles of legacy
+    TSTRGFRM (weaving loop + klammer editor + position selector +
+    goto buttons) and TStrgOptLoomForm (loom options) into one
+    modal dialog.                                                 */
 
 #ifndef DBWEAVE_UI_LOOM_DIALOG_H
 #define DBWEAVE_UI_LOOM_DIALOG_H
@@ -29,7 +24,7 @@
 
 #include "loom.h"
 
-class QComboBox;
+class QCheckBox;
 class QLabel;
 class QPlainTextEdit;
 class QPushButton;
@@ -43,57 +38,76 @@ public:
 	explicit LoomDialog (TDBWFRM* _frm, QWidget* _parent = nullptr);
 
 private slots:
-	void onStart ();
-	void onStop  ();
-	void onStep  ();
-	void onReset ();
+	void onStart   ();
+	void onStop    ();
+	void onStep    ();
+	void onReset   ();
+	void onOptions ();
+	void onGotoLast();
+	void onGotoKlammer (int _index);
 
 private:
 	TDBWFRM*                             frm = nullptr;
 	std::unique_ptr<StWeaveController>   controller;
 
-	/*  UI widgets. */
-	QComboBox*      cbInterface = nullptr;
-	QSpinBox*       spinWaitMs  = nullptr;
-	QLabel*         labStatus   = nullptr;
-	QPlainTextEdit* log         = nullptr;
-	QPushButton*    bStart      = nullptr;
-	QPushButton*    bStop       = nullptr;
-	QPushButton*    bStep       = nullptr;
-	QPushButton*    bReset      = nullptr;
+	/*  Loom options — persisted to QSettings under "Loom/*"
+	    so subsequent runs pick up the user's last setup. */
+	LOOMINTERFACE intrf = intrf_dummy;
+	int  optPort    = 1;
+	int  optDelay   = 0;
+	int  slipsBytes = 4;
 
-	/*  Weaving cursor — matches legacy weave_klammer /
-	    weave_position / weave_repetition. */
+	/*  Klammer editor widgets: 9 rows × (first, last, repetitions)
+	    plus a "goto" button per row. */
+	QSpinBox*    klFirst[9] = { };
+	QSpinBox*    klLast [9] = { };
+	QSpinBox*    klReps [9] = { };
+	QPushButton* klGoto [9] = { };
+
+	/*  Weaving state. */
 	int  currentKlammer    = -1;
 	int  currentPosition   = 0;
 	int  currentRepetition = 1;
 	bool stopRequested     = false;
 	bool running           = false;
 
-	/*  Make the controller for the combo-box's current selection.
-	    Only intrf_dummy is live; other entries are shown disabled. */
+	/*  Previous successful position (for "Goto last" button). */
+	int lastKlammer    = -1;
+	int lastPosition   = 0;
+	int lastRepetition = 1;
+
+	/*  UI widgets. */
+	QLabel*         labStatus   = nullptr;
+	QPlainTextEdit* log         = nullptr;
+	QPushButton*    bStart      = nullptr;
+	QPushButton*    bStop       = nullptr;
+	QPushButton*    bStep       = nullptr;
+	QPushButton*    bReset      = nullptr;
+	QPushButton*    bOptions    = nullptr;
+	QPushButton*    bGotoLast   = nullptr;
+	QCheckBox*      cbLoop      = nullptr;
+	QCheckBox*      cbBackwards = nullptr;
+	QCheckBox*      cbReverse   = nullptr;
+	QSpinBox*       spinWaitMs  = nullptr;
+
 	void rebuildController ();
-
-	/*  Seek to the first non-empty klammer / first weft thread
-	    that's within its range. Resets position state used by
-	    advanceCursor() for a subsequent loom-drive pass. */
 	void resetCursor ();
-
-	/*  Compute the shaft-lift bitmap for the current weft row
-	    (weave_position). In schlagpatrone mode, trittfolge rows
-	    directly encode the lifts; otherwise each set treadle cell
-	    activates every shaft tied to it in aufknuepfung. */
-	std::uint32_t computeShafts () const;
-
-	/*  Move the cursor one weft row forward, honouring klammer
-	    boundaries × repetitions. Returns true if we're back at
-	    the start after at least one full pass. */
 	bool advanceCursor ();
+	bool retreatCursor ();
+	std::uint32_t computeShafts () const;
 
 	void weaveOne ();
 	void refreshStatus ();
-
 	void setUiRunning (bool _running);
+	void updateGotoLabels ();
+
+	/*  Klammer editor ↔ TDBWFRM::klammern[]. */
+	void pullKlammersFromFrm ();
+	void pushKlammersToFrm   () const;
+
+	/*  Loom/* settings load/save. */
+	void loadSettings ();
+	void saveSettings () const;
 };
 
 #endif
