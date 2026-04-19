@@ -344,6 +344,15 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	connect(actCopyEzTf, &QAction::triggered, this, [this]{ CopyEinzugTrittfolgeClick(); });
 	connect(actCopyTfEz, &QAction::triggered, this, [this]{ CopyTrittfolgeEinzugClick(); });
 	patternMenu->addSeparator();
+	QAction* actSetKettf  = patternMenu->addAction(QStringLiteral("Set all &warp colors..."));
+	QAction* actSetSchuf  = patternMenu->addAction(QStringLiteral("Set all w&eft colors..."));
+	QAction* actReplColor = patternMenu->addAction(QStringLiteral("Re&place color under cursor..."));
+	QAction* actSwapCols  = patternMenu->addAction(QStringLiteral("Sw&ap warp / weft colors"));
+	connect(actSetKettf,  &QAction::triggered, this, [this]{ SetKettfarbeClick();   });
+	connect(actSetSchuf,  &QAction::triggered, this, [this]{ SetSchussfarbeClick(); });
+	connect(actReplColor, &QAction::triggered, this, [this]{ ReplaceColorClick();   });
+	connect(actSwapCols,  &QAction::triggered, this, [this]{ SwitchColorsClick();   });
+	patternMenu->addSeparator();
 	QAction* actClearTf   = patternMenu->addAction(QStringLiteral("Clear &treadling / pegplan"));
 	QAction* actMirrorTf  = patternMenu->addAction(QStringLiteral("&Mirror treadling vertically"));
 	QAction* actInvertSp  = patternMenu->addAction(QStringLiteral("In&vert pegplan"));

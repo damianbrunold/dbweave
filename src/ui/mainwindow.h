@@ -33,6 +33,7 @@
 #include "loadoptions.h"    /* LOADSTAT / LOADPARTS */
 #include "blockmuster.h"    /* Muster / BlockUndo */
 #include "userdef.h"        /* UserdefPattern / MAXUSERDEF */
+#include "colors_compat.h"  /* COLORREF */
 
 class QPainter;
 class PatternCanvas;
@@ -664,6 +665,14 @@ public:
 	/*  Bereiche (range-substitution) dialog + fill. */
 	void __fastcall RangePatternsClick    ();
 	void __fastcall BereicheFillPattern   (int _x, int _y);
+
+	/*  Palette-index selection helpers (setcolors.cpp). */
+	int  __fastcall SelectColorIndex    (int _index);
+	bool __fastcall SelectColor         (COLORREF& _col);
+	void __fastcall SetKettfarbeClick   ();
+	void __fastcall SetSchussfarbeClick ();
+	void __fastcall ReplaceColorClick   ();
+	void __fastcall SwitchColorsClick   ();
 	void __fastcall BlockExpandEinzug      (int _count);
 	void __fastcall BlockExpandTrittfolge  (int _count);
 	void __fastcall BlockExpandAufknuepfung(int _x, int _y);

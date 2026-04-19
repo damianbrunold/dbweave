@@ -70,6 +70,7 @@ add_library(dbweave_ui STATIC
     exportwif.cpp
     exportbitmap.cpp
     bereiche.cpp
+    setcolors.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)
