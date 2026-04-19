@@ -22,7 +22,19 @@
 
 int main(int argc, char* argv[])
 {
+    /*  The icons.qrc resource lives in the dbweave_ui static
+        library, so its registrar isn't automatically pulled in by
+        the linker. Force initialisation before any QIcon is built
+        from ":/icons/*".                                        */
+    Q_INIT_RESOURCE(icons);
+
     QApplication app(argc, argv);
+
+    /*  Legacy DB-WEAVE always showed icons next to menu entries.
+        Qt defaults to hiding them on platforms whose HIG discourages
+        menu icons (GNOME, macOS): force them on so the ported
+        layout matches the VCL original.                          */
+    QApplication::setAttribute(Qt::AA_DontShowIconsInMenus, false);
 
     QApplication::setOrganizationName("Brunold Software");
     QApplication::setOrganizationDomain("brunoldsoftware.ch");

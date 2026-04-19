@@ -136,8 +136,6 @@ void TDBWFRM::SaveMRU()
 
 void TDBWFRM::UpdateMRUMenu()
 {
-    if (!mruMenu)
-        return;
     for (int i = 0; i < MRU_MAX; i++) {
         QAction* a = mruActions[i];
         if (!a)
@@ -152,7 +150,6 @@ void TDBWFRM::UpdateMRUMenu()
             a->setVisible(false);
         }
     }
-    mruMenu->setEnabled(!mru.isEmpty());
 }
 
 void TDBWFRM::OpenFromMRU(int _index)

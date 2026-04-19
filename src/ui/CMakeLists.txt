@@ -3,6 +3,7 @@
 # still consumed by headless tests via the static-lib boundary.
 
 add_library(dbweave_ui STATIC
+    icons.qrc
     draw_cell.cpp
     datamodule.cpp
     mainwindow.cpp
