@@ -414,6 +414,8 @@ public:
 	    (einzug, kettfarben, blatteinzug) around the kette centre. */
 	void __fastcall FillKoeper();
 	void __fastcall SwapSide();
+	void __fastcall KettLancierungClick  ();
+	void __fastcall SchussLancierungClick();
 
 	/*  Steigung ("slope") shifts each column of the selection by
 	    an increasing offset, producing a diagonal twist. Valid

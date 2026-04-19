@@ -210,6 +210,9 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	QAction* actSteigInc   = editMenu->addAction(QStringLiteral("Steigung &+"));
 	QAction* actSteigDec   = editMenu->addAction(QStringLiteral("Steigung &-"));
 	QAction* actSpInvert   = editMenu->addAction(QStringLiteral("Pegplan In&vert"));
+	editMenu->addSeparator();
+	QAction* actKettLanc   = editMenu->addAction(QStringLiteral("Warp &Lancierung..."));
+	QAction* actSchussLanc = editMenu->addAction(QStringLiteral("Weft Lancie&rung..."));
 	actUndo ->setShortcut(QKeySequence::Undo);
 	actRedo ->setShortcut(QKeySequence::Redo);
 	actCut  ->setShortcut(QKeySequence::Cut);
@@ -238,6 +241,8 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	connect(actSteigInc,         &QAction::triggered, this, [this] { SteigungInc();          });
 	connect(actSteigDec,         &QAction::triggered, this, [this] { SteigungDec();          });
 	connect(actSpInvert,         &QAction::triggered, this, [this] { SpInvert();             });
+	connect(actKettLanc,         &QAction::triggered, this, [this] { KettLancierungClick();   });
+	connect(actSchussLanc,       &QAction::triggered, this, [this] { SchussLancierungClick(); });
 
 	/*  Pattern menu: structural insert / delete of threads, shafts
 	    and treadles. Each action is gated on kbd_field at invocation
