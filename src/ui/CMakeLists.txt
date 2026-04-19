@@ -63,6 +63,8 @@ add_library(dbweave_ui STATIC
     blockmusterdialog.cpp
     choosecolordialog.cpp
     selcolordialog.cpp
+    userdef.cpp
+    userdefdialogs.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)

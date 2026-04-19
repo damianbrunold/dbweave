@@ -32,6 +32,7 @@
 #include "hilfslinien.h"    /* Hilfslinien container */
 #include "loadoptions.h"    /* LOADSTAT / LOADPARTS */
 #include "blockmuster.h"    /* Muster / BlockUndo */
+#include "userdef.h"        /* UserdefPattern / MAXUSERDEF */
 
 class QPainter;
 class PatternCanvas;
@@ -254,6 +255,13 @@ public:
 	bool             einzugZ      = true;
 	bool             trittfolgeZ  = true;
 	class BlockUndo* blockundo    = nullptr;
+
+	/*  User-defined patterns: 10 slots persisted via QSettings under
+	    Userdef0..9. LoadUserdefMenu rebuilds the menu captions from
+	    the slot array. */
+	UserdefPattern   userdef[MAXUSERDEF];
+	QAction*         UserdefAct[MAXUSERDEF] = { };
+	class QMenu*     MenuWeitere  = nullptr;
 
 	/*  Schedule a repaint of the pattern canvas. QWidget::update() on
 	    the main window only invalidates the window chrome; children
@@ -617,6 +625,15 @@ public:
 	void __fastcall FarbverlaufClick       ();
 	void __fastcall EditBlockmusterClick   ();
 	void __fastcall DefineColorsClick      ();
+
+	/*  User-defined patterns (legacy userdef.cpp). */
+	void __fastcall LoadUserdefMenu     ();
+	void __fastcall PasteUserdef        (bool _transparent);
+	void __fastcall InsertUserdef       (int _i, bool _transparent);
+	void __fastcall UserdefAddClick     ();
+	void __fastcall UserdefAddSelClick  ();
+	void __fastcall UserdefRemoveClick  ();
+	int  __fastcall SelectUserdef       (const QString& _title = QString());
 	void __fastcall BlockExpandEinzug      (int _count);
 	void __fastcall BlockExpandTrittfolge  (int _count);
 	void __fastcall BlockExpandAufknuepfung(int _x, int _y);

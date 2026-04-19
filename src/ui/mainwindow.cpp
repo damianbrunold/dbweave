@@ -334,6 +334,29 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	connect(actFarbverlauf, &QAction::triggered, this, [this]{ FarbverlaufClick();     });
 	connect(actBlockmuster, &QAction::triggered, this, [this]{ EditBlockmusterClick(); });
 
+	/*  User-defined patterns: 10 slots plus add / add-selection /
+	    remove actions. Captions are filled in by LoadUserdefMenu. */
+	patternMenu->addSeparator();
+	QMenu* udMenu = patternMenu->addMenu(QStringLiteral("&User-defined"));
+	QAction* actUdAdd    = udMenu->addAction(QStringLiteral("&Save pattern..."));
+	QAction* actUdAddSel = udMenu->addAction(QStringLiteral("Save s&election..."));
+	QAction* actUdDel    = udMenu->addAction(QStringLiteral("&Delete..."));
+	udMenu->addSeparator();
+	MenuWeitere = udMenu->addMenu(QStringLiteral("&Other patterns"));
+	for (int i = 0; i < MAXUSERDEF; i++) {
+		UserdefAct[i] = MenuWeitere->addAction(QString());
+		UserdefAct[i]->setVisible(false);
+		connect(UserdefAct[i], &QAction::triggered, this, [this, i](){
+			/*  Ctrl pressed at click → transparent paste. */
+			const bool transp = QApplication::keyboardModifiers().testFlag(Qt::ControlModifier);
+			InsertUserdef(i, transp);
+		});
+	}
+	MenuWeitere->menuAction()->setVisible(false);
+	connect(actUdAdd,    &QAction::triggered, this, [this]{ UserdefAddClick();    });
+	connect(actUdAddSel, &QAction::triggered, this, [this]{ UserdefAddSelClick(); });
+	connect(actUdDel,    &QAction::triggered, this, [this]{ UserdefRemoveClick(); });
+
 	/*  Rapport (extend pattern) entries. */
 	patternMenu->addSeparator();
 	QAction* actRappExtend   = patternMenu->addAction(QStringLiteral("&Extend pattern..."));
@@ -536,6 +559,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 
 	/*  Populate the recent-files submenu from QSettings. */
 	LoadMRU();
+	LoadUserdefMenu();
 
 	/*  Cursor blink. QApplication::cursorFlashTime is the total
 	    flash period in ms; fire the timer at half that so one tick
