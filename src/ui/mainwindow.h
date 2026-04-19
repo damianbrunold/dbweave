@@ -667,6 +667,26 @@ public:
 	void __fastcall BereicheFillPattern   (int _x, int _y);
 
 	/*  Palette-index selection helpers (setcolors.cpp). */
+	/*  Print subsystem — page layout / header-footer state. The
+	    Borders / Header / Footer nested structs mirror the legacy
+	    layout verbatim so ported print.cpp continues to reference
+	    borders.range.{left,right,top,bottom}, header.{height,text},
+	    footer.{height,text}. */
+	struct Borders {
+		struct Range { int left = 20; int right = 20; int top = 25; int bottom = 25; } range;
+	};
+	struct Header  { int height = 6; QString text; };
+	struct Footer  { int height = 6; QString text; };
+	Borders borders;
+	Header  header;
+	Footer  footer;
+	void __fastcall InitBorders ();
+
+	/*  File menu print-stack handlers. */
+	void __fastcall FilePrintClick        ();
+	void __fastcall FilePrintpreviewClick ();
+	void __fastcall FileSetPageClick      ();
+
 	/*  Drawing tools (tools.cpp). */
 	TOOL             tool = TOOL_POINT;
 	/*  Tool-drag preview: when the user is dragging with a non-

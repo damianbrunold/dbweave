@@ -116,6 +116,9 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	    ownership transfer is needed. */
 	blockundo   = new BlockUndo(&blockmuster,   currentbm);
 	bereichundo = new BlockUndo(&bereichmuster, currentbm);
+
+	/*  Page layout defaults (margins + header/footer). */
+	InitBorders();
 	std::memset(xbuf, 0, Data->MAXX1);
 	std::memset(ybuf, 0, Data->MAXY2);
 
@@ -163,6 +166,14 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	fileMenu->addSeparator();
 	QAction* actFileProps = fileMenu->addAction(QStringLiteral("Propert&ies..."));
 	connect(actFileProps, &QAction::triggered, this, [this]{ FilePropsClick(); });
+	fileMenu->addSeparator();
+	QAction* actPageSetup  = fileMenu->addAction(QStringLiteral("Page set&up..."));
+	QAction* actPrint      = fileMenu->addAction(QStringLiteral("&Print..."));
+	QAction* actPreview    = fileMenu->addAction(QStringLiteral("Print pre&view..."));
+	actPrint->setShortcut(QKeySequence::Print);
+	connect(actPageSetup, &QAction::triggered, this, [this]{ FileSetPageClick();      });
+	connect(actPrint,     &QAction::triggered, this, [this]{ FilePrintClick();        });
+	connect(actPreview,   &QAction::triggered, this, [this]{ FilePrintpreviewClick(); });
 	fileMenu->addSeparator();
 	QAction* actImportWIF = fileMenu->addAction(QStringLiteral("Import &WIF..."));
 	QAction* actImportBmp = fileMenu->addAction(QStringLiteral("Import &picture..."));

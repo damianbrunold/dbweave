@@ -72,6 +72,12 @@ add_library(dbweave_ui STATIC
     bereiche.cpp
     setcolors.cpp
     tools.cpp
+    print.cpp
+    printinit.cpp
+    printextent.cpp
+    printdraw.cpp
+    printprint.cpp
+    pagesetupdialog.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)
