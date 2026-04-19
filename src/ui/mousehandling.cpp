@@ -89,6 +89,7 @@ void __fastcall TDBWFRM::handleCanvasMousePress (int _x, int _y, bool _shift)
 	lastfarbei       = -1;
 	lastfarbej       = -1;
 	lastblatteinzugi = -1;
+	bSelectionCleared = selection.Valid();
 
 	int di, dj;
 	dataCoords(this, f, i, j, di, dj);
@@ -101,7 +102,9 @@ void __fastcall TDBWFRM::handleCanvasMousePress (int _x, int _y, bool _shift)
 	case EINZUG:
 	case AUFKNUEPFUNG:
 	case TRITTFOLGE:
-		/*  Start a fresh rubber-band selection at the clicked cell. */
+		/*  Start a fresh rubber-band selection at the clicked cell.
+		    The toggle (if the user doesn't drag) happens on the
+		    matching release event, matching legacy FormMouseUp.   */
 		ClearSelection();
 		ResizeSelection(di, dj, f, _shift);
 		break;
@@ -171,9 +174,42 @@ void __fastcall TDBWFRM::handleCanvasMouseMove (int _x, int _y, bool _shift)
 
 void __fastcall TDBWFRM::handleCanvasMouseRelease ()
 {
+	/*  Click-without-drag: if the release leaves the rubber-band
+	    as a single cell at the press point, interpret the click
+	    as a toggle on that cell. Matches legacy FormMouseUp in
+	    mousehandling.cpp (the md_feld==f && md==pt branch).     */
+	if (mousedown && md_feld != INVALID && !bSelectionCleared) {
+		RANGE sel = selection;
+		sel.Normalize();
+		const bool sameCell = sel.Valid() && sel.feld == md_feld
+		                   && sel.begin.i == sel.end.i
+		                   && sel.begin.j == sel.end.j
+		                   && sel.begin.i == md.i && sel.begin.j == md.j;
+		if (sameCell) {
+			ClearSelection();
+			const int r = currentrange;
+			switch (md_feld) {
+			case GEWEBE:
+				SetGewebe     (md.i - scroll_x1, md.j - scroll_y2, /*_set=*/false, r);
+				break;
+			case EINZUG:
+				SetEinzug     (md.i - scroll_x1, md.j - scroll_y1);
+				break;
+			case AUFKNUEPFUNG:
+				SetAufknuepfung (md.i - scroll_x2, md.j - scroll_y1, /*_set=*/false, r);
+				break;
+			case TRITTFOLGE:
+				SetTrittfolge (md.i - scroll_x2, md.j - scroll_y2, /*_set=*/false, r);
+				break;
+			default: break;
+			}
+		}
+	}
+
 	mousedown        = false;
 	md_feld          = INVALID;
 	lastfarbei       = -1;
 	lastfarbej       = -1;
 	lastblatteinzugi = -1;
+	bSelectionCleared = false;
 }

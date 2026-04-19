@@ -312,6 +312,11 @@ public:
 	int  lastfarbei       = -1;  /* drag-paint de-dup, kettfarben */
 	int  lastfarbej       = -1;  /* drag-paint de-dup, schussfarben */
 	int  lastblatteinzugi = -1;  /* drag-paint de-dup, blatteinzug */
+	/*  True when the mouse press had to wipe a prior valid
+	    selection. Used on release so a click that only serves to
+	    dismiss a previous rubber-band doesn't also toggle the
+	    clicked cell. Matches legacy bSelectionCleared.         */
+	bool bSelectionCleared = false;
 
 	void __fastcall ClearSelection();
 	void __fastcall DrawSelection();

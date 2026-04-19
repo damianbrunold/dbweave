@@ -231,6 +231,62 @@ private slots:
 		QCOMPARE((int)DBWFRM->gewebe.feld.Get(0, 0), 1);
 	}
 
+	void click_release_on_gewebe_toggles_cell()
+	{
+		/*  Press+release on a single gewebe cell should toggle it.
+		    Cell (2, 5) starts empty; after a click it should carry
+		    currentrange. A second press+release flips it back to a
+		    non-positive "cleared" value.                          */
+		DBWFRM->currentrange = 3;
+		DBWFRM->handleCanvasMousePress (25, 75, /*shift=*/false);
+		DBWFRM->handleCanvasMouseRelease();
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(2, 5), 3);
+		DBWFRM->handleCanvasMousePress (25, 75, /*shift=*/false);
+		DBWFRM->handleCanvasMouseRelease();
+		QVERIFY((int)DBWFRM->gewebe.feld.Get(2, 5) <= 0);
+	}
+
+	void click_release_on_einzug_sets_then_clears_shaft()
+	{
+		/*  Einzug is a column-indexed vector where feld[i] stores
+		    the shaft (j+1, 0 = empty). Click on einzug cell (2, 2)
+		    sets the column to shaft 3; a second click on the same
+		    spot clears it.                                       */
+		DBWFRM->handleCanvasMousePress (25, 15, /*shift=*/false);
+		DBWFRM->handleCanvasMouseRelease();
+		QCOMPARE((int)DBWFRM->einzug.feld.Get(2), 3);
+		DBWFRM->handleCanvasMousePress (25, 15, /*shift=*/false);
+		DBWFRM->handleCanvasMouseRelease();
+		QCOMPARE((int)DBWFRM->einzug.feld.Get(2), 0);
+	}
+
+	void click_release_after_drag_does_not_toggle()
+	{
+		/*  A drag that grows the selection should NOT toggle the
+		    anchor cell on release -- the user is selecting, not
+		    painting.                                              */
+		DBWFRM->currentrange = 4;
+		DBWFRM->handleCanvasMousePress (25, 75, /*shift=*/false);
+		DBWFRM->handleCanvasMouseMove  (45, 95, /*shift=*/false);
+		DBWFRM->handleCanvasMouseRelease();
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(2, 5), 0);
+	}
+
+	void click_release_dismisses_prior_selection_without_toggle()
+	{
+		/*  Legacy bSelectionCleared: a click that only serves to
+		    drop a previous rubber-band must not also toggle the
+		    clicked cell. Seed an existing selection, then click
+		    a cell and verify it stays empty. */
+		DBWFRM->selection.feld  = GEWEBE;
+		DBWFRM->selection.begin = PT(0, 0);
+		DBWFRM->selection.end   = PT(1, 1);
+		DBWFRM->currentrange    = 5;
+		DBWFRM->handleCanvasMousePress (25, 75, /*shift=*/false);
+		DBWFRM->handleCanvasMouseRelease();
+		QCOMPARE((int)DBWFRM->gewebe.feld.Get(2, 5), 0);
+	}
+
 	void click_on_blatteinzug_toggles_cell()
 	{
 		/*  Blatteinzug strip y-range is 40..50. Interior pixel at
