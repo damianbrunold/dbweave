@@ -12,6 +12,7 @@
 #include "mainwindow.h"
 #include "patterncanvas.h"
 #include "palettepanel.h"
+#include "aboutdialog.h"
 #include "undoredo.h"
 #include "rapport.h"
 #include "einzug.h"
@@ -474,6 +475,14 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	addSpecial(QStringLiteral("L"), AUSHEBUNG, QStringLiteral("Lift out (Aushebung)"));
 	addSpecial(QStringLiteral("B"), ANBINDUNG, QStringLiteral("Binding (Anbindung)"));
 	addSpecial(QStringLiteral("U"), ABBINDUNG, QStringLiteral("Unbinding (Abbindung)"));
+
+	/*  Help menu: just the About box for now. */
+	QMenu* helpMenu = menuBar()->addMenu(QStringLiteral("&Help"));
+	QAction* actAbout = helpMenu->addAction(QStringLiteral("&About DB-WEAVE..."));
+	connect(actAbout, &QAction::triggered, this, [this] {
+		AboutDialog dlg(this);
+		dlg.exec();
+	});
 
 	/*  Status-bar panels (right-aligned permanent widgets). */
 	sbField   = new QLabel(this);
