@@ -75,7 +75,13 @@ private:
     void LoadViewGeneral(FfReader* _reader);
     void LoadViewGewebe(FfReader* _reader);
     void LoadViewEinzug(FfReader* _reader);
+    void LoadViewAufknuepfung(FfReader* _reader);
     void LoadViewTrittfolge(FfReader* _reader);
+    void LoadViewSchlagpatrone(FfReader* _reader);
+    void LoadViewBlatteinzug(FfReader* _reader);
+    void LoadViewKettfarben(FfReader* _reader);
+    void LoadViewSchussfarben(FfReader* _reader);
+    void LoadViewPagesetup(FfReader* _reader);
 };
 
 #endif

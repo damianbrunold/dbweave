@@ -990,15 +990,15 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     QAction* actOptAm = menuAct(baseMenu, "&American", "&Amerikanisch", nullptr,
                                 "Activates the settings commonly used in the united states",
                                 "Aktiviert die Einstellungen, die gewöhnlich in den USA verwendet werden");
-    actOptAm->setEnabled(false);
+    connect(actOptAm, &QAction::triggered, this, [this] { OptAmericanClick(); });
     QAction* actOptSk = menuAct(baseMenu, "S&candinavian", "&Skandinavisch", nullptr,
                                 "Activates the settings commonly used in the scandinavian region",
                                 "Aktiviert die Einstellungen, die gewöhnlich in der skandinavischen Region verwendet werden");
-    actOptSk->setEnabled(false);
+    connect(actOptSk, &QAction::triggered, this, [this] { OptSkandinavischClick(); });
     QAction* actOptSw = menuAct(baseMenu, "&German/Swiss", "&Deutsch/Schweizerisch", nullptr,
                                 "Activates the settings commonly used in Germany and Switzerland",
                                 "Aktiviert die Einstellungen, die gewöhnlich in Deutschland und der Schweiz verwendet werden");
-    actOptSw->setEnabled(false);
+    connect(actOptSw, &QAction::triggered, this, [this] { OptSwissClick(); });
     QMenu* optMenu = addSubmenu(extrasMenu, "&Options", "&Optionen");
     QAction* actXOpt = menuAct(optMenu, "&For this pattern...", "&Für dieses Muster...", nullptr,
                                "Edits options for this pattern",
@@ -1170,6 +1170,11 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         ensures the "Pegplan" top-level menu is hidden in the default
         (trittfolge) state.                                          */
     UpdateSchlagpatroneMode();
+
+    /*  Seed the runtime with the user's saved Grundeinstellung so a
+        fresh launch starts in the user's preferred region-defaults.
+        A pattern load overwrites these from the file.              */
+    ApplyBaseStyleFromSettings();
 
     /*  Cursor blink. QApplication::cursorFlashTime is the total
         flash period in ms; fire the timer at half that so one tick
@@ -1463,6 +1468,154 @@ void TDBWFRM::SetModified(bool _modified)
 {
     modified = _modified;
     SetAppTitle();
+}
+
+/*-----------------------------------------------------------------*/
+/*  Grundeinstellung presets. Two-level update: the choice is always
+    persisted globally (so File > New picks it up and the next
+    session starts with it) and also applied to the in-memory view
+    state. Only when the current document has non-trivial content
+    does the preset change ALSO mark the pattern as modified and
+    snapshot undo — the idea being that the user just changed a
+    viewable property of the loaded pattern. For an empty freshly-
+    launched session, the preset just updates the global defaults
+    without leaving a bogus "unsaved changes" state.
+
+    A subsequent file load overrides the in-memory view with the
+    file's own settings (LoadViewGeneral in fileload.cpp) — this
+    helper doesn't change that. The user's saved Grundeinstellung
+    only wins over file-stored values when File > New creates a
+    fresh document.                                               */
+namespace {
+void saveBaseStyle(DARSTELLUNG ezD, DARSTELLUNG aufD, DARSTELLUNG tfD, DARSTELLUNG spD,
+                   bool einzugunten, bool righttoleft, bool toptobottom, bool sinkingshed,
+                   bool reedVisible)
+{
+    Settings settings;
+    settings.SetCategory(AnsiString("Display"));
+    settings.Save(AnsiString("Threading"), int(ezD));
+    settings.Save(AnsiString("Tie-up"), int(aufD));
+    settings.Save(AnsiString("Treadling"), int(tfD));
+    settings.Save(AnsiString("Pegplan"), int(spD));
+    settings.SetCategory(AnsiString("View"));
+    settings.Save(AnsiString("ThreadingDown"), einzugunten ? 1 : 0);
+    settings.Save(AnsiString("RightToLeft"), righttoleft ? 1 : 0);
+    settings.Save(AnsiString("TopToBottom"), toptobottom ? 1 : 0);
+    settings.SetCategory(AnsiString("Settings"));
+    settings.Save(AnsiString("SinkingShed"), sinkingshed ? 1 : 0);
+    settings.SetCategory(AnsiString("Divers"));
+    settings.Save(AnsiString("ViewReedthreading"), reedVisible ? 1 : 0);
+}
+} /* anonymous namespace */
+
+bool TDBWFRM::HasNonTrivialContent() const
+{
+    if (kette.b != -1 || schuesse.b != -1)
+        return true;
+    if (freieschaefte)
+        for (int j = 0; j < Data->MAXY1; j++)
+            if (!freieschaefte[j])
+                return true;
+    if (freietritte)
+        for (int i = 0; i < Data->MAXX2; i++)
+            if (!freietritte[i])
+                return true;
+    return false;
+}
+
+void TDBWFRM::ApplyBaseStyleFromSettings()
+{
+    Settings settings;
+    settings.SetCategory(AnsiString("Display"));
+    einzug.darstellung = DARSTELLUNG(settings.Load(AnsiString("Threading"), int(STRICH)));
+    aufknuepfung.darstellung = DARSTELLUNG(settings.Load(AnsiString("Tie-up"), int(KREUZ)));
+    trittfolge.darstellung = DARSTELLUNG(settings.Load(AnsiString("Treadling"), int(PUNKT)));
+    schlagpatronendarstellung
+        = DARSTELLUNG(settings.Load(AnsiString("Pegplan"), int(AUSGEFUELLT)));
+    settings.SetCategory(AnsiString("View"));
+    einzugunten = (settings.Load(AnsiString("ThreadingDown"), 0) != 0);
+    righttoleft = (settings.Load(AnsiString("RightToLeft"), 0) != 0);
+    toptobottom = (settings.Load(AnsiString("TopToBottom"), 0) != 0);
+    settings.SetCategory(AnsiString("Settings"));
+    sinkingshed = (settings.Load(AnsiString("SinkingShed"), 0) != 0);
+    settings.SetCategory(AnsiString("Divers"));
+    if (ViewBlatteinzug)
+        ViewBlatteinzug->setChecked(settings.Load(AnsiString("ViewReedthreading"), 1) != 0);
+}
+
+void TDBWFRM::OptSwissClick()
+{
+    einzug.darstellung = STRICH;
+    aufknuepfung.darstellung = KREUZ;
+    trittfolge.darstellung = PUNKT;
+    schlagpatronendarstellung = AUSGEFUELLT;
+    righttoleft = false;
+    toptobottom = false;
+    sinkingshed = false;
+    einzugunten = false;
+    if (ViewBlatteinzug)
+        ViewBlatteinzug->setChecked(true);
+    saveBaseStyle(einzug.darstellung, aufknuepfung.darstellung, trittfolge.darstellung,
+                  schlagpatronendarstellung, einzugunten, righttoleft, toptobottom,
+                  sinkingshed, true);
+    if (pattern_canvas)
+        pattern_canvas->recomputeLayout();
+    if (HasNonTrivialContent()) {
+        if (undo)
+            undo->Snapshot();
+        SetModified();
+    }
+    refresh();
+}
+
+void TDBWFRM::OptSkandinavischClick()
+{
+    einzug.darstellung = AUSGEFUELLT;
+    aufknuepfung.darstellung = AUSGEFUELLT;
+    trittfolge.darstellung = AUSGEFUELLT;
+    schlagpatronendarstellung = AUSGEFUELLT;
+    righttoleft = true;
+    toptobottom = true;
+    sinkingshed = true;
+    einzugunten = true;
+    if (ViewBlatteinzug)
+        ViewBlatteinzug->setChecked(false);
+    saveBaseStyle(einzug.darstellung, aufknuepfung.darstellung, trittfolge.darstellung,
+                  schlagpatronendarstellung, einzugunten, righttoleft, toptobottom,
+                  sinkingshed, false);
+    if (pattern_canvas)
+        pattern_canvas->recomputeLayout();
+    if (HasNonTrivialContent()) {
+        if (undo)
+            undo->Snapshot();
+        SetModified();
+    }
+    refresh();
+}
+
+void TDBWFRM::OptAmericanClick()
+{
+    einzug.darstellung = AUSGEFUELLT;
+    aufknuepfung.darstellung = AUSGEFUELLT;
+    trittfolge.darstellung = AUSGEFUELLT;
+    schlagpatronendarstellung = AUSGEFUELLT;
+    righttoleft = true;
+    toptobottom = false;
+    sinkingshed = false;
+    einzugunten = false;
+    if (ViewBlatteinzug)
+        ViewBlatteinzug->setChecked(true);
+    saveBaseStyle(einzug.darstellung, aufknuepfung.darstellung, trittfolge.darstellung,
+                  schlagpatronendarstellung, einzugunten, righttoleft, toptobottom,
+                  sinkingshed, true);
+    if (pattern_canvas)
+        pattern_canvas->recomputeLayout();
+    if (HasNonTrivialContent()) {
+        if (undo)
+            undo->Snapshot();
+        SetModified();
+    }
+    refresh();
 }
 void TDBWFRM::SetCursor(int, int) { }
 void TDBWFRM::SetAppTitle()

@@ -152,9 +152,11 @@ void TDBWFRM::ResetDocument()
     if (Inverserepeat)
         Inverserepeat->setChecked(false);
     fewithraster = false;
-    sinkingshed = false;
-    righttoleft = false;
-    toptobottom = false;
+    /*  Orientation / shed / reed visibility follow the user's saved
+        Grundeinstellung. Ensures that File > New creates a document
+        with the preset the user configured, regardless of what a
+        previously-loaded pattern set.                              */
+    ApplyBaseStyleFromSettings();
 
     /*  Secondary state: hilfslinien, blockmuster, bereichmuster,
         metadata, print borders.                                   */
@@ -314,11 +316,30 @@ void TDBWFRM::FileSave()
 /*  Port of legacy TDBWFRM::AskSave. Returns true when it's safe to
     discard the current document (no unsaved changes, user saved,
     or user explicitly discarded). Returns false when the user
-    cancelled the prompt.                                          */
+    cancelled the prompt.
+
+    Matches legacy semantics exactly: a modified but empty AND
+    unnamed document (e.g. after a Grundeinstellung change on a
+    fresh session) is treated as harmless -- no prompt.            */
 bool TDBWFRM::AskSave()
 {
     if (!modified)
         return true;
+    /*  An unnamed document that hasn't accumulated any real content
+        can be silently discarded. Real content = any used warp or
+        weft range, any used shaft (einzug entry), or any used
+        treadle.                                                    */
+    if (filename.isEmpty()) {
+        bool anyShaft = false;
+        for (int j = 0; j < Data->MAXY1 && !anyShaft; j++)
+            if (!freieschaefte[j])
+                anyShaft = true;
+        const bool anyTritt = GetFirstTritt() <= GetLastTritt();
+        const bool hasContent
+            = kette.b != -1 || schuesse.b != -1 || anyShaft || anyTritt;
+        if (!hasContent)
+            return true;
+    }
     const QString msg = LANG_STR(
         "The pattern has unsaved changes. Save them now?",
         "Das Muster hat ungespeicherte Änderungen. Jetzt speichern?");

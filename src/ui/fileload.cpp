@@ -418,6 +418,16 @@ void FhLoader::LoadDataWebstuhl(FfReader* _reader)
 /*-----------------------------------------------------------------*/
 void FhLoader::LoadView(FfReader* _reader)
 {
+    /*  Seed the darstellungen to the file-format defaults BEFORE
+        parsing so missing view subsections fall back to those
+        defaults rather than keeping the session's Grundeinstellung.
+        Any subsection actually present in the file overrides via
+        the SECTION_MAP below.                                     */
+    mainfrm->einzug.darstellung = PUNKT;
+    mainfrm->aufknuepfung.darstellung = KREUZ;
+    mainfrm->trittfolge.darstellung = PUNKT;
+    mainfrm->schlagpatronendarstellung = AUSGEFUELLT;
+
     BEGIN_LOAD_MAP
     BEGIN_FIELD_MAP
     NO_FIELDS
@@ -425,11 +435,14 @@ void FhLoader::LoadView(FfReader* _reader)
     _SECTION_MAP("general", LoadViewGeneral)
     SECTION_MAP("gewebe", LoadViewGewebe)
     SECTION_MAP("einzug", LoadViewEinzug)
+    SECTION_MAP("aufknuepfung", LoadViewAufknuepfung)
     SECTION_MAP("trittfolge", LoadViewTrittfolge)
-    DEFAULT_SECTION /* aufknuepfung, schlagpatrone, blatteinzug,
-                       kettfarben, schussfarben, pagesetup --
-                       skipped until those toggles + metadata
-                       are wired up in the port.          */
+    SECTION_MAP("schlagpatrone", LoadViewSchlagpatrone)
+    SECTION_MAP("blatteinzug", LoadViewBlatteinzug)
+    SECTION_MAP("kettfarben", LoadViewKettfarben)
+    SECTION_MAP("schussfarben", LoadViewSchussfarben)
+    SECTION_MAP("pagesetup", LoadViewPagesetup)
+    DEFAULT_SECTION
         BEGIN_DEFAULT_MAP END_LOAD_MAP
 }
 /*-----------------------------------------------------------------*/
@@ -443,20 +456,29 @@ void FhLoader::LoadViewGeneral(FfReader* _reader)
 {
     int zoom = mainfrm->currentzoom;
     int hebung = 1; /* inverse of sinkingshed */
+    int color = Data ? int(Data->color) : 1;
+    int viewpalette
+        = mainfrm->ViewFarbpalette ? mainfrm->ViewFarbpalette->isChecked() : 1;
     int viewpegplan = mainfrm->ViewSchlagpatrone ? mainfrm->ViewSchlagpatrone->isChecked() : 0;
     int viewrapport = mainfrm->RappViewRapport ? mainfrm->RappViewRapport->isChecked() : 0;
     int viewhlines = mainfrm->ViewHlines ? mainfrm->ViewHlines->isChecked() : 1;
     int righttoleft = mainfrm->righttoleft ? 1 : 0;
     int toptobottom = mainfrm->toptobottom ? 1 : 0;
+    double fk = mainfrm->faktor_kette;
+    double fs = mainfrm->faktor_schuss;
     BEGIN_LOAD_MAP
     BEGIN_FIELD_MAP
     _FIELD_MAP_INT("zoom", zoom, int)
     FIELD_MAP_INT("hebung", hebung, int)
+    FIELD_MAP_INT("color", color, int)
+    FIELD_MAP_INT("viewpalette", viewpalette, int)
     FIELD_MAP_INT("viewpegplan", viewpegplan, int)
     FIELD_MAP_INT("viewrapport", viewrapport, int)
     FIELD_MAP_INT("viewhlines", viewhlines, int)
     FIELD_MAP_INT("righttoleft", righttoleft, int)
     FIELD_MAP_INT("toptobottom", toptobottom, int)
+    FIELD_MAP_DOUBLE("faktor_kette", fk)
+    FIELD_MAP_DOUBLE("faktor_schuss", fs)
     DEFAULT_FIELD
     BEGIN_SECTION_MAP
     NO_SECTIONS
@@ -464,8 +486,13 @@ void FhLoader::LoadViewGeneral(FfReader* _reader)
     END_LOAD_MAP
     mainfrm->currentzoom = (zoom < 0 ? 0 : (zoom > 9 ? 9 : zoom));
     mainfrm->sinkingshed = (hebung == 0);
+    if (Data)
+        Data->color = (unsigned char)color;
+    mainfrm->faktor_kette = float(fk);
+    mainfrm->faktor_schuss = float(fs);
     mainfrm->righttoleft = (righttoleft != 0);
     mainfrm->toptobottom = (toptobottom != 0);
+    setChecked(mainfrm->ViewFarbpalette, viewpalette != 0);
     setChecked(mainfrm->ViewSchlagpatrone, viewpegplan != 0);
     setChecked(mainfrm->RappViewRapport, viewrapport != 0);
     setChecked(mainfrm->ViewHlines, viewhlines != 0);
@@ -493,37 +520,192 @@ void FhLoader::LoadViewGewebe(FfReader* _reader)
 /*-----------------------------------------------------------------*/
 void FhLoader::LoadViewEinzug(FfReader* _reader)
 {
-    int visible = mainfrm->ViewEinzug ? mainfrm->ViewEinzug->isChecked() : 1;
+    /*  Hardcoded per-field defaults match legacy file-format
+        expectations: when a pattern file lacks viewtype, the symbol
+        resets to the historical default (PUNKT for einzug) so two
+        loads of the same file always yield the same look, regardless
+        of the active Grundeinstellung.                             */
+    int visible = 1;
+    int down = 0;
+    int viewtype = int(PUNKT);
     int hvisible = mainfrm->hvisible;
+    int style = 1; /* 1 = EzMinimalZ -- legacy default */
     BEGIN_LOAD_MAP
     BEGIN_FIELD_MAP
     _FIELD_MAP_INT("visible", visible, int)
+    FIELD_MAP_INT("down", down, int)
+    FIELD_MAP_INT("viewtype", viewtype, int)
     FIELD_MAP_INT("hvisible", hvisible, int)
+    FIELD_MAP_INT("style", style, int)
     DEFAULT_FIELD
     BEGIN_SECTION_MAP
     NO_SECTIONS
     BEGIN_DEFAULT_MAP
     END_LOAD_MAP
     setChecked(mainfrm->ViewEinzug, visible != 0);
+    mainfrm->einzugunten = (down != 0);
+    mainfrm->einzug.darstellung = DARSTELLUNG(viewtype);
     if (hvisible > 0)
         mainfrm->hvisible = hvisible;
+    /*  style selects the einzug-rearrangement radio group. Map legacy
+        indices verbatim; out-of-range falls back to MinimalZ.      */
+    switch (style) {
+    case 0: setChecked(mainfrm->EzFixiert, true); break;
+    case 1: setChecked(mainfrm->EzMinimalZ, true); break;
+    case 2: setChecked(mainfrm->EzMinimalS, true); break;
+    case 3: setChecked(mainfrm->EzGeradeZ, true); break;
+    case 4: setChecked(mainfrm->EzGeradeS, true); break;
+    case 5: setChecked(mainfrm->EzBelassen, true); break;
+    case 6: setChecked(mainfrm->EzChorig2, true); break;
+    case 7: setChecked(mainfrm->EzChorig3, true); break;
+    default: setChecked(mainfrm->EzMinimalZ, true); break;
+    }
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadViewAufknuepfung(FfReader* _reader)
+{
+    int viewtype = int(KREUZ);
+    BEGIN_LOAD_MAP
+    BEGIN_FIELD_MAP
+    _FIELD_MAP_INT("viewtype", viewtype, int)
+    DEFAULT_FIELD
+    BEGIN_SECTION_MAP
+    NO_SECTIONS
+    BEGIN_DEFAULT_MAP
+    END_LOAD_MAP
+    mainfrm->aufknuepfung.darstellung = DARSTELLUNG(viewtype);
 }
 /*-----------------------------------------------------------------*/
 void FhLoader::LoadViewTrittfolge(FfReader* _reader)
 {
-    int visible = mainfrm->ViewTrittfolge ? mainfrm->ViewTrittfolge->isChecked() : 1;
+    int visible = 1;
+    int viewtype = int(PUNKT);
+    int einzeltritt = 1;
     int wvisible = mainfrm->wvisible;
+    int style = 1;
     BEGIN_LOAD_MAP
     BEGIN_FIELD_MAP
     _FIELD_MAP_INT("visible", visible, int)
+    FIELD_MAP_INT("viewtype", viewtype, int)
+    FIELD_MAP_INT("single", einzeltritt, int)
     FIELD_MAP_INT("wvisible", wvisible, int)
+    FIELD_MAP_INT("style", style, int)
     DEFAULT_FIELD
     BEGIN_SECTION_MAP
     NO_SECTIONS
     BEGIN_DEFAULT_MAP
     END_LOAD_MAP
     setChecked(mainfrm->ViewTrittfolge, visible != 0);
+    mainfrm->trittfolge.darstellung = DARSTELLUNG(viewtype);
+    mainfrm->trittfolge.einzeltritt = (einzeltritt != 0);
     if (wvisible > 0)
         mainfrm->wvisible = wvisible;
+    /*  Trittfolge-rearrangement radio group selector. */
+    switch (style) {
+    case 0: setChecked(mainfrm->TfBelassen, true); break;
+    case 1: setChecked(mainfrm->TfMinimalZ, true); break;
+    case 2: setChecked(mainfrm->TfMinimalS, true); break;
+    case 3: setChecked(mainfrm->TfGeradeZ, true); break;
+    case 4: setChecked(mainfrm->TfGeradeS, true); break;
+    case 5: setChecked(mainfrm->TfGesprungen, true); break;
+    default: setChecked(mainfrm->TfMinimalZ, true); break;
+    }
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadViewSchlagpatrone(FfReader* _reader)
+{
+    int viewtype = int(AUSGEFUELLT);
+    BEGIN_LOAD_MAP
+    BEGIN_FIELD_MAP
+    _FIELD_MAP_INT("viewtype", viewtype, int)
+    DEFAULT_FIELD
+    BEGIN_SECTION_MAP
+    NO_SECTIONS
+    BEGIN_DEFAULT_MAP
+    END_LOAD_MAP
+    mainfrm->schlagpatronendarstellung = DARSTELLUNG(viewtype);
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadViewBlatteinzug(FfReader* _reader)
+{
+    int visible = mainfrm->ViewBlatteinzug ? mainfrm->ViewBlatteinzug->isChecked() : 1;
+    BEGIN_LOAD_MAP
+    BEGIN_FIELD_MAP
+    _FIELD_MAP_INT("visible", visible, int)
+    DEFAULT_FIELD
+    BEGIN_SECTION_MAP
+    NO_SECTIONS
+    BEGIN_DEFAULT_MAP
+    END_LOAD_MAP
+    setChecked(mainfrm->ViewBlatteinzug, visible != 0);
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadViewKettfarben(FfReader* _reader)
+{
+    int visible = mainfrm->ViewFarbe ? mainfrm->ViewFarbe->isChecked() : 1;
+    BEGIN_LOAD_MAP
+    BEGIN_FIELD_MAP
+    _FIELD_MAP_INT("visible", visible, int)
+    DEFAULT_FIELD
+    BEGIN_SECTION_MAP
+    NO_SECTIONS
+    BEGIN_DEFAULT_MAP
+    END_LOAD_MAP
+    setChecked(mainfrm->ViewFarbe, visible != 0);
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadViewSchussfarben(FfReader* _reader)
+{
+    int visible = mainfrm->ViewFarbe ? mainfrm->ViewFarbe->isChecked() : 1;
+    BEGIN_LOAD_MAP
+    BEGIN_FIELD_MAP
+    _FIELD_MAP_INT("visible", visible, int)
+    DEFAULT_FIELD
+    BEGIN_SECTION_MAP
+    NO_SECTIONS
+    BEGIN_DEFAULT_MAP
+    END_LOAD_MAP
+    setChecked(mainfrm->ViewFarbe, visible != 0);
+}
+/*-----------------------------------------------------------------*/
+void FhLoader::LoadViewPagesetup(FfReader* _reader)
+{
+    int topborder = mainfrm->borders.range.top;
+    int bottomborder = mainfrm->borders.range.bottom;
+    int leftborder = mainfrm->borders.range.left;
+    int rightborder = mainfrm->borders.range.right;
+    int headerheight = mainfrm->header.height;
+    int footerheight = mainfrm->footer.height;
+    char* headertext = nullptr;
+    char* footertext = nullptr;
+    BEGIN_LOAD_MAP
+    BEGIN_FIELD_MAP
+    _FIELD_MAP_INT("topmargin", topborder, int)
+    FIELD_MAP_INT("bottommargin", bottomborder, int)
+    FIELD_MAP_INT("leftmargin", leftborder, int)
+    FIELD_MAP_INT("rightmargin", rightborder, int)
+    FIELD_MAP_INT("headerheight", headerheight, int)
+    FIELD_MAP_STRING("headertext", headertext)
+    FIELD_MAP_INT("footerheight", footerheight, int)
+    FIELD_MAP_STRING("footertext", footertext)
+    DEFAULT_FIELD
+    BEGIN_SECTION_MAP
+    NO_SECTIONS
+    BEGIN_DEFAULT_MAP
+    END_LOAD_MAP
+    mainfrm->borders.range.top = topborder;
+    mainfrm->borders.range.bottom = bottomborder;
+    mainfrm->borders.range.left = leftborder;
+    mainfrm->borders.range.right = rightborder;
+    mainfrm->header.height = headerheight;
+    mainfrm->footer.height = footerheight;
+    if (headertext) {
+        mainfrm->header.text = QString::fromUtf8(headertext);
+        delete[] headertext;
+    }
+    if (footertext) {
+        mainfrm->footer.text = QString::fromUtf8(footertext);
+        delete[] footertext;
+    }
 }
 /*-----------------------------------------------------------------*/

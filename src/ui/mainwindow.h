@@ -86,8 +86,12 @@ public:
     bool toptobottom = false;
 
     /*  Warp / weft ranges and the pattern rapport. */
-    SZ kette;
-    SZ schuesse;
+    /*  Sentinel for "no range yet" is a = b = -1, matching legacy. The
+        SZ default ctor initialises to (0, 0); override it here so a
+        freshly-constructed TDBWFRM behaves the same as after File >
+        New.                                                        */
+    SZ kette { -1, -1 };
+    SZ schuesse { -1, -1 };
     RAPPORT rapport;
 
     /*  Currently selected "range" (1..9 plus AUSHEBUNG/ANBINDUNG/
@@ -682,6 +686,28 @@ public:
     void LoadPartsClick();
     void FileNewClick();
     void FileNewTemplateClick();
+
+    /*  Extras > Grundeinstellung presets. Flip the four darstellungen,
+        right-to-left / top-to-bottom orientation, sinking-shed flag,
+        einzug-unten flag and reed-threading visibility to one of
+        three region defaults. Ported from legacy
+        OptSwiss/Skandinavisch/American click handlers.              */
+    void OptSwissClick();
+    void OptSkandinavischClick();
+    void OptAmericanClick();
+
+    /*  True when the current document holds any painted content or
+        has a defined kette / schuesse range. Used to gate
+        SetModified() inside Grundeinstellung changes so that flipping
+        settings on an empty freshly-launched session doesn't leave
+        the document in a "needs saving" state.                     */
+    bool HasNonTrivialContent() const;
+
+    /*  Read the saved Grundeinstellung from Settings and apply it to
+        the current session. Called from File > New and at startup so
+        a fresh document uses the user's saved region-defaults. File
+        loads override these with whatever the file stored.          */
+    void ApplyBaseStyleFromSettings();
     /*  Reset the document state to defaults. Shared between
         FileNewClick and FileNewTemplateClick -- after template
         loading the caller clears the filename so Save prompts for a

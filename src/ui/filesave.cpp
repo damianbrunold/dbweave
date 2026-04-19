@@ -113,14 +113,29 @@ bool TDBWFRM::Save()
 
         writer.EndSection(); /* data */
 
-        /*  View state -- only the fields the port actually drives.
-            aufknuepfung / schlagpatrone / blatteinzug / kettfarben /
-            schussfarben subsections are omitted (their darstellung
-            toggles aren't yet wired to QActions).                  */
+        /*  View state -- full round-trip matching legacy SaveView in
+            filesave.cpp. Covers the symbols (viewtype) per field, the
+            einzug/trittfolge rearrangement style radio group, pegplan
+            state, orientation, fabric-view mode, and the page-setup
+            margins / header / footer.                              */
+        auto styleIndex = [](QAction* const* acts, int n, int fallback) {
+            for (int i = 0; i < n; i++)
+                if (acts[i] && acts[i]->isChecked())
+                    return i;
+            return fallback;
+        };
+        QAction* ezActs[8] = { EzFixiert,  EzMinimalZ, EzMinimalS, EzGeradeZ,
+                               EzGeradeS,  EzBelassen, EzChorig2,  EzChorig3 };
+        QAction* tfActs[6] = { TfBelassen, TfMinimalZ,   TfMinimalS,
+                               TfGeradeZ,  TfGeradeS,    TfGesprungen };
+
         writer.BeginSection("view", "Ansicht");
         writer.BeginSection("general");
         writer.WriteFieldInt("zoom", currentzoom);
         writer.WriteFieldInt("hebung", sinkingshed ? 0 : 1);
+        writer.WriteFieldInt("color", Data ? int(Data->color) : 1);
+        writer.WriteFieldInt("viewpalette",
+                             (ViewFarbpalette && ViewFarbpalette->isChecked()) ? 1 : 0);
         writer.WriteFieldInt("viewpegplan",
                              (ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) ? 1 : 0);
         writer.WriteFieldInt("viewrapport",
@@ -129,6 +144,31 @@ bool TDBWFRM::Save()
         writer.WriteFieldInt("righttoleft", righttoleft ? 1 : 0);
         writer.WriteFieldInt("toptobottom", toptobottom ? 1 : 0);
         writer.EndSection();
+
+        writer.BeginSection("einzug");
+        writer.WriteFieldInt("visible", (ViewEinzug && ViewEinzug->isChecked()) ? 1 : 0);
+        writer.WriteFieldInt("down", einzugunten ? 1 : 0);
+        writer.WriteFieldInt("viewtype", int(einzug.darstellung));
+        writer.WriteFieldInt("hvisible", hvisible);
+        writer.WriteFieldInt("style", styleIndex(ezActs, 8, 1));
+        writer.EndSection();
+
+        writer.BeginSection("aufknuepfung");
+        writer.WriteFieldInt("viewtype", int(aufknuepfung.darstellung));
+        writer.EndSection();
+
+        writer.BeginSection("trittfolge");
+        writer.WriteFieldInt("visible", (ViewTrittfolge && ViewTrittfolge->isChecked()) ? 1 : 0);
+        writer.WriteFieldInt("viewtype", int(trittfolge.darstellung));
+        writer.WriteFieldInt("single", trittfolge.einzeltritt ? 1 : 0);
+        writer.WriteFieldInt("wvisible", wvisible);
+        writer.WriteFieldInt("style", styleIndex(tfActs, 6, 1));
+        writer.EndSection();
+
+        writer.BeginSection("schlagpatrone");
+        writer.WriteFieldInt("viewtype", int(schlagpatronendarstellung));
+        writer.EndSection();
+
         writer.BeginSection("gewebe");
         int g = 0;
         if (GewebeFarbeffekt && GewebeFarbeffekt->isChecked())
@@ -140,13 +180,29 @@ bool TDBWFRM::Save()
         writer.WriteFieldInt("state", g);
         writer.WriteFieldInt("withgrid", fewithraster ? 1 : 0);
         writer.EndSection();
-        writer.BeginSection("einzug");
-        writer.WriteFieldInt("visible", (ViewEinzug && ViewEinzug->isChecked()) ? 1 : 0);
-        writer.WriteFieldInt("hvisible", hvisible);
+
+        writer.BeginSection("blatteinzug");
+        writer.WriteFieldInt("visible",
+                             (ViewBlatteinzug && ViewBlatteinzug->isChecked()) ? 1 : 0);
         writer.EndSection();
-        writer.BeginSection("trittfolge");
-        writer.WriteFieldInt("visible", (ViewTrittfolge && ViewTrittfolge->isChecked()) ? 1 : 0);
-        writer.WriteFieldInt("wvisible", wvisible);
+
+        const int viewFarbe = (ViewFarbe && ViewFarbe->isChecked()) ? 1 : 0;
+        writer.BeginSection("kettfarben");
+        writer.WriteFieldInt("visible", viewFarbe);
+        writer.EndSection();
+        writer.BeginSection("schussfarben");
+        writer.WriteFieldInt("visible", viewFarbe);
+        writer.EndSection();
+
+        writer.BeginSection("pagesetup");
+        writer.WriteFieldInt("topmargin", borders.range.top);
+        writer.WriteFieldInt("bottommargin", borders.range.bottom);
+        writer.WriteFieldInt("leftmargin", borders.range.left);
+        writer.WriteFieldInt("rightmargin", borders.range.right);
+        writer.WriteFieldInt("headerheight", header.height);
+        writer.WriteField("headertext", header.text.toUtf8().constData());
+        writer.WriteFieldInt("footerheight", footer.height);
+        writer.WriteField("footertext", footer.text.toUtf8().constData());
         writer.EndSection();
         writer.EndSection(); /* view */
 
