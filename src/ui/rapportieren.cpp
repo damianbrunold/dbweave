@@ -9,18 +9,19 @@
     (at your option) any later version.
 */
 
-/*  Port scope: the six non-click replication utilities from legacy/
-    rapportieren.cpp (RapportSchuss, RapportKette, CopyKettfaden,
-    CopySchussfaden, ClearKettfaden, ClearSchussfaden). The three
-    click handlers (RappRapportierenClick, RappReduzierenClick,
-    RappOverrideClick) dispatch through a TRapportForm dialog whose
-    port belongs in Phase 7.
+/*  Port scope: the six non-click replication utilities plus the
+    three click handlers from legacy/rapportieren.cpp. The
+    RappRapportierenClick dispatches to a Qt port of the legacy
+    TRapportForm (RapportDialog) for the repeat-count entry.
 */
 
 /*-----------------------------------------------------------------*/
 #include "assert_compat.h"
 #include "mainwindow.h"
 #include "datamodule.h"
+#include "rapport.h"
+#include "rapportdialog.h"
+#include "undoredo.h"
 /*-----------------------------------------------------------------*/
 void __fastcall TDBWFRM::RapportSchuss (int _ry, bool _withcolors)
 {
@@ -149,3 +150,77 @@ void __fastcall TDBWFRM::ClearSchussfaden (int _j)
 	if (kette.b!=-1) for (int i=kette.a; i<=kette.b; i++) gewebe.feld.Set (i, _j, 0);
 }
 /*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::RappRapportierenClick()
+{
+	RapportDialog dlg(this);
+	dlg.setRepeatAll(false);
+	const int kx = kette.b - kette.a + 1;
+	const int rx = rapport.kr.b - rapport.kr.a + 1;
+	if (kx != 0 && rx != 0) dlg.setHorz(kx / rx);
+	const int ky = schuesse.b - schuesse.a + 1;
+	const int ry = rapport.sr.b - rapport.sr.a + 1;
+	if (ky != 0 && ry != 0) dlg.setVert(ky / ry);
+
+	if (dlg.exec() != QDialog::Accepted) return;
+
+	int rxn = dlg.horz();
+	int ryn = dlg.vert();
+	if (dlg.repeatAll()) rxn = ryn = -1;
+	const bool rappcolors = dlg.repeatColors();
+	RapportKette  (rxn == 0 ? 1 : rxn, rappcolors);
+	RapportSchuss (ryn == 0 ? 1 : ryn, rappcolors);
+
+	CalcRangeSchuesse();
+	CalcRangeKette();
+	CalcRapport();
+
+	UpdateStatusBar();
+	SetModified();
+	refresh();
+	if (undo) undo->Snapshot();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::RappReduzierenClick()
+{
+	RapportKette  (1, false);
+	RapportSchuss (1, false);
+	if (EzFixiert && EzFixiert->isChecked()) RecalcAll();
+
+	CalcRangeSchuesse();
+	CalcRangeKette();
+	CalcRapport();
+
+	UpdateStatusBar();
+	SetModified();
+	refresh();
+	if (undo) undo->Snapshot();
+}
+/*-----------------------------------------------------------------*/
+void __fastcall TDBWFRM::RappOverrideClick()
+{
+	if (!rapport.overridden) {
+		if (selection.Valid() && selection.feld == GEWEBE) {
+			RANGE save = selection;
+			selection.Normalize();
+			if (RappViewRapport && RappViewRapport->isChecked()) ClearRapport();
+			rapport.overridden = true;
+			RAPPORT old = rapport;
+			rapport.kr.a = selection.begin.i;
+			rapport.kr.b = selection.end.i;
+			rapport.sr.a = selection.begin.j;
+			rapport.sr.b = selection.end.j;
+			if (RappViewRapport && RappViewRapport->isChecked()) {
+				DrawRapport();
+				if (rapporthandler)
+					rapporthandler->DrawDifferences(old, rapport);
+			}
+			ClearSelection();
+			(void)save;
+		}
+	} else {
+		rapport.overridden = false;
+		UpdateRapport();
+	}
+	UpdateStatusBar();
+	refresh();
+}

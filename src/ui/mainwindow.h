@@ -338,6 +338,15 @@ public:
 	void __fastcall KoeperEinfuegen (int _h, int _s);
 	void __fastcall AtlasEinfuegen  (int _n);
 
+	/*  Rapport (extend pattern) menu handlers. Rapportieren opens
+	    a modal dialog to pick horizontal / vertical repeat counts;
+	    Reduzieren collapses the pattern to a single rapport;
+	    Override flips the manual-rapport lock using the current
+	    selection as the rapport rectangle.                       */
+	void __fastcall RappRapportierenClick ();
+	void __fastcall RappReduzierenClick   ();
+	void __fastcall RappOverrideClick     ();
+
 	/*  Full einzug / trittfolge / aufknuepfung recompute from the
 	    current gewebe content. Used by bereiche, importbmp,
 	    insertbindung, rapportieren, and Edit operations that

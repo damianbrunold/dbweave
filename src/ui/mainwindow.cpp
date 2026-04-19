@@ -298,6 +298,15 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	};
 	for (int n = 5; n <= 10; n++) addAtlas(n);
 
+	/*  Rapport (extend pattern) entries. */
+	patternMenu->addSeparator();
+	QAction* actRappExtend   = patternMenu->addAction(QStringLiteral("&Extend pattern..."));
+	QAction* actRappReduce   = patternMenu->addAction(QStringLiteral("Red&uce to one repeat"));
+	QAction* actRappOverride = patternMenu->addAction(QStringLiteral("&Override rapport from selection"));
+	connect(actRappExtend,   &QAction::triggered, this, [this] { RappRapportierenClick(); });
+	connect(actRappReduce,   &QAction::triggered, this, [this] { RappReduzierenClick();   });
+	connect(actRappOverride, &QAction::triggered, this, [this] { RappOverrideClick();     });
+
 	QMenu* viewMenu = menuBar()->addMenu(QStringLiteral("&View"));
 	QAction* actZoomIn     = viewMenu->addAction(QStringLiteral("Zoom &In"));
 	QAction* actZoomOut    = viewMenu->addAction(QStringLiteral("Zoom &Out"));

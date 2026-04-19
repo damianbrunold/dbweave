@@ -44,6 +44,7 @@ add_library(dbweave_ui STATIC
     delete.cpp
     move.cpp
     insertbindung.cpp
+    rapportdialog.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)
