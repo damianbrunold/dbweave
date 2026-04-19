@@ -1,0 +1,104 @@
+# DB-WEAVE — cross-platform packaging
+
+Three scripts, one per platform. Each uses the regular CMake install
+rules declared at the top of `CMakeLists.txt` (bundle target + desktop
+entry + icon + LICENSE/PDFs) and then wraps the installed tree into
+the native distributable.
+
+All scripts accept an optional `--with-loom` flag that enables the
+`DBWEAVE_BUILD_LOOM` CMake option for serial-loom support (needs
+Qt6SerialPort).
+
+Outputs land in `dist/` under the repository root.
+
+## Linux — AppImage
+
+```
+packaging/linux/build_appimage.sh            # default build
+packaging/linux/build_appimage.sh --with-loom
+```
+
+Dependencies (Debian / Ubuntu):
+
+```
+sudo apt install qt6-base-dev qt6-base-dev-tools \
+                 qt6-tools-dev qt6-tools-dev-tools \
+                 cmake ninja-build
+# for --with-loom:
+sudo apt install libqt6serialport6-dev
+```
+
+Download `linuxdeploy` and its Qt plugin (continuous releases):
+
+```
+curl -L https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage         -o linuxdeploy-x86_64.AppImage
+curl -L https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage -o linuxdeploy-plugin-qt-x86_64.AppImage
+chmod +x linuxdeploy-*.AppImage
+export PATH="$PWD:$PATH"
+```
+
+The script produces `dist/DB-WEAVE-<version>-x86_64.AppImage`. Run
+anywhere with a glibc newer than the build host (AppImage handles
+the Qt dependencies).
+
+## Windows — NSIS installer
+
+Run from a **Qt 6 x64 Developer Command Prompt** (or any shell where
+`qmake.exe`, `windeployqt.exe`, `cmake.exe`, and `makensis.exe`
+are on `PATH`):
+
+```
+powershell -File packaging\windows\build_installer.ps1
+powershell -File packaging\windows\build_installer.ps1 -WithLoom
+```
+
+Prerequisites:
+
+* Qt 6.5+ MSVC *or* MinGW install (the official installer from
+  https://www.qt.io/download-qt-installer works).
+* CMake 3.21+ and Ninja (Qt's installer bundles Ninja; otherwise
+  `choco install ninja`).
+* NSIS 3.x (`choco install nsis`).
+
+Output: `dist\dbweave_setup.exe`. The installer writes the registry
+entries the legacy installer did (`.dbw` association, Add/Remove
+Programs, Start Menu + Desktop shortcuts).
+
+## macOS — `.dmg`
+
+Run on any supported macOS (11 Big Sur+). The script produces a
+universal-ish `.dmg` matching the host architecture; run on an
+Apple-silicon Mac for an arm64 build, on Intel for x86_64.
+
+```
+brew install qt cmake ninja        # create-dmg optional, for nicer layout
+export PATH="$(brew --prefix qt)/bin:$PATH"
+packaging/macos/build_dmg.sh
+packaging/macos/build_dmg.sh --with-loom
+packaging/macos/build_dmg.sh --sign "Developer ID Application: ..."
+```
+
+What it does:
+
+1. CMake configure + build (no tests).
+2. `cmake --install` lays `DB-WEAVE.app` into `dist/macos-stage/`.
+3. `macdeployqt` copies the Qt frameworks into the bundle.
+4. Docs + `LICENSE` copied next to the `.app`.
+5. `create-dmg` (preferred) or `hdiutil create` (fallback) bakes the
+   `.dmg`.
+6. Optional `codesign --deep` pass when `--sign <identity>` is given.
+
+Output: `dist/DB-WEAVE-<version>-<arch>.dmg`.
+
+To notarise the resulting `.dmg`, do it separately with
+`xcrun notarytool submit … --wait`. The script stops short of
+notarisation because it requires an Apple Developer account.
+
+## Re-using the scripts on CI
+
+None of the scripts touch `packaging/`-specific CI infrastructure —
+they run in whatever shell invokes them. Drop each onto the matching
+runner (`ubuntu-latest`, `windows-latest`, `macos-latest`) and they
+work. A ready-made GitHub Actions matrix is intentionally **not**
+checked in (upstream requested no CI yaml); the scripts are set up to
+make one trivial to add later.

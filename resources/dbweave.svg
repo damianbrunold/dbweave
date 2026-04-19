@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+    DB-WEAVE placeholder application icon. A stylised 8x8 weaving
+    pattern. Replace with a real icon before 1.0.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" rx="32" fill="#2d3e50"/>
+  <g transform="translate(32 32)" fill="#f7f3e3">
+    <!--
+        Checkerboard-ish weave: alternating filled / empty cells in a
+        twill pattern. Hand-laid so the result reads as "textile".
+    -->
+    <rect x="0"   y="0"   width="24" height="24"/>
+    <rect x="24"  y="0"   width="24" height="24" fill="#6d8aa0"/>
+    <rect x="48"  y="0"   width="24" height="24"/>
+    <rect x="72"  y="0"   width="24" height="24" fill="#6d8aa0"/>
+    <rect x="96"  y="0"   width="24" height="24"/>
+    <rect x="120" y="0"   width="24" height="24" fill="#6d8aa0"/>
+    <rect x="144" y="0"   width="24" height="24"/>
+    <rect x="168" y="0"   width="24" height="24" fill="#6d8aa0"/>
+
+    <rect x="0"   y="24"  width="24" height="24" fill="#6d8aa0"/>
+    <rect x="24"  y="24"  width="24" height="24"/>
+    <rect x="48"  y="24"  width="24" height="24" fill="#6d8aa0"/>
+    <rect x="72"  y="24"  width="24" height="24"/>
+    <rect x="96"  y="24"  width="24" height="24" fill="#6d8aa0"/>
+    <rect x="120" y="24"  width="24" height="24"/>
+    <rect x="144" y="24"  width="24" height="24" fill="#6d8aa0"/>
+    <rect x="168" y="24"  width="24" height="24"/>
+
+    <rect x="0"   y="48"  width="24" height="24"/>
+    <rect x="24"  y="48"  width="24" height="24" fill="#6d8aa0"/>
+    <rect x="48"  y="48"  width="24" height="24"/>
+    <rect x="72"  y="48"  width="24" height="24" fill="#6d8aa0"/>
+    <rect x="96"  y="48"  width="24" height="24"/>
+    <rect x="120" y="48"  width="24" height="24" fill="#6d8aa0"/>
+    <rect x="144" y="48"  width="24" height="24"/>
+    <rect x="168" y="48"  width="24" height="24" fill="#6d8aa0"/>
+
+    <rect x="0"   y="72"  width="24" height="24" fill="#6d8aa0"/>
+    <rect x="24"  y="72"  width="24" height="24"/>
+    <rect x="48"  y="72"  width="24" height="24" fill="#6d8aa0"/>
+    <rect x="72"  y="72"  width="24" height="24"/>
+    <rect x="96"  y="72"  width="24" height="24" fill="#6d8aa0"/>
+    <rect x="120" y="72"  width="24" height="24"/>
+    <rect x="144" y="72"  width="24" height="24" fill="#6d8aa0"/>
+    <rect x="168" y="72"  width="24" height="24"/>
+
+    <rect x="0"   y="96"  width="24" height="24"/>
+    <rect x="24"  y="96"  width="24" height="24" fill="#6d8aa0"/>
+    <rect x="48"  y="96"  width="24" height="24"/>
+    <rect x="72"  y="96"  width="24" height="24" fill="#6d8aa0"/>
+    <rect x="96"  y="96"  width="24" height="24"/>
+    <rect x="120" y="96"  width="24" height="24" fill="#6d8aa0"/>
+    <rect x="144" y="96"  width="24" height="24"/>
+    <rect x="168" y="96"  width="24" height="24" fill="#6d8aa0"/>
+
+    <rect x="0"   y="120" width="24" height="24" fill="#6d8aa0"/>
+    <rect x="24"  y="120" width="24" height="24"/>
+    <rect x="48"  y="120" width="24" height="24" fill="#6d8aa0"/>
+    <rect x="72"  y="120" width="24" height="24"/>
+    <rect x="96"  y="120" width="24" height="24" fill="#6d8aa0"/>
+    <rect x="120" y="120" width="24" height="24"/>
+    <rect x="144" y="120" width="24" height="24" fill="#6d8aa0"/>
+    <rect x="168" y="120" width="24" height="24"/>
+
+    <rect x="0"   y="144" width="24" height="24"/>
+    <rect x="24"  y="144" width="24" height="24" fill="#6d8aa0"/>
+    <rect x="48"  y="144" width="24" height="24"/>
+    <rect x="72"  y="144" width="24" height="24" fill="#6d8aa0"/>
+    <rect x="96"  y="144" width="24" height="24"/>
+    <rect x="120" y="144" width="24" height="24" fill="#6d8aa0"/>
+    <rect x="144" y="144" width="24" height="24"/>
+    <rect x="168" y="144" width="24" height="24" fill="#6d8aa0"/>
+
+    <rect x="0"   y="168" width="24" height="24" fill="#6d8aa0"/>
+    <rect x="24"  y="168" width="24" height="24"/>
+    <rect x="48"  y="168" width="24" height="24" fill="#6d8aa0"/>
+    <rect x="72"  y="168" width="24" height="24"/>
+    <rect x="96"  y="168" width="24" height="24" fill="#6d8aa0"/>
+    <rect x="120" y="168" width="24" height="24"/>
+    <rect x="144" y="168" width="24" height="24" fill="#6d8aa0"/>
+    <rect x="168" y="168" width="24" height="24"/>
+  </g>
+</svg>
