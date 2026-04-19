@@ -51,6 +51,8 @@ add_library(dbweave_ui STATIC
     loadpartsdialog.cpp
     aboutdialog.cpp
     techinfodialog.cpp
+    envoptionsdialog.cpp
+    xoptionsdialog.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)

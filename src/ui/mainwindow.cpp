@@ -477,6 +477,15 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	addSpecial(QStringLiteral("B"), ANBINDUNG, QStringLiteral("Binding (Anbindung)"));
 	addSpecial(QStringLiteral("U"), ABBINDUNG, QStringLiteral("Unbinding (Abbindung)"));
 
+	/*  Options menu. */
+	QMenu* optMenu = menuBar()->addMenu(QStringLiteral("&Options"));
+	QAction* actEnvOpt = optMenu->addAction(QStringLiteral("&Environment..."));
+	QAction* actXOpt   = optMenu->addAction(QStringLiteral("&Options..."));
+	QAction* actXOptG  = optMenu->addAction(QStringLiteral("Options (&global)..."));
+	connect(actEnvOpt, &QAction::triggered, this, [this]{ OptEnvironmentClick(); });
+	connect(actXOpt,   &QAction::triggered, this, [this]{ XOptionsClick();       });
+	connect(actXOptG,  &QAction::triggered, this, [this]{ XOptionsGlobalClick(); });
+
 	/*  Help menu. */
 	QMenu* helpMenu = menuBar()->addMenu(QStringLiteral("&Help"));
 	QAction* actTechInfo = helpMenu->addAction(QStringLiteral("&Technical Info..."));

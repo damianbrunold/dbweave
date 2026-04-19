@@ -210,3 +210,62 @@ void __fastcall TDBWFRM::AllocBuffers (bool _clear)
 	AllocBuffersY2();
 }
 /*-----------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------*/
+/*  SetAusmasse: resize the document dimensions (warps, shafts,
+    treadles, wefts) + visibility caps. Verbatim port of legacy/
+    xoptions_form.cpp:SetAusmasse. Called from ShowOptions when
+    the user accepts a resize.                                    */
+void __fastcall TDBWFRM::SetAusmasse (int _x1, int _y1, int _x2, int _y2,
+                                      int _vx2, int _vy1)
+{
+	/*  #Schaefte == #Tritte */
+	if (_y1 > _x2) _x2 = _y1;
+	if (_x2 > _y1) _y1 = _x2;
+
+	/*  Feld u. U. redimensionieren. */
+	if (_x1 != Data->MAXX1) {
+		blatteinzug.feld.Resize(_x1, 0);
+		kettfarben.feld.Resize(_x1, Data->defcolorh);
+		einzug.feld.Resize(_x1, 0);
+		einzug.maxy = _y1;
+	}
+	if (_x1 != Data->MAXX1 || _y2 != Data->MAXY2)
+		gewebe.feld.Resize(_x1, _y2, 0);
+	if (_x2 != Data->MAXX2 || _y1 != Data->MAXY1)
+		aufknuepfung.feld.Resize(_x2, _y1, 0);
+	if (_x2 != Data->MAXX2 || _y2 != Data->MAXY2) {
+		trittfolge.feld.Resize(_x2, _y2, 0);
+		trittfolge.isempty.Resize(_y2, true);
+	}
+	if (_y2 != Data->MAXY2)
+		schussfarben.feld.Resize(_y2, Data->defcolorv);
+
+	const bool reallocbufs = _x1 != Data->MAXX1 || _y2 != Data->MAXY2
+	                      || _x2 != Data->MAXX2 || _y1 != Data->MAXY1;
+
+	Data->MAXX1 = _x1;
+	Data->MAXY1 = _y1;
+	Data->MAXX2 = _x2;
+	Data->MAXY2 = _y2;
+
+	if (reallocbufs) AllocBuffers(false);
+
+	if (hvisible == 0 && _vy1 != 0) {
+		if (ViewEinzug) ViewEinzug->setChecked(true);
+	}
+	if (wvisible == 0 && _vx2 != 0) {
+		if (ViewTrittfolge) ViewTrittfolge->setChecked(true);
+	}
+
+	hvisible = _vy1;
+	wvisible = _vx2;
+
+	if (Data->MAXY1 < hvisible) hvisible = Data->MAXY1;
+	if (Data->MAXX2 < wvisible) wvisible = Data->MAXX2;
+
+	if (hvisible == 0) { if (ViewEinzug)     ViewEinzug    ->setChecked(false); }
+	if (wvisible == 0) { if (ViewTrittfolge) ViewTrittfolge->setChecked(false); }
+
+	CalcRange();
+}

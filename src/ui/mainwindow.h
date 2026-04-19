@@ -160,6 +160,12 @@ public:
 	                    line width in Simulation.                   */
 	bool  sinkingshed  = false;
 	bool  fewithraster = false;
+	/*  true -> einzug renders below the gewebe (legacy
+	    EinzugUnten option). recomputeLayout currently ignores
+	    this flag; kept for option-dialog round-trip.          */
+	bool  einzugunten  = false;
+	/*  true -> use the alternative standard colour palette.  */
+	bool  palette2     = false;
 	float faktor_kette  = 1.0f;
 	float faktor_schuss = 1.0f;
 	int   currentzoom   = 4;
@@ -577,6 +583,14 @@ public:
 	void __fastcall FileSave ();
 	void __fastcall FileSaveAs ();
 	void __fastcall LoadPartsClick ();
+
+	/*  Options / Environment dialogs (app settings). */
+	void __fastcall OptEnvironmentClick ();
+	void __fastcall XOptionsClick       ();
+	void __fastcall XOptionsGlobalClick ();
+	void __fastcall ShowOptions (bool _global);
+	void __fastcall SetAusmasse (int _x1, int _y1, int _x2, int _y2,
+	                             int _vx2, int _vy1);
 
 	/*  --- Most-recently-used files ------------------------------
 	    Up to 6 paths stored via QSettings under

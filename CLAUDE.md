@@ -114,3 +114,4 @@ Split analogously to the main editor: `steuerung_draw.cpp`, `steuerung_kbd.cpp`,
 - Preserve German domain identifiers (see glossary above).
 - Every ported module should ship with at least a minimal Qt Test under `tests/`.
 - Docs: `dbw_manual.pdf` (English), `dbw_handbuch.pdf` (German). License: `LICENSE`.
+- Port the functionality as directly as possible. The Port should work exactly as the legacy code, except for required deviations.
