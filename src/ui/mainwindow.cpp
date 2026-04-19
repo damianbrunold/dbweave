@@ -233,6 +233,38 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	connect(actSteigDec,         &QAction::triggered, this, [this] { SteigungDec();          });
 	connect(actSpInvert,         &QAction::triggered, this, [this] { SpInvert();             });
 
+	/*  Pattern menu: structural insert / delete of threads, shafts
+	    and treadles. Each action is gated on kbd_field at invocation
+	    time (inside the handler) so Qt's enabled-state doesn't need
+	    live updates.                                              */
+	QMenu* patternMenu = menuBar()->addMenu(QStringLiteral("&Pattern"));
+	QAction* actInsKette   = patternMenu->addAction(QStringLiteral("Insert &Warp thread"));
+	QAction* actInsSchuss  = patternMenu->addAction(QStringLiteral("Insert W&eft thread"));
+	QAction* actInsSchaft  = patternMenu->addAction(QStringLiteral("Insert &Shaft"));
+	QAction* actInsTritt   = patternMenu->addAction(QStringLiteral("Insert &Treadle"));
+	patternMenu->addSeparator();
+	QAction* actDelKette   = patternMenu->addAction(QStringLiteral("Delete W&arp thread"));
+	QAction* actDelSchuss  = patternMenu->addAction(QStringLiteral("Delete Wef&t thread"));
+	QAction* actDelSchaft  = patternMenu->addAction(QStringLiteral("Delete Sh&aft"));
+	QAction* actDelTritt   = patternMenu->addAction(QStringLiteral("Delete Tre&adle"));
+	patternMenu->addSeparator();
+	QAction* actSchaftUp   = patternMenu->addAction(QStringLiteral("Shaft &Up"));
+	QAction* actSchaftDown = patternMenu->addAction(QStringLiteral("Shaft &Down"));
+	QAction* actTrittLeft  = patternMenu->addAction(QStringLiteral("Treadle &Left"));
+	QAction* actTrittRight = patternMenu->addAction(QStringLiteral("Treadle &Right"));
+	connect(actInsKette,   &QAction::triggered, this, [this] { InsertKetteClick();  });
+	connect(actInsSchuss,  &QAction::triggered, this, [this] { InsertSchussClick(); });
+	connect(actInsSchaft,  &QAction::triggered, this, [this] { InsertSchaftClick(); });
+	connect(actInsTritt,   &QAction::triggered, this, [this] { InsertTrittClick();  });
+	connect(actDelKette,   &QAction::triggered, this, [this] { DeleteKetteClick();  });
+	connect(actDelSchuss,  &QAction::triggered, this, [this] { DeleteSchussClick(); });
+	connect(actDelSchaft,  &QAction::triggered, this, [this] { DeleteSchaftClick(); });
+	connect(actDelTritt,   &QAction::triggered, this, [this] { DeleteTrittClick();  });
+	connect(actSchaftUp,   &QAction::triggered, this, [this] { SchaftMoveUpClick();   });
+	connect(actSchaftDown, &QAction::triggered, this, [this] { SchaftMoveDownClick(); });
+	connect(actTrittLeft,  &QAction::triggered, this, [this] { TrittMoveLeftClick();  });
+	connect(actTrittRight, &QAction::triggered, this, [this] { TrittMoveRightClick(); });
+
 	QMenu* viewMenu = menuBar()->addMenu(QStringLiteral("&View"));
 	QAction* actZoomIn     = viewMenu->addAction(QStringLiteral("Zoom &In"));
 	QAction* actZoomOut    = viewMenu->addAction(QStringLiteral("Zoom &Out"));

@@ -304,6 +304,32 @@ public:
 	void __fastcall RecalcFreieSchaefte();
 	void __fastcall RecalcFreieTritte();
 
+	/*  --- Insert / Delete / Move menu ops ---------------------
+	    Structural editing: shift warp / weft / shaft / treadle to
+	    make room for a new one or remove an existing one. Ported
+	    verbatim from legacy/insert.cpp, legacy/delete.cpp,
+	    legacy/move.cpp.                                         */
+	bool __fastcall _IsEmptySchaft  (int _j);
+	bool __fastcall _IsEmptyTritt   (int _i);
+	int  __fastcall GetEmptySchaft  ();
+	int  __fastcall GetEmptyTritt   ();
+	void __fastcall InsertKettfaden   (int _i);
+	void __fastcall InsertSchussfaden (int _j);
+	void __fastcall DeleteKettfaden   (int _i);
+	void __fastcall DeleteSchussfaden (int _j);
+	void __fastcall InsertSchaftClick ();
+	void __fastcall InsertTrittClick  ();
+	void __fastcall InsertKetteClick  ();
+	void __fastcall InsertSchussClick ();
+	void __fastcall DeleteSchaftClick ();
+	void __fastcall DeleteTrittClick  ();
+	void __fastcall DeleteKetteClick  ();
+	void __fastcall DeleteSchussClick ();
+	void __fastcall SchaftMoveUpClick   ();
+	void __fastcall SchaftMoveDownClick ();
+	void __fastcall TrittMoveLeftClick  ();
+	void __fastcall TrittMoveRightClick ();
+
 	/*  Full einzug / trittfolge / aufknuepfung recompute from the
 	    current gewebe content. Used by bereiche, importbmp,
 	    insertbindung, rapportieren, and Edit operations that

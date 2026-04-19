@@ -40,6 +40,9 @@ add_library(dbweave_ui STATIC
     steigung.cpp
     palettepanel.cpp
     recalc.cpp
+    insert.cpp
+    delete.cpp
+    move.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)
