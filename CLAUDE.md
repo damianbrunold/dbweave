@@ -110,8 +110,6 @@ Split analogously to the main editor: `steuerung_draw.cpp`, `steuerung_kbd.cpp`,
 
 - Do not edit anything under `legacy/`. Treat it as a read-only reference snapshot.
 - New code goes into `src/<sub-module>/`. When adding a source file, add it to the matching `CMakeLists.txt` under `src/` or its sub-module.
-- Code style during the port matches the legacy style (tabs, brace-on-same-line); see `.clang-format`. Full Qt-style reformat happens in Phase 12.
 - Preserve German domain identifiers (see glossary above).
-- Every ported module should ship with at least a minimal Qt Test under `tests/`.
 - Docs: `dbw_manual.pdf` (English), `dbw_handbuch.pdf` (German). License: `LICENSE`.
-- Port the functionality as directly as possible. The Port should work exactly as the legacy code, except for required deviations.
+- Before committing, run clang-format on the changed files
