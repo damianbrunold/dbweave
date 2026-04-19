@@ -180,7 +180,13 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
         farben + trittfolge + gaps. */
     const int rightW = trittfolgeW + (showFarbe ? schussfarbenW + MARGIN : 0);
     const int ez_area_w = usableW - rightW - 3 * MARGIN;
-    const int ez_cells = std::max(0, ez_area_w / GW);
+    /*  Cap the visible gewebe / strip width at Data->MAXX1 cells.
+        Without this, enlarging the window produces a strip wider
+        than the field's backing store -- paintEvent then reads
+        kettfarben.feld.Get(i) with i > MAXX1-1 and paints whatever
+        memory lies past the allocation. Legacy clamps the same way
+        in RecalcDimensions.                                        */
+    const int ez_cells = std::max(0, std::min(ez_area_w / GW, Data ? Data->MAXX1 : 0));
     const int colW = ez_cells * GW;
     const int colX = MARGIN;
 
@@ -215,7 +221,10 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
     const int stripsAboveGewebeH = frm->kettfarben.pos.height + fh_div + frm->einzug.pos.height
                                    + e_div + frm->blatteinzug.pos.height + b_div;
     const int tf_area_h = usableH - 2 * MARGIN - stripsAboveGewebeH;
-    const int tf_rows = std::max(0, tf_area_h / GH);
+    /*  Likewise cap the vertical extent at Data->MAXY2 so the
+        schussfarben / gewebe row loops don't read past the backing
+        schussfarben.feld.                                        */
+    const int tf_rows = std::max(0, std::min(tf_area_h / GH, Data ? Data->MAXY2 : 0));
 
     frm->gewebe.gw = GW;
     frm->gewebe.gh = GH;
@@ -597,6 +606,15 @@ void PatternCanvas::paintEvent(QPaintEvent* /*_e*/)
         p.drawRect(g.x0, g.y0, g.width, g.height);
     };
 
+    /*  Direction-aware data-index lookup. kettfarben / blatteinzug
+        flow along the kette (warp) axis and share right-to-left
+        handling. schussfarben flows along the weft (top-to-bottom)
+        axis. Width/height are already clamped to Data->MAX* in
+        recomputeLayout above, so `cols`/`rows` here never exceed
+        the backing-feld size -- but we still pick the source index
+        via the orientation flags so the cells draw in the same
+        visual order as legacy.                                  */
+
     /*  kettfarben: horizontal strip, one palette-coloured cell per
         warp thread, separated by a clBtnShadow vertical hairline. */
     if (frm->kettfarben.gw > 0 && frm->kettfarben.pos.width > 0 && Data && Data->palette) {
@@ -604,9 +622,11 @@ void PatternCanvas::paintEvent(QPaintEvent* /*_e*/)
         const int y0 = frm->kettfarben.pos.y0;
         const int h = frm->kettfarben.pos.height;
         for (int i = 0; i < cols; i++) {
+            const int idx = frm->righttoleft ? frm->scroll_x1 + (cols - 1 - i)
+                                             : frm->scroll_x1 + i;
             const int x = frm->kettfarben.pos.x0 + i * frm->kettfarben.gw;
             p.setPen(Qt::NoPen);
-            p.setBrush(palCol(frm->kettfarben.feld.Get(frm->scroll_x1 + i)));
+            p.setBrush(palCol(frm->kettfarben.feld.Get(idx)));
             p.drawRect(x, y0, frm->kettfarben.gw, h);
             p.setPen(QPen(kLegacyBtnShadow));
             p.drawLine(x, y0, x, y0 + h);
@@ -615,16 +635,19 @@ void PatternCanvas::paintEvent(QPaintEvent* /*_e*/)
     }
 
     /*  schussfarben: vertical strip right of trittfolge, one
-        palette-coloured cell per weft thread; y axis flipped
-        (j=0 lives at the bottom). Cell separators are horizontal
-        clBtnShadow hairlines. */
+        palette-coloured cell per weft thread. Always bottom-up
+        (j=0 at the bottom) -- legacy DrawSchussfarben doesn't
+        branch on toptobottom because the gewebe grid itself also
+        stays bottom-up regardless of that flag. Mirroring schuss-
+        farben here would misalign it with the rows of the pattern
+        next to it.                                              */
     if (frm->schussfarben.gh > 0 && frm->schussfarben.pos.height > 0 && Data && Data->palette) {
         const int rows = frm->schussfarben.pos.height / frm->schussfarben.gh;
         const int x0 = frm->schussfarben.pos.x0;
         const int w = frm->schussfarben.pos.width;
         for (int j = 0; j < rows; j++) {
             const int y = frm->schussfarben.pos.y0 + frm->schussfarben.pos.height
-                          - (j + 1) * frm->schussfarben.gh;
+                - (j + 1) * frm->schussfarben.gh;
             p.setPen(Qt::NoPen);
             p.setBrush(palCol(frm->schussfarben.feld.Get(frm->scroll_y2 + j)));
             p.drawRect(x0, y, w, frm->schussfarben.gh);
@@ -645,9 +668,11 @@ void PatternCanvas::paintEvent(QPaintEvent* /*_e*/)
         const int h = frm->blatteinzug.pos.height;
         const int half = h / 2;
         for (int i = 0; i < cols; i++) {
+            const int idx = frm->righttoleft ? frm->scroll_x1 + (cols - 1 - i)
+                                             : frm->scroll_x1 + i;
             const int x = frm->blatteinzug.pos.x0 + i * frm->blatteinzug.gw;
             const int gw = frm->blatteinzug.gw;
-            const bool on = frm->blatteinzug.feld.Get(frm->scroll_x1 + i);
+            const bool on = frm->blatteinzug.feld.Get(idx);
             p.setPen(Qt::NoPen);
             /*  Top half */
             p.setBrush(on ? QColor(Qt::black) : kLegacyBtnFace);
