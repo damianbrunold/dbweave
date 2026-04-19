@@ -43,6 +43,7 @@ add_library(dbweave_ui STATIC
     insert.cpp
     delete.cpp
     move.cpp
+    insertbindung.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)

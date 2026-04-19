@@ -265,6 +265,39 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	connect(actTrittLeft,  &QAction::triggered, this, [this] { TrittMoveLeftClick();  });
 	connect(actTrittRight, &QAction::triggered, this, [this] { TrittMoveRightClick(); });
 
+	/*  Insert binding: stamp a Koeper (twill) or Atlas (satin)
+	    weave structure into the gewebe at the cursor. 13 variants
+	    matching legacy insertbindung.cpp.                       */
+	patternMenu->addSeparator();
+	QMenu* bindMenu  = patternMenu->addMenu(QStringLiteral("Insert &binding"));
+	QMenu* koepMenu  = bindMenu   ->addMenu(QStringLiteral("&Koeper (twill)"));
+	QMenu* atlasMenu = bindMenu   ->addMenu(QStringLiteral("&Atlas (satin)"));
+	auto addKoeper = [this, koepMenu](const QString& label, int h, int s) {
+		QAction* a = koepMenu->addAction(label);
+		connect(a, &QAction::triggered, this, [this, h, s] { KoeperEinfuegen(h, s); });
+	};
+	addKoeper(QStringLiteral("2 / 2"), 2, 2);
+	addKoeper(QStringLiteral("3 / 3"), 3, 3);
+	addKoeper(QStringLiteral("4 / 4"), 4, 4);
+	addKoeper(QStringLiteral("5 / 5"), 5, 5);
+	koepMenu->addSeparator();
+	addKoeper(QStringLiteral("2 / 1"), 2, 1);
+	addKoeper(QStringLiteral("3 / 1"), 3, 1);
+	addKoeper(QStringLiteral("4 / 1"), 4, 1);
+	addKoeper(QStringLiteral("5 / 1"), 5, 1);
+	koepMenu->addSeparator();
+	addKoeper(QStringLiteral("3 / 2"), 3, 2);
+	addKoeper(QStringLiteral("4 / 2"), 4, 2);
+	addKoeper(QStringLiteral("5 / 2"), 5, 2);
+	koepMenu->addSeparator();
+	addKoeper(QStringLiteral("4 / 3"), 4, 3);
+	addKoeper(QStringLiteral("5 / 3"), 5, 3);
+	auto addAtlas = [this, atlasMenu](int n) {
+		QAction* a = atlasMenu->addAction(QStringLiteral("Atlas &%1").arg(n));
+		connect(a, &QAction::triggered, this, [this, n] { AtlasEinfuegen(n); });
+	};
+	for (int n = 5; n <= 10; n++) addAtlas(n);
+
 	QMenu* viewMenu = menuBar()->addMenu(QStringLiteral("&View"));
 	QAction* actZoomIn     = viewMenu->addAction(QStringLiteral("Zoom &In"));
 	QAction* actZoomOut    = viewMenu->addAction(QStringLiteral("Zoom &Out"));

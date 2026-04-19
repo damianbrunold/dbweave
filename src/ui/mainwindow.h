@@ -330,6 +330,14 @@ public:
 	void __fastcall TrittMoveLeftClick  ();
 	void __fastcall TrittMoveRightClick ();
 
+	/*  --- Insert binding (Koeper / Atlas) --------------------
+	    Stamp a twill (Koeper _h up / _s down) or satin (Atlas
+	    size _n) binding on the gewebe starting at the cursor,
+	    then drive a full RecalcAll so the einzug / trittfolge /
+	    aufknuepfung follow.                                   */
+	void __fastcall KoeperEinfuegen (int _h, int _s);
+	void __fastcall AtlasEinfuegen  (int _n);
+
 	/*  Full einzug / trittfolge / aufknuepfung recompute from the
 	    current gewebe content. Used by bereiche, importbmp,
 	    insertbindung, rapportieren, and Edit operations that
