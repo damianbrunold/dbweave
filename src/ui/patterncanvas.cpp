@@ -130,7 +130,12 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
 
     constexpr int MARGIN = 10;
     constexpr int SB_SIZE = 16; /* thickness of a scrollbar channel */
-    constexpr int DIV = 3;      /* pixel gap between adjacent fields / strips */
+    /*  Inter-strip gap: zoom-scaled, matches legacy RecalcDimensions
+        (`divider = zoom[min(currentzoom,3)] * 3 / 4`). For cell sizes
+        up to zoom[3]=11 this is ~3/4 of a cell; capped at zoom 3 so
+        very large cells don't produce huge gaps. Used for every
+        inner gap between adjacent visible fields / strips.         */
+    const int divider = (std::min(GW, ZOOM_TABLE[3]) * 3) / 4;
     const int W = width();
     const int H = height();
     if (W < 4 * GW || H < 4 * GH)
@@ -191,10 +196,12 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
 
     /*  Width available for the einzug/gewebe/blatteinzug/kettfarben
         column. The right column eats aufknuepfung width + schuss-
-        farben + trittfolge + gaps + hilfslinien vertical bar.     */
-    const int rightW = trittfolgeW + (showFarbe ? schussfarbenW + MARGIN : 0)
-                       + (showHlines ? BAR + MARGIN : 0);
-    const int ez_area_w = usableW - rightW - 3 * MARGIN;
+        farben + trittfolge + inter-strip gaps + hilfslinien bar.  */
+    const int rightW = trittfolgeW + (showFarbe ? schussfarbenW + divider : 0)
+                       + (showHlines ? BAR + divider : 0);
+    /*  Left outer margin (colX) + gewebe↔trittfolge gap (divider)
+        + right outer margin. */
+    const int ez_area_w = usableW - rightW - 2 * MARGIN - divider;
     /*  Cap the visible gewebe / strip width at Data->MAXX1 cells.
         Without this, enlarging the window produces a strip wider
         than the field's backing store -- paintEvent then reads
@@ -208,16 +215,16 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
     /*  Vertical dividers between stacked strips. Legacy inserts a
         `divider` pixel gap between each pair of visible strips
         (farbe/einzug/blatteinzug/gewebe).                       */
-    const int fh_div = showFarbe ? DIV : 0;
-    const int e_div = showEinzug ? DIV : 0;
-    const int b_div = showBlatteinzug ? DIV : 0;
+    const int fh_div = showFarbe ? divider : 0;
+    const int e_div = showEinzug ? divider : 0;
+    const int b_div = showBlatteinzug ? divider : 0;
 
     /*  Legacy places the two horizontal hilfslinien bars at the top
         of the client area; every strip below is pushed down by
-        BAR+DIV when ViewHlines is active. The two vertical bars sit
-        far-right, between schussfarben and the vertical scrollbar
-        (that width is already reserved via rightW above).          */
-    const int hlh_div = showHlines ? BAR + DIV : 0;
+        BAR+divider when ViewHlines is active. The two vertical bars
+        sit far-right, between schussfarben and the vertical
+        scrollbar (that width is reserved via rightW above).        */
+    const int hlh_div = showHlines ? BAR + divider : 0;
 
     frm->kettfarben.gw = GW;
     frm->kettfarben.gh = GH;
@@ -242,7 +249,12 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
 
     const int stripsAboveGewebeH = frm->kettfarben.pos.height + fh_div + frm->einzug.pos.height
                                    + e_div + frm->blatteinzug.pos.height + b_div;
-    const int tf_area_h = usableH - 2 * MARGIN - stripsAboveGewebeH;
+    /*  hlh_div is added to kettfarben.y0 (pushing the whole left
+        column down); the gewebe bottom must stay above the
+        horizontal scrollbar channel, so we subtract hlh_div from the
+        available height. Without this the gewebe slid down under the
+        scrollbar when ViewHlines was active with large cells.       */
+    const int tf_area_h = usableH - 2 * MARGIN - stripsAboveGewebeH - hlh_div;
     /*  Likewise cap the vertical extent at Data->MAXY2 so the
         schussfarben / gewebe row loops don't read past the backing
         schussfarben.feld.                                        */
@@ -260,7 +272,7 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
         schussfarben further right (aligned with gewebe). */
     frm->trittfolge.gw = GW;
     frm->trittfolge.gh = GH;
-    frm->trittfolge.pos.x0 = colX + colW + MARGIN;
+    frm->trittfolge.pos.x0 = colX + colW + divider;
     frm->trittfolge.pos.y0 = frm->gewebe.pos.y0;
     frm->trittfolge.pos.width = trittfolgeW;
     frm->trittfolge.pos.height = showTrittfolge ? frm->gewebe.pos.height : 0;
@@ -268,7 +280,7 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
     frm->schussfarben.gw = GW;
     frm->schussfarben.gh = GH;
     frm->schussfarben.pos.x0
-        = frm->trittfolge.pos.x0 + frm->trittfolge.pos.width + (showFarbe ? MARGIN : 0);
+        = frm->trittfolge.pos.x0 + frm->trittfolge.pos.width + (showFarbe ? divider : 0);
     frm->schussfarben.pos.y0 = frm->gewebe.pos.y0;
     frm->schussfarben.pos.width = schussfarbenW;
     frm->schussfarben.pos.height = showFarbe ? frm->gewebe.pos.height : 0;
@@ -298,7 +310,7 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
         frm->hlinevert2.height = frm->gewebe.pos.height;
 
         /*  Pull schussfarben to the left of the vertical bar. */
-        frm->schussfarben.pos.x0 = hlvX - DIV - frm->schussfarben.pos.width;
+        frm->schussfarben.pos.x0 = hlvX - divider - frm->schussfarben.pos.width;
 
         /*  Horizontal bars sit at the very top, above their
             respective columns.                                */
