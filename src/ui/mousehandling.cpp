@@ -45,7 +45,7 @@ static bool HitCheck (const GRIDPOS& _grid, int _x, int _y,
 	return true;
 }
 
-void __fastcall TDBWFRM::Physical2Logical (int _x, int _y, FELD& _feld, int& _i, int& _j)
+void TDBWFRM::Physical2Logical (int _x, int _y, FELD& _feld, int& _i, int& _j)
 {
 	const bool rtl = righttoleft;
 	const bool ttb = toptobottom;
@@ -77,7 +77,7 @@ static void dataCoords (TDBWFRM* frm, FELD f, int vp_i, int vp_j, int& di, int& 
 	}
 }
 
-void __fastcall TDBWFRM::handleCanvasMousePress (int _x, int _y, bool _shift, bool _ctrl)
+void TDBWFRM::handleCanvasMousePress (int _x, int _y, bool _shift, bool _ctrl)
 {
 	FELD f;
 	int  i, j;
@@ -141,7 +141,7 @@ void __fastcall TDBWFRM::handleCanvasMousePress (int _x, int _y, bool _shift, bo
 	refresh();
 }
 
-void __fastcall TDBWFRM::handleCanvasMouseMove (int _x, int _y, bool _shift)
+void TDBWFRM::handleCanvasMouseMove (int _x, int _y, bool _shift)
 {
 	if (!mousedown) return;
 
@@ -196,7 +196,7 @@ void __fastcall TDBWFRM::handleCanvasMouseMove (int _x, int _y, bool _shift)
 	}
 }
 
-void __fastcall TDBWFRM::handleCanvasMouseRelease ()
+void TDBWFRM::handleCanvasMouseRelease ()
 {
 	/*  Tool-drag release: rasterise the shape between anchor and
 	    current cell via DrawTool, clear the preview, and bail out

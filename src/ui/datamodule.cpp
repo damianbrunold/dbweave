@@ -36,7 +36,7 @@ TData::~TData()
 	delete properties;
 }
 
-void __fastcall TData::ReloadLanguage()
+void TData::ReloadLanguage()
 {
 	/*  Placeholder -- the legacy implementation reloads dialog
 	    captions from the language.cpp string table. Ported later

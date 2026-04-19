@@ -49,7 +49,7 @@ static QColor palCol (int _idx)
 	return qColorFromTColor((TColor)Data->palette->GetColor(_idx));
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DrawGewebe (int _i, int _j)
+void TDBWFRM::DrawGewebe (int _i, int _j)
 {
 	QPainter* p = currentPainter;
 	if (!p) return;
@@ -109,7 +109,7 @@ void __fastcall TDBWFRM::DrawGewebe (int _i, int _j)
 	            qColorFromTColor(GetRangeColor(range)));
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DrawGewebeRapport (int _i, int _j, int _x, int _y, int _xx, int _yy)
+void TDBWFRM::DrawGewebeRapport (int _i, int _j, int _x, int _y, int _xx, int _yy)
 {
 	QPainter* p = currentPainter;
 	if (!p) return;
@@ -121,7 +121,7 @@ void __fastcall TDBWFRM::DrawGewebeRapport (int _i, int _j, int _x, int _y, int 
 	p->fillRect(QRect(_x + 1, _y + 1, _xx - _x - 1, _yy - _y - 1), fg);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DrawGewebeFarbeffekt (int _i, int _j, int _x, int _y, int _xx, int _yy)
+void TDBWFRM::DrawGewebeFarbeffekt (int _i, int _j, int _x, int _y, int _xx, int _yy)
 {
 	QPainter* p = currentPainter;
 	if (!p) return;
@@ -139,7 +139,7 @@ void __fastcall TDBWFRM::DrawGewebeFarbeffekt (int _i, int _j, int _x, int _y, i
 	if (fewithraster) DrawGewebeRahmen(_i, _j);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DrawGewebeSimulation (int _i, int _j, int _x, int _y, int _xx, int _yy)
+void TDBWFRM::DrawGewebeSimulation (int _i, int _j, int _x, int _y, int _xx, int _yy)
 {
 	QPainter* p = currentPainter;
 	if (!p) return;
@@ -188,21 +188,21 @@ void __fastcall TDBWFRM::DrawGewebeSimulation (int _i, int _j, int _x, int _y, i
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DrawGewebeSchuss (int _j)
+void TDBWFRM::DrawGewebeSchuss (int _j)
 {
 	if (gewebe.gw <= 0) return;
 	for (int i = 0; i < gewebe.pos.width / gewebe.gw; i++)
 		DrawGewebe(i, _j);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DrawGewebeKette (int _i)
+void TDBWFRM::DrawGewebeKette (int _i)
 {
 	if (gewebe.gh <= 0) return;
 	for (int j = 0; j < gewebe.pos.height / gewebe.gh; j++)
 		DrawGewebe(_i, j);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DeleteGewebeSchuss (int _j)
+void TDBWFRM::DeleteGewebeSchuss (int _j)
 {
 	if (gewebe.gw <= 0) return;
 	for (int i = 0; i < gewebe.pos.width / gewebe.gw; i++) {
@@ -211,7 +211,7 @@ void __fastcall TDBWFRM::DeleteGewebeSchuss (int _j)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DeleteGewebeKette (int _i)
+void TDBWFRM::DeleteGewebeKette (int _i)
 {
 	if (gewebe.gh <= 0) return;
 	for (int j = 0; j < gewebe.pos.height / gewebe.gh; j++) {
@@ -220,7 +220,7 @@ void __fastcall TDBWFRM::DeleteGewebeKette (int _i)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DrawEinzug (int _i, int _j)
+void TDBWFRM::DrawEinzug (int _i, int _j)
 {
 	QPainter* p = currentPainter;
 	if (!p) return;
@@ -252,7 +252,7 @@ void __fastcall TDBWFRM::DrawEinzug (int _i, int _j)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DrawAufknuepfung (int _i, int _j)
+void TDBWFRM::DrawAufknuepfung (int _i, int _j)
 {
 	QPainter* p = currentPainter;
 	if (!p) return;
@@ -309,7 +309,7 @@ void __fastcall TDBWFRM::DrawAufknuepfung (int _i, int _j)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DrawTrittfolge (int _i, int _j)
+void TDBWFRM::DrawTrittfolge (int _i, int _j)
 {
 	QPainter* p = currentPainter;
 	if (!p) return;
@@ -376,7 +376,7 @@ void __fastcall TDBWFRM::DrawTrittfolge (int _i, int _j)
     TDBWFRM::strongclr. These paint one cell at a time, same as the
     Draw* primitives; PatternCanvas drives the iteration. */
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DrawEinzugRahmen (int _i, int _j)
+void TDBWFRM::DrawEinzugRahmen (int _i, int _j)
 {
 	QPainter* p = currentPainter;
 	if (!p) return;
@@ -431,7 +431,7 @@ void __fastcall TDBWFRM::DrawEinzugRahmen (int _i, int _j)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DrawAufknuepfungRahmen (int _i, int _j)
+void TDBWFRM::DrawAufknuepfungRahmen (int _i, int _j)
 {
 	QPainter* p = currentPainter;
 	if (!p) return;
@@ -475,7 +475,7 @@ void __fastcall TDBWFRM::DrawAufknuepfungRahmen (int _i, int _j)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DrawTrittfolgeRahmen (int _i, int _j)
+void TDBWFRM::DrawTrittfolgeRahmen (int _i, int _j)
 {
 	QPainter* p = currentPainter;
 	if (!p) return;
@@ -507,7 +507,7 @@ void __fastcall TDBWFRM::DrawTrittfolgeRahmen (int _i, int _j)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DrawGewebeRahmen (int _i, int _j)
+void TDBWFRM::DrawGewebeRahmen (int _i, int _j)
 {
 	QPainter* p = currentPainter;
 	if (!p) return;

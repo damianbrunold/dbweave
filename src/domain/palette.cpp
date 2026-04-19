@@ -42,35 +42,35 @@ struct LOGPALETTE_legacy {
 };
 #pragma pack(pop)
 /*-----------------------------------------------------------------*/
-__fastcall Palette::Palette()
+ Palette::Palette()
 {
 	palette2 = false;
 	InitPalette();
 }
 /*-----------------------------------------------------------------*/
-__fastcall Palette::~Palette()
+ Palette::~Palette()
 {
 	//
 }
 /*-----------------------------------------------------------------*/
-void __fastcall Palette::SetPaletteType (bool _palette2)
+void Palette::SetPaletteType (bool _palette2)
 {
 	palette2 = _palette2;
 	InitPalette();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall Palette::InitPalette()
+void Palette::InitPalette()
 {
 	if (!palette2) FillDefaultPalette ();
 	else FillDefaultPalette2 ();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall Palette::SetPaletteEntry (int _i, BYTE _red, BYTE _green, BYTE _blue)
+void Palette::SetPaletteEntry (int _i, BYTE _red, BYTE _green, BYTE _blue)
 {
 	data[_i] = RGB(_red, _green, _blue);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall Palette::FillDefaultPalette()
+void Palette::FillDefaultPalette()
 {
 	int i = 0;
 	SetPaletteEntry (i++, 0xff, 0x00, 0x00);
@@ -312,7 +312,7 @@ void __fastcall Palette::FillDefaultPalette()
 	SetPaletteEntry (i++, 0x00, 0x00, 0x00);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall Palette::FillDefaultPalette2()
+void Palette::FillDefaultPalette2()
 {
 	int i, red, green, blue;
 
@@ -409,7 +409,7 @@ void __fastcall Palette::FillDefaultPalette2()
 	SetPaletteEntry (MAX_PAL_ENTRY-1, 221, 220, 220);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall Palette::FillDefaultPalette3()
+void Palette::FillDefaultPalette3()
 {
 	int i, j, k, red, green, blue;
 
@@ -436,7 +436,7 @@ void __fastcall Palette::FillDefaultPalette3()
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall Palette::Save (FfWriter* _writer, bool _format37)
+void Palette::Save (FfWriter* _writer, bool _format37)
 {
 	if (!_writer->IsOpen()) return;
 	if (_format37) {
@@ -471,7 +471,7 @@ void __fastcall Palette::Save (FfWriter* _writer, bool _format37)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall Palette::Load (FfReader* _reader)
+void Palette::Load (FfReader* _reader)
 {
 	int newsize = MAX_PAL_ENTRY;
 	(void)newsize;
@@ -508,12 +508,12 @@ void __fastcall Palette::Load (FfReader* _reader)
 	delete[] olddata;
 }
 /*-----------------------------------------------------------------*/
-COLORREF __fastcall Palette::GetColor (int _index)
+COLORREF Palette::GetColor (int _index)
 {
 	return data[_index];
 }
 /*-----------------------------------------------------------------*/
-void __fastcall Palette::SetColor (int _index, COLORREF _color)
+void Palette::SetColor (int _index, COLORREF _color)
 {
 	data[_index] = _color;
 }

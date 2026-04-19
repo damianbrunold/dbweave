@@ -16,7 +16,7 @@
 #include "settings.h"
 #include "regbase.h"
 /*-----------------------------------------------------------------*/
-__fastcall Settings::Settings()
+ Settings::Settings()
 {
 	category = QStringLiteral("General");
 	try {
@@ -27,12 +27,12 @@ __fastcall Settings::Settings()
 	}
 }
 /*-----------------------------------------------------------------*/
-__fastcall Settings::~Settings()
+ Settings::~Settings()
 {
 	delete registry;
 }
 /*-----------------------------------------------------------------*/
-int __fastcall Settings::Load (const AnsiString& _name, int _default/*=0*/)
+int Settings::Load (const AnsiString& _name, int _default/*=0*/)
 {
 	dbw3_assert (registry);
 	int value = _default;
@@ -48,7 +48,7 @@ int __fastcall Settings::Load (const AnsiString& _name, int _default/*=0*/)
 	return value;
 }
 /*-----------------------------------------------------------------*/
-AnsiString __fastcall Settings::Load (const AnsiString& _name, const AnsiString& _default/*=""*/)
+AnsiString Settings::Load (const AnsiString& _name, const AnsiString& _default/*=""*/)
 {
 	dbw3_assert (registry);
 	AnsiString value = _default;
@@ -64,7 +64,7 @@ AnsiString __fastcall Settings::Load (const AnsiString& _name, const AnsiString&
 	return value;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall Settings::Save (const AnsiString& _name, int _value)
+void Settings::Save (const AnsiString& _name, int _value)
 {
 	try {
 		AnsiString key = AnsiString(DBW_REGBASE) + category;
@@ -76,7 +76,7 @@ void __fastcall Settings::Save (const AnsiString& _name, int _value)
 	registry->CloseKey();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall Settings::Save (const AnsiString& _name, const AnsiString& _value)
+void Settings::Save (const AnsiString& _name, const AnsiString& _value)
 {
 	try {
 		AnsiString key = AnsiString(DBW_REGBASE) + category;

@@ -491,7 +491,7 @@ void EntwurfsinfoDialog::onExport ()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::ViewInfosClick ()
+void TDBWFRM::ViewInfosClick ()
 {
 	EntwurfsinfoDialog dlg(this, this);
 	dlg.initInfos();

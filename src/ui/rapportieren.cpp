@@ -23,7 +23,7 @@
 #include "rapportdialog.h"
 #include "undoredo.h"
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::RapportSchuss (int _ry, bool _withcolors)
+void TDBWFRM::RapportSchuss (int _ry, bool _withcolors)
 {
 	int j, j1, j2, sj1, sj2;
 
@@ -61,7 +61,7 @@ void __fastcall TDBWFRM::RapportSchuss (int _ry, bool _withcolors)
 	CalcRangeSchuesse();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::RapportKette (int _rx, bool _withcolors)
+void TDBWFRM::RapportKette (int _rx, bool _withcolors)
 {
 	int i, i1, i2, ki1, ki2;
 
@@ -99,7 +99,7 @@ void __fastcall TDBWFRM::RapportKette (int _rx, bool _withcolors)
 	CalcRangeKette();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::CopyKettfaden (int _von, int _nach, bool _withcolors)
+void TDBWFRM::CopyKettfaden (int _von, int _nach, bool _withcolors)
 {
 	// Blatteinzug kopieren
 	//xxxx ?? muss ich das?!
@@ -118,7 +118,7 @@ void __fastcall TDBWFRM::CopyKettfaden (int _von, int _nach, bool _withcolors)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::CopySchussfaden (int _von, int _nach, bool _withcolors)
+void TDBWFRM::CopySchussfaden (int _von, int _nach, bool _withcolors)
 {
 	// IsTrittfolgeEmpty kopieren
 	trittfolge.isempty.Set (_nach, trittfolge.isempty.Get(_von));
@@ -137,20 +137,20 @@ void __fastcall TDBWFRM::CopySchussfaden (int _von, int _nach, bool _withcolors)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::ClearKettfaden (int _i)
+void TDBWFRM::ClearKettfaden (int _i)
 {
 	einzug.feld.Set (_i, 0);
 	if (schuesse.b!=-1) for (int j=schuesse.a; j<=schuesse.b; j++) gewebe.feld.Set (_i, j, 0);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::ClearSchussfaden (int _j)
+void TDBWFRM::ClearSchussfaden (int _j)
 {
 	for (int i=0; i<Data->MAXX2; i++) trittfolge.feld.Set (i, _j, 0);
 	trittfolge.isempty.Set (_j, true);
 	if (kette.b!=-1) for (int i=kette.a; i<=kette.b; i++) gewebe.feld.Set (i, _j, 0);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::RappRapportierenClick()
+void TDBWFRM::RappRapportierenClick()
 {
 	RapportDialog dlg(this);
 	dlg.setRepeatAll(false);
@@ -180,7 +180,7 @@ void __fastcall TDBWFRM::RappRapportierenClick()
 	if (undo) undo->Snapshot();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::RappReduzierenClick()
+void TDBWFRM::RappReduzierenClick()
 {
 	RapportKette  (1, false);
 	RapportSchuss (1, false);
@@ -196,7 +196,7 @@ void __fastcall TDBWFRM::RappReduzierenClick()
 	if (undo) undo->Snapshot();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::RappOverrideClick()
+void TDBWFRM::RappOverrideClick()
 {
 	if (!rapport.overridden) {
 		if (selection.Valid() && selection.feld == GEWEBE) {

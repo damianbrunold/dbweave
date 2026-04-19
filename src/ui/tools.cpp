@@ -32,7 +32,7 @@
 #include <cstdlib>
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DrawTool (int _i, int _j, int _i1, int _j1)
+void TDBWFRM::DrawTool (int _i, int _j, int _i1, int _j1)
 {
 	switch (tool) {
 	case TOOL_POINT:
@@ -113,7 +113,7 @@ static void drawLine (FeldGewebe& _gewebe, int _i, int _j, int _i1, int _j1, cha
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DrawToolLine (int _i, int _j, int _i1, int _j1)
+void TDBWFRM::DrawToolLine (int _i, int _j, int _i1, int _j1)
 {
 	if (_i == _i1) {
 		/*  Vertical. */
@@ -148,7 +148,7 @@ void __fastcall TDBWFRM::DrawToolLine (int _i, int _j, int _i1, int _j1)
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DrawToolRectangle (int _i, int _j, int _i1, int _j1, bool _filled)
+void TDBWFRM::DrawToolRectangle (int _i, int _j, int _i1, int _j1, bool _filled)
 {
 	if (_i > _i1) std::swap(_i, _i1);
 	if (_j > _j1) std::swap(_j, _j1);
@@ -173,7 +173,7 @@ void __fastcall TDBWFRM::DrawToolRectangle (int _i, int _j, int _i1, int _j1, bo
     samples pixel centres to decide which grid cells to set. The
     QImage equivalent is identical in spirit — QPainter::drawArc
     for outline, drawEllipse for filled. */
-void __fastcall TDBWFRM::DrawToolEllipse (int _i, int _j, int _i1, int _j1, bool _filled)
+void TDBWFRM::DrawToolEllipse (int _i, int _j, int _i1, int _j1, bool _filled)
 {
 	if (_i > _i1) std::swap(_i, _i1);
 	if (_j > _j1) std::swap(_j, _j1);

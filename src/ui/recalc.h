@@ -33,27 +33,27 @@ protected:
 	int      s1, s2;
 
 public:
-	__fastcall RcRecalcAll (TDBWFRM* _frm, TData* _data, bool _schlagpatrone = false);
+ RcRecalcAll (TDBWFRM* _frm, TData* _data, bool _schlagpatrone = false);
 
-	void __fastcall Recalc();
-	void __fastcall RecalcEinzugFixiert();
-	void __fastcall RecalcSchlagpatrone();
-	void __fastcall RecalcTrittfolgeAufknuepfung();
-	void __fastcall RecalcAufknuepfung();
-	void __fastcall CalcK();
-	void __fastcall CalcS();
+	void Recalc();
+	void RecalcEinzugFixiert();
+	void RecalcSchlagpatrone();
+	void RecalcTrittfolgeAufknuepfung();
+	void RecalcAufknuepfung();
+	void CalcK();
+	void CalcS();
 
 protected:
-	void __fastcall RecalcEinzug();
-	void __fastcall RecalcTrittfolge();
+	void RecalcEinzug();
+	void RecalcTrittfolge();
 
-	bool __fastcall KettfadenEqual   (int _a, int _b);
-	bool __fastcall SchussfadenEqual (int _a, int _b);
+	bool KettfadenEqual   (int _a, int _b);
+	bool SchussfadenEqual (int _a, int _b);
 
-	bool __fastcall KettfadenEmpty   (int _a);
-	bool __fastcall SchussfadenEmpty (int _a);
+	bool KettfadenEmpty   (int _a);
+	bool SchussfadenEmpty (int _a);
 
-	short __fastcall GetSchaft (int _a);
+	short GetSchaft (int _a);
 };
 
 #endif

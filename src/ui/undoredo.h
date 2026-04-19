@@ -40,26 +40,26 @@ protected:
 	UrUndoItem* next;
 	UrUndoItem* prev;
 
-	void __fastcall Allocate (TDBWFRM* _mainfrm);
+	void Allocate (TDBWFRM* _mainfrm);
 
 public:
-	__fastcall UrUndoItem (TDBWFRM* _mainfrm, UrUndoItem* _prev=0, UrUndoItem* _next=0);
-	__fastcall ~UrUndoItem();
+ UrUndoItem (TDBWFRM* _mainfrm, UrUndoItem* _prev=0, UrUndoItem* _next=0);
+ ~UrUndoItem();
 
-	void __fastcall UpdateSize();
-	void __fastcall SetData (TDBWFRM* _mainfrm);
+	void UpdateSize();
+	void SetData (TDBWFRM* _mainfrm);
 
-	bool __fastcall IsEmpty() const { return !active; }
-	void __fastcall Clean();
+	bool IsEmpty() const { return !active; }
+	void Clean();
 
-	void __fastcall Undo (TDBWFRM* _mainfrm);
-	void __fastcall Redo (TDBWFRM* _mainfrm);
+	void Undo (TDBWFRM* _mainfrm);
+	void Redo (TDBWFRM* _mainfrm);
 
-	UrUndoItem* __fastcall Next() const { return next; }
-	UrUndoItem* __fastcall Prev() const { return prev; }
+	UrUndoItem* Next() const { return next; }
+	UrUndoItem* Prev() const { return prev; }
 
-	void __fastcall SetNext (UrUndoItem* _next) { next = _next; }
-	void __fastcall SetPrev (UrUndoItem* _prev) { prev = _prev; }
+	void SetNext (UrUndoItem* _next) { next = _next; }
+	void SetPrev (UrUndoItem* _prev) { prev = _prev; }
 };
 /*-----------------------------------------------------------------*/
 class UrUndo
@@ -72,23 +72,23 @@ protected:
 	bool        locked;
 
 public:
-	__fastcall UrUndo (TDBWFRM* _mainfrm, int _maxundo=100);
-	__fastcall ~UrUndo();
+ UrUndo (TDBWFRM* _mainfrm, int _maxundo=100);
+ ~UrUndo();
 
-	void __fastcall Clear();
-	void __fastcall UpdateSize();
+	void Clear();
+	void UpdateSize();
 
-	bool __fastcall Undo();
-	bool __fastcall Redo();
+	bool Undo();
+	bool Redo();
 
-	bool __fastcall CanUndo();
-	bool __fastcall CanRedo();
+	bool CanUndo();
+	bool CanRedo();
 
-	void __fastcall Snapshot();
+	void Snapshot();
 
 protected:
-	void __fastcall Init (int _maxundo);
-	void __fastcall Cleanup();
+	void Init (int _maxundo);
+	void Cleanup();
 };
 /*-----------------------------------------------------------------*/
 #endif

@@ -30,7 +30,7 @@
 #include <QAction>
 #include <QCursor>
 /*-----------------------------------------------------------------*/
-__fastcall UrUndoItem::UrUndoItem (TDBWFRM* _mainfrm, UrUndoItem* _prev/*=0*/, UrUndoItem* _next/*=0*/)
+ UrUndoItem::UrUndoItem (TDBWFRM* _mainfrm, UrUndoItem* _prev/*=0*/, UrUndoItem* _next/*=0*/)
 {
 	prev = _prev;
 	next = _next;
@@ -52,7 +52,7 @@ __fastcall UrUndoItem::UrUndoItem (TDBWFRM* _mainfrm, UrUndoItem* _prev/*=0*/, U
 	Allocate (_mainfrm);
 }
 /*-----------------------------------------------------------------*/
-__fastcall UrUndoItem::~UrUndoItem()
+ UrUndoItem::~UrUndoItem()
 {
 	Clean();
 	delete einzug;
@@ -65,7 +65,7 @@ __fastcall UrUndoItem::~UrUndoItem()
 	// prev und next werden von UrUndo geloescht, da zirkulaere Struktur
 }
 /*-----------------------------------------------------------------*/
-void __fastcall UrUndoItem::Allocate (TDBWFRM* _mainfrm)
+void UrUndoItem::Allocate (TDBWFRM* _mainfrm)
 {
 	dbw3_assert(_mainfrm);
 
@@ -86,7 +86,7 @@ void __fastcall UrUndoItem::Allocate (TDBWFRM* _mainfrm)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall UrUndoItem::SetData (TDBWFRM* _mainfrm)
+void UrUndoItem::SetData (TDBWFRM* _mainfrm)
 {
 	dbw3_assert(einzug);
 	dbw3_assert(aufknuepfung);
@@ -142,7 +142,7 @@ void __fastcall UrUndoItem::SetData (TDBWFRM* _mainfrm)
 	active = true;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall UrUndoItem::UpdateSize()
+void UrUndoItem::UpdateSize()
 {
 	dbw3_assert(einzug);
 	dbw3_assert(aufknuepfung);
@@ -161,7 +161,7 @@ void __fastcall UrUndoItem::UpdateSize()
 	blatteinzug->Resize (Data->MAXX1, 0);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall UrUndoItem::Undo (TDBWFRM* _mainfrm)
+void UrUndoItem::Undo (TDBWFRM* _mainfrm)
 {
 	if (IsEmpty()) return;
 
@@ -203,17 +203,17 @@ void __fastcall UrUndoItem::Undo (TDBWFRM* _mainfrm)
 	_mainfrm->SetModified();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall UrUndoItem::Redo (TDBWFRM* _mainfrm)
+void UrUndoItem::Redo (TDBWFRM* _mainfrm)
 {
 	Undo(_mainfrm);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall UrUndoItem::Clean()
+void UrUndoItem::Clean()
 {
 	active = false;
 }
 /*-----------------------------------------------------------------*/
-__fastcall UrUndo::UrUndo (TDBWFRM* _mainfrm, int _maxundo/*=100*/)
+ UrUndo::UrUndo (TDBWFRM* _mainfrm, int _maxundo/*=100*/)
 {
 	maxundo = _maxundo;
 	mainfrm = _mainfrm;
@@ -221,13 +221,13 @@ __fastcall UrUndo::UrUndo (TDBWFRM* _mainfrm, int _maxundo/*=100*/)
 	locked = false;
 }
 /*-----------------------------------------------------------------*/
-__fastcall UrUndo::~UrUndo()
+ UrUndo::~UrUndo()
 {
 	mainfrm = 0;
 	Cleanup();
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall UrUndo::Undo()
+bool UrUndo::Undo()
 {
 	if (locked) return false;
 	dbw3_assert (current!=0);
@@ -243,7 +243,7 @@ bool __fastcall UrUndo::Undo()
 	return false;
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall UrUndo::Redo()
+bool UrUndo::Redo()
 {
 	if (locked) return false;
 	dbw3_assert (current!=0);
@@ -259,7 +259,7 @@ bool __fastcall UrUndo::Redo()
 	return false;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall UrUndo::Snapshot()
+void UrUndo::Snapshot()
 {
 	dbw3_assert (current!=0);
 	dbw3_assert (first!=0);
@@ -281,7 +281,7 @@ void __fastcall UrUndo::Snapshot()
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall UrUndo::Init (int _maxundo)
+void UrUndo::Init (int _maxundo)
 {
 	try {
 		first = current = new UrUndoItem (mainfrm, 0, 0);
@@ -298,7 +298,7 @@ void __fastcall UrUndo::Init (int _maxundo)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall UrUndo::Clear()
+void UrUndo::Clear()
 {
 	dbw3_assert (current!=0);
 	dbw3_assert (first!=0);
@@ -310,7 +310,7 @@ void __fastcall UrUndo::Clear()
 	if (current!=first) current = first;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall UrUndo::UpdateSize()
+void UrUndo::UpdateSize()
 {
 	dbw3_assert (mainfrm!=0);
 	dbw3_assert (first!=0);
@@ -321,7 +321,7 @@ void __fastcall UrUndo::UpdateSize()
 	} while(p!=first);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall UrUndo::Cleanup()
+void UrUndo::Cleanup()
 {
 	first->Prev()->SetNext(0); // ausklinken
 	while (first) {
@@ -332,12 +332,12 @@ void __fastcall UrUndo::Cleanup()
 	first = current = 0;
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall UrUndo::CanUndo()
+bool UrUndo::CanUndo()
 {
 	return (current!=first && !current->Prev()->IsEmpty());
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall UrUndo::CanRedo()
+bool UrUndo::CanRedo()
 {
 	return (current->Next()!=first && !current->Next()->IsEmpty());
 }

@@ -13,39 +13,39 @@
 #include "dbw3_base.h"
 #include "datamodule.h"
 /*-----------------------------------------------------------------*/
-void __fastcall FeldBlatteinzug::Clear()
+void FeldBlatteinzug::Clear()
 {
 	for (int i=0; i<Data->MAXX1; i++)
 		feld.Set(i, (((i+1)%4)==0||((i+2)%4)==0) ? (char)1 : (char)0);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FeldKettfarben::Clear()
+void FeldKettfarben::Clear()
 {
 	feld.Init (Data->defcolorh);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FeldSchussfarben::Clear()
+void FeldSchussfarben::Clear()
 {
 	feld.Init (Data->defcolorv);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FeldEinzug::Clear()
+void FeldEinzug::Clear()
 {
 	feld.Init (0);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FeldAufknuepfung::Clear()
+void FeldAufknuepfung::Clear()
 {
 	feld.Init (0);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FeldTrittfolge::Clear()
+void FeldTrittfolge::Clear()
 {
 	feld.Init (0);
 	isempty.Init (true);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FeldGewebe::Clear()
+void FeldGewebe::Clear()
 {
 	feld.Init (0);
 }

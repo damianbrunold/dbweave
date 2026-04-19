@@ -22,7 +22,7 @@
 #include "cursor.h"
 #include "undoredo.h"
 
-void __fastcall TDBWFRM::SchaftMoveUpClick ()
+void TDBWFRM::SchaftMoveUpClick ()
 {
 	dbw3_assert(kbd_field == EINZUG || kbd_field == AUFKNUEPFUNG);
 	dbw3_assert(einzughandler);
@@ -45,7 +45,7 @@ void __fastcall TDBWFRM::SchaftMoveUpClick ()
 	}
 }
 
-void __fastcall TDBWFRM::SchaftMoveDownClick ()
+void TDBWFRM::SchaftMoveDownClick ()
 {
 	dbw3_assert(kbd_field == EINZUG || kbd_field == AUFKNUEPFUNG);
 	dbw3_assert(einzughandler);
@@ -68,7 +68,7 @@ void __fastcall TDBWFRM::SchaftMoveDownClick ()
 	}
 }
 
-void __fastcall TDBWFRM::TrittMoveLeftClick ()
+void TDBWFRM::TrittMoveLeftClick ()
 {
 	dbw3_assert(kbd_field == TRITTFOLGE || kbd_field == AUFKNUEPFUNG);
 	dbw3_assert(cursorhandler);
@@ -91,7 +91,7 @@ void __fastcall TDBWFRM::TrittMoveLeftClick ()
 	}
 }
 
-void __fastcall TDBWFRM::TrittMoveRightClick ()
+void TDBWFRM::TrittMoveRightClick ()
 {
 	dbw3_assert(kbd_field == TRITTFOLGE || kbd_field == AUFKNUEPFUNG);
 	dbw3_assert(cursorhandler);

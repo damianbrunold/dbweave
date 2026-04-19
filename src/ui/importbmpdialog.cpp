@@ -190,7 +190,7 @@ void ImportBmpDialog::accept ()
 /*  TDBWFRM::ImportBitmapClick — prompt for a bitmap, run the
     import dialog, wipe the gewebe, drop the returned data in at
     the origin. Matches legacy importbmp.cpp one-to-one.          */
-void __fastcall TDBWFRM::ImportBitmapClick ()
+void TDBWFRM::ImportBitmapClick ()
 {
 	const QString fn = QFileDialog::getOpenFileName(
 	    this,

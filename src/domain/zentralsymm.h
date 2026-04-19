@@ -22,16 +22,16 @@ private:
 	char* temp;
 	int sizex, sizey;
 private:
-	bool __fastcall IsSymmetric();
-	void __fastcall RollLeft();
-	void __fastcall RollUp();
+	bool IsSymmetric();
+	void RollLeft();
+	void RollUp();
 public:
-	__fastcall ZentralSymmChecker();
-	__fastcall ZentralSymmChecker (int _sizex, int _sizey);
-	virtual __fastcall ~ZentralSymmChecker();
-	void __fastcall Init (int _sizex, int _sizey);
-	void __fastcall SetData (int _i, int _j, char _val);
-	char __fastcall GetData (int _i, int _j);
+ ZentralSymmChecker();
+ ZentralSymmChecker (int _sizex, int _sizey);
+	virtual ~ZentralSymmChecker();
+	void Init (int _sizex, int _sizey);
+	void SetData (int _i, int _j, char _val);
+	char GetData (int _i, int _j);
 	bool IsAlreadySymmetric();
 	bool SearchSymmetry();
 };

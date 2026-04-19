@@ -29,24 +29,24 @@ private:
 	char* organization;
 	char* remarks;
 
-	void __fastcall RemoveNL (char* _data);
-	void __fastcall InsertNL (char* _data);
+	void RemoveNL (char* _data);
+	void InsertNL (char* _data);
 
 public:
-	__fastcall FileProperties();
-	virtual __fastcall ~FileProperties();
+ FileProperties();
+	virtual ~FileProperties();
 
-	void __fastcall SetAuthor       (const char* _author);
-	void __fastcall SetOrganization (const char* _organization);
-	void __fastcall SetRemarks      (const char* _remarks);
+	void SetAuthor       (const char* _author);
+	void SetOrganization (const char* _organization);
+	void SetRemarks      (const char* _remarks);
 
-	const char* __fastcall Author       () const;
-	const char* __fastcall Organization () const;
-	const char* __fastcall Remarks      () const;
+	const char* Author       () const;
+	const char* Organization () const;
+	const char* Remarks      () const;
 
-	void __fastcall Save (FfWriter* _writer);
-	void __fastcall Load (FfReader* _reader);
-	void __fastcall Init ();
+	void Save (FfWriter* _writer);
+	void Load (FfReader* _reader);
+	void Init ();
 };
 
 #endif

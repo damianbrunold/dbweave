@@ -34,7 +34,7 @@ static QString fileFilter()
 	return QStringLiteral("DB-WEAVE files (*.dbw);;All files (*.*)");
 }
 
-void __fastcall TDBWFRM::FileOpen ()
+void TDBWFRM::FileOpen ()
 {
 	const QString dir = filename.isEmpty()
 	                  ? QString()
@@ -60,7 +60,7 @@ void __fastcall TDBWFRM::FileOpen ()
 	refresh();
 }
 
-void __fastcall TDBWFRM::FileSaveAs ()
+void TDBWFRM::FileSaveAs ()
 {
 	const QString dir = filename.isEmpty()
 	                  ? QString()
@@ -74,7 +74,7 @@ void __fastcall TDBWFRM::FileSaveAs ()
 	FileSave();
 }
 
-void __fastcall TDBWFRM::FileSave ()
+void TDBWFRM::FileSave ()
 {
 	if (filename.isEmpty()) { FileSaveAs(); return; }
 	if (!Save()) {
@@ -94,7 +94,7 @@ void __fastcall TDBWFRM::FileSave ()
 
 static constexpr int MRU_MAX = 6;
 
-void __fastcall TDBWFRM::AddToMRU (const QString& _filename)
+void TDBWFRM::AddToMRU (const QString& _filename)
 {
 	if (_filename.isEmpty()) return;
 	mru.removeAll(_filename);
@@ -104,7 +104,7 @@ void __fastcall TDBWFRM::AddToMRU (const QString& _filename)
 	SaveMRU();
 }
 
-void __fastcall TDBWFRM::LoadMRU ()
+void TDBWFRM::LoadMRU ()
 {
 	QSettings settings;
 	settings.beginGroup(QStringLiteral("mru"));
@@ -117,7 +117,7 @@ void __fastcall TDBWFRM::LoadMRU ()
 	UpdateMRUMenu();
 }
 
-void __fastcall TDBWFRM::SaveMRU ()
+void TDBWFRM::SaveMRU ()
 {
 	QSettings settings;
 	settings.beginGroup(QStringLiteral("mru"));
@@ -127,7 +127,7 @@ void __fastcall TDBWFRM::SaveMRU ()
 	settings.endGroup();
 }
 
-void __fastcall TDBWFRM::UpdateMRUMenu ()
+void TDBWFRM::UpdateMRUMenu ()
 {
 	if (!mruMenu) return;
 	for (int i = 0; i < MRU_MAX; i++) {
@@ -146,7 +146,7 @@ void __fastcall TDBWFRM::UpdateMRUMenu ()
 	mruMenu->setEnabled(!mru.isEmpty());
 }
 
-void __fastcall TDBWFRM::OpenFromMRU (int _index)
+void TDBWFRM::OpenFromMRU (int _index)
 {
 	if (_index < 0 || _index >= mru.size()) return;
 	const QString path = mru.at(_index);
@@ -174,7 +174,7 @@ void __fastcall TDBWFRM::OpenFromMRU (int _index)
 /*-----------------------------------------------------------------*/
 #include "loadpartsdialog.h"
 
-void __fastcall TDBWFRM::LoadPartsClick ()
+void TDBWFRM::LoadPartsClick ()
 {
 	LoadPartsDialog dlg(this);
 	if (dlg.exec() != QDialog::Accepted) return;

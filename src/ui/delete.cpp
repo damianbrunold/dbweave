@@ -19,7 +19,7 @@
 #include "cursor.h"
 #include "undoredo.h"
 
-void __fastcall TDBWFRM::DeleteSchaftClick ()
+void TDBWFRM::DeleteSchaftClick ()
 {
 	dbw3_assert(kbd_field == EINZUG || kbd_field == AUFKNUEPFUNG);
 	if (!(kbd_field == EINZUG || kbd_field == AUFKNUEPFUNG)) return;
@@ -62,7 +62,7 @@ void __fastcall TDBWFRM::DeleteSchaftClick ()
 	if (undo) undo->Snapshot();
 }
 
-void __fastcall TDBWFRM::DeleteTrittClick ()
+void TDBWFRM::DeleteTrittClick ()
 {
 	dbw3_assert(kbd_field == TRITTFOLGE || kbd_field == AUFKNUEPFUNG);
 	if (!(kbd_field == TRITTFOLGE || kbd_field == AUFKNUEPFUNG)) return;
@@ -107,7 +107,7 @@ void __fastcall TDBWFRM::DeleteTrittClick ()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DeleteKettfaden (int _i)
+void TDBWFRM::DeleteKettfaden (int _i)
 {
 	/*  Alles eins nach links kopieren im Einzug. */
 	for (int i = _i + 1; i < Data->MAXX1; i++)
@@ -126,7 +126,7 @@ void __fastcall TDBWFRM::DeleteKettfaden (int _i)
 	CalcRapport();
 }
 
-void __fastcall TDBWFRM::DeleteSchussfaden (int _j)
+void TDBWFRM::DeleteSchussfaden (int _j)
 {
 	/*  Alles eins nach unten kopieren in der Trittfolge. */
 	for (int j = _j + 1; j < Data->MAXY2; j++) {
@@ -151,7 +151,7 @@ void __fastcall TDBWFRM::DeleteSchussfaden (int _j)
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DeleteKetteClick ()
+void TDBWFRM::DeleteKetteClick ()
 {
 	dbw3_assert(kbd_field == EINZUG || kbd_field == GEWEBE);
 	if (!(kbd_field == EINZUG || kbd_field == GEWEBE)) return;
@@ -172,7 +172,7 @@ void __fastcall TDBWFRM::DeleteKetteClick ()
 	if (undo) undo->Snapshot();
 }
 
-void __fastcall TDBWFRM::DeleteSchussClick ()
+void TDBWFRM::DeleteSchussClick ()
 {
 	dbw3_assert(kbd_field == TRITTFOLGE || kbd_field == GEWEBE);
 	if (!(kbd_field == TRITTFOLGE || kbd_field == GEWEBE)) return;

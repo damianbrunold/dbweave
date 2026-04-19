@@ -15,7 +15,7 @@
 #include "datamodule.h"
 #include "undoredo.h"
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::SetTrittfolge (int _i, int _j, bool _set, int _range)
+void TDBWFRM::SetTrittfolge (int _i, int _j, bool _set, int _range)
 {
 	if (ViewOnlyGewebe && ViewOnlyGewebe->isChecked()) return;
 
@@ -56,7 +56,7 @@ void __fastcall TDBWFRM::SetTrittfolge (int _i, int _j, bool _set, int _range)
 	if (undo) undo->Snapshot();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DoSetTrittfolge (int _i, int _j, bool _set, int _range)
+void TDBWFRM::DoSetTrittfolge (int _i, int _j, bool _set, int _range)
 {
 	// Tritt neu setzen
 	if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) {

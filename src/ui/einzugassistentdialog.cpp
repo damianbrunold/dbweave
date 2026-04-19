@@ -199,7 +199,7 @@ void EinzugassistentDialog::accept ()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::EinzugAssistentClick ()
+void TDBWFRM::EinzugAssistentClick ()
 {
 	EinzugassistentDialog dlg(this, this);
 	if (dlg.exec() == QDialog::Accepted) {

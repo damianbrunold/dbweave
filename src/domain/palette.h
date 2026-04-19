@@ -29,20 +29,20 @@ public:
 	bool palette2;
 
 public:
-	__fastcall Palette();
-	virtual __fastcall ~Palette();
-	void __fastcall InitPalette();
-	void __fastcall Save (FfWriter* _writer, bool _format37);
-	void __fastcall Load (FfReader* _reader);
-	COLORREF __fastcall GetColor (int _index);
-	void __fastcall SetColor (int _index, COLORREF _color);
-	void __fastcall SetPaletteType (bool _palette2);
+ Palette();
+	virtual ~Palette();
+	void InitPalette();
+	void Save (FfWriter* _writer, bool _format37);
+	void Load (FfReader* _reader);
+	COLORREF GetColor (int _index);
+	void SetColor (int _index, COLORREF _color);
+	void SetPaletteType (bool _palette2);
 
 private:
-	void __fastcall SetPaletteEntry (int _i, BYTE _red, BYTE _green, BYTE _blue);
-	void __fastcall FillDefaultPalette();
-	void __fastcall FillDefaultPalette2();
-	void __fastcall FillDefaultPalette3();
+	void SetPaletteEntry (int _i, BYTE _red, BYTE _green, BYTE _blue);
+	void FillDefaultPalette();
+	void FillDefaultPalette2();
+	void FillDefaultPalette3();
 };
 /*-----------------------------------------------------------------*/
 #endif

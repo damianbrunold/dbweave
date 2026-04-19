@@ -23,21 +23,21 @@ private:
 	TData*   data;
 
 public:
-	__fastcall RpRapportImpl (TDBWFRM* _frm, TData* _data);
-	virtual __fastcall ~RpRapportImpl();
+ RpRapportImpl (TDBWFRM* _frm, TData* _data);
+	virtual ~RpRapportImpl();
 
-	virtual bool __fastcall IsInRapport (int _i, int _j);
-	virtual void __fastcall UpdateRapport();
-	virtual void __fastcall CalcRapport();
-	virtual void __fastcall DrawRapport();
-	virtual void __fastcall ClearRapport();
-	virtual void __fastcall DrawDifferences (const RAPPORT& _old, const RAPPORT& _new);
+	virtual bool IsInRapport (int _i, int _j);
+	virtual void UpdateRapport();
+	virtual void CalcRapport();
+	virtual void DrawRapport();
+	virtual void ClearRapport();
+	virtual void DrawDifferences (const RAPPORT& _old, const RAPPORT& _new);
 
 protected:
-	void __fastcall CalcKettrapport();
-	void __fastcall CalcSchussrapport();
-	bool __fastcall TrittfolgeEqual (int _j1, int _j2);
-	bool __fastcall EinzugEqual (int _i1, int _i2);
+	void CalcKettrapport();
+	void CalcSchussrapport();
+	bool TrittfolgeEqual (int _j1, int _j2);
+	bool EinzugEqual (int _i1, int _i2);
 };
 /*------------------------------------------------------------------*/
 #endif

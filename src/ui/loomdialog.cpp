@@ -519,7 +519,7 @@ void LoomDialog::saveSettings () const
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::LoomControlClick ()
+void TDBWFRM::LoomControlClick ()
 {
 	LoomDialog dlg(this, this);
 	dlg.exec();

@@ -33,7 +33,7 @@
 #define YSCALE(y) (int(y_scale * (y)))
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::InitBorders ()
+void TDBWFRM::InitBorders ()
 {
 	borders.range.left   = 20;
 	borders.range.right  = 20;

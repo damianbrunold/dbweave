@@ -38,7 +38,7 @@
 #define FILEFORMATVERSION "0002"
 #define DBWEAVE_PORT_VERSION "0.1.0 (Qt 6 port)"
 
-bool __fastcall TDBWFRM::Save ()
+bool TDBWFRM::Save ()
 {
 	if (filename.isEmpty()) return false;
 

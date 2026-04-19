@@ -28,7 +28,7 @@
 const int INDENT        = 2;
 const int MAXLEVELS     = 30;
 /*-----------------------------------------------------------------*/
-__fastcall FfBuffer::FfBuffer (int _defaultlen, int _increment/*=255*/)
+ FfBuffer::FfBuffer (int _defaultlen, int _increment/*=255*/)
 {
 	defaultlen = _defaultlen;
 	increment  = _increment;
@@ -39,12 +39,12 @@ __fastcall FfBuffer::FfBuffer (int _defaultlen, int _increment/*=255*/)
 	buffer[0] = 0;
 }
 /*-----------------------------------------------------------------*/
-__fastcall FfBuffer::~FfBuffer()
+ FfBuffer::~FfBuffer()
 {
 	delete[] buffer;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfBuffer::Add (int _ch)
+void FfBuffer::Add (int _ch)
 {
 	if (length>=maxlength)
 		Reallocate();
@@ -55,7 +55,7 @@ void __fastcall FfBuffer::Add (int _ch)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfBuffer::Reallocate()
+void FfBuffer::Reallocate()
 {
 	try {
 		char* newbuff = new char[maxlength+increment+1];
@@ -78,7 +78,7 @@ FfTokenBase::~FfTokenBase()
 	delete[] static_cast<char*>(data);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfTokenBase::SetData (FfBuffer& buffer)
+void FfTokenBase::SetData (FfBuffer& buffer)
 {
 	try {
 		delete[] static_cast<char*>(data);
@@ -97,20 +97,20 @@ bool IsTokenEqual (FfToken* _token, const char* _id)
 	return strcmp ((char*)base->data, _id)==0;
 }
 /*-----------------------------------------------------------------*/
-__fastcall FfFile::FfFile()
+ FfFile::FfFile()
 {
 	openflags = 0;
 	filename = 0;
 	hfile = nullptr;
 }
 /*-----------------------------------------------------------------*/
-__fastcall FfFile::~FfFile()
+ FfFile::~FfFile()
 {
 	Close();
 	delete[] filename;
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall FfFile::Open (const char* _filename, int _of)
+bool FfFile::Open (const char* _filename, int _of)
 {
 	openflags = _of;
 
@@ -142,7 +142,7 @@ bool __fastcall FfFile::Open (const char* _filename, int _of)
 	return IsOpen();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfFile::Close()
+void FfFile::Close()
 {
 	if (hfile!=nullptr) {
 		std::fclose (hfile);
@@ -150,17 +150,17 @@ void __fastcall FfFile::Close()
 	}
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall FfFile::IsOpen() const
+bool FfFile::IsOpen() const
 {
 	return hfile!=nullptr;
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall FfFile::IsWriteable() const
+bool FfFile::IsWriteable() const
 {
 	return IsOpen() && (openflags&FfOpenWrite)!=0;
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall FfFile::IsReadable() const
+bool FfFile::IsReadable() const
 {
 	return IsOpen() && (openflags&FfOpenRead)!=0;
 }
@@ -182,29 +182,29 @@ FfFile& FfFile::operator= (const FfFile& _file)
 	return *this;
 }
 /*-----------------------------------------------------------------*/
-int __fastcall FfFile::Read (void* _buffer, int _length)
+int FfFile::Read (void* _buffer, int _length)
 {
 	return (int)std::fread (_buffer, 1, (size_t)_length, hfile);
 }
 /*-----------------------------------------------------------------*/
-int __fastcall FfFile::Read()
+int FfFile::Read()
 {
 	unsigned char b;
 	if (std::fread (&b, 1, 1, hfile)==1) return (int)b;
 	return 0;
 }
 /*-----------------------------------------------------------------*/
-int __fastcall FfFile::Write (const void* _buffer, int _length)
+int FfFile::Write (const void* _buffer, int _length)
 {
 	return (int)std::fwrite (_buffer, 1, (size_t)_length, hfile);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfFile::SeekBegin()
+void FfFile::SeekBegin()
 {
 	std::fseek (hfile, 0, SEEK_SET);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfFile::SetEndOfFile()
+void FfFile::SetEndOfFile()
 {
 	/*  stdio has no portable truncate-to-current-position operation.
 	    Flush to make sure the tell position is valid, then rely on the
@@ -224,46 +224,46 @@ void __fastcall FfFile::SetEndOfFile()
 #endif
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfFile::SetInvalid()
+void FfFile::SetInvalid()
 {
 	hfile = nullptr;
 }
 /*-----------------------------------------------------------------*/
-__fastcall FfBase::FfBase()
+ FfBase::FfBase()
 {
 	assigned = false;
 }
 /*-----------------------------------------------------------------*/
-__fastcall FfBase::~FfBase()
+ FfBase::~FfBase()
 {
 	// Der FfFile-Destructor darf nicht
 	// die Datei schliessen!
 	if (assigned) file.SetInvalid();
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall FfBase::Assign (FfFile* _file)
+bool FfBase::Assign (FfFile* _file)
 {
 	file = *_file;
 	assigned = true;
 	return file.IsOpen()==_file->IsOpen();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfBase::Close()
+void FfBase::Close()
 {
 	if (!assigned) file.Close();
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall FfBase::IsOpen() const
+bool FfBase::IsOpen() const
 {
 	return file.IsOpen();
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall FfReader::Open (const char* _filename)
+bool FfReader::Open (const char* _filename)
 {
 	return file.Open (_filename, FfOpenRead);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfReader::SkipSection()
+void FfReader::SkipSection()
 {
 	int level = 1;
 	do {
@@ -275,7 +275,7 @@ void __fastcall FfReader::SkipSection()
 	} while (level!=0);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfReader::SkipField()
+void FfReader::SkipField()
 {
 	FfToken* token = GetToken();
 	if (!token) throw "No Token";
@@ -286,7 +286,7 @@ void __fastcall FfReader::SkipField()
 	delete token;
 }
 /*-----------------------------------------------------------------*/
-FfToken* __fastcall FfReader::GetToken()
+FfToken* FfReader::GetToken()
 {
 	// Mit einer Finite State Machine werden
 	// die einzelnen Tokens ermittelt
@@ -380,18 +380,18 @@ FfToken* __fastcall FfReader::GetToken()
 	return token;
 }
 /*-----------------------------------------------------------------*/
-__fastcall FfWriter::FfWriter()
+ FfWriter::FfWriter()
 {
 	indent = 0;
 	breakfields = true;
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall FfWriter::Open (const char* _filename)
+bool FfWriter::Open (const char* _filename)
 {
 	return file.Open (_filename, FfOpenWrite|FfOpenOverwrite);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfWriter::WriteSignature()
+void FfWriter::WriteSignature()
 {
 	dbw3_assert (file.IsWriteable());
 	file.SeekBegin(); // Die Signatur kommt immer zu Beginn des Files!
@@ -400,7 +400,7 @@ void __fastcall FfWriter::WriteSignature()
 	(void)written;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfWriter::Indentation()
+void FfWriter::Indentation()
 {
 	dbw3_assert (file.IsWriteable());
 	dbw3_assert (indent<=MAXLEVELS);
@@ -411,7 +411,7 @@ void __fastcall FfWriter::Indentation()
 	file.Write (buff, INDENT*indent);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfWriter::BeginSection (const char* _section, const char* _description/*=0*/)
+void FfWriter::BeginSection (const char* _section, const char* _description/*=0*/)
 {
 	dbw3_assert (file.IsWriteable());
 	dbw3_assert (_section);
@@ -427,7 +427,7 @@ void __fastcall FfWriter::BeginSection (const char* _section, const char* _descr
 	indent += INDENT;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfWriter::EndSection()
+void FfWriter::EndSection()
 {
 	dbw3_assert (file.IsWriteable());
 	indent -= INDENT;
@@ -435,7 +435,7 @@ void __fastcall FfWriter::EndSection()
 	file.Write ("}\r\n", 3);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfWriter::WriteField (const char* _field, const char* _data)
+void FfWriter::WriteField (const char* _field, const char* _data)
 {
 	dbw3_assert (file.IsWriteable());
 	dbw3_assert (_field);
@@ -465,7 +465,7 @@ void __fastcall FfWriter::WriteField (const char* _field, const char* _data)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfWriter::WriteFieldChunk (const char* _data, int _chunk, int _length, bool /*_indent*/)
+void FfWriter::WriteFieldChunk (const char* _data, int _chunk, int _length, bool /*_indent*/)
 {
 	dbw3_assert (file.IsWriteable());
 	dbw3_assert (_data);
@@ -475,7 +475,7 @@ void __fastcall FfWriter::WriteFieldChunk (const char* _data, int _chunk, int _l
 	file.Write ("\r\n", 2);
 }
 /*-----------------------------------------------------------------*/
-static void __fastcall ByteToHex (char* _buff, unsigned int _byte)
+static void ByteToHex (char* _buff, unsigned int _byte)
 {
 	char hex[] = { '0', '1', '2', '3', '4', '5', '6', '7',
 	               '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
@@ -483,7 +483,7 @@ static void __fastcall ByteToHex (char* _buff, unsigned int _byte)
 	_buff[1] = hex[_byte%16];
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfWriter::WriteFieldBinary (const char* _field, void* _data, int _length)
+void FfWriter::WriteFieldBinary (const char* _field, void* _data, int _length)
 {
 	dbw3_assert (_data);
 	dbw3_assert (_length>=0);
@@ -508,21 +508,21 @@ void __fastcall FfWriter::WriteFieldBinary (const char* _field, void* _data, int
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfWriter::WriteFieldInt (const char* _field, int _data)
+void FfWriter::WriteFieldInt (const char* _field, int _data)
 {
 	char buff[16];
 	std::snprintf (buff, sizeof(buff), "%d", _data);
 	WriteField (_field, buff);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FfWriter::WriteFieldDouble (const char* _field, double _data)
+void FfWriter::WriteFieldDouble (const char* _field, double _data)
 {
 	char buff[32];
 	std::snprintf (buff, sizeof(buff), "%0.8f", _data);
 	WriteField (_field, buff);
 }
 /*-----------------------------------------------------------------*/
-static void __fastcall HexToByte (char* _byte, const char* _hex)
+static void HexToByte (char* _byte, const char* _hex)
 {
 	dbw3_assert (_byte);
 	dbw3_assert (_hex);
@@ -572,7 +572,7 @@ static void __fastcall HexToByte (char* _byte, const char* _hex)
 	*_byte = (char)byte;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall FieldHexToBinary (void* _dest, const void* _source, int _length)
+void FieldHexToBinary (void* _dest, const void* _source, int _length)
 {
 	dbw3_assert (_dest);
 	dbw3_assert (_source);

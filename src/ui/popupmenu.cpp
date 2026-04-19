@@ -21,7 +21,7 @@
 #include <QAction>
 #include <QMenu>
 
-void __fastcall TDBWFRM::handleContextMenu (const QPoint& _globalPos)
+void TDBWFRM::handleContextMenu (const QPoint& _globalPos)
 {
 	QMenu menu(this);
 

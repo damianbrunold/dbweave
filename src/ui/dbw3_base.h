@@ -128,7 +128,7 @@ struct RAPPORT
 	bool overridden;
 	SZ kr; // Kettrapport
 	SZ sr; // Schussrapport
-	__fastcall RAPPORT() { overridden = false; }
+ RAPPORT() { overridden = false; }
 };
 /*-----------------------------------------------------------------*/
 // RANGE wird verwendet, um eine Selektion zu verwalten.
@@ -138,14 +138,14 @@ struct RANGE
 	PT end;
 	FELD feld;
 
-	__fastcall RANGE() { Clear(); }
-	void __fastcall Clear() { begin = PT(0,0); end = PT(-1,-1); feld = INVALID; }
-	bool __fastcall Valid();
-	PT   __fastcall LeftDown();
-	PT   __fastcall TopRight();
-	void __fastcall Normalize();
-	int  __fastcall Width() const { return end.i!=-1 ? std::abs(end.i-begin.i)+1 : 1; }
-	int  __fastcall Height() const { return end.j!=-1 ? std::abs(end.j-begin.j)+1 : 1; }
+ RANGE() { Clear(); }
+	void Clear() { begin = PT(0,0); end = PT(-1,-1); feld = INVALID; }
+	bool Valid();
+	PT LeftDown();
+	PT TopRight();
+	void Normalize();
+	int Width() const { return end.i!=-1 ? std::abs(end.i-begin.i)+1 : 1; }
+	int Height() const { return end.j!=-1 ? std::abs(end.j-begin.j)+1 : 1; }
 };
 /*-----------------------------------------------------------------*/
 struct FeldBase
@@ -155,11 +155,11 @@ struct FeldBase
 	int gh = 0; // Gridheight -- zero until AllocBuffers / PatternCanvas::resizeEvent
 	int gw = 0; // Gridwidth   -- zero until AllocBuffers / PatternCanvas::resizeEvent
 	virtual ~FeldBase() = default;
-	virtual void __fastcall Clear() = 0;
-	virtual int __fastcall SizeX() = 0;
-	virtual int __fastcall SizeY() = 0;
-	virtual int __fastcall ScrollX() = 0;
-	virtual int __fastcall ScrollY() = 0;
+	virtual void Clear() = 0;
+	virtual int SizeX() = 0;
+	virtual int SizeY() = 0;
+	virtual int ScrollX() = 0;
+	virtual int ScrollY() = 0;
 };
 /*-----------------------------------------------------------------*/
 struct FeldBase2 : public FeldBase
@@ -176,33 +176,33 @@ struct FeldBlatteinzug : public FeldBase
 {
 	FeldVectorChar feld;
 	FeldBlatteinzug();
-	virtual void __fastcall Clear();
-	virtual int __fastcall SizeX() { return feld.Size(); }
-	virtual int __fastcall SizeY() { return 1; }
-	virtual int __fastcall ScrollX();
-	virtual int __fastcall ScrollY();
+	virtual void Clear();
+	virtual int SizeX() { return feld.Size(); }
+	virtual int SizeY() { return 1; }
+	virtual int ScrollX();
+	virtual int ScrollY();
 };
 /*-----------------------------------------------------------------*/
 struct FeldKettfarben : public FeldBase
 {
 	FeldVectorChar feld;
 	FeldKettfarben();
-	virtual void __fastcall Clear();
-	virtual int __fastcall SizeX() { return feld.Size(); }
-	virtual int __fastcall SizeY() { return 1; }
-	virtual int __fastcall ScrollX();
-	virtual int __fastcall ScrollY();
+	virtual void Clear();
+	virtual int SizeX() { return feld.Size(); }
+	virtual int SizeY() { return 1; }
+	virtual int ScrollX();
+	virtual int ScrollY();
 };
 /*-----------------------------------------------------------------*/
 struct FeldSchussfarben : public FeldBase
 {
 	FeldVectorChar feld;
 	FeldSchussfarben();
-	virtual void __fastcall Clear();
-	virtual int __fastcall SizeX() { return 1; }
-	virtual int __fastcall SizeY() { return feld.Size(); }
-	virtual int __fastcall ScrollX();
-	virtual int __fastcall ScrollY();
+	virtual void Clear();
+	virtual int SizeX() { return 1; }
+	virtual int SizeY() { return feld.Size(); }
+	virtual int ScrollX();
+	virtual int ScrollY();
 };
 /*-----------------------------------------------------------------*/
 struct FeldEinzug : public FeldBase3
@@ -210,11 +210,11 @@ struct FeldEinzug : public FeldBase3
 	int maxy;
 	FeldVectorShort feld;
 	FeldEinzug();
-	virtual void __fastcall Clear();
-	virtual int __fastcall SizeX() { return feld.Size(); }
-	virtual int __fastcall SizeY() { return maxy; }
-	virtual int __fastcall ScrollX();
-	virtual int __fastcall ScrollY();
+	virtual void Clear();
+	virtual int SizeX() { return feld.Size(); }
+	virtual int SizeY() { return maxy; }
+	virtual int ScrollX();
+	virtual int ScrollY();
 };
 /*-----------------------------------------------------------------*/
 struct FeldAufknuepfung : public FeldBase3
@@ -222,11 +222,11 @@ struct FeldAufknuepfung : public FeldBase3
 	FeldGridChar feld;
 	FeldAufknuepfung();
 	bool pegplanstyle; // Schlagpatronenstil
-	virtual void __fastcall Clear();
-	virtual int __fastcall SizeX() { return feld.SizeX(); }
-	virtual int __fastcall SizeY() { return feld.SizeY(); }
-	virtual int __fastcall ScrollX();
-	virtual int __fastcall ScrollY();
+	virtual void Clear();
+	virtual int SizeX() { return feld.SizeX(); }
+	virtual int SizeY() { return feld.SizeY(); }
+	virtual int ScrollX();
+	virtual int ScrollY();
 };
 /*-----------------------------------------------------------------*/
 struct FeldTrittfolge : public FeldBase3
@@ -235,22 +235,22 @@ struct FeldTrittfolge : public FeldBase3
 	FeldVectorBool isempty;
 	bool einzeltritt;
 	FeldTrittfolge();
-	virtual void __fastcall Clear();
-	virtual int __fastcall SizeX() { return feld.SizeX(); }
-	virtual int __fastcall SizeY() { return feld.SizeY(); }
-	virtual int __fastcall ScrollX();
-	virtual int __fastcall ScrollY();
+	virtual void Clear();
+	virtual int SizeX() { return feld.SizeX(); }
+	virtual int SizeY() { return feld.SizeY(); }
+	virtual int ScrollX();
+	virtual int ScrollY();
 };
 /*-----------------------------------------------------------------*/
 struct FeldGewebe : public FeldBase2
 {
 	FeldGridChar feld;
 	FeldGewebe();
-	virtual void __fastcall Clear();
-	virtual int __fastcall SizeX() { return feld.SizeX(); }
-	virtual int __fastcall SizeY() { return feld.SizeY(); }
-	virtual int __fastcall ScrollX();
-	virtual int __fastcall ScrollY();
+	virtual void Clear();
+	virtual int SizeX() { return feld.SizeX(); }
+	virtual int SizeY() { return feld.SizeY(); }
+	virtual int ScrollX();
+	virtual int ScrollY();
 };
 /*-----------------------------------------------------------------*/
 // Die Hilfslinien haben einen Bereich (je einen fuer

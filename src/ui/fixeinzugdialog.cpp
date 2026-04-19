@@ -330,7 +330,7 @@ void FixeinzugDialog::accept ()
     einzug.cpp:TDBWFRM::UpdateEinzugFixiert. Copies the current einzug
     into fixeinzug (skipping empty threads), rapports the pattern out
     to the end of MAXX1, and records the first free shaft index.   */
-void __fastcall TDBWFRM::UpdateEinzugFixiert ()
+void TDBWFRM::UpdateEinzugFixiert ()
 {
 	if (!fixeinzug) return;
 	std::memset(fixeinzug, 0, Data->MAXX1*sizeof(short));
@@ -358,7 +358,7 @@ void __fastcall TDBWFRM::UpdateEinzugFixiert ()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::EditFixeinzug ()
+void TDBWFRM::EditFixeinzug ()
 {
 	if (!fixeinzug) return;
 	if (fixeinzug[0] == 0) UpdateEinzugFixiert();

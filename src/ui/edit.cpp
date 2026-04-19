@@ -87,7 +87,7 @@ static void getSelectionLine (TDBWFRM* frm, const RANGE& _sel, int _j, char* _bu
 }
 
 /*-----------------------------------------------------------------*/
-bool __fastcall TDBWFRM::CopySelection (bool _movecursor)
+bool TDBWFRM::CopySelection (bool _movecursor)
 {
 	RANGE savesel = selection;
 	selection.Normalize();
@@ -128,7 +128,7 @@ bool __fastcall TDBWFRM::CopySelection (bool _movecursor)
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::CutSelection()
+void TDBWFRM::CutSelection()
 {
 	RANGE savesel = selection;
 	if (CopySelection(/*_movecursor=*/false)) {
@@ -140,7 +140,7 @@ void __fastcall TDBWFRM::CutSelection()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::PasteSelection (bool _transparent)
+void TDBWFRM::PasteSelection (bool _transparent)
 {
 	const QString s = QApplication::clipboard()->text();
 	if (!s.startsWith(QLatin1String("dbw"))) return;
@@ -244,7 +244,7 @@ void __fastcall TDBWFRM::PasteSelection (bool _transparent)
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DeleteSelection()
+void TDBWFRM::DeleteSelection()
 {
 	RANGE savesel = selection;
 	selection.Normalize();
@@ -288,7 +288,7 @@ void __fastcall TDBWFRM::DeleteSelection()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::InvertSelection()
+void TDBWFRM::InvertSelection()
 {
 	RANGE savesel = selection;
 	selection.Normalize();
@@ -334,7 +334,7 @@ void __fastcall TDBWFRM::InvertSelection()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::MirrorHorzSelection()
+void TDBWFRM::MirrorHorzSelection()
 {
 	RANGE savesel = selection;
 	selection.Normalize();
@@ -390,7 +390,7 @@ void __fastcall TDBWFRM::MirrorHorzSelection()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::MirrorVertSelection()
+void TDBWFRM::MirrorVertSelection()
 {
 	RANGE savesel = selection;
 	selection.Normalize();
@@ -446,7 +446,7 @@ void __fastcall TDBWFRM::MirrorVertSelection()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::RotateSelection()
+void TDBWFRM::RotateSelection()
 {
 	RANGE savesel = selection;
 	selection.Normalize();
@@ -520,7 +520,7 @@ static void rollTrittfolgeEmpty (TDBWFRM* frm, int j0, int j1)
 	for (int j = j0; j <= j1; j++) frm->RecalcTrittfolgeEmpty(j);
 }
 
-void __fastcall TDBWFRM::RollUpSelection()
+void TDBWFRM::RollUpSelection()
 {
 	RANGE savesel = selection;
 	selection.Normalize();
@@ -578,7 +578,7 @@ void __fastcall TDBWFRM::RollUpSelection()
 	if (undo) undo->Snapshot();
 }
 
-void __fastcall TDBWFRM::RollDownSelection()
+void TDBWFRM::RollDownSelection()
 {
 	RANGE savesel = selection;
 	selection.Normalize();
@@ -636,7 +636,7 @@ void __fastcall TDBWFRM::RollDownSelection()
 	if (undo) undo->Snapshot();
 }
 
-void __fastcall TDBWFRM::RollLeftSelection()
+void TDBWFRM::RollLeftSelection()
 {
 	RANGE savesel = selection;
 	selection.Normalize();
@@ -691,7 +691,7 @@ void __fastcall TDBWFRM::RollLeftSelection()
 	if (undo) undo->Snapshot();
 }
 
-void __fastcall TDBWFRM::RollRightSelection()
+void TDBWFRM::RollRightSelection()
 {
 	RANGE savesel = selection;
 	selection.Normalize();
@@ -747,7 +747,7 @@ void __fastcall TDBWFRM::RollRightSelection()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::CentralsymSelection()
+void TDBWFRM::CentralsymSelection()
 {
 	RANGE savesel = selection;
 	selection.Normalize();
@@ -817,7 +817,7 @@ void __fastcall TDBWFRM::CentralsymSelection()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::SwitchRange (int _range)
+void TDBWFRM::SwitchRange (int _range)
 {
 	RANGE savesel = selection;
 	selection.Normalize();
@@ -874,7 +874,7 @@ void __fastcall TDBWFRM::SwitchRange (int _range)
 /*-----------------------------------------------------------------*/
 #include "cursordirdialog.h"
 
-void __fastcall TDBWFRM::EditCursordirectionClick ()
+void TDBWFRM::EditCursordirectionClick ()
 {
 	if (!cursorhandler) return;
 	cursorhandler->DisableCursor();
@@ -888,7 +888,7 @@ void __fastcall TDBWFRM::EditCursordirectionClick ()
 /*-----------------------------------------------------------------*/
 #include "cursorgotodialog.h"
 
-void __fastcall TDBWFRM::CursorGotoClick ()
+void TDBWFRM::CursorGotoClick ()
 {
 	if (!cursorhandler) return;
 	const bool pegplan = ViewSchlagpatrone && ViewSchlagpatrone->isChecked();

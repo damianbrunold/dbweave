@@ -70,7 +70,7 @@ static void applyAtCursor (TDBWFRM* frm, bool _set, int _range)
 }
 
 
-void __fastcall TDBWFRM::handleCanvasKeyPress (int _key, int _modifiers)
+void TDBWFRM::handleCanvasKeyPress (int _key, int _modifiers)
 {
 	if (!cursorhandler) return;
 

@@ -24,29 +24,29 @@
 /*-----------------------------------------------------------------*/
 using std::max;
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::ToggleGewebe (int _i, int _j)
+void TDBWFRM::ToggleGewebe (int _i, int _j)
 {
 	char s = gewebe.feld.Get (_i, _j);
 	gewebe.feld.Set (_i, _j, char(s<=0 ? currentrange : -s));
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::ToggleAufknuepfung (int _i, int _j)
+void TDBWFRM::ToggleAufknuepfung (int _i, int _j)
 {
 	char s = aufknuepfung.feld.Get (_i, _j);
 	aufknuepfung.feld.Set (_i, _j, char(s<=0 ? currentrange : -s));
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall TDBWFRM::IsEmptyEinzug (int _i)
+bool TDBWFRM::IsEmptyEinzug (int _i)
 {
 	return einzug.feld.Get(_i)==0;
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall TDBWFRM::IsEmptyTrittfolge (int _j)
+bool TDBWFRM::IsEmptyTrittfolge (int _j)
 {
 	return trittfolge.isempty.Get(_j);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::RecalcTrittfolgeEmpty (int _j)
+void TDBWFRM::RecalcTrittfolgeEmpty (int _j)
 {
 	for (int i=0; i<Data->MAXX2; i++)
 		if (trittfolge.feld.Get(i,_j)>0) {
@@ -56,7 +56,7 @@ void __fastcall TDBWFRM::RecalcTrittfolgeEmpty (int _j)
 	trittfolge.isempty.Set(_j, true);
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall TDBWFRM::KettfadenEqual (int _a, int _b)
+bool TDBWFRM::KettfadenEqual (int _a, int _b)
 {
 	for (int j=0; j<Data->MAXY2; j++) {
 		char s1 = gewebe.feld.Get (_a, j);
@@ -67,7 +67,7 @@ bool __fastcall TDBWFRM::KettfadenEqual (int _a, int _b)
 	return true;
 }
 /*-----------------------------------------------------------------*/
-short __fastcall TDBWFRM::GetFreeEinzug()
+short TDBWFRM::GetFreeEinzug()
 {
 	for (int i=0; i<Data->MAXY1; i++)
 		if (freieschaefte[i]==true) return short(i+1);
@@ -77,7 +77,7 @@ short __fastcall TDBWFRM::GetFreeEinzug()
 	return free;
 }
 /*-----------------------------------------------------------------*/
-short __fastcall TDBWFRM::GetFreeTritt()
+short TDBWFRM::GetFreeTritt()
 {
 	for (short i=0; i<Data->MAXX2; i++)
 		if (freietritte[i]==true) return i;
@@ -87,13 +87,13 @@ short __fastcall TDBWFRM::GetFreeTritt()
 	return free;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::CopyTritt (int _von, int _nach)
+void TDBWFRM::CopyTritt (int _von, int _nach)
 {
 	for (int i=0; i<Data->MAXX2; i++)
 		trittfolge.feld.Set (i, _nach, trittfolge.feld.Get (i, _von));
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::_ExtendTritte (int _max)
+void TDBWFRM::_ExtendTritte (int _max)
 {
 	if (Data->MAXX2<_max) {
 		Data->MAXX2 = _max;
@@ -108,7 +108,7 @@ void __fastcall TDBWFRM::_ExtendTritte (int _max)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::_ExtendSchaefte (int _max)
+void TDBWFRM::_ExtendSchaefte (int _max)
 {
 	if (Data->MAXY1<_max) {
 		Data->MAXY1 = _max;
@@ -122,7 +122,7 @@ void __fastcall TDBWFRM::_ExtendSchaefte (int _max)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::ExtendTritte()
+void TDBWFRM::ExtendTritte()
 {
 	int newmax = max(int(Data->MAXX2)+10, int(Data->MAXY1));
 	_ExtendTritte (newmax);
@@ -131,7 +131,7 @@ void __fastcall TDBWFRM::ExtendTritte()
 	UpdateScrollbars();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::ExtendSchaefte()
+void TDBWFRM::ExtendSchaefte()
 {
 	int newmax = max(int(Data->MAXX2), int(Data->MAXY1)+10);
 	_ExtendTritte (newmax);
@@ -169,7 +169,7 @@ static void resizeScratch (char*& _buf, int _newsize)
 	std::memset(_buf, 0, _newsize);
 }
 
-void __fastcall TDBWFRM::AllocBuffersX1()
+void TDBWFRM::AllocBuffersX1()
 {
 	einzug.feld.Resize       (Data->MAXX1, 0);
 	kettfarben.feld.Resize   (Data->MAXX1, Data->defcolorh);
@@ -178,21 +178,21 @@ void __fastcall TDBWFRM::AllocBuffersX1()
 	resizeScratch(xbuf, Data->MAXX1);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::AllocBuffersX2()
+void TDBWFRM::AllocBuffersX2()
 {
 	aufknuepfung.feld.Resize (Data->MAXX2, Data->MAXY1, 0);
 	trittfolge.feld.Resize   (Data->MAXX2, Data->MAXY2, 0);
 	resizeFreie(freietritte,   Data->MAXX2);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::AllocBuffersY1()
+void TDBWFRM::AllocBuffersY1()
 {
 	aufknuepfung.feld.Resize (Data->MAXX2, Data->MAXY1, 0);
 	einzug.maxy = Data->MAXY1;
 	resizeFreie(freieschaefte, Data->MAXY1);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::AllocBuffersY2()
+void TDBWFRM::AllocBuffersY2()
 {
 	trittfolge.feld.Resize   (Data->MAXX2, Data->MAXY2, 0);
 	trittfolge.isempty.Resize(Data->MAXY2, true);
@@ -201,7 +201,7 @@ void __fastcall TDBWFRM::AllocBuffersY2()
 	resizeScratch(ybuf, Data->MAXY2);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::AllocBuffers (bool _clear)
+void TDBWFRM::AllocBuffers (bool _clear)
 {
 	(void)_clear;   /* legacy cleared; we unconditionally preserve */
 	AllocBuffersX1();
@@ -216,7 +216,7 @@ void __fastcall TDBWFRM::AllocBuffers (bool _clear)
     treadles, wefts) + visibility caps. Verbatim port of legacy/
     xoptions_form.cpp:SetAusmasse. Called from ShowOptions when
     the user accepts a resize.                                    */
-void __fastcall TDBWFRM::SetAusmasse (int _x1, int _y1, int _x2, int _y2,
+void TDBWFRM::SetAusmasse (int _x1, int _y1, int _x2, int _y2,
                                       int _vx2, int _vy1)
 {
 	/*  #Schaefte == #Tritte */

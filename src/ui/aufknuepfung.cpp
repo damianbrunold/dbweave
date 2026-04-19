@@ -24,7 +24,7 @@
 #include "einzug.h"
 #include <QAction>
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::MinimizeAufknuepfung()
+void TDBWFRM::MinimizeAufknuepfung()
 {
 	if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) return;
 

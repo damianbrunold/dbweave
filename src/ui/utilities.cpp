@@ -23,7 +23,7 @@
 
 #include <algorithm>
 
-void __fastcall TDBWFRM::FillKoeper()
+void TDBWFRM::FillKoeper()
 {
 	RANGE savesel = selection;
 	selection.Normalize();
@@ -111,7 +111,7 @@ void __fastcall TDBWFRM::FillKoeper()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::SwapSide()
+void TDBWFRM::SwapSide()
 {
 	const bool pegplan = ViewSchlagpatrone && ViewSchlagpatrone->isChecked();
 	if (!pegplan) {
@@ -176,7 +176,7 @@ void __fastcall TDBWFRM::SwapSide()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::KettLancierungClick()
+void TDBWFRM::KettLancierungClick()
 {
 	EnterVVDialog dlg(this);
 	if (dlg.exec() != QDialog::Accepted) return;
@@ -269,7 +269,7 @@ void __fastcall TDBWFRM::KettLancierungClick()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::SchussLancierungClick()
+void TDBWFRM::SchussLancierungClick()
 {
 	EnterVVDialog dlg(this);
 	if (dlg.exec() != QDialog::Accepted) return;

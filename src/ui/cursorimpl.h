@@ -25,8 +25,8 @@ struct CrSharedCoord
 	int x2;
 	int y1;
 	int y2;
-	__fastcall CrSharedCoord() { Init(); }
-	void __fastcall Init() { x1 = x2 = y1 = y2 = 0; }
+ CrSharedCoord() { Init(); }
+	void Init() { x1 = x2 = y1 = y2 = 0; }
 };
 /*-----------------------------------------------------------------*/
 typedef int CrShareFlags;
@@ -50,31 +50,31 @@ public:
 	CrFeld* next;
 
 public:
-	__fastcall CrFeld (FELD _feld, TDBWFRM* _frm, TData* _data, FeldBase& _fb, CrSharedCoord& _sharedcoord, CrShareFlags _shareflags, CrFeld* _prev);
-	virtual __fastcall ~CrFeld();
+ CrFeld (FELD _feld, TDBWFRM* _frm, TData* _data, FeldBase& _fb, CrSharedCoord& _sharedcoord, CrShareFlags _shareflags, CrFeld* _prev);
+	virtual ~CrFeld();
 
-	bool __fastcall IsVisible() const;
+	bool IsVisible() const;
 
-	void __fastcall Toggle (TShiftState _shift);
-	void __fastcall Set (bool _set, TShiftState _shift);
-	void __fastcall SetCursor (int _i, int _j);
-	void __fastcall CheckCursorPos();
+	void Toggle (TShiftState _shift);
+	void Set (bool _set, TShiftState _shift);
+	void SetCursor (int _i, int _j);
+	void CheckCursorPos();
 
-	void __fastcall MoveCursorLeft (int _step, bool _select);
-	void __fastcall MoveCursorRight (int _step, bool _select);
-	void __fastcall MoveCursorUp (int _step, bool _select);
-	void __fastcall MoveCursorDown (int _step, bool _select);
+	void MoveCursorLeft (int _step, bool _select);
+	void MoveCursorRight (int _step, bool _select);
+	void MoveCursorUp (int _step, bool _select);
+	void MoveCursorDown (int _step, bool _select);
 
-	void __fastcall DrawCursor();
-	void __fastcall DeleteCursor();
-	void __fastcall ToggleCursor();
+	void DrawCursor();
+	void DeleteCursor();
+	void ToggleCursor();
 
-	void __fastcall SyncSharedCoord();
+	void SyncSharedCoord();
 
 protected:
-	void __fastcall DisableCursor();
-	void __fastcall EnableCursor();
-	void __fastcall UpdateSharedCoord (int _i, int _j);
+	void DisableCursor();
+	void EnableCursor();
+	void UpdateSharedCoord (int _i, int _j);
 };
 /*-----------------------------------------------------------------*/
 class CrCursorHandlerImpl : public CrCursorHandler
@@ -88,41 +88,41 @@ private:
 	bool locked;
 
 public:
-	__fastcall CrCursorHandlerImpl (TDBWFRM* _frm, TData* _data);
-	virtual __fastcall ~CrCursorHandlerImpl();
+ CrCursorHandlerImpl (TDBWFRM* _frm, TData* _data);
+	virtual ~CrCursorHandlerImpl();
 
-	virtual void __fastcall Init();
+	virtual void Init();
 
-	virtual void __fastcall ToggleField (TShiftState _shift);
-	virtual void __fastcall SetField (bool _set, TShiftState _shift);
-	virtual void __fastcall SetCursor (FELD _feld, int _i, int _j, bool _clearselection=true);
-	virtual void __fastcall CheckCursorPos();
+	virtual void ToggleField (TShiftState _shift);
+	virtual void SetField (bool _set, TShiftState _shift);
+	virtual void SetCursor (FELD _feld, int _i, int _j, bool _clearselection=true);
+	virtual void CheckCursorPos();
 
-	virtual void __fastcall MoveCursorLeft (int _step, bool _select);
-	virtual void __fastcall MoveCursorRight (int _step, bool _select);
-	virtual void __fastcall MoveCursorUp (int _step, bool _select);
-	virtual void __fastcall MoveCursorDown (int _step, bool _select);
+	virtual void MoveCursorLeft (int _step, bool _select);
+	virtual void MoveCursorRight (int _step, bool _select);
+	virtual void MoveCursorUp (int _step, bool _select);
+	virtual void MoveCursorDown (int _step, bool _select);
 
-	virtual void __fastcall GotoNextField();
-	virtual void __fastcall GotoPrevField();
-	virtual void __fastcall GotoField (FELD _feld);
-	virtual void __fastcall SetInvisible (FELD _feld);
+	virtual void GotoNextField();
+	virtual void GotoPrevField();
+	virtual void GotoField (FELD _feld);
+	virtual void SetInvisible (FELD _feld);
 
-	virtual void __fastcall DrawCursor();
-	virtual void __fastcall DeleteCursor();
-	virtual void __fastcall ToggleCursor();
+	virtual void DrawCursor();
+	virtual void DeleteCursor();
+	virtual void ToggleCursor();
 
-	virtual void __fastcall SetCursorDirection (CURSORDIRECTION _cd);
-	virtual CURSORDIRECTION __fastcall GetCursorDirection();
+	virtual void SetCursorDirection (CURSORDIRECTION _cd);
+	virtual CURSORDIRECTION GetCursorDirection();
 
-	virtual void __fastcall SetCursorLocked (bool _locked=true);
+	virtual void SetCursorLocked (bool _locked=true);
 
-	virtual void __fastcall DisableCursor();
-	virtual void __fastcall EnableCursor();
+	virtual void DisableCursor();
+	virtual void EnableCursor();
 
-	virtual void __fastcall CheckLocked();
+	virtual void CheckLocked();
 
-	virtual FELD __fastcall CurrentFeld() const { return feld ? feld->feld : INVALID; }
+	virtual FELD CurrentFeld() const { return feld ? feld->feld : INVALID; }
 
 protected:
 	CrFeld* GetFeld (FELD _feld);

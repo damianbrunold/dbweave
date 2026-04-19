@@ -30,7 +30,7 @@
 /*  TDBWFRM::Load wraps an FhLoader instance so callers don't have
     to know about the loader class. Matches the legacy call site:
         bool ok = DBWFRM->Load(stat, LOADALL); */
-bool __fastcall TDBWFRM::Load (LOADSTAT& _stat, LOADPARTS _loadparts)
+bool TDBWFRM::Load (LOADSTAT& _stat, LOADPARTS _loadparts)
 {
 	try {
 		FhLoader loader(this);

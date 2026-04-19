@@ -16,7 +16,7 @@
 #include "undoredo.h"
 #include "palette.h"
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::SetKettfarben (int _i)
+void TDBWFRM::SetKettfarben (int _i)
 {
 	DoSetKettfarben (_i);
 	refresh();
@@ -25,7 +25,7 @@ void __fastcall TDBWFRM::SetKettfarben (int _i)
 	if (undo) undo->Snapshot();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DoSetKettfarben (int _i)
+void TDBWFRM::DoSetKettfarben (int _i)
 {
 	kettfarben.feld.Set (_i+scroll_x1, Data->color);
 
@@ -40,7 +40,7 @@ void __fastcall TDBWFRM::DoSetKettfarben (int _i)
 	SetModified();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::SetSchussfarben (int _j)
+void TDBWFRM::SetSchussfarben (int _j)
 {
 	DoSetSchussfarben (_j);
 	refresh();
@@ -49,7 +49,7 @@ void __fastcall TDBWFRM::SetSchussfarben (int _j)
 	if (undo) undo->Snapshot();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DoSetSchussfarben (int _j)
+void TDBWFRM::DoSetSchussfarben (int _j)
 {
 	schussfarben.feld.Set (_j+scroll_y2, Data->color);
 

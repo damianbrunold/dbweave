@@ -26,37 +26,37 @@ protected:
 	SZ  r;
 
 public:
-	__fastcall EinzugRearrangeImpl (TDBWFRM* _frm, TData* _data);
-	virtual __fastcall ~EinzugRearrangeImpl();
+ EinzugRearrangeImpl (TDBWFRM* _frm, TData* _data);
+	virtual ~EinzugRearrangeImpl();
 
-	virtual void __fastcall Rearrange();
-	virtual void __fastcall NormalZ();
-	virtual void __fastcall NormalS();
-	virtual void __fastcall GeradeZ();
-	virtual void __fastcall GeradeS();
-	virtual void __fastcall Chorig2();
-	virtual void __fastcall Chorig3();
-	virtual void __fastcall Fixiert();
-	virtual void __fastcall Belassen();
+	virtual void Rearrange();
+	virtual void NormalZ();
+	virtual void NormalS();
+	virtual void GeradeZ();
+	virtual void GeradeS();
+	virtual void Chorig2();
+	virtual void Chorig3();
+	virtual void Fixiert();
+	virtual void Belassen();
 
-	virtual bool __fastcall IsEmptySchaft (int _j);
-	virtual void __fastcall RedrawSchaft (int _j);
-	virtual void __fastcall RedrawAufknuepfungSchaft (int _j);
-	virtual void __fastcall EliminateEmptySchaft();
-	virtual void __fastcall SwitchSchaefte (int _a, int _b);
+	virtual bool IsEmptySchaft (int _j);
+	virtual void RedrawSchaft (int _j);
+	virtual void RedrawAufknuepfungSchaft (int _j);
+	virtual void EliminateEmptySchaft();
+	virtual void SwitchSchaefte (int _a, int _b);
 
 protected:
-	bool __fastcall IsTotalEmptySchaft (int _j);
-	void __fastcall CalcRange();
-	SZ   __fastcall CalcRapportRange();
-	bool __fastcall EinzugEqual (int _i1, int _i2);
-	int  __fastcall GetFirstNonemptySchaft (int _j);
-	void __fastcall MoveSchaft (int _von, int _nach);
-	int  __fastcall SplitSchaft (int _searchj, int _sourcej);
-	void __fastcall MergeSchaefte();
-	bool __fastcall SchaefteEqual (int _j1, int _j2);
-	void __fastcall RearrangeSchaefte();
-	void __fastcall RedrawSchlagpatrone (int _i);
+	bool IsTotalEmptySchaft (int _j);
+	void CalcRange();
+	SZ CalcRapportRange();
+	bool EinzugEqual (int _i1, int _i2);
+	int GetFirstNonemptySchaft (int _j);
+	void MoveSchaft (int _von, int _nach);
+	int SplitSchaft (int _searchj, int _sourcej);
+	void MergeSchaefte();
+	bool SchaefteEqual (int _j1, int _j2);
+	void RearrangeSchaefte();
+	void RedrawSchlagpatrone (int _i);
 };
 /*-----------------------------------------------------------------*/
 #endif

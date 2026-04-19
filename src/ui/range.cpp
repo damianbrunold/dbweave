@@ -22,7 +22,7 @@
 #include "datamodule.h"
 /*-----------------------------------------------------------------*/
 // CalcRangeSchuesse: Berechnet den belegten Schussbereich
-void __fastcall TDBWFRM::CalcRangeSchuesse()
+void TDBWFRM::CalcRangeSchuesse()
 {
 	schuesse.a = schuesse.b = -1;
 	bool first = true;
@@ -36,7 +36,7 @@ void __fastcall TDBWFRM::CalcRangeSchuesse()
 }
 /*-----------------------------------------------------------------*/
 // CalcRangeKette: Berechnet den belegten Kettbereich
-void __fastcall TDBWFRM::CalcRangeKette()
+void TDBWFRM::CalcRangeKette()
 {
 	kette.a = kette.b = -1;
 	bool first = true;
@@ -49,13 +49,13 @@ void __fastcall TDBWFRM::CalcRangeKette()
 	if (kette.a!=-1 && kette.b==-1) kette.b = kette.a;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::CalcRange()
+void TDBWFRM::CalcRange()
 {
 	CalcRangeKette();
 	CalcRangeSchuesse();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::UpdateRange (int _i, int _j, bool _set)
+void TDBWFRM::UpdateRange (int _i, int _j, bool _set)
 {
 	// _i==-1 nur Schuesse updaten
 	// _j==-1 nur Kette updaten
@@ -124,7 +124,7 @@ g_s_weiter: ;
 	}
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall TDBWFRM::IsEmptySchuss (int _j)
+bool TDBWFRM::IsEmptySchuss (int _j)
 {
 	if (!trittfolge.isempty.Get(_j)) return false;
 	for (int i=0; i<Data->MAXX1; i++)
@@ -132,7 +132,7 @@ bool __fastcall TDBWFRM::IsEmptySchuss (int _j)
 	return true;
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall TDBWFRM::IsEmptyKette (int _i)
+bool TDBWFRM::IsEmptyKette (int _i)
 {
 	if (einzug.feld.Get(_i)!=0) return false;
 	for (int j=0; j<Data->MAXY2; j++)
@@ -140,14 +140,14 @@ bool __fastcall TDBWFRM::IsEmptyKette (int _i)
 	return true;
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall TDBWFRM::IsEmptySchussNurGewebe (int _j)
+bool TDBWFRM::IsEmptySchussNurGewebe (int _j)
 {
 	for (int i=0; i<Data->MAXX1; i++)
 		if (gewebe.feld.Get (i, _j)>0) return false;
 	return true;
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall TDBWFRM::IsEmptyKetteNurGewebe (int _i)
+bool TDBWFRM::IsEmptyKetteNurGewebe (int _i)
 {
 	for (int j=0; j<Data->MAXY2; j++)
 		if (gewebe.feld.Get (_i, j)>0) return false;

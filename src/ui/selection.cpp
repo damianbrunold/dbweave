@@ -42,14 +42,14 @@
 #include <cstdlib>
 
 /*-----------------------------------------------------------------*/
-bool __fastcall RANGE::Valid()
+bool RANGE::Valid()
 {
 	return begin.i >= 0 && begin.j >= 0 &&
 	       end.i > -1   && end.j > -1   &&
 	       feld != INVALID;
 }
 
-void __fastcall RANGE::Normalize()
+void RANGE::Normalize()
 {
 	const int minx = std::min(begin.i, end.i);
 	const int miny = std::min(begin.j, end.j);
@@ -59,8 +59,8 @@ void __fastcall RANGE::Normalize()
 	end   = PT(maxx, maxy);
 }
 
-PT __fastcall RANGE::LeftDown()  { Normalize(); return begin; }
-PT __fastcall RANGE::TopRight()  { Normalize(); return end;   }
+PT RANGE::LeftDown()  { Normalize(); return begin; }
+PT RANGE::TopRight()  { Normalize(); return end;   }
 
 /*-----------------------------------------------------------------*/
 /*  Map the (normalised) selection rectangle back to pixel coords
@@ -157,13 +157,13 @@ static void calcSelectionRect (TDBWFRM* frm, int& _x, int& _y, int& _xx, int& _y
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::ClearSelection()
+void TDBWFRM::ClearSelection()
 {
 	selection.Clear();
 	refresh();
 }
 
-void __fastcall TDBWFRM::DrawSelection()
+void TDBWFRM::DrawSelection()
 {
 	QPainter* p = currentPainter;
 	if (!p) return;
@@ -185,7 +185,7 @@ void __fastcall TDBWFRM::DrawSelection()
 	p->drawLine(x,  yy, x,  y);
 }
 
-void __fastcall TDBWFRM::ResizeSelection (int _i, int _j, FELD _feld, bool _square)
+void TDBWFRM::ResizeSelection (int _i, int _j, FELD _feld, bool _square)
 {
 	if (!selection.Valid()) {
 		selection.begin = selection.end = PT(_i, _j);
@@ -214,7 +214,7 @@ void __fastcall TDBWFRM::ResizeSelection (int _i, int _j, FELD _feld, bool _squa
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::ApplyRangeToSelection (int _range)
+void TDBWFRM::ApplyRangeToSelection (int _range)
 {
 	if (!selection.Valid()) return;
 

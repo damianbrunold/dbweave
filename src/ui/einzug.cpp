@@ -33,17 +33,17 @@
 #include <QAction>
 #include <cstring>  /* memset */
 /*-----------------------------------------------------------------*/
-__fastcall EinzugRearrangeImpl::EinzugRearrangeImpl (TDBWFRM* _frm, TData* _data)
+ EinzugRearrangeImpl::EinzugRearrangeImpl (TDBWFRM* _frm, TData* _data)
 : frm(_frm), data(_data)
 {
 	j1 = j2 = 0;
 }
 /*-----------------------------------------------------------------*/
-__fastcall EinzugRearrangeImpl::~EinzugRearrangeImpl()
+ EinzugRearrangeImpl::~EinzugRearrangeImpl()
 {
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::NormalZ()
+void EinzugRearrangeImpl::NormalZ()
 {
 	CalcRange();
 	if (j1>=j2) return;
@@ -59,7 +59,7 @@ void __fastcall EinzugRearrangeImpl::NormalZ()
 	frm->CalcRangeKette();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::NormalS()
+void EinzugRearrangeImpl::NormalS()
 {
 	CalcRange();
 	if (j1>=j2) return;
@@ -75,7 +75,7 @@ void __fastcall EinzugRearrangeImpl::NormalS()
 	frm->CalcRangeKette();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::GeradeZ()
+void EinzugRearrangeImpl::GeradeZ()
 {
 	CalcRange();
 	if (j1>=j2) return;
@@ -112,7 +112,7 @@ void __fastcall EinzugRearrangeImpl::GeradeZ()
 	frm->CalcRangeKette();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::GeradeS()
+void EinzugRearrangeImpl::GeradeS()
 {
 	CalcRange();
 	if (j1>=j2) return;
@@ -149,7 +149,7 @@ void __fastcall EinzugRearrangeImpl::GeradeS()
 	frm->CalcRangeKette();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::Chorig2()
+void EinzugRearrangeImpl::Chorig2()
 {
 	if (frm->kette.b-frm->kette.a < 2) return;
 	CalcRange();
@@ -187,7 +187,7 @@ void __fastcall EinzugRearrangeImpl::Chorig2()
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::Chorig3()
+void EinzugRearrangeImpl::Chorig3()
 {
 	if (frm->kette.b-frm->kette.a < 3) return;
 	CalcRange();
@@ -248,7 +248,7 @@ void __fastcall EinzugRearrangeImpl::Chorig3()
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::Fixiert()
+void EinzugRearrangeImpl::Fixiert()
 {
 	/*  STUB: the real body drives RcRecalcAll (recalc.cpp, not
 	    ported) to recompute the einzug from a fixed template, then
@@ -256,12 +256,12 @@ void __fastcall EinzugRearrangeImpl::Fixiert()
 	    with the recalc slice. */
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::Belassen()
+void EinzugRearrangeImpl::Belassen()
 {
 	// Nichts tun...
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::Rearrange()
+void EinzugRearrangeImpl::Rearrange()
 {
 	if (frm->EzFixiert  && frm->EzFixiert->isChecked())  Fixiert();
 	else if (frm->EzMinimalZ && frm->EzMinimalZ->isChecked()) NormalZ();
@@ -273,14 +273,14 @@ void __fastcall EinzugRearrangeImpl::Rearrange()
 	else if (frm->EzBelassen && frm->EzBelassen->isChecked()) Belassen();
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall EinzugRearrangeImpl::EinzugEqual (int _i1, int _i2)
+bool EinzugRearrangeImpl::EinzugEqual (int _i1, int _i2)
 {
 	for (int j=frm->schuesse.a; j<=frm->schuesse.b; j++)
 		if (frm->gewebe.feld.Get(_i1, j)!=frm->gewebe.feld.Get(_i2, j)) return false;
 	return true;
 }
 /*-----------------------------------------------------------------*/
-SZ __fastcall EinzugRearrangeImpl::CalcRapportRange()
+SZ EinzugRearrangeImpl::CalcRapportRange()
 {
 	SZ r(0, -1);
 
@@ -310,7 +310,7 @@ g_again:
 	return r;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::CalcRange()
+void EinzugRearrangeImpl::CalcRange()
 {
 	j1 = j2 = 0;
 
@@ -323,19 +323,19 @@ void __fastcall EinzugRearrangeImpl::CalcRange()
 	}
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall EinzugRearrangeImpl::IsEmptySchaft (int _j)
+bool EinzugRearrangeImpl::IsEmptySchaft (int _j)
 {
 	return frm->freieschaefte[_j];
 }
 /*-----------------------------------------------------------------*/
-int __fastcall EinzugRearrangeImpl::GetFirstNonemptySchaft (int _j)
+int EinzugRearrangeImpl::GetFirstNonemptySchaft (int _j)
 {
 	for (int j=_j+1; j<data->MAXY1; j++)
 		if (!IsEmptySchaft (j)) return j;
 	return -1;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::RedrawSchaft (int _j)
+void EinzugRearrangeImpl::RedrawSchaft (int _j)
 {
 	if (!frm->ViewEinzug || !frm->ViewEinzug->isChecked()) return;
 	if (frm->einzug.gh<=0) return;
@@ -345,7 +345,7 @@ void __fastcall EinzugRearrangeImpl::RedrawSchaft (int _j)
 		frm->DrawEinzug (i, _j-frm->scroll_y1);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::RedrawAufknuepfungSchaft (int _j)
+void EinzugRearrangeImpl::RedrawAufknuepfungSchaft (int _j)
 {
 	if (!frm->ViewEinzug || !frm->ViewEinzug->isChecked()) return;
 	if (!frm->ViewTrittfolge || !frm->ViewTrittfolge->isChecked()) return;
@@ -356,7 +356,7 @@ void __fastcall EinzugRearrangeImpl::RedrawAufknuepfungSchaft (int _j)
 		frm->DrawAufknuepfung (i-frm->scroll_x2, _j-frm->scroll_y1);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::RedrawSchlagpatrone (int _i)
+void EinzugRearrangeImpl::RedrawSchlagpatrone (int _i)
 {
 	if (!frm->ViewTrittfolge || !frm->ViewTrittfolge->isChecked()) return;
 	if (frm->trittfolge.gw<=0 || frm->trittfolge.gh<=0) return;
@@ -365,7 +365,7 @@ void __fastcall EinzugRearrangeImpl::RedrawSchlagpatrone (int _i)
 		frm->DrawTrittfolge (_i-frm->scroll_x2, j-frm->scroll_y2);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::MoveSchaft (int _von, int _nach)
+void EinzugRearrangeImpl::MoveSchaft (int _von, int _nach)
 {
 	int i;
 	for (i=frm->kette.a; i<=frm->kette.b; i++)
@@ -399,7 +399,7 @@ void __fastcall EinzugRearrangeImpl::MoveSchaft (int _von, int _nach)
 	RedrawSchaft (_nach);
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall EinzugRearrangeImpl::IsTotalEmptySchaft (int _j)
+bool EinzugRearrangeImpl::IsTotalEmptySchaft (int _j)
 {
 	if (!frm->ViewSchlagpatrone || !frm->ViewSchlagpatrone->isChecked()) {
 		for (int i=0; i<Data->MAXX2; i++)
@@ -417,7 +417,7 @@ bool __fastcall EinzugRearrangeImpl::IsTotalEmptySchaft (int _j)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::EliminateEmptySchaft()
+void EinzugRearrangeImpl::EliminateEmptySchaft()
 {
 	for (int j=0; j<data->MAXY1; j++)
 		if (IsTotalEmptySchaft(j)) {
@@ -469,7 +469,7 @@ void __fastcall EinzugRearrangeImpl::EliminateEmptySchaft()
 		}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::SwitchSchaefte (int _a, int _b)
+void EinzugRearrangeImpl::SwitchSchaefte (int _a, int _b)
 {
 	int i;
 	for (i=frm->kette.a; i<=frm->kette.b; i++) {
@@ -512,7 +512,7 @@ void __fastcall EinzugRearrangeImpl::SwitchSchaefte (int _a, int _b)
 // es noetig sein, dass ein Einzug, der eigentlich schon vorhanden
 // waere, nicht genommen wird, sondern identisch auf einen anderen
 // Schaft gelegt wird.
-int __fastcall EinzugRearrangeImpl::SplitSchaft (int _searchj, int _sourcej)
+int EinzugRearrangeImpl::SplitSchaft (int _searchj, int _sourcej)
 {
 	int lastnewj = 0;
 	// Rapport durchgehen
@@ -570,7 +570,7 @@ int __fastcall EinzugRearrangeImpl::SplitSchaft (int _searchj, int _sourcej)
 	return lastnewj;
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall EinzugRearrangeImpl::SchaefteEqual (int _j1, int _j2)
+bool EinzugRearrangeImpl::SchaefteEqual (int _j1, int _j2)
 {
 	if (!frm->ViewSchlagpatrone || !frm->ViewSchlagpatrone->isChecked()) {
 		dbw3_assert(_j1>=0 && _j1<data->MAXY1);
@@ -599,7 +599,7 @@ bool __fastcall EinzugRearrangeImpl::SchaefteEqual (int _j1, int _j2)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::MergeSchaefte()
+void EinzugRearrangeImpl::MergeSchaefte()
 {
 	// Identische Schaefte suchen
 	for (int i=frm->kette.a; i<=frm->kette.b; i++) {
@@ -634,14 +634,14 @@ void __fastcall EinzugRearrangeImpl::MergeSchaefte()
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrangeImpl::RearrangeSchaefte()
+void EinzugRearrangeImpl::RearrangeSchaefte()
 {
 	/*  The legacy TDBWFRM::RearrangeSchaefte method simply forwards to
 	    einzughandler->Rearrange(); this helper is not exercised from
 	    the Impl class itself. */
 }
 /*-----------------------------------------------------------------*/
-EinzugRearrange* __fastcall EinzugRearrange::CreateInstance (TDBWFRM* _frm, TData* _data)
+EinzugRearrange* EinzugRearrange::CreateInstance (TDBWFRM* _frm, TData* _data)
 {
 	EinzugRearrange* p = NULL;
 	try {
@@ -651,7 +651,7 @@ EinzugRearrange* __fastcall EinzugRearrange::CreateInstance (TDBWFRM* _frm, TDat
 	return p;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall EinzugRearrange::ReleaseInstance (EinzugRearrange* _einzug)
+void EinzugRearrange::ReleaseInstance (EinzugRearrange* _einzug)
 {
 	delete _einzug;
 }

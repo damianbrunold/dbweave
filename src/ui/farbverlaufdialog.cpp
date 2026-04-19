@@ -347,7 +347,7 @@ void FarbverlaufDialog::accept ()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::FarbverlaufClick ()
+void TDBWFRM::FarbverlaufClick ()
 {
 	FarbverlaufDialog dlg(this, this);
 	dlg.exec();

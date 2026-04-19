@@ -290,7 +290,7 @@ bool WifReader::read (const QString& _filename)
 } /* anonymous namespace */
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::ImportWIFClick ()
+void TDBWFRM::ImportWIFClick ()
 {
 	const QString fn = QFileDialog::getOpenFileName(
 	    this,

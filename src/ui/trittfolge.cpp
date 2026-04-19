@@ -24,19 +24,19 @@
 #include "datamodule.h"
 #include <QAction>
 /*-----------------------------------------------------------------*/
-bool __fastcall TDBWFRM::IsEmptyTritt (int _i)
+bool TDBWFRM::IsEmptyTritt (int _i)
 {
 	return freietritte[_i];
 }
 /*-----------------------------------------------------------------*/
-int __fastcall TDBWFRM::GetFirstNonemptyTritt (int _i)
+int TDBWFRM::GetFirstNonemptyTritt (int _i)
 {
 	for (int i=_i; i<Data->MAXX2; i++)
 		if (!IsEmptyTritt (i)) return i;
 	return -1;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::RedrawTritt (int _i)
+void TDBWFRM::RedrawTritt (int _i)
 {
 	if (!ViewTrittfolge || !ViewTrittfolge->isChecked()) return;
 	if (trittfolge.gw<=0 || trittfolge.gh<=0) return;
@@ -45,7 +45,7 @@ void __fastcall TDBWFRM::RedrawTritt (int _i)
 		DrawTrittfolge (_i-scroll_x2, j);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::RedrawAufknuepfungTritt (int _i)
+void TDBWFRM::RedrawAufknuepfungTritt (int _i)
 {
 	if (!ViewEinzug || !ViewEinzug->isChecked()) return;
 	if (!ViewTrittfolge || !ViewTrittfolge->isChecked()) return;
@@ -55,7 +55,7 @@ void __fastcall TDBWFRM::RedrawAufknuepfungTritt (int _i)
 		DrawAufknuepfung (_i-scroll_x2, j-scroll_y1);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::MoveTritt (int _von, int _nach)
+void TDBWFRM::MoveTritt (int _von, int _nach)
 {
 	int j;
 	for (j=schuesse.a; j<=schuesse.b; j++) {
@@ -74,7 +74,7 @@ void __fastcall TDBWFRM::MoveTritt (int _von, int _nach)
 	freietritte[_von] = true;
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall TDBWFRM::AufknuepfungsspalteEqual (int _i1, int _i2)
+bool TDBWFRM::AufknuepfungsspalteEqual (int _i1, int _i2)
 {
 	bool nonempty = false;
 	for (int j=0; j<Data->MAXY1; j++) {
@@ -88,7 +88,7 @@ bool __fastcall TDBWFRM::AufknuepfungsspalteEqual (int _i1, int _i2)
 	return nonempty ? true : false;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::MergeTritte()
+void TDBWFRM::MergeTritte()
 {
 	bool found;
 
@@ -120,7 +120,7 @@ void __fastcall TDBWFRM::MergeTritte()
 	} while (found);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::EliminateEmptyTritt()
+void TDBWFRM::EliminateEmptyTritt()
 {
 	for (int i=0; i<Data->MAXX2; i++)
 		if (IsEmptyTritt (i)) {
@@ -131,7 +131,7 @@ void __fastcall TDBWFRM::EliminateEmptyTritt()
 		}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::SwitchTritte (int _a, int _b)
+void TDBWFRM::SwitchTritte (int _a, int _b)
 {
 	int j;
 	for (j=schuesse.a; j<=schuesse.b; j++) {
@@ -155,7 +155,7 @@ void __fastcall TDBWFRM::SwitchTritte (int _a, int _b)
 	freietritte[_b] = IsEmpty;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::RearrangeTritte()
+void TDBWFRM::RearrangeTritte()
 {
 	if (TfBelassen && TfBelassen->isChecked()) return;
 	if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) return;

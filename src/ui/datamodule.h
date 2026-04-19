@@ -46,7 +46,7 @@ public:
 public:
 	TData();
 	virtual ~TData();
-	void __fastcall ReloadLanguage();
+	void ReloadLanguage();
 };
 
 /*  Global pointer, populated by main(). Matches the VCL `extern PACKAGE

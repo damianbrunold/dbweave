@@ -29,19 +29,19 @@ public:
 private:
 	char feld[maxx*maxy];
 public:
-	__fastcall Muster();
-	void __fastcall Set (int _i, int _j, char _value);
-	char __fastcall Get (int _i, int _j);
-	void __fastcall Clear();
-	bool __fastcall IsEmpty();
-	int  __fastcall SizeX();
-	int  __fastcall SizeY();
-	int  __fastcall FirstX();
-	int  __fastcall FirstY();
+ Muster();
+	void Set (int _i, int _j, char _value);
+	char Get (int _i, int _j);
+	void Clear();
+	bool IsEmpty();
+	int SizeX();
+	int SizeY();
+	int FirstX();
+	int FirstY();
 
-	const char* __fastcall Data() const { return feld; }
-	int         __fastcall DataSize() const { return maxx*maxy; }
-	void __fastcall SetData (const char* _data);
+	const char* Data() const { return feld; }
+	int DataSize() const { return maxx*maxy; }
+	void SetData (const char* _data);
 
 	Muster& operator= (const Muster& _m);
 };
@@ -57,7 +57,7 @@ public:
 	int    active;
 	BlockUndoItem* prev;
 	BlockUndoItem* next;
-	__fastcall BlockUndoItem() { isempty = true; prev = next = nullptr; active = 0; }
+ BlockUndoItem() { isempty = true; prev = next = nullptr; active = 0; }
 };
 
 class BlockUndo
@@ -67,15 +67,15 @@ public:
 	int&         active;
 	BlockUndoItem* list;
 	BlockUndoItem* current;
-	__fastcall BlockUndo (PMUSTERARRAY _bindungen, int& _active);
-	virtual __fastcall ~BlockUndo();
-	void __fastcall Allocate();
-	void __fastcall Snapshot();
-	void __fastcall Undo();
-	void __fastcall Redo();
-	bool __fastcall CanUndo();
-	bool __fastcall CanRedo();
-	void __fastcall Clear();
+ BlockUndo (PMUSTERARRAY _bindungen, int& _active);
+	virtual ~BlockUndo();
+	void Allocate();
+	void Snapshot();
+	void Undo();
+	void Redo();
+	bool CanUndo();
+	bool CanRedo();
+	void Clear();
 };
 
 #endif

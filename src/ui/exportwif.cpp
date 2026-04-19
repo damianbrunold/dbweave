@@ -277,7 +277,7 @@ void WifWriter::writeBlatteinzug ()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DateiExportieren (const QString& _filename)
+void TDBWFRM::DateiExportieren (const QString& _filename)
 {
 	WifWriter writer(this);
 	writer.write(_filename);
@@ -289,7 +289,7 @@ void __fastcall TDBWFRM::DateiExportieren (const QString& _filename)
     legacy export.cpp semantics (minus the dbw-3.5 "old format"
     branch, which is essentially a legacy-Save-As and will land when
     the file-I/O slice rounds out).                                */
-void __fastcall TDBWFRM::DateiExportClick ()
+void TDBWFRM::DateiExportClick ()
 {
 	const QString fn = QFileDialog::getSaveFileName(
 	    this,

@@ -28,7 +28,7 @@
 #include "einzug.h"
 #include <QCursor>
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::SetGewebe (int _i, int _j, bool _set, int _range)
+void TDBWFRM::SetGewebe (int _i, int _j, bool _set, int _range)
 {
 	if (GewebeNone && GewebeNone->isChecked()) return;
 
@@ -97,7 +97,7 @@ void __fastcall TDBWFRM::SetGewebe (int _i, int _j, bool _set, int _range)
 	if (undo) undo->Snapshot();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DoSetGewebe (int _i, int _j, bool _set, int _range)
+void TDBWFRM::DoSetGewebe (int _i, int _j, bool _set, int _range)
 {
 	int i, j, k;
 	bool wasemptyeinzug     = IsEmptyEinzug (_i+scroll_x1);

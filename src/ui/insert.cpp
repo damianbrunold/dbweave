@@ -21,7 +21,7 @@
 #include "cursor.h"
 #include "undoredo.h"
 
-bool __fastcall TDBWFRM::_IsEmptySchaft (int _j)
+bool TDBWFRM::_IsEmptySchaft (int _j)
 {
 	for (int i = 0; i < Data->MAXX1; i++)
 		if (einzug.feld.Get(i) == _j + 1) return false;
@@ -35,7 +35,7 @@ bool __fastcall TDBWFRM::_IsEmptySchaft (int _j)
 	return true;
 }
 
-bool __fastcall TDBWFRM::_IsEmptyTritt (int _i)
+bool TDBWFRM::_IsEmptyTritt (int _i)
 {
 	for (int j = 0; j < Data->MAXY2; j++)
 		if (trittfolge.feld.Get(_i, j) > 0) return false;
@@ -49,7 +49,7 @@ bool __fastcall TDBWFRM::_IsEmptyTritt (int _i)
 	return true;
 }
 
-int __fastcall TDBWFRM::GetEmptySchaft()
+int TDBWFRM::GetEmptySchaft()
 {
 	int lastempty = -1;
 	int j = Data->MAXY1 - 1;
@@ -60,7 +60,7 @@ int __fastcall TDBWFRM::GetEmptySchaft()
 	return lastempty;
 }
 
-int __fastcall TDBWFRM::GetEmptyTritt()
+int TDBWFRM::GetEmptyTritt()
 {
 	int lastempty = -1;
 	int i = Data->MAXX2 - 1;
@@ -72,7 +72,7 @@ int __fastcall TDBWFRM::GetEmptyTritt()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::InsertSchaftClick ()
+void TDBWFRM::InsertSchaftClick ()
 {
 	dbw3_assert(kbd_field == EINZUG || kbd_field == AUFKNUEPFUNG);
 	if (!(kbd_field == EINZUG || kbd_field == AUFKNUEPFUNG)) return;
@@ -93,7 +93,7 @@ void __fastcall TDBWFRM::InsertSchaftClick ()
 	if (undo) undo->Snapshot();
 }
 
-void __fastcall TDBWFRM::InsertTrittClick ()
+void TDBWFRM::InsertTrittClick ()
 {
 	dbw3_assert(kbd_field == TRITTFOLGE || kbd_field == AUFKNUEPFUNG);
 	if (!(kbd_field == TRITTFOLGE || kbd_field == AUFKNUEPFUNG)) return;
@@ -114,7 +114,7 @@ void __fastcall TDBWFRM::InsertTrittClick ()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::InsertKettfaden (int _i)
+void TDBWFRM::InsertKettfaden (int _i)
 {
 	/*  Alles eins nach rechts kopieren im Einzug. */
 	for (int i = Data->MAXX1 - 1; i > _i; i--)
@@ -136,7 +136,7 @@ void __fastcall TDBWFRM::InsertKettfaden (int _i)
 	CalcRapport();
 }
 
-void __fastcall TDBWFRM::InsertSchussfaden (int _j)
+void TDBWFRM::InsertSchussfaden (int _j)
 {
 	/*  Alles eins nach oben kopieren in der Trittfolge. */
 	for (int j = Data->MAXY2 - 1; j > _j; j--) {
@@ -164,7 +164,7 @@ void __fastcall TDBWFRM::InsertSchussfaden (int _j)
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::InsertKetteClick ()
+void TDBWFRM::InsertKetteClick ()
 {
 	dbw3_assert(kbd_field == EINZUG || kbd_field == GEWEBE);
 	if (!(kbd_field == EINZUG || kbd_field == GEWEBE)) return;
@@ -189,7 +189,7 @@ void __fastcall TDBWFRM::InsertKetteClick ()
 	if (undo) undo->Snapshot();
 }
 
-void __fastcall TDBWFRM::InsertSchussClick ()
+void TDBWFRM::InsertSchussClick ()
 {
 	dbw3_assert(kbd_field == TRITTFOLGE || kbd_field == GEWEBE);
 	if (!(kbd_field == TRITTFOLGE || kbd_field == GEWEBE)) return;

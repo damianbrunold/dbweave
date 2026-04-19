@@ -44,7 +44,7 @@ static QString fieldName (FELD _f)
 	}
 }
 
-void __fastcall TDBWFRM::UpdateStatusBar()
+void TDBWFRM::UpdateStatusBar()
 {
 	if (!sbField) return;   /* ctor hasn't run the setup yet */
 

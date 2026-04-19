@@ -35,7 +35,7 @@
 
 #define INITIALMAX 20
 
-__fastcall Hilfslinien::Hilfslinien()
+ Hilfslinien::Hilfslinien()
 {
 	list = nullptr;
 	max  = 0;
@@ -43,12 +43,12 @@ __fastcall Hilfslinien::Hilfslinien()
 	Reallocate (INITIALMAX);
 }
 
-__fastcall Hilfslinien::~Hilfslinien()
+ Hilfslinien::~Hilfslinien()
 {
 	delete[] list;
 }
 
-void __fastcall Hilfslinien::Reallocate (int _newmax)
+void Hilfslinien::Reallocate (int _newmax)
 {
 	if (_newmax <= max) return;
 	try {
@@ -64,7 +64,7 @@ void __fastcall Hilfslinien::Reallocate (int _newmax)
 	}
 }
 
-void __fastcall Hilfslinien::SetData (Hilfslinie* _list, int _count)
+void Hilfslinien::SetData (Hilfslinie* _list, int _count)
 {
 	delete[] list;
 	list = _list;
@@ -72,7 +72,7 @@ void __fastcall Hilfslinien::SetData (Hilfslinie* _list, int _count)
 	last = _count - 1;
 }
 
-bool __fastcall Hilfslinien::Add (HLTYP _typ, HLFELD _feld, int _pos)
+bool Hilfslinien::Add (HLTYP _typ, HLFELD _feld, int _pos)
 {
 	dbw3_assert (list);
 	if (last >= max - 1) Reallocate (max + 10);
@@ -84,7 +84,7 @@ bool __fastcall Hilfslinien::Add (HLTYP _typ, HLFELD _feld, int _pos)
 	return true;
 }
 
-void __fastcall Hilfslinien::Update (int _index, HLFELD _feld, int _pos)
+void Hilfslinien::Update (int _index, HLFELD _feld, int _pos)
 {
 	dbw3_assert (list);
 	dbw3_assert (_index <= last && _index < max);
@@ -93,7 +93,7 @@ void __fastcall Hilfslinien::Update (int _index, HLFELD _feld, int _pos)
 	list[_index].pos  = _pos;
 }
 
-void __fastcall Hilfslinien::Delete (int _index)
+void Hilfslinien::Delete (int _index)
 {
 	dbw3_assert (list);
 	dbw3_assert (_index <= last && _index < max);
@@ -102,7 +102,7 @@ void __fastcall Hilfslinien::Delete (int _index)
 	last--;
 }
 
-void __fastcall Hilfslinien::Delete (Hilfslinie* _hline)
+void Hilfslinien::Delete (Hilfslinie* _hline)
 {
 	dbw3_assert (_hline);
 	if (!_hline) return;
@@ -116,24 +116,24 @@ void __fastcall Hilfslinien::Delete (Hilfslinie* _hline)
 	}
 }
 
-void __fastcall Hilfslinien::DeleteAll()
+void Hilfslinien::DeleteAll()
 {
 	last = -1;
 }
 
-int __fastcall Hilfslinien::GetCount() const
+int Hilfslinien::GetCount() const
 {
 	return last + 1;
 }
 
-Hilfslinie* __fastcall Hilfslinien::GetLine (int _index)
+Hilfslinie* Hilfslinien::GetLine (int _index)
 {
 	dbw3_assert (list);
 	if (_index > last) return nullptr;
 	return &list[_index];
 }
 
-Hilfslinie* __fastcall Hilfslinien::GetLine (HLTYP _typ, HLFELD _feld, int _pos)
+Hilfslinie* Hilfslinien::GetLine (HLTYP _typ, HLFELD _feld, int _pos)
 {
 	if (!list) return nullptr;
 	for (int i = 0; i <= last && i < max; i++) {
@@ -147,7 +147,7 @@ Hilfslinie* __fastcall Hilfslinien::GetLine (HLTYP _typ, HLFELD _feld, int _pos)
 /*-----------------------------------------------------------------*/
 static inline bool checked (QAction* _a) { return _a && _a->isChecked(); }
 
-static void __fastcall _DrawHilfslinie (TDBWFRM* frm, Hilfslinie* _hline)
+static void _DrawHilfslinie (TDBWFRM* frm, Hilfslinie* _hline)
 {
 	QPainter* p = frm->currentPainter;
 	if (!p) return;
@@ -246,7 +246,7 @@ static void __fastcall _DrawHilfslinie (TDBWFRM* frm, Hilfslinie* _hline)
 	}
 }
 
-void __fastcall TDBWFRM::DrawHilfslinien()
+void TDBWFRM::DrawHilfslinien()
 {
 	const int count = hlines.GetCount();
 	for (int i = 0; i < count; i++) {

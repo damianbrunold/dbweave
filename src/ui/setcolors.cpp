@@ -22,7 +22,7 @@
 #include "choosecolordialog.h"
 
 /*-----------------------------------------------------------------*/
-int __fastcall TDBWFRM::SelectColorIndex (int _index)
+int TDBWFRM::SelectColorIndex (int _index)
 {
 	ChoosePaletteDialog dlg(this);
 	dlg.SelectColor(Data->palette->GetColor(_index));
@@ -30,7 +30,7 @@ int __fastcall TDBWFRM::SelectColorIndex (int _index)
 	return dlg.GetSelectedIndex();
 }
 
-bool __fastcall TDBWFRM::SelectColor (COLORREF& _col)
+bool TDBWFRM::SelectColor (COLORREF& _col)
 {
 	ChoosePaletteDialog dlg(this);
 	if (dlg.exec() != QDialog::Accepted) return false;
@@ -39,7 +39,7 @@ bool __fastcall TDBWFRM::SelectColor (COLORREF& _col)
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::SetKettfarbeClick ()
+void TDBWFRM::SetKettfarbeClick ()
 {
 	const int col = SelectColorIndex(Data->color);
 	if (col == -1) return;
@@ -52,7 +52,7 @@ void __fastcall TDBWFRM::SetKettfarbeClick ()
 	if (undo) undo->Snapshot();
 }
 
-void __fastcall TDBWFRM::SetSchussfarbeClick ()
+void TDBWFRM::SetSchussfarbeClick ()
 {
 	const int col = SelectColorIndex(Data->color);
 	if (col == -1) return;
@@ -66,7 +66,7 @@ void __fastcall TDBWFRM::SetSchussfarbeClick ()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::ReplaceColorClick ()
+void TDBWFRM::ReplaceColorClick ()
 {
 	int col = -1;
 	if (kbd_field == KETTFARBEN) {
@@ -96,7 +96,7 @@ void __fastcall TDBWFRM::ReplaceColorClick ()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::SwitchColorsClick ()
+void TDBWFRM::SwitchColorsClick ()
 {
 	const int maxi = Data->MAXX1 > Data->MAXY2 ? int(Data->MAXY2) : int(Data->MAXX1);
 	for (int i = 0; i < maxi; i++) {

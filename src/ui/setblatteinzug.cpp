@@ -22,7 +22,7 @@
 #include "datamodule.h"
 #include "undoredo.h"
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::SetBlatteinzug (int _i)
+void TDBWFRM::SetBlatteinzug (int _i)
 {
 	DoSetBlatteinzug (_i);
 	refresh();    /* legacy painted inline; defer to paintEvent */
@@ -31,7 +31,7 @@ void __fastcall TDBWFRM::SetBlatteinzug (int _i)
 	if (undo) undo->Snapshot();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DoSetBlatteinzug (int _i)
+void TDBWFRM::DoSetBlatteinzug (int _i)
 {
 	// Feld setzen
 	blatteinzug.feld.Set (_i+scroll_x1, !blatteinzug.feld.Get(_i+scroll_x1));

@@ -27,7 +27,7 @@ struct Hilfslinie
 	HLTYP  typ;
 	HLFELD feld;
 	int    pos;
-	__fastcall Hilfslinie() { typ = HL_NONE; feld = HL_LEFT; pos = 0; }
+ Hilfslinie() { typ = HL_NONE; feld = HL_LEFT; pos = 0; }
 };
 
 class Hilfslinien
@@ -37,21 +37,21 @@ private:
 	int max;
 	int last;
 protected:
-	void __fastcall Reallocate (int _newmax);
+	void Reallocate (int _newmax);
 public:
-	__fastcall Hilfslinien();
-	virtual __fastcall ~Hilfslinien();
-	bool __fastcall Add (HLTYP _typ, HLFELD _feld, int _pos);
-	void __fastcall Update (int _index, HLFELD _feld, int _pos);
-	void __fastcall Delete (int _index);
-	void __fastcall Delete (Hilfslinie* _hline);
-	void __fastcall DeleteAll();
-	int  __fastcall GetCount() const;
-	Hilfslinie* __fastcall GetLine (int _index);
-	Hilfslinie* __fastcall GetLine (HLTYP _typ, HLFELD _feld, int _pos);
-	void* __fastcall Data() { return list; }
-	int   __fastcall DataSize() { return (last + 1) * (int)sizeof(Hilfslinie); }
-	void  __fastcall SetData (Hilfslinie* _list, int _count);
+ Hilfslinien();
+	virtual ~Hilfslinien();
+	bool Add (HLTYP _typ, HLFELD _feld, int _pos);
+	void Update (int _index, HLFELD _feld, int _pos);
+	void Delete (int _index);
+	void Delete (Hilfslinie* _hline);
+	void DeleteAll();
+	int GetCount() const;
+	Hilfslinie* GetLine (int _index);
+	Hilfslinie* GetLine (HLTYP _typ, HLFELD _feld, int _pos);
+	void* Data() { return list; }
+	int DataSize() { return (last + 1) * (int)sizeof(Hilfslinie); }
+	void SetData (Hilfslinie* _list, int _count);
 };
 
 #endif

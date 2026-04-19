@@ -22,7 +22,7 @@
 #include <QMessageBox>
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::LoadUserdefMenu ()
+void TDBWFRM::LoadUserdefMenu ()
 {
 	Settings settings;
 	bool menuvisible = false;
@@ -43,7 +43,7 @@ void __fastcall TDBWFRM::LoadUserdefMenu ()
 }
 
 /*-----------------------------------------------------------------*/
-int __fastcall TDBWFRM::SelectUserdef (const QString& _title)
+int TDBWFRM::SelectUserdef (const QString& _title)
 {
 	UserdefSelectDialog dlg(userdef, _title, this);
 	if (dlg.exec() != QDialog::Accepted) return -1;
@@ -51,7 +51,7 @@ int __fastcall TDBWFRM::SelectUserdef (const QString& _title)
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::InsertUserdef (int _i, bool _transparent)
+void TDBWFRM::InsertUserdef (int _i, bool _transparent)
 {
 	dbw3_assert(_i >= 0);
 	dbw3_assert(_i < MAXUSERDEF);
@@ -104,7 +104,7 @@ void __fastcall TDBWFRM::InsertUserdef (int _i, bool _transparent)
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::PasteUserdef (bool _transparent)
+void TDBWFRM::PasteUserdef (bool _transparent)
 {
 	const int i = SelectUserdef(QStringLiteral("Paste user pattern"));
 	if (i >= 0 && i < MAXUSERDEF) InsertUserdef(i, _transparent);
@@ -127,7 +127,7 @@ static AnsiString encodeRect (TDBWFRM* _frm, int _i1, int _i2, int _j1, int _j2)
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::UserdefAddClick ()
+void TDBWFRM::UserdefAddClick ()
 {
 	if (kette.count() > 50 || schuesse.count() > 50) {
 		QMessageBox::information(this, QStringLiteral("DB-WEAVE"),
@@ -154,7 +154,7 @@ void __fastcall TDBWFRM::UserdefAddClick ()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::UserdefAddSelClick ()
+void TDBWFRM::UserdefAddSelClick ()
 {
 	RANGE savesel = selection;
 	selection.Normalize();
@@ -193,7 +193,7 @@ void __fastcall TDBWFRM::UserdefAddSelClick ()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::UserdefRemoveClick ()
+void TDBWFRM::UserdefRemoveClick ()
 {
 	const int i = SelectUserdef(QStringLiteral("Select pattern to delete"));
 	if (i >= 0 && i < MAXUSERDEF) {

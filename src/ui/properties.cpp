@@ -15,44 +15,44 @@
 #include "loadmap.h"
 #include <cstring>
 
-__fastcall FileProperties::FileProperties()
+ FileProperties::FileProperties()
 {
 	author = organization = remarks = 0;
 }
 
-__fastcall FileProperties::~FileProperties()
+ FileProperties::~FileProperties()
 {
 	delete[] author;
 	delete[] organization;
 	delete[] remarks;
 }
 
-void __fastcall FileProperties::SetAuthor (const char* _author)
+void FileProperties::SetAuthor (const char* _author)
 {
 	delete[] author;
 	author = new char [std::strlen(_author)+1];
 	std::strcpy (author, _author);
 }
 
-void __fastcall FileProperties::SetOrganization (const char* _organization)
+void FileProperties::SetOrganization (const char* _organization)
 {
 	delete[] organization;
 	organization = new char [std::strlen(_organization)+1];
 	std::strcpy (organization, _organization);
 }
 
-void __fastcall FileProperties::SetRemarks (const char* _remarks)
+void FileProperties::SetRemarks (const char* _remarks)
 {
 	delete[] remarks;
 	remarks = new char [std::strlen(_remarks)+1];
 	std::strcpy (remarks, _remarks);
 }
 
-const char* __fastcall FileProperties::Author       () const { return author       ? author       : ""; }
-const char* __fastcall FileProperties::Organization () const { return organization ? organization : ""; }
-const char* __fastcall FileProperties::Remarks      () const { return remarks      ? remarks      : ""; }
+const char* FileProperties::Author       () const { return author       ? author       : ""; }
+const char* FileProperties::Organization () const { return organization ? organization : ""; }
+const char* FileProperties::Remarks      () const { return remarks      ? remarks      : ""; }
 
-void __fastcall FileProperties::RemoveNL (char* _data)
+void FileProperties::RemoveNL (char* _data)
 {
 	if (!_data) return;
 	char* p1 = _data;
@@ -70,7 +70,7 @@ void __fastcall FileProperties::RemoveNL (char* _data)
 	*p2 = '\0';
 }
 
-void __fastcall FileProperties::InsertNL (char* _data)
+void FileProperties::InsertNL (char* _data)
 {
 	if (!_data) return;
 	try {
@@ -93,7 +93,7 @@ void __fastcall FileProperties::InsertNL (char* _data)
 	}
 }
 
-void __fastcall FileProperties::Save (FfWriter* _writer)
+void FileProperties::Save (FfWriter* _writer)
 {
 	dbw3_assert (_writer);
 	try {
@@ -111,7 +111,7 @@ void __fastcall FileProperties::Save (FfWriter* _writer)
 	}
 }
 
-void __fastcall FileProperties::Load (FfReader* _reader)
+void FileProperties::Load (FfReader* _reader)
 {
 	char* bemerkungen = NULL;
 	BEGIN_LOAD_MAP
@@ -132,7 +132,7 @@ void __fastcall FileProperties::Load (FfReader* _reader)
 	}
 }
 
-void __fastcall FileProperties::Init ()
+void FileProperties::Init ()
 {
 	SetAuthor       ("");
 	SetOrganization ("");

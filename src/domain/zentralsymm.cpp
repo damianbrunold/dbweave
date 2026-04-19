@@ -16,7 +16,7 @@
 /*-----------------------------------------------------------------*/
 #include "zentralsymm.h"
 /*-----------------------------------------------------------------*/
-__fastcall ZentralSymmChecker::ZentralSymmChecker()
+ ZentralSymmChecker::ZentralSymmChecker()
 {
 	data = 0;
 	temp = 0;
@@ -24,7 +24,7 @@ __fastcall ZentralSymmChecker::ZentralSymmChecker()
 	sizey = 0;
 }
 /*-----------------------------------------------------------------*/
-__fastcall ZentralSymmChecker::ZentralSymmChecker (int _sizex, int _sizey)
+ ZentralSymmChecker::ZentralSymmChecker (int _sizex, int _sizey)
 {
 	data = 0;
 	temp = 0;
@@ -34,13 +34,13 @@ __fastcall ZentralSymmChecker::ZentralSymmChecker (int _sizex, int _sizey)
 	Init (_sizex, _sizey);
 }
 /*-----------------------------------------------------------------*/
-__fastcall ZentralSymmChecker::~ZentralSymmChecker()
+ ZentralSymmChecker::~ZentralSymmChecker()
 {
 	delete[] data;
 	delete[] temp;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall ZentralSymmChecker::Init (int _sizex, int _sizey)
+void ZentralSymmChecker::Init (int _sizex, int _sizey)
 {
 	delete[] data;
 	delete[] temp;
@@ -61,21 +61,21 @@ void __fastcall ZentralSymmChecker::Init (int _sizex, int _sizey)
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall ZentralSymmChecker::SetData (int _i, int _j, char _val)
+void ZentralSymmChecker::SetData (int _i, int _j, char _val)
 {
 	dbw3_assert(_i>=0 && _i<sizex);
 	dbw3_assert(_j>=0 && _j<sizey);
 	data[_i*sizey+_j] = _val;
 }
 /*-----------------------------------------------------------------*/
-char __fastcall ZentralSymmChecker::GetData (int _i, int _j)
+char ZentralSymmChecker::GetData (int _i, int _j)
 {
 	dbw3_assert(_i>=0 && _i<sizex);
 	dbw3_assert(_j>=0 && _j<sizey);
 	return data[_i*sizey+_j];
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall ZentralSymmChecker::IsSymmetric()
+bool ZentralSymmChecker::IsSymmetric()
 {
 	for (int i=0; i<sizex/2; i++)
 		for (int j=0; j<sizey; j++)
@@ -84,7 +84,7 @@ bool __fastcall ZentralSymmChecker::IsSymmetric()
 	return true;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall ZentralSymmChecker::RollLeft()
+void ZentralSymmChecker::RollLeft()
 {
 	for (int j=0; j<sizey; j++) temp[j] = GetData (0, j);
 	for (int i=1; i<sizex; i++)
@@ -93,7 +93,7 @@ void __fastcall ZentralSymmChecker::RollLeft()
 	for (int j=0; j<sizey; j++) SetData (sizex-1, j, temp[j]);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall ZentralSymmChecker::RollUp()
+void ZentralSymmChecker::RollUp()
 {
 	for (int i=0; i<sizex; i++) temp[i] = GetData(i, 0);
 	for (int j=1; j<sizey; j++)

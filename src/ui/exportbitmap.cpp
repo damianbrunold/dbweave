@@ -40,7 +40,7 @@ static QColor paletteColor (int _idx)
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DoExportBitmap (const QString& _filename)
+void TDBWFRM::DoExportBitmap (const QString& _filename)
 {
 	const int gw = 16;
 	const int gh = 16;

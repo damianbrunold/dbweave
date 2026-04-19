@@ -282,7 +282,7 @@ public:
 	/*  Called by SwitchLanguage(). Body is filled in when lang_main.cpp
 	    is ported (that unit is a 673-line blob of LANG_C_H assignments
 	    against menu items and actions that don't exist yet). */
-	void __fastcall ReloadLanguage();
+	void ReloadLanguage();
 
 	/*  Stubs for the recalc / house-keeping methods every editor
 	    operation dispatches through. Bodies land in later slices
@@ -290,14 +290,14 @@ public:
 	    kette/schuesse range management, ...). Defined now so ported
 	    undoredo / editor code links without forward-reference
 	    surgery.                                                    */
-	void __fastcall RecalcGewebe();
-	void __fastcall CalcRangeKette();
-	void __fastcall CalcRangeSchuesse();
-	void __fastcall CalcRange();
-	void __fastcall SetModified (bool _modified = true);
-	void __fastcall SetCursor   (int _i, int _j);
-	void __fastcall SetAppTitle ();
-	void __fastcall UpdateStatusBar();
+	void RecalcGewebe();
+	void CalcRangeKette();
+	void CalcRangeSchuesse();
+	void CalcRange();
+	void SetModified (bool _modified = true);
+	void SetCursor   (int _i, int _j);
+	void SetAppTitle ();
+	void UpdateStatusBar();
 
 	/*  Status-bar labels; created in the ctor and addPermanent-ed
 	    onto statusBar() so they stay right-aligned. UpdateStatusBar
@@ -314,91 +314,91 @@ public:
 	class QLabel* sbZoom     = nullptr;
 
 	/*  Rapport forwarding methods -- delegate to rapporthandler. */
-	void __fastcall CalcRapport();
-	void __fastcall UpdateRapport();
-	void __fastcall ClearRapport();
-	void __fastcall DrawRapport();
-	bool __fastcall IsInRapport (int _i, int _j);
+	void CalcRapport();
+	void UpdateRapport();
+	void ClearRapport();
+	void DrawRapport();
+	bool IsInRapport (int _i, int _j);
 
 	/*  Drawing stubs (bodies land with the rendering slice). */
-	void __fastcall DrawHilfslinien();
-	void __fastcall DrawGewebe (int _i, int _j);
-	void __fastcall DrawGewebeRahmen (int _i, int _j);
-	void __fastcall DrawGewebeFarbeffekt  (int _i, int _j, int _x, int _y, int _xx, int _yy);
-	void __fastcall DrawGewebeSimulation  (int _i, int _j, int _x, int _y, int _xx, int _yy);
-	void __fastcall DrawGewebeRapport     (int _i, int _j, int _x, int _y, int _xx, int _yy);
-	void __fastcall DrawEinzug (int _i, int _j);
-	void __fastcall DrawAufknuepfung (int _i, int _j);
-	void __fastcall DrawTrittfolge (int _i, int _j);
-	void __fastcall DrawGewebeKette (int _i);
-	void __fastcall DeleteGewebeKette (int _i);
-	void __fastcall _ClearEinzug();
-	void __fastcall _ClearAufknuepfung();
-	void __fastcall _ClearSchlagpatrone();
-	void __fastcall _DrawEinzug();
-	void __fastcall _DrawAufknuepfung();
-	void __fastcall _DrawSchlagpatrone();
-	void __fastcall RecalcFreieSchaefte();
-	void __fastcall RecalcFreieTritte();
+	void DrawHilfslinien();
+	void DrawGewebe (int _i, int _j);
+	void DrawGewebeRahmen (int _i, int _j);
+	void DrawGewebeFarbeffekt  (int _i, int _j, int _x, int _y, int _xx, int _yy);
+	void DrawGewebeSimulation  (int _i, int _j, int _x, int _y, int _xx, int _yy);
+	void DrawGewebeRapport     (int _i, int _j, int _x, int _y, int _xx, int _yy);
+	void DrawEinzug (int _i, int _j);
+	void DrawAufknuepfung (int _i, int _j);
+	void DrawTrittfolge (int _i, int _j);
+	void DrawGewebeKette (int _i);
+	void DeleteGewebeKette (int _i);
+	void _ClearEinzug();
+	void _ClearAufknuepfung();
+	void _ClearSchlagpatrone();
+	void _DrawEinzug();
+	void _DrawAufknuepfung();
+	void _DrawSchlagpatrone();
+	void RecalcFreieSchaefte();
+	void RecalcFreieTritte();
 
 	/*  --- Insert / Delete / Move menu ops ---------------------
 	    Structural editing: shift warp / weft / shaft / treadle to
 	    make room for a new one or remove an existing one. Ported
 	    verbatim from legacy/insert.cpp, legacy/delete.cpp,
 	    legacy/move.cpp.                                         */
-	bool __fastcall _IsEmptySchaft  (int _j);
-	bool __fastcall _IsEmptyTritt   (int _i);
-	int  __fastcall GetEmptySchaft  ();
-	int  __fastcall GetEmptyTritt   ();
-	void __fastcall InsertKettfaden   (int _i);
-	void __fastcall InsertSchussfaden (int _j);
-	void __fastcall DeleteKettfaden   (int _i);
-	void __fastcall DeleteSchussfaden (int _j);
-	void __fastcall InsertSchaftClick ();
-	void __fastcall InsertTrittClick  ();
-	void __fastcall InsertKetteClick  ();
-	void __fastcall InsertSchussClick ();
-	void __fastcall DeleteSchaftClick ();
-	void __fastcall DeleteTrittClick  ();
-	void __fastcall DeleteKetteClick  ();
-	void __fastcall DeleteSchussClick ();
-	void __fastcall SchaftMoveUpClick   ();
-	void __fastcall SchaftMoveDownClick ();
-	void __fastcall TrittMoveLeftClick  ();
-	void __fastcall TrittMoveRightClick ();
+	bool _IsEmptySchaft  (int _j);
+	bool _IsEmptyTritt   (int _i);
+	int GetEmptySchaft  ();
+	int GetEmptyTritt   ();
+	void InsertKettfaden   (int _i);
+	void InsertSchussfaden (int _j);
+	void DeleteKettfaden   (int _i);
+	void DeleteSchussfaden (int _j);
+	void InsertSchaftClick ();
+	void InsertTrittClick  ();
+	void InsertKetteClick  ();
+	void InsertSchussClick ();
+	void DeleteSchaftClick ();
+	void DeleteTrittClick  ();
+	void DeleteKetteClick  ();
+	void DeleteSchussClick ();
+	void SchaftMoveUpClick   ();
+	void SchaftMoveDownClick ();
+	void TrittMoveLeftClick  ();
+	void TrittMoveRightClick ();
 
 	/*  --- Insert binding (Koeper / Atlas) --------------------
 	    Stamp a twill (Koeper _h up / _s down) or satin (Atlas
 	    size _n) binding on the gewebe starting at the cursor,
 	    then drive a full RecalcAll so the einzug / trittfolge /
 	    aufknuepfung follow.                                   */
-	void __fastcall KoeperEinfuegen (int _h, int _s);
-	void __fastcall AtlasEinfuegen  (int _n);
+	void KoeperEinfuegen (int _h, int _s);
+	void AtlasEinfuegen  (int _n);
 
 	/*  Rapport (extend pattern) menu handlers. Rapportieren opens
 	    a modal dialog to pick horizontal / vertical repeat counts;
 	    Reduzieren collapses the pattern to a single rapport;
 	    Override flips the manual-rapport lock using the current
 	    selection as the rapport rectangle.                       */
-	void __fastcall RappRapportierenClick ();
-	void __fastcall RappReduzierenClick   ();
-	void __fastcall RappOverrideClick     ();
+	void RappRapportierenClick ();
+	void RappReduzierenClick   ();
+	void RappOverrideClick     ();
 
 	/*  Edit menu: ask the cursor handler what direction it's
 	    auto-advancing in after Set/Toggle, let the user change
 	    it via the cursor-direction dialog. */
-	void __fastcall EditCursordirectionClick ();
-	void __fastcall CursorGotoClick          ();
+	void EditCursordirectionClick ();
+	void CursorGotoClick          ();
 
 	/*  Full einzug / trittfolge / aufknuepfung recompute from the
 	    current gewebe content. Used by bereiche, importbmp,
 	    insertbindung, rapportieren, and Edit operations that
 	    mutate the gewebe wholesale. Wrappers around RcRecalcAll
 	    with the ViewSchlagpatrone flag threaded through.        */
-	void __fastcall RecalcAll();
-	void __fastcall RecalcSchlagpatrone();
-	void __fastcall RecalcTrittfolgeAufknuepfung();
-	void __fastcall RecalcFixEinzug();
+	void RecalcAll();
+	void RecalcSchlagpatrone();
+	void RecalcTrittfolgeAufknuepfung();
+	void RecalcFixEinzug();
 
 	/*  --- Selection --------------------------------------------
 	    The RANGE tracks a rubber-band rectangle on GEWEBE / EINZUG
@@ -425,21 +425,21 @@ public:
 	    legacy FormMouseUp's `if (!ctrl) SetX(...)` gate.         */
 	bool md_ctrl           = false;
 
-	void __fastcall ClearSelection();
-	void __fastcall DrawSelection();
-	void __fastcall ResizeSelection (int _i, int _j, FELD _feld, bool _square);
+	void ClearSelection();
+	void DrawSelection();
+	void ResizeSelection (int _i, int _j, FELD _feld, bool _square);
 
 	/*  Apply `_range` (1..9) to every cell inside the current
 	    selection using the matching SetGewebe / SetAufknuepfung /
 	    SetTrittfolge op. Used by digit-key shortcuts. No-op if the
 	    selection is empty or on a non-paintable field.           */
-	void __fastcall ApplyRangeToSelection (int _range);
+	void ApplyRangeToSelection (int _range);
 
 	/*  Re-colour the cells inside the selection to `_range`. Only
 	    non-zero cells get rewritten; if every cell is zero the
 	    whole rectangle is filled with `_range`. Matches legacy
 	    SwitchRange (bound to Shift+Ctrl+digit).                  */
-	void __fastcall SwitchRange (int _range);
+	void SwitchRange (int _range);
 
 	/*  --- Pattern utilities -----------------------------------
 	    FillKoeper: given a 1-cell-wide warp (or 1-cell-tall weft)
@@ -449,28 +449,28 @@ public:
 	    SwapSide: invert the tie-up (or pegplan) across every
 	    in-use shaft/treadle and mirror the warp side-info
 	    (einzug, kettfarben, blatteinzug) around the kette centre. */
-	void __fastcall FillKoeper();
-	void __fastcall SwapSide();
-	void __fastcall KettLancierungClick  ();
-	void __fastcall SchussLancierungClick();
+	void FillKoeper();
+	void SwapSide();
+	void KettLancierungClick  ();
+	void SchussLancierungClick();
 
 	/*  Steigung ("slope") shifts each column of the selection by
 	    an increasing offset, producing a diagonal twist. Valid
 	    on GEWEBE / AUFKNUEPFUNG / TRITTFOLGE (last only when
 	    trittfolge.einzeltritt is off).                          */
-	void __fastcall SteigungInc();
-	void __fastcall SteigungDec();
-	void __fastcall IncrementSteigung (int _i, int _j, int _ii, int _jj, FELD _feld);
-	void __fastcall DecrementSteigung (int _i, int _j, int _ii, int _jj, FELD _feld);
+	void SteigungInc();
+	void SteigungDec();
+	void IncrementSteigung (int _i, int _j, int _ii, int _jj, FELD _feld);
+	void DecrementSteigung (int _i, int _j, int _ii, int _jj, FELD _feld);
 
 	/*  Range-wide schlagpatrone invert -- flips every cell in
 	    trittfolge and gewebe across the used shaft range and
 	    weft range. */
-	void __fastcall SpInvert();
+	void SpInvert();
 
 	/*  First / last used treadle indices (-1 if none used). */
-	int  __fastcall GetFirstTritt();
-	int  __fastcall GetLastTritt();
+	int GetFirstTritt();
+	int GetLastTritt();
 
 	/*  --- Edit-menu operations on the selection ----------------
 	    All bodies live in src/ui/edit.cpp. Each op reads
@@ -478,22 +478,22 @@ public:
 	    field, recomputes derived state (gewebe / ranges / rapport)
 	    and snapshots an undo entry. No-op if the selection is
 	    empty or on a non-editable field.                        */
-	bool __fastcall CopySelection  (bool _movecursor = true);  /* true on success */
-	void __fastcall CutSelection   ();
-	void __fastcall PasteSelection (bool _transparent = false);
-	void __fastcall DeleteSelection();
-	void __fastcall InvertSelection();
-	void __fastcall MirrorHorzSelection();
-	void __fastcall MirrorVertSelection();
-	void __fastcall RotateSelection();   /* 90deg, square selections only */
+	bool CopySelection  (bool _movecursor = true);  /* true on success */
+	void CutSelection   ();
+	void PasteSelection (bool _transparent = false);
+	void DeleteSelection();
+	void InvertSelection();
+	void MirrorHorzSelection();
+	void MirrorVertSelection();
+	void RotateSelection();   /* 90deg, square selections only */
 
 	/*  Shift every row / column of the selection by one cell with
 	    wrap-around at the selection edge. Legacy Roll Up / Down /
 	    Left / Right. */
-	void __fastcall RollUpSelection();
-	void __fastcall RollDownSelection();
-	void __fastcall RollLeftSelection();
-	void __fastcall RollRightSelection();
+	void RollUpSelection();
+	void RollDownSelection();
+	void RollLeftSelection();
+	void RollRightSelection();
 
 	/*  Rolling search for a point-symmetric arrangement of the
 	    selection. Shifts the block left 0..sizex and up 0..sizey
@@ -503,168 +503,168 @@ public:
 	    selection is already symmetric; a message box warns if no
 	    symmetric roll exists. Port of EditCentralsymClick;
 	    ZentralSymmChecker lives in the domain module.          */
-	void __fastcall CentralsymSelection();
+	void CentralsymSelection();
 
 	/*  --- Trittfolge (weft treadling) utilities ------------------
 	    Legacy helpers that read/write the trittfolge.feld and
 	    aufknuepfung.feld state. Click handlers (ClearTrittfolge-
 	    Click, Tf*Click) are deferred until menus are wired.    */
-	bool __fastcall IsEmptyTritt (int _i);
-	int  __fastcall GetFirstNonemptyTritt (int _i);
-	void __fastcall RedrawTritt (int _i);
-	void __fastcall RedrawAufknuepfungTritt (int _i);
-	void __fastcall MoveTritt (int _von, int _nach);
-	bool __fastcall AufknuepfungsspalteEqual (int _i1, int _i2);
-	void __fastcall MergeTritte();
-	void __fastcall EliminateEmptyTritt();
-	void __fastcall SwitchTritte (int _a, int _b);
-	void __fastcall RearrangeTritte();
+	bool IsEmptyTritt (int _i);
+	int GetFirstNonemptyTritt (int _i);
+	void RedrawTritt (int _i);
+	void RedrawAufknuepfungTritt (int _i);
+	void MoveTritt (int _von, int _nach);
+	bool AufknuepfungsspalteEqual (int _i1, int _i2);
+	void MergeTritte();
+	void EliminateEmptyTritt();
+	void SwitchTritte (int _a, int _b);
+	void RearrangeTritte();
 
 	/*  --- Aufknuepfung helpers ----------------------------------- */
-	void __fastcall MinimizeAufknuepfung();
+	void MinimizeAufknuepfung();
 
 	/*  --- Rapportieren utilities --------------------------------
 	    Pattern replication along the warp / weft direction. */
-	void __fastcall RapportSchuss (int _ry, bool _withcolors);
-	void __fastcall RapportKette  (int _rx, bool _withcolors);
-	void __fastcall CopyKettfaden   (int _von, int _nach, bool _withcolors);
-	void __fastcall CopySchussfaden (int _von, int _nach, bool _withcolors);
-	void __fastcall ClearKettfaden   (int _i);
-	void __fastcall ClearSchussfaden (int _j);
+	void RapportSchuss (int _ry, bool _withcolors);
+	void RapportKette  (int _rx, bool _withcolors);
+	void CopyKettfaden   (int _von, int _nach, bool _withcolors);
+	void CopySchussfaden (int _von, int _nach, bool _withcolors);
+	void ClearKettfaden   (int _i);
+	void ClearSchussfaden (int _j);
 
 	/*  --- Range / emptiness predicates (range.cpp) ------------- */
-	bool __fastcall IsEmptySchuss (int _j);
-	bool __fastcall IsEmptyKette  (int _i);
-	bool __fastcall IsEmptySchussNurGewebe (int _j);
-	bool __fastcall IsEmptyKetteNurGewebe  (int _i);
-	void __fastcall UpdateRange (int _i, int _j, bool _set);
+	bool IsEmptySchuss (int _j);
+	bool IsEmptyKette  (int _i);
+	bool IsEmptySchussNurGewebe (int _j);
+	bool IsEmptyKetteNurGewebe  (int _i);
+	void UpdateRange (int _i, int _j, bool _set);
 
 	/*  --- Data-level helpers (formerly spread across dbw3_form.cpp
 	    / range.cpp / setgewebe.cpp / redraw.cpp) ---------------  */
-	void  __fastcall ToggleGewebe       (int _i, int _j);
-	void  __fastcall ToggleAufknuepfung (int _i, int _j);
-	bool  __fastcall IsEmptyEinzug      (int _i);
-	bool  __fastcall IsEmptyTrittfolge  (int _j);
-	void  __fastcall RecalcTrittfolgeEmpty (int _j);
-	bool  __fastcall KettfadenEqual     (int _a, int _b);
-	short __fastcall GetFreeEinzug();
-	short __fastcall GetFreeTritt();
-	void  __fastcall CopyTritt          (int _von, int _nach);
-	void  __fastcall ExtendSchaefte();
-	void  __fastcall ExtendTritte();
-	void  __fastcall _ExtendSchaefte (int _max);
-	void  __fastcall _ExtendTritte   (int _max);
-	void  __fastcall RearrangeSchaefte();
-	void  __fastcall UpdateScrollbars();
-	void  __fastcall InvalidateFeld (const GRIDPOS& _pos);
+	void ToggleGewebe       (int _i, int _j);
+	void ToggleAufknuepfung (int _i, int _j);
+	bool IsEmptyEinzug      (int _i);
+	bool IsEmptyTrittfolge  (int _j);
+	void RecalcTrittfolgeEmpty (int _j);
+	bool KettfadenEqual     (int _a, int _b);
+	short GetFreeEinzug();
+	short GetFreeTritt();
+	void CopyTritt          (int _von, int _nach);
+	void ExtendSchaefte();
+	void ExtendTritte();
+	void _ExtendSchaefte (int _max);
+	void _ExtendTritte   (int _max);
+	void RearrangeSchaefte();
+	void UpdateScrollbars();
+	void InvalidateFeld (const GRIDPOS& _pos);
 
 	/*  --- Redraw primitives stubs (bodies land with rendering). */
-	void  __fastcall ClearGewebe       (int _i, int _j);
-	void  __fastcall RedrawGewebe      (int _i, int _j);
-	void  __fastcall RedrawAufknuepfung (int _i, int _j);
-	void  __fastcall DrawGewebeSchuss  (int _j);
-	void  __fastcall DeleteGewebeSchuss (int _j);
+	void ClearGewebe       (int _i, int _j);
+	void RedrawGewebe      (int _i, int _j);
+	void RedrawAufknuepfung (int _i, int _j);
+	void DrawGewebeSchuss  (int _j);
+	void DeleteGewebeSchuss (int _j);
 
 	/*  --- Field "Rahmen" (frame + strongline) painters ---------- */
-	void __fastcall DrawEinzugRahmen       (int _i, int _j);
-	void __fastcall DrawAufknuepfungRahmen (int _i, int _j);
-	void __fastcall DrawTrittfolgeRahmen   (int _i, int _j);
+	void DrawEinzugRahmen       (int _i, int _j);
+	void DrawAufknuepfungRahmen (int _i, int _j);
+	void DrawTrittfolgeRahmen   (int _i, int _j);
 
 	/*  --- State-apply operations (set*.cpp) ------------------
 	    The public Set* methods wrap the DoSet* primitive with
 	    an undo-snapshot + SetModified + update() repaint. */
-	void __fastcall SetGewebe       (int _i, int _j, bool _set, int _range);
-	void __fastcall DoSetGewebe     (int _i, int _j, bool _set, int _range);
-	void __fastcall SetEinzug       (int _i, int _j);
-	void __fastcall DoSetEinzug     (int _i, int _j);
-	void __fastcall SetAufknuepfung   (int _i, int _j, bool _set, int _range);
-	void __fastcall DoSetAufknuepfung (int _i, int _j, bool _set, int _range);
-	void __fastcall SetTrittfolge   (int _i, int _j, bool _set, int _range);
-	void __fastcall DoSetTrittfolge (int _i, int _j, bool _set, int _range);
-	void __fastcall SetBlatteinzug   (int _i);
-	void __fastcall DoSetBlatteinzug (int _i);
-	void __fastcall SetKettfarben    (int _i);
-	void __fastcall DoSetKettfarben  (int _i);
-	void __fastcall SetSchussfarben  (int _j);
-	void __fastcall DoSetSchussfarben (int _j);
+	void SetGewebe       (int _i, int _j, bool _set, int _range);
+	void DoSetGewebe     (int _i, int _j, bool _set, int _range);
+	void SetEinzug       (int _i, int _j);
+	void DoSetEinzug     (int _i, int _j);
+	void SetAufknuepfung   (int _i, int _j, bool _set, int _range);
+	void DoSetAufknuepfung (int _i, int _j, bool _set, int _range);
+	void SetTrittfolge   (int _i, int _j, bool _set, int _range);
+	void DoSetTrittfolge (int _i, int _j, bool _set, int _range);
+	void SetBlatteinzug   (int _i);
+	void DoSetBlatteinzug (int _i);
+	void SetKettfarben    (int _i);
+	void DoSetKettfarben  (int _i);
+	void SetSchussfarben  (int _j);
+	void DoSetSchussfarben (int _j);
 
 	/*  --- File I/O -------------------------------------------- */
 	/*  Resize every Feld to match the current Data->MAX* dimensions.
 	    Called by the loader after updating MAX*. */
-	void __fastcall AllocBuffers  (bool _clear);
-	void __fastcall AllocBuffersX1();
-	void __fastcall AllocBuffersX2();
-	void __fastcall AllocBuffersY1();
-	void __fastcall AllocBuffersY2();
+	void AllocBuffers  (bool _clear);
+	void AllocBuffersX1();
+	void AllocBuffersX2();
+	void AllocBuffersY1();
+	void AllocBuffersY2();
 
 	/*  Open `filename` as a .dbw file and populate the document
 	    state. Returns true on success; _stat receives a more
 	    detailed outcome in all cases. */
-	bool __fastcall Load (LOADSTAT& _stat, LOADPARTS _loadparts = LOADALL);
+	bool Load (LOADSTAT& _stat, LOADPARTS _loadparts = LOADALL);
 
 	/*  Write the current document state to `filename` in the
 	    @dbw3:file text format. Covers only the sections the
 	    port currently loads (signature, version, data.size,
 	    data.fields, data.palette, data.hilfslinien). Returns
 	    true on success. */
-	bool __fastcall Save ();
+	bool Save ();
 
 	/*  --- File menu handlers ------------------------------------ */
-	void __fastcall FileOpen ();
-	void __fastcall FileSave ();
-	void __fastcall FileSaveAs ();
-	void __fastcall LoadPartsClick ();
+	void FileOpen ();
+	void FileSave ();
+	void FileSaveAs ();
+	void LoadPartsClick ();
 
 	/*  Options / Environment dialogs (app settings). */
-	void __fastcall OptEnvironmentClick ();
-	void __fastcall XOptionsClick       ();
-	void __fastcall XOptionsGlobalClick ();
-	void __fastcall ShowOptions (bool _global);
-	void __fastcall SetAusmasse (int _x1, int _y1, int _x2, int _y2,
+	void OptEnvironmentClick ();
+	void XOptionsClick       ();
+	void XOptionsGlobalClick ();
+	void ShowOptions (bool _global);
+	void SetAusmasse (int _x1, int _y1, int _x2, int _y2,
 	                             int _vx2, int _vy1);
 
 	/*  Document metadata dialogs. */
-	void __fastcall FilePropsClick ();
-	void __fastcall ViewInfosClick ();
+	void FilePropsClick ();
+	void ViewInfosClick ();
 
 	/*  Editing-assistant dialogs (Phase 7 batch 4). */
-	void __fastcall EinzugAssistentClick   ();
-	void __fastcall EditFixeinzug          ();
-	void __fastcall UpdateEinzugFixiert    ();
-	void __fastcall FarbverlaufClick       ();
-	void __fastcall EditBlockmusterClick   ();
-	void __fastcall DefineColorsClick      ();
+	void EinzugAssistentClick   ();
+	void EditFixeinzug          ();
+	void UpdateEinzugFixiert    ();
+	void FarbverlaufClick       ();
+	void EditBlockmusterClick   ();
+	void DefineColorsClick      ();
 
 	/*  User-defined patterns (legacy userdef.cpp). */
-	void __fastcall LoadUserdefMenu     ();
-	void __fastcall PasteUserdef        (bool _transparent);
-	void __fastcall InsertUserdef       (int _i, bool _transparent);
-	void __fastcall UserdefAddClick     ();
-	void __fastcall UserdefAddSelClick  ();
-	void __fastcall UserdefRemoveClick  ();
-	int  __fastcall SelectUserdef       (const QString& _title = QString());
+	void LoadUserdefMenu     ();
+	void PasteUserdef        (bool _transparent);
+	void InsertUserdef       (int _i, bool _transparent);
+	void UserdefAddClick     ();
+	void UserdefAddSelClick  ();
+	void UserdefRemoveClick  ();
+	int SelectUserdef       (const QString& _title = QString());
 
 	/*  Import / export (Phase 7 batch 8). */
-	void __fastcall ImportWIFClick      ();
-	void __fastcall ImportBitmapClick   ();
-	void __fastcall DateiExportClick    ();
-	void __fastcall DateiExportieren    (const QString& _filename);
-	void __fastcall DoExportBitmap      (const QString& _filename);
+	void ImportWIFClick      ();
+	void ImportBitmapClick   ();
+	void DateiExportClick    ();
+	void DateiExportieren    (const QString& _filename);
+	void DoExportBitmap      (const QString& _filename);
 
 	/*  Schlagpatrone (pegplan) / trittfolge clickhandlers. */
-	void __fastcall ClearSchlagpatroneClick ();
-	void __fastcall SpSpiegelnClick         ();
-	void __fastcall SpInvertClick           ();
-	void __fastcall ClearTrittfolgeClick    ();
-	void __fastcall TfSpiegelnClick         ();
+	void ClearSchlagpatroneClick ();
+	void SpSpiegelnClick         ();
+	void SpInvertClick           ();
+	void ClearTrittfolgeClick    ();
+	void TfSpiegelnClick         ();
 
 	/*  Einzug ↔ Trittfolge transfer. */
-	void __fastcall CopyEinzugTrittfolgeClick ();
-	void __fastcall CopyTrittfolgeEinzugClick ();
+	void CopyEinzugTrittfolgeClick ();
+	void CopyTrittfolgeEinzugClick ();
 
 	/*  Bereiche (range-substitution) dialog + fill. */
-	void __fastcall RangePatternsClick    ();
-	void __fastcall BereicheFillPattern   (int _x, int _y);
+	void RangePatternsClick    ();
+	void BereicheFillPattern   (int _x, int _y);
 
 	/*  Palette-index selection helpers (setcolors.cpp). */
 	/*  Print subsystem — page layout / header-footer state. The
@@ -680,17 +680,17 @@ public:
 	Borders borders;
 	Header  header;
 	Footer  footer;
-	void __fastcall InitBorders ();
+	void InitBorders ();
 
 	/*  File menu print-stack handlers. */
-	void __fastcall FilePrintClick        ();
-	void __fastcall FilePrintpreviewClick ();
-	void __fastcall FileSetPageClick      ();
+	void FilePrintClick        ();
+	void FilePrintpreviewClick ();
+	void FileSetPageClick      ();
 
 	/*  Loom control (Phase 11). Opens LoomDialog with the current
 	    trittfolge / aufknuepfung / klammer state and lets the user
 	    run a dummy loom simulation row-by-row. */
-	void __fastcall LoomControlClick      ();
+	void LoomControlClick      ();
 
 	/*  Drawing tools (tools.cpp). */
 	TOOL             tool = TOOL_POINT;
@@ -702,20 +702,20 @@ public:
 	int              tool_i0 = 0, tool_j0 = 0;   /* anchor */
 	int              tool_i1 = 0, tool_j1 = 0;   /* current */
 
-	void __fastcall DrawTool          (int _i, int _j, int _i1, int _j1);
-	void __fastcall DrawToolLine      (int _i, int _j, int _i1, int _j1);
-	void __fastcall DrawToolRectangle (int _i, int _j, int _i1, int _j1, bool _filled);
-	void __fastcall DrawToolEllipse   (int _i, int _j, int _i1, int _j1, bool _filled);
+	void DrawTool          (int _i, int _j, int _i1, int _j1);
+	void DrawToolLine      (int _i, int _j, int _i1, int _j1);
+	void DrawToolRectangle (int _i, int _j, int _i1, int _j1, bool _filled);
+	void DrawToolEllipse   (int _i, int _j, int _i1, int _j1, bool _filled);
 
-	int  __fastcall SelectColorIndex    (int _index);
-	bool __fastcall SelectColor         (COLORREF& _col);
-	void __fastcall SetKettfarbeClick   ();
-	void __fastcall SetSchussfarbeClick ();
-	void __fastcall ReplaceColorClick   ();
-	void __fastcall SwitchColorsClick   ();
-	void __fastcall BlockExpandEinzug      (int _count);
-	void __fastcall BlockExpandTrittfolge  (int _count);
-	void __fastcall BlockExpandAufknuepfung(int _x, int _y);
+	int SelectColorIndex    (int _index);
+	bool SelectColor         (COLORREF& _col);
+	void SetKettfarbeClick   ();
+	void SetSchussfarbeClick ();
+	void ReplaceColorClick   ();
+	void SwitchColorsClick   ();
+	void BlockExpandEinzug      (int _count);
+	void BlockExpandTrittfolge  (int _count);
+	void BlockExpandAufknuepfung(int _x, int _y);
 
 	/*  --- Most-recently-used files ------------------------------
 	    Up to 6 paths stored via QSettings under
@@ -726,11 +726,11 @@ public:
 	QStringList mru;
 	class QMenu*   mruMenu = nullptr;
 	class QAction* mruActions[6] = { };
-	void __fastcall AddToMRU    (const QString& _filename);
-	void __fastcall LoadMRU     ();
-	void __fastcall SaveMRU     ();
-	void __fastcall UpdateMRUMenu ();
-	void __fastcall OpenFromMRU (int _index);
+	void AddToMRU    (const QString& _filename);
+	void LoadMRU     ();
+	void SaveMRU     ();
+	void UpdateMRUMenu ();
+	void OpenFromMRU (int _index);
 
 	/*  --- Input routing ----------------------------------------
 	    Physical-to-logical hit-test: map (X, Y) pixel inside the
@@ -739,36 +739,36 @@ public:
 	    The viewport coords do NOT include the scroll offsets, so
 	    callers add scroll_x1/x2/y1/y2 as appropriate for the
 	    resulting feld. */
-	void __fastcall Physical2Logical (int _x, int _y, FELD& _feld, int& _i, int& _j);
+	void Physical2Logical (int _x, int _y, FELD& _feld, int& _i, int& _j);
 
 	/*  Mouse-button handlers invoked from PatternCanvas mouse events.
 	    Press starts a selection / paints the initial cell; Move
 	    grows the rubber-band or drag-paints a 1-D strip; Release
 	    clears the drag state. */
-	void __fastcall handleCanvasMousePress   (int _x, int _y, bool _shift, bool _ctrl = false);
-	void __fastcall handleCanvasMouseMove    (int _x, int _y, bool _shift);
-	void __fastcall handleCanvasMouseRelease ();
+	void handleCanvasMousePress   (int _x, int _y, bool _shift, bool _ctrl = false);
+	void handleCanvasMouseMove    (int _x, int _y, bool _shift);
+	void handleCanvasMouseRelease ();
 
 	/*  Key-down handler invoked from PatternCanvas::keyPressEvent.
 	    Drives cursor motion (arrow keys), range selection (digits),
 	    field toggle (Space), and field traversal (Tab / Enter). */
-	void __fastcall handleCanvasKeyPress (int _key, int _modifiers);
+	void handleCanvasKeyPress (int _key, int _modifiers);
 
 	/*  Build and exec a context menu at the given global screen
 	    position. When a selection is active the menu offers Edit
 	    ops (Cut/Copy/Paste/.../Rotate/Roll/Centralsym); otherwise
 	    a View-toggle menu (Threading, Treadling, Pegplan, Rapport,
 	    Guides) + a paste-at-cursor entry.                        */
-	void __fastcall handleContextMenu (const QPoint& _globalPos);
+	void handleContextMenu (const QPoint& _globalPos);
 
 	/*  --- Viewport: zoom ---------------------------------------
 	    Legacy zoom[10] = { 5,7,9,11,13,15,17,19,21,23 } pixels per
 	    cell; currentzoom indexes into it. These three handlers step
 	    currentzoom up/down/to-default, reflow the layout, and
 	    trigger a repaint. */
-	void __fastcall zoomIn();
-	void __fastcall zoomOut();
-	void __fastcall zoomNormal();
+	void zoomIn();
+	void zoomOut();
+	void zoomNormal();
 };
 
 /*  Matches legacy `extern PACKAGE TDBWFRM *DBWFRM;`. Populated by

@@ -28,7 +28,7 @@
 
 /*-----------------------------------------------------------------*/
 /*  schlagpatrone.cpp ports. */
-void __fastcall TDBWFRM::ClearTrittfolgeClick ()
+void TDBWFRM::ClearTrittfolgeClick ()
 {
 	for (int j = 0; j < Data->MAXY2; j++) {
 		trittfolge.isempty.Set(j, true);
@@ -44,7 +44,7 @@ void __fastcall TDBWFRM::ClearTrittfolgeClick ()
 	if (undo) undo->Snapshot();
 }
 
-void __fastcall TDBWFRM::TfSpiegelnClick ()
+void TDBWFRM::TfSpiegelnClick ()
 {
 	if (TfBelassen) TfBelassen->setChecked(true);
 	for (int j = schuesse.a; j <= (schuesse.b - schuesse.a)/2; j++) {
@@ -68,10 +68,10 @@ void __fastcall TDBWFRM::TfSpiegelnClick ()
 	if (undo) undo->Snapshot();
 }
 
-void __fastcall TDBWFRM::ClearSchlagpatroneClick () { ClearTrittfolgeClick(); }
-void __fastcall TDBWFRM::SpSpiegelnClick          () { TfSpiegelnClick();      }
+void TDBWFRM::ClearSchlagpatroneClick () { ClearTrittfolgeClick(); }
+void TDBWFRM::SpSpiegelnClick          () { TfSpiegelnClick();      }
 
-void __fastcall TDBWFRM::SpInvertClick ()
+void TDBWFRM::SpInvertClick ()
 {
 	if (!ViewSchlagpatrone || !ViewSchlagpatrone->isChecked()) return;
 
@@ -96,7 +96,7 @@ void __fastcall TDBWFRM::SpInvertClick ()
 
 /*-----------------------------------------------------------------*/
 /*  einzugtrittfolge.cpp — "Copy threading ↔ treadling" helpers. */
-void __fastcall TDBWFRM::CopyEinzugTrittfolgeClick ()
+void TDBWFRM::CopyEinzugTrittfolgeClick ()
 {
 	/*  Clear einzug. */
 	for (int i = 0; i < Data->MAXX1; i++) einzug.feld.Set(i, 0);
@@ -118,7 +118,7 @@ void __fastcall TDBWFRM::CopyEinzugTrittfolgeClick ()
 	SetModified();
 }
 
-void __fastcall TDBWFRM::CopyTrittfolgeEinzugClick ()
+void TDBWFRM::CopyTrittfolgeEinzugClick ()
 {
 	/*  Clear trittfolge. */
 	for (int j = 0; j < Data->MAXY2; j++) {
@@ -148,7 +148,7 @@ void __fastcall TDBWFRM::CopyTrittfolgeEinzugClick ()
 /*  bereiche.cpp — range-substitution: open the Blockmuster dialog
     in withrange=false mode on the bereichmuster slots, then replay
     them over the selection on Apply.                               */
-void __fastcall TDBWFRM::RangePatternsClick ()
+void TDBWFRM::RangePatternsClick ()
 {
 	if (cursorhandler) cursorhandler->DisableCursor();
 	if (!bereichundo) { if (cursorhandler) cursorhandler->EnableCursor(); return; }
@@ -176,7 +176,7 @@ void __fastcall TDBWFRM::RangePatternsClick ()
 	if (cursorhandler) cursorhandler->EnableCursor();
 }
 
-void __fastcall TDBWFRM::BereicheFillPattern (int _x, int _y)
+void TDBWFRM::BereicheFillPattern (int _x, int _y)
 {
 	(void)_x; (void)_y;
 	int i0, i1, j0, j1;

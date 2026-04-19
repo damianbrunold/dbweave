@@ -24,21 +24,21 @@
 
 #include <QByteArray>
 
-int __fastcall TDBWFRM::GetFirstTritt()
+int TDBWFRM::GetFirstTritt()
 {
 	for (int i = 0; i < Data->MAXX2; i++)
 		if (freietritte && !freietritte[i]) return i;
 	return Data->MAXX2 - 1;
 }
 
-int __fastcall TDBWFRM::GetLastTritt()
+int TDBWFRM::GetLastTritt()
 {
 	for (int i = Data->MAXX2 - 1; i >= 0; i--)
 		if (freietritte && !freietritte[i]) return i;
 	return 0;
 }
 
-void __fastcall TDBWFRM::SpInvert()
+void TDBWFRM::SpInvert()
 {
 	if (!(ViewSchlagpatrone && ViewSchlagpatrone->isChecked())) return;
 
@@ -65,7 +65,7 @@ void __fastcall TDBWFRM::SpInvert()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::IncrementSteigung (int _i, int _j, int _ii, int _jj, FELD _feld)
+void TDBWFRM::IncrementSteigung (int _i, int _j, int _ii, int _jj, FELD _feld)
 {
 	FeldGridChar& feld = (_feld == GEWEBE)       ? gewebe.feld     :
 	                     (_feld == TRITTFOLGE)   ? trittfolge.feld :
@@ -86,7 +86,7 @@ void __fastcall TDBWFRM::IncrementSteigung (int _i, int _j, int _ii, int _jj, FE
 		for (int j = _j; j <= _jj; j++) RecalcTrittfolgeEmpty(j);
 }
 
-void __fastcall TDBWFRM::DecrementSteigung (int _i, int _j, int _ii, int _jj, FELD _feld)
+void TDBWFRM::DecrementSteigung (int _i, int _j, int _ii, int _jj, FELD _feld)
 {
 	FeldGridChar& feld = (_feld == GEWEBE)       ? gewebe.feld     :
 	                     (_feld == TRITTFOLGE)   ? trittfolge.feld :
@@ -114,7 +114,7 @@ static bool allowedForSteigung (TDBWFRM* frm, FELD f)
 	return false;
 }
 
-void __fastcall TDBWFRM::SteigungInc()
+void TDBWFRM::SteigungInc()
 {
 	RANGE savesel = selection;
 	selection.Normalize();
@@ -133,7 +133,7 @@ void __fastcall TDBWFRM::SteigungInc()
 	if (undo) undo->Snapshot();
 }
 
-void __fastcall TDBWFRM::SteigungDec()
+void TDBWFRM::SteigungDec()
 {
 	RANGE savesel = selection;
 	selection.Normalize();

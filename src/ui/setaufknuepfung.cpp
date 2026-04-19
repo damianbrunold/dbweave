@@ -16,7 +16,7 @@
 #include "undoredo.h"
 #include "einzug.h"
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::SetAufknuepfung (int _i, int _j, bool _set, int _range)
+void TDBWFRM::SetAufknuepfung (int _i, int _j, bool _set, int _range)
 {
 	if (ViewOnlyGewebe && ViewOnlyGewebe->isChecked()) return;
 
@@ -26,7 +26,7 @@ void __fastcall TDBWFRM::SetAufknuepfung (int _i, int _j, bool _set, int _range)
 	if (undo) undo->Snapshot();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DoSetAufknuepfung (int _i, int _j, bool _set, int _range)
+void TDBWFRM::DoSetAufknuepfung (int _i, int _j, bool _set, int _range)
 {
 	int i, j, k, l;
 	if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked()) return;

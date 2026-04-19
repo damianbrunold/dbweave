@@ -28,22 +28,22 @@
 #include <QPainter>
 #include <QPen>
 /*-----------------------------------------------------------------*/
-__fastcall RpRapportImpl::RpRapportImpl (TDBWFRM* _frm, TData* _data)
+ RpRapportImpl::RpRapportImpl (TDBWFRM* _frm, TData* _data)
 : frm(_frm), data(_data)
 {
 }
 /*-----------------------------------------------------------------*/
-__fastcall RpRapportImpl::~RpRapportImpl()
+ RpRapportImpl::~RpRapportImpl()
 {
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall RpRapportImpl::IsInRapport (int _i, int _j)
+bool RpRapportImpl::IsInRapport (int _i, int _j)
 {
 	return _i>=frm->rapport.kr.a && _i<=frm->rapport.kr.b &&
 	       _j>=frm->rapport.sr.a && _j<=frm->rapport.sr.b;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall RpRapportImpl::UpdateRapport()
+void RpRapportImpl::UpdateRapport()
 {
 	if (frm->RappViewRapport && frm->RappViewRapport->isChecked()) ClearRapport();
 	RAPPORT oldrapport = frm->rapport;
@@ -55,7 +55,7 @@ void __fastcall RpRapportImpl::UpdateRapport()
 	frm->UpdateStatusBar();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall RpRapportImpl::ClearRapport()
+void RpRapportImpl::ClearRapport()
 {
 	/*  Qt no-op. Legacy's VCL retained-mode canvas needed an
 	    explicit clBtnShadow overpaint to erase a previously-drawn
@@ -65,7 +65,7 @@ void __fastcall RpRapportImpl::ClearRapport()
 	    falls out of the paintEvent flow. */
 }
 /*-----------------------------------------------------------------*/
-void __fastcall RpRapportImpl::DrawRapport()
+void RpRapportImpl::DrawRapport()
 {
 	QPainter* p = frm->currentPainter;
 	if (!p) return;
@@ -116,7 +116,7 @@ void __fastcall RpRapportImpl::DrawRapport()
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall RpRapportImpl::DrawDifferences (const RAPPORT& _old, const RAPPORT& _new)
+void RpRapportImpl::DrawDifferences (const RAPPORT& _old, const RAPPORT& _new)
 {
 	/*  STUB: when the rapport expands, the newly-revealed gewebe
 	    cells need redrawing (DrawGewebe / DrawGewebeRahmen). Legacy
@@ -126,7 +126,7 @@ void __fastcall RpRapportImpl::DrawDifferences (const RAPPORT& _old, const RAPPO
 	(void)_new;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall RpRapportImpl::CalcKettrapport()
+void RpRapportImpl::CalcKettrapport()
 {
 	// Rapport loeschen
 	frm->rapport.kr = SZ(0, -1);
@@ -155,7 +155,7 @@ g_again:
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall RpRapportImpl::CalcSchussrapport()
+void RpRapportImpl::CalcSchussrapport()
 {
 	// Rapport loeschen
 	frm->rapport.sr = SZ(0, -1);
@@ -184,7 +184,7 @@ g_again:
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall RpRapportImpl::CalcRapport()
+void RpRapportImpl::CalcRapport()
 {
 	if (frm->rapport.overridden) {
 		return;
@@ -199,7 +199,7 @@ void __fastcall RpRapportImpl::CalcRapport()
 	frm->setCursor(old);
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall RpRapportImpl::TrittfolgeEqual (int _j1, int _j2)
+bool RpRapportImpl::TrittfolgeEqual (int _j1, int _j2)
 {
 	for (int i=0; i<data->MAXX2; i++) {
 		char s1 = frm->trittfolge.feld.Get (i, _j1);
@@ -219,7 +219,7 @@ bool __fastcall RpRapportImpl::TrittfolgeEqual (int _j1, int _j2)
 	return true;
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall RpRapportImpl::EinzugEqual (int _i1, int _i2)
+bool RpRapportImpl::EinzugEqual (int _i1, int _i2)
 {
 	if (frm->einzug.feld.Get(_i1)!=frm->einzug.feld.Get(_i2))
 		return false;
@@ -234,7 +234,7 @@ bool __fastcall RpRapportImpl::EinzugEqual (int _i1, int _i2)
 	return true;
 }
 /*-----------------------------------------------------------------*/
-RpRapport* __fastcall RpRapport::CreateInstance (TDBWFRM* _frm, TData* _data)
+RpRapport* RpRapport::CreateInstance (TDBWFRM* _frm, TData* _data)
 {
 	RpRapport* p = NULL;
 	try {
@@ -244,7 +244,7 @@ RpRapport* __fastcall RpRapport::CreateInstance (TDBWFRM* _frm, TData* _data)
 	return p;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall RpRapport::ReleaseInstance (RpRapport* _rapport)
+void RpRapport::ReleaseInstance (RpRapport* _rapport)
 {
 	delete _rapport;
 }

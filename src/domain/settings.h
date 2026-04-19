@@ -23,17 +23,17 @@ protected:
 	TRegistry* registry;
 
 public:
-	__fastcall Settings();
-	virtual __fastcall ~Settings();
+ Settings();
+	virtual ~Settings();
 
 	void SetCategory (const AnsiString& _category) { category = _category; }
 	AnsiString Category() const { return category; }
 
-	int __fastcall Load (const AnsiString& _name, int _default=0);
-	AnsiString __fastcall Load (const AnsiString& _name, const AnsiString& _default=QString());
+	int Load (const AnsiString& _name, int _default=0);
+	AnsiString Load (const AnsiString& _name, const AnsiString& _default=QString());
 
-	void __fastcall Save (const AnsiString& _name, int _value);
-	void __fastcall Save (const AnsiString& _name, const AnsiString& _value);
+	void Save (const AnsiString& _name, int _value);
+	void Save (const AnsiString& _name, const AnsiString& _value);
 };
 /*-----------------------------------------------------------------*/
 #endif

@@ -684,7 +684,7 @@ void TDBWFRM::refresh()
 	}
 }
 
-void __fastcall TDBWFRM::zoomIn()
+void TDBWFRM::zoomIn()
 {
 	if (currentzoom >= 9) return;
 	++currentzoom;
@@ -693,7 +693,7 @@ void __fastcall TDBWFRM::zoomIn()
 	SetModified();
 }
 
-void __fastcall TDBWFRM::zoomOut()
+void TDBWFRM::zoomOut()
 {
 	if (currentzoom <= 0) return;
 	--currentzoom;
@@ -702,7 +702,7 @@ void __fastcall TDBWFRM::zoomOut()
 	SetModified();
 }
 
-void __fastcall TDBWFRM::zoomNormal()
+void TDBWFRM::zoomNormal()
 {
 	/*  Legacy default currentzoom = 3 (11 px/cell). */
 	if (currentzoom == 3) return;
@@ -712,12 +712,12 @@ void __fastcall TDBWFRM::zoomNormal()
 	SetModified();
 }
 
-void __fastcall TDBWFRM::ReloadLanguage()
+void TDBWFRM::ReloadLanguage()
 {
 	/*  Placeholder until lang_main.cpp is ported. */
 }
 
-void __fastcall TDBWFRM::RecalcGewebe()
+void TDBWFRM::RecalcGewebe()
 {
 	/*  Port of legacy recalc.cpp RecalcGewebe. Rebuilds gewebe from
 	    einzug x aufknuepfung x trittfolge (default view) or from
@@ -754,35 +754,35 @@ void __fastcall TDBWFRM::RecalcGewebe()
 	setCursor(old);
 	refresh();
 }
-void __fastcall TDBWFRM::SetModified(bool)    {}
-void __fastcall TDBWFRM::SetCursor(int, int)  {}
-void __fastcall TDBWFRM::SetAppTitle()        {}
-void __fastcall TDBWFRM::UpdateScrollbars()   {}
-void __fastcall TDBWFRM::InvalidateFeld(const GRIDPOS&) { refresh(); }
+void TDBWFRM::SetModified(bool)    {}
+void TDBWFRM::SetCursor(int, int)  {}
+void TDBWFRM::SetAppTitle()        {}
+void TDBWFRM::UpdateScrollbars()   {}
+void TDBWFRM::InvalidateFeld(const GRIDPOS&) { refresh(); }
 
-void __fastcall TDBWFRM::RearrangeSchaefte()
+void TDBWFRM::RearrangeSchaefte()
 {
 	dbw3_assert(einzughandler);
 	if (einzughandler) einzughandler->Rearrange();
 }
 
-void __fastcall TDBWFRM::CalcRapport()    { if (rapporthandler) rapporthandler->CalcRapport(); }
-void __fastcall TDBWFRM::UpdateRapport()  { if (rapporthandler) rapporthandler->UpdateRapport(); }
-void __fastcall TDBWFRM::ClearRapport()   { if (rapporthandler) rapporthandler->ClearRapport(); }
-void __fastcall TDBWFRM::DrawRapport()    { if (rapporthandler) rapporthandler->DrawRapport(); }
-bool __fastcall TDBWFRM::IsInRapport(int _i, int _j)
+void TDBWFRM::CalcRapport()    { if (rapporthandler) rapporthandler->CalcRapport(); }
+void TDBWFRM::UpdateRapport()  { if (rapporthandler) rapporthandler->UpdateRapport(); }
+void TDBWFRM::ClearRapport()   { if (rapporthandler) rapporthandler->ClearRapport(); }
+void TDBWFRM::DrawRapport()    { if (rapporthandler) rapporthandler->DrawRapport(); }
+bool TDBWFRM::IsInRapport(int _i, int _j)
                                           { return rapporthandler ? rapporthandler->IsInRapport(_i, _j) : false; }
 
 /*  DrawGewebe / DrawEinzug / DrawAufknuepfung / DrawTrittfolge,
     the four *Rahmen painters, DrawGewebeFarbeffekt /
     DrawGewebeSimulation, and DrawGewebeKette / Schuss /
     DeleteGewebeKette / Schuss all live in draw.cpp. */
-void __fastcall TDBWFRM::_ClearEinzug()                            {}
-void __fastcall TDBWFRM::_ClearAufknuepfung()                      {}
-void __fastcall TDBWFRM::_ClearSchlagpatrone()                     {}
-void __fastcall TDBWFRM::_DrawEinzug()                             {}
-void __fastcall TDBWFRM::_DrawAufknuepfung()                       {}
-void __fastcall TDBWFRM::_DrawSchlagpatrone()                      {}
-void __fastcall TDBWFRM::ClearGewebe(int, int)                     {}
-void __fastcall TDBWFRM::RedrawGewebe(int, int)                    {}
-void __fastcall TDBWFRM::RedrawAufknuepfung(int, int)              {}
+void TDBWFRM::_ClearEinzug()                            {}
+void TDBWFRM::_ClearAufknuepfung()                      {}
+void TDBWFRM::_ClearSchlagpatrone()                     {}
+void TDBWFRM::_DrawEinzug()                             {}
+void TDBWFRM::_DrawAufknuepfung()                       {}
+void TDBWFRM::_DrawSchlagpatrone()                      {}
+void TDBWFRM::ClearGewebe(int, int)                     {}
+void TDBWFRM::RedrawGewebe(int, int)                    {}
+void TDBWFRM::RedrawAufknuepfung(int, int)              {}

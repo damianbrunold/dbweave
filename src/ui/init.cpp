@@ -18,12 +18,12 @@ FeldBlatteinzug::FeldBlatteinzug()
 {
 }
 /*-----------------------------------------------------------------*/
-int __fastcall FeldBlatteinzug::ScrollX()
+int FeldBlatteinzug::ScrollX()
 {
 	return DBWFRM->scroll_x1;
 }
 /*-----------------------------------------------------------------*/
-int __fastcall FeldBlatteinzug::ScrollY()
+int FeldBlatteinzug::ScrollY()
 {
 	return 0;
 }
@@ -33,12 +33,12 @@ FeldKettfarben::FeldKettfarben()
 {
 }
 /*-----------------------------------------------------------------*/
-int __fastcall FeldKettfarben::ScrollX()
+int FeldKettfarben::ScrollX()
 {
 	return DBWFRM->scroll_x1;
 }
 /*-----------------------------------------------------------------*/
-int __fastcall FeldKettfarben::ScrollY()
+int FeldKettfarben::ScrollY()
 {
 	return 0;
 }
@@ -48,12 +48,12 @@ FeldSchussfarben::FeldSchussfarben()
 {
 }
 /*-----------------------------------------------------------------*/
-int __fastcall FeldSchussfarben::ScrollX()
+int FeldSchussfarben::ScrollX()
 {
 	return 0;
 }
 /*-----------------------------------------------------------------*/
-int __fastcall FeldSchussfarben::ScrollY()
+int FeldSchussfarben::ScrollY()
 {
 	return DBWFRM->scroll_y2;
 }
@@ -65,12 +65,12 @@ FeldEinzug::FeldEinzug()
 	darstellung = STRICH;
 }
 /*-----------------------------------------------------------------*/
-int __fastcall FeldEinzug::ScrollX()
+int FeldEinzug::ScrollX()
 {
 	return DBWFRM->scroll_x1;
 }
 /*-----------------------------------------------------------------*/
-int __fastcall FeldEinzug::ScrollY()
+int FeldEinzug::ScrollY()
 {
 	return DBWFRM->scroll_y1;
 }
@@ -82,12 +82,12 @@ FeldAufknuepfung::FeldAufknuepfung()
 	pegplanstyle = false;
 }
 /*-----------------------------------------------------------------*/
-int __fastcall FeldAufknuepfung::ScrollX()
+int FeldAufknuepfung::ScrollX()
 {
 	return DBWFRM->scroll_x2;
 }
 /*-----------------------------------------------------------------*/
-int __fastcall FeldAufknuepfung::ScrollY()
+int FeldAufknuepfung::ScrollY()
 {
 	return DBWFRM->scroll_y1;
 }
@@ -100,12 +100,12 @@ FeldTrittfolge::FeldTrittfolge()
 	einzeltritt = true;
 }
 /*-----------------------------------------------------------------*/
-int __fastcall FeldTrittfolge::ScrollX()
+int FeldTrittfolge::ScrollX()
 {
 	return DBWFRM->scroll_x2;
 }
 /*-----------------------------------------------------------------*/
-int __fastcall FeldTrittfolge::ScrollY()
+int FeldTrittfolge::ScrollY()
 {
 	return DBWFRM->scroll_y2;
 }
@@ -115,12 +115,12 @@ FeldGewebe::FeldGewebe()
 {
 }
 /*-----------------------------------------------------------------*/
-int __fastcall FeldGewebe::ScrollX()
+int FeldGewebe::ScrollX()
 {
 	return DBWFRM->scroll_x1;
 }
 /*-----------------------------------------------------------------*/
-int __fastcall FeldGewebe::ScrollY()
+int FeldGewebe::ScrollY()
 {
 	return DBWFRM->scroll_y2;
 }

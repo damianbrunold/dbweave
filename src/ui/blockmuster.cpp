@@ -14,9 +14,9 @@
 
 #include <cstring>
 
-__fastcall Muster::Muster() { Clear(); }
+ Muster::Muster() { Clear(); }
 
-void __fastcall Muster::Set (int _i, int _j, char _value)
+void Muster::Set (int _i, int _j, char _value)
 {
 	dbw3_assert(_i < maxx);
 	dbw3_assert(_j < maxy);
@@ -24,7 +24,7 @@ void __fastcall Muster::Set (int _i, int _j, char _value)
 	feld[_i + maxx*_j] = _value;
 }
 
-char __fastcall Muster::Get (int _i, int _j)
+char Muster::Get (int _i, int _j)
 {
 	dbw3_assert(_i < maxx);
 	dbw3_assert(_j < maxy);
@@ -32,9 +32,9 @@ char __fastcall Muster::Get (int _i, int _j)
 	return feld[_i + maxx*_j];
 }
 
-void __fastcall Muster::Clear() { std::memset(feld, 0, maxx*maxy); }
+void Muster::Clear() { std::memset(feld, 0, maxx*maxy); }
 
-bool __fastcall Muster::IsEmpty()
+bool Muster::IsEmpty()
 {
 	for (int i = 0; i < maxx; i++)
 		for (int j = 0; j < maxy; j++)
@@ -49,12 +49,12 @@ Muster& Muster::operator= (const Muster& _m)
 	return *this;
 }
 
-void __fastcall Muster::SetData (const char* _data)
+void Muster::SetData (const char* _data)
 {
 	std::memcpy(feld, _data, maxx*maxy);
 }
 
-int __fastcall Muster::SizeX()
+int Muster::SizeX()
 {
 	bool nonempty = false;
 	int i1 = maxx-1, i2 = 0;
@@ -68,7 +68,7 @@ int __fastcall Muster::SizeX()
 	return nonempty ? i2 - i1 + 1 : 0;
 }
 
-int __fastcall Muster::SizeY()
+int Muster::SizeY()
 {
 	bool nonempty = false;
 	int j1 = maxy-1, j2 = 0;
@@ -82,7 +82,7 @@ int __fastcall Muster::SizeY()
 	return nonempty ? j2 - j1 + 1 : 0;
 }
 
-int __fastcall Muster::FirstX()
+int Muster::FirstX()
 {
 	for (int i = 0; i < maxx; i++)
 		for (int j = 0; j < maxy; j++)
@@ -90,7 +90,7 @@ int __fastcall Muster::FirstX()
 	return 0;
 }
 
-int __fastcall Muster::FirstY()
+int Muster::FirstY()
 {
 	for (int j = 0; j < maxy; j++)
 		for (int i = 0; i < maxx; i++)
@@ -99,14 +99,14 @@ int __fastcall Muster::FirstY()
 }
 
 /*-----------------------------------------------------------------*/
-__fastcall BlockUndo::BlockUndo (PMUSTERARRAY _bindungen, int& _active)
+ BlockUndo::BlockUndo (PMUSTERARRAY _bindungen, int& _active)
 	: bindungen(_bindungen), active(_active)
 {
 	list = current = nullptr;
 	Allocate();
 }
 
-__fastcall BlockUndo::~BlockUndo()
+ BlockUndo::~BlockUndo()
 {
 	BlockUndoItem* p = list->prev;
 	while (p != list) {
@@ -117,7 +117,7 @@ __fastcall BlockUndo::~BlockUndo()
 	bindungen = nullptr;
 }
 
-void __fastcall BlockUndo::Allocate()
+void BlockUndo::Allocate()
 {
 	try {
 		list = current = new BlockUndoItem;
@@ -132,7 +132,7 @@ void __fastcall BlockUndo::Allocate()
 	}
 }
 
-void __fastcall BlockUndo::Snapshot()
+void BlockUndo::Snapshot()
 {
 	dbw3_assert(current != nullptr);
 	dbw3_assert(list != nullptr);
@@ -155,7 +155,7 @@ void __fastcall BlockUndo::Snapshot()
 	}
 }
 
-void __fastcall BlockUndo::Undo()
+void BlockUndo::Undo()
 {
 	dbw3_assert(current != nullptr);
 	dbw3_assert(list != nullptr);
@@ -168,7 +168,7 @@ void __fastcall BlockUndo::Undo()
 	}
 }
 
-void __fastcall BlockUndo::Redo()
+void BlockUndo::Redo()
 {
 	dbw3_assert(current != nullptr);
 	dbw3_assert(list != nullptr);
@@ -181,17 +181,17 @@ void __fastcall BlockUndo::Redo()
 	}
 }
 
-bool __fastcall BlockUndo::CanUndo()
+bool BlockUndo::CanUndo()
 {
 	return (current != list && !current->prev->isempty);
 }
 
-bool __fastcall BlockUndo::CanRedo()
+bool BlockUndo::CanRedo()
 {
 	return (current->next != list && !current->next->isempty);
 }
 
-void __fastcall BlockUndo::Clear()
+void BlockUndo::Clear()
 {
 	dbw3_assert(current != nullptr);
 	dbw3_assert(list != nullptr);

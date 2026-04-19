@@ -21,7 +21,7 @@
 #include "undoredo.h"
 #include "assert_compat.h"
 
-void __fastcall TDBWFRM::KoeperEinfuegen (int _h, int _s)
+void TDBWFRM::KoeperEinfuegen (int _h, int _s)
 {
 	if (kbd_field != GEWEBE) return;
 
@@ -65,7 +65,7 @@ static inline void FSet (FeldGridChar& _m, int _i, int _j, char _s)
 	if (_i < Data->MAXX1 && _j < Data->MAXY2) _m.Set(_i, _j, _s);
 }
 
-void __fastcall TDBWFRM::AtlasEinfuegen (int _n)
+void TDBWFRM::AtlasEinfuegen (int _n)
 {
 	if (kbd_field != GEWEBE) return;
 

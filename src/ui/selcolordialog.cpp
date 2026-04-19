@@ -284,7 +284,7 @@ void SelColorDialog::reject ()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DefineColorsClick ()
+void TDBWFRM::DefineColorsClick ()
 {
 	SelColorDialog dlg(Data->color, this);
 	dlg.exec();

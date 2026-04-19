@@ -1,22 +1,24 @@
-# Matches the legacy C++Builder style: tabs for indent, brace-on-same-line.
-# The intent is to minimize diff noise when porting legacy/*.cpp to src/.
-# In Phase 12 (cleanup) this will be replaced with a Qt-style profile.
+# Qt coding style (Phase 12 cleanup). A thin profile on top of the
+# upstream "Qt" preset. Invoke `clang-format -i <file>` to normalise
+# anything you touch; Phase 12 intentionally does not sweep the tree
+# wholesale because a per-file reformat would bury the substantive
+# shim-removal diff. The profile lines below just pin choices where
+# the Qt preset would otherwise differ from the habits this tree
+# already carries (pointer alignment, tab vs space, column cap).
 
-BasedOnStyle: LLVM
+BasedOnStyle: Qt
 Language: Cpp
 Standard: c++17
 
-UseTab: ForIndentation
 IndentWidth: 4
 TabWidth: 4
+UseTab: Never
 
-BreakBeforeBraces: Attach
-AllowShortFunctionsOnASingleLine: Empty
-AllowShortIfStatementsOnASingleLine: Never
-AllowShortLoopsOnASingleLine: false
-
-ColumnLimit: 0
-AccessModifierOffset: -4
 PointerAlignment: Left
 SpaceAfterCStyleCast: false
 SpaceBeforeParens: ControlStatements
+ColumnLimit: 100
+
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false

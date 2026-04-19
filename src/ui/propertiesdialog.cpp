@@ -61,7 +61,7 @@ void PropertiesDialog::setRemarks      (const QString& _s) { edRemarks     ->set
 #include "properties.h"
 #include "cursor.h"
 
-void __fastcall TDBWFRM::FilePropsClick ()
+void TDBWFRM::FilePropsClick ()
 {
 	if (!Data->properties) return;
 	if (cursorhandler) cursorhandler->DisableCursor();

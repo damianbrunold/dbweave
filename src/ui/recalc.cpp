@@ -34,7 +34,7 @@
 using std::min;
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::RecalcFreieSchaefte()
+void TDBWFRM::RecalcFreieSchaefte()
 {
 	dbw3_assert (freieschaefte);
 	if (!freieschaefte) return;
@@ -45,7 +45,7 @@ void __fastcall TDBWFRM::RecalcFreieSchaefte()
 			freieschaefte[einzug.feld.Get(i) - 1] = false;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::RecalcFreieTritte()
+void TDBWFRM::RecalcFreieTritte()
 {
 	dbw3_assert (freietritte);
 	if (!freietritte) return;
@@ -57,7 +57,7 @@ void __fastcall TDBWFRM::RecalcFreieTritte()
 				freietritte[i] = false;
 }
 /*-----------------------------------------------------------------*/
-__fastcall RcRecalcAll::RcRecalcAll (TDBWFRM* _frm, TData* _data, bool _schlagpatrone)
+ RcRecalcAll::RcRecalcAll (TDBWFRM* _frm, TData* _data, bool _schlagpatrone)
 {
 	dbw3_assert (_frm  != 0);
 	dbw3_assert (_data != 0);
@@ -69,7 +69,7 @@ __fastcall RcRecalcAll::RcRecalcAll (TDBWFRM* _frm, TData* _data, bool _schlagpa
 }
 /*-----------------------------------------------------------------*/
 /*  Achtung: Undo muss vom Aufrufer gehandelt werden!              */
-void __fastcall RcRecalcAll::Recalc()
+void RcRecalcAll::Recalc()
 {
 	dbw3_assert (frm != 0);
 	if (!(frm->EzFixiert && frm->EzFixiert->isChecked())) RecalcEinzug();
@@ -93,19 +93,19 @@ void __fastcall RcRecalcAll::Recalc()
 	frm->InvalidateFeld (frm->trittfolge.pos);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall RcRecalcAll::CalcK()
+void RcRecalcAll::CalcK()
 {
 	k1 = frm->kette.a;
 	k2 = frm->kette.b;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall RcRecalcAll::CalcS()
+void RcRecalcAll::CalcS()
 {
 	s1 = frm->schuesse.a;
 	s2 = frm->schuesse.b;
 }
 /*-----------------------------------------------------------------*/
-void __fastcall RcRecalcAll::RecalcSchlagpatrone()
+void RcRecalcAll::RecalcSchlagpatrone()
 {
 	dbw3_assert (frm != 0);
 	CalcK();
@@ -117,7 +117,7 @@ void __fastcall RcRecalcAll::RecalcSchlagpatrone()
 	frm->InvalidateFeld (frm->trittfolge.pos);
 }
 /*-----------------------------------------------------------------*/
-void __fastcall RcRecalcAll::RecalcTrittfolgeAufknuepfung()
+void RcRecalcAll::RecalcTrittfolgeAufknuepfung()
 {
 	dbw3_assert (frm != 0);
 	CalcK();
@@ -130,7 +130,7 @@ void __fastcall RcRecalcAll::RecalcTrittfolgeAufknuepfung()
 	frm->InvalidateFeld (frm->trittfolge.pos);
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall RcRecalcAll::KettfadenEqual (int _a, int _b)
+bool RcRecalcAll::KettfadenEqual (int _a, int _b)
 {
 	if (frm->xbuf[_a] == 0 && frm->xbuf[_b] == 0) return true;
 	for (int j = 0; j < data->MAXY2; j++) {
@@ -142,7 +142,7 @@ bool __fastcall RcRecalcAll::KettfadenEqual (int _a, int _b)
 	return true;
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall RcRecalcAll::SchussfadenEqual (int _a, int _b)
+bool RcRecalcAll::SchussfadenEqual (int _a, int _b)
 {
 	if (frm->ybuf[_a] == 0 && frm->ybuf[_b] == 0) return true;
 	for (int i = k1; i <= k2; i++) {
@@ -154,28 +154,28 @@ bool __fastcall RcRecalcAll::SchussfadenEqual (int _a, int _b)
 	return true;
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall RcRecalcAll::KettfadenEmpty (int _a)
+bool RcRecalcAll::KettfadenEmpty (int _a)
 {
 	for (int j = 0; j < data->MAXY2; j++)
 		if (frm->gewebe.feld.Get (_a, j) > 0) return false;
 	return true;
 }
 /*-----------------------------------------------------------------*/
-bool __fastcall RcRecalcAll::SchussfadenEmpty (int _a)
+bool RcRecalcAll::SchussfadenEmpty (int _a)
 {
 	for (int i = k1; i <= k2; i++)
 		if (frm->gewebe.feld.Get (i, _a) > 0) return false;
 	return true;
 }
 /*-----------------------------------------------------------------*/
-short __fastcall RcRecalcAll::GetSchaft (int _a)
+short RcRecalcAll::GetSchaft (int _a)
 {
 	dbw3_assert (frm);
 	dbw3_assert (frm->fixeinzug);
 	return frm->fixeinzug[_a];
 }
 /*-----------------------------------------------------------------*/
-void __fastcall RcRecalcAll::RecalcEinzug()
+void RcRecalcAll::RecalcEinzug()
 {
 	/*  Einzug loeschen und neuberechnen. */
 	frm->einzug.feld.Init(0);
@@ -226,7 +226,7 @@ void __fastcall RcRecalcAll::RecalcEinzug()
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall RcRecalcAll::RecalcEinzugFixiert()
+void RcRecalcAll::RecalcEinzugFixiert()
 {
 	/*  Ist ueberhaupt ein fixierter Einzug da?! */
 	if (!frm->fixeinzug || frm->fixeinzug[0] == 0) {
@@ -284,7 +284,7 @@ void __fastcall RcRecalcAll::RecalcEinzugFixiert()
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall RcRecalcAll::RecalcTrittfolge()
+void RcRecalcAll::RecalcTrittfolge()
 {
 	/*  Trittfolge loeschen und neuberechnen. */
 	frm->trittfolge.feld.Init(0);
@@ -352,7 +352,7 @@ void __fastcall RcRecalcAll::RecalcTrittfolge()
 	}
 }
 /*-----------------------------------------------------------------*/
-void __fastcall RcRecalcAll::RecalcAufknuepfung()
+void RcRecalcAll::RecalcAufknuepfung()
 {
 	int a, b, c;
 
@@ -376,7 +376,7 @@ void __fastcall RcRecalcAll::RecalcAufknuepfung()
 /*-----------------------------------------------------------------*/
 /*  RecalcAll: Berechnet einen neuen Einzug, eine neue Trittfolge
     und eine neue Aufknuepfung fuer das Gewebe.                  */
-void __fastcall TDBWFRM::RecalcAll()
+void TDBWFRM::RecalcAll()
 {
 	/*  Diese Funktion sollte nur fuer die Bereichsmanipulationen
 	    eingesetzt werden. Deshalb wird das Undo hier nicht
@@ -391,7 +391,7 @@ void __fastcall TDBWFRM::RecalcAll()
 }
 /*-----------------------------------------------------------------*/
 /*  RecalcSchlagpatrone: Berechnet Schlagpatrone. */
-void __fastcall TDBWFRM::RecalcSchlagpatrone()
+void TDBWFRM::RecalcSchlagpatrone()
 {
 	QCursor old = cursor();
 	setCursor (Qt::WaitCursor);
@@ -403,7 +403,7 @@ void __fastcall TDBWFRM::RecalcSchlagpatrone()
 }
 /*-----------------------------------------------------------------*/
 /*  RecalcTrittfolgeAufknuepfung: Berechnet Trittfolge/Aufknuepfung */
-void __fastcall TDBWFRM::RecalcTrittfolgeAufknuepfung()
+void TDBWFRM::RecalcTrittfolgeAufknuepfung()
 {
 	QCursor old = cursor();
 	setCursor (Qt::WaitCursor);
@@ -416,7 +416,7 @@ void __fastcall TDBWFRM::RecalcTrittfolgeAufknuepfung()
 /*-----------------------------------------------------------------*/
 /*  RecalcFixEinzug: Berechnet einen neuen Einzug gemaess dem
     gespeicherten Fixeinzug.                                     */
-void __fastcall TDBWFRM::RecalcFixEinzug()
+void TDBWFRM::RecalcFixEinzug()
 {
 	RcRecalcAll reclc (this, Data, ViewSchlagpatrone && ViewSchlagpatrone->isChecked());
 	reclc.RecalcEinzugFixiert();

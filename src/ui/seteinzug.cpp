@@ -15,7 +15,7 @@
 #include "datamodule.h"
 #include "undoredo.h"
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::SetEinzug (int _i, int _j)
+void TDBWFRM::SetEinzug (int _i, int _j)
 {
 	if (ViewOnlyGewebe && ViewOnlyGewebe->isChecked()) {
 		/*  Legacy rang the system bell here (MessageBeep). Qt has
@@ -60,7 +60,7 @@ void __fastcall TDBWFRM::SetEinzug (int _i, int _j)
 	if (undo) undo->Snapshot();
 }
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::DoSetEinzug (int _i, int _j)
+void TDBWFRM::DoSetEinzug (int _i, int _j)
 {
 	// Einzug neu setzen
 	short oldeinzug = einzug.feld.Get(scroll_x1+_i);

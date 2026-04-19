@@ -175,17 +175,17 @@ XOptionsDialog::XOptionsDialog (QWidget* _parent)
 #include "undoredo.h"
 #include "settings.h"
 
-void __fastcall TDBWFRM::OptEnvironmentClick ()
+void TDBWFRM::OptEnvironmentClick ()
 {
 	EnvOptionsDialog dlg(this);
 	dlg.exec();
 	refresh();
 }
 
-void __fastcall TDBWFRM::XOptionsClick ()       { ShowOptions(false); }
-void __fastcall TDBWFRM::XOptionsGlobalClick () { ShowOptions(true);  }
+void TDBWFRM::XOptionsClick ()       { ShowOptions(false); }
+void TDBWFRM::XOptionsGlobalClick () { ShowOptions(true);  }
 
-void __fastcall TDBWFRM::ShowOptions (bool _global)
+void TDBWFRM::ShowOptions (bool _global)
 {
 	XOptionsDialog frm(this);
 

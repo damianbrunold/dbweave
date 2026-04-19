@@ -89,7 +89,7 @@ QString PageSetupDialog::footerText () const { return footer->text(); }
 
 /*-----------------------------------------------------------------*/
 /*  TDBWFRM menu handlers for page setup / print / preview. */
-void __fastcall TDBWFRM::FileSetPageClick ()
+void TDBWFRM::FileSetPageClick ()
 {
 	PageSetupDialog dlg(this);
 	dlg.setMargins(borders.range.left,   borders.range.right,
@@ -107,7 +107,7 @@ void __fastcall TDBWFRM::FileSetPageClick ()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::FilePrintClick ()
+void TDBWFRM::FilePrintClick ()
 {
 	QPrinter printer(QPrinter::HighResolution);
 	QPrintDialog pd(&printer, this);
@@ -135,7 +135,7 @@ void __fastcall TDBWFRM::FilePrintClick ()
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::FilePrintpreviewClick ()
+void TDBWFRM::FilePrintpreviewClick ()
 {
 	QPrinter printer(QPrinter::HighResolution);
 	QPrintPreviewDialog preview(&printer, this);

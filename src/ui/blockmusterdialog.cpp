@@ -698,7 +698,7 @@ void BlockmusterDialog::accept ()
     blockmuster.cpp:BlockExpandEinzug. Expands each existing einzug
     thread into `_count` consecutive threads on `_count` consecutive
     shafts; direction is controlled by einzugZ.                    */
-void __fastcall TDBWFRM::BlockExpandEinzug (int _count)
+void TDBWFRM::BlockExpandEinzug (int _count)
 {
 	if (kette.a == -1 || kette.b == -1) return;
 
@@ -728,7 +728,7 @@ void __fastcall TDBWFRM::BlockExpandEinzug (int _count)
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::BlockExpandTrittfolge (int _count)
+void TDBWFRM::BlockExpandTrittfolge (int _count)
 {
 	if (schuesse.a == -1 || schuesse.b == -1) return;
 
@@ -765,7 +765,7 @@ void __fastcall TDBWFRM::BlockExpandTrittfolge (int _count)
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::BlockExpandAufknuepfung (int _x, int _y)
+void TDBWFRM::BlockExpandAufknuepfung (int _x, int _y)
 {
 	char* pData = new char[Data->MAXY1*Data->MAXX2];
 	for (int j = 0; j < Data->MAXY1; j++)
@@ -801,7 +801,7 @@ void __fastcall TDBWFRM::BlockExpandAufknuepfung (int _x, int _y)
 }
 
 /*-----------------------------------------------------------------*/
-void __fastcall TDBWFRM::EditBlockmusterClick ()
+void TDBWFRM::EditBlockmusterClick ()
 {
 	if (cursorhandler) cursorhandler->DisableCursor();
 	if (!blockundo) return;
