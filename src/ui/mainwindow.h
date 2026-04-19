@@ -347,6 +347,11 @@ public:
 	void __fastcall RappReduzierenClick   ();
 	void __fastcall RappOverrideClick     ();
 
+	/*  Edit menu: ask the cursor handler what direction it's
+	    auto-advancing in after Set/Toggle, let the user change
+	    it via the cursor-direction dialog. */
+	void __fastcall EditCursordirectionClick ();
+
 	/*  Full einzug / trittfolge / aufknuepfung recompute from the
 	    current gewebe content. Used by bereiche, importbmp,
 	    insertbindung, rapportieren, and Edit operations that

@@ -199,6 +199,10 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	QAction* actRollLeft  = editMenu->addAction(QStringLiteral("Roll &Left"));
 	QAction* actRollRight = editMenu->addAction(QStringLiteral("Roll &Right"));
 	editMenu->addSeparator();
+	editMenu->addSeparator();
+	QAction* actCursorDir  = editMenu->addAction(QStringLiteral("Cursor d&irection..."));
+	connect(actCursorDir, &QAction::triggered, this, [this] { EditCursordirectionClick(); });
+	editMenu->addSeparator();
 	QAction* actFillKoeper = editMenu->addAction(QStringLiteral("Fill &Twill"));
 	QAction* actSwapSide   = editMenu->addAction(QStringLiteral("S&wap Side"));
 	QAction* actSteigInc   = editMenu->addAction(QStringLiteral("Steigung &+"));

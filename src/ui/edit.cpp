@@ -870,3 +870,17 @@ void __fastcall TDBWFRM::SwitchRange (int _range)
 	refresh();
 	if (undo) undo->Snapshot();
 }
+
+/*-----------------------------------------------------------------*/
+#include "cursordirdialog.h"
+
+void __fastcall TDBWFRM::EditCursordirectionClick ()
+{
+	if (!cursorhandler) return;
+	cursorhandler->DisableCursor();
+	CursorDirDialog dlg(this, cursorhandler->GetCursorDirection());
+	if (dlg.exec() == QDialog::Accepted)
+		cursorhandler->SetCursorDirection(dlg.cursordirection);
+	cursorhandler->EnableCursor();
+	refresh();
+}
