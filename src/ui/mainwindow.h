@@ -351,6 +351,7 @@ public:
 	    auto-advancing in after Set/Toggle, let the user change
 	    it via the cursor-direction dialog. */
 	void __fastcall EditCursordirectionClick ();
+	void __fastcall CursorGotoClick          ();
 
 	/*  Full einzug / trittfolge / aufknuepfung recompute from the
 	    current gewebe content. Used by bereiche, importbmp,

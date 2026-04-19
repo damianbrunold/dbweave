@@ -201,7 +201,9 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 	editMenu->addSeparator();
 	editMenu->addSeparator();
 	QAction* actCursorDir  = editMenu->addAction(QStringLiteral("Cursor d&irection..."));
-	connect(actCursorDir, &QAction::triggered, this, [this] { EditCursordirectionClick(); });
+	QAction* actCursorGoto = editMenu->addAction(QStringLiteral("&Go to field..."));
+	connect(actCursorDir,  &QAction::triggered, this, [this] { EditCursordirectionClick(); });
+	connect(actCursorGoto, &QAction::triggered, this, [this] { CursorGotoClick();          });
 	editMenu->addSeparator();
 	QAction* actFillKoeper = editMenu->addAction(QStringLiteral("Fill &Twill"));
 	QAction* actSwapSide   = editMenu->addAction(QStringLiteral("S&wap Side"));

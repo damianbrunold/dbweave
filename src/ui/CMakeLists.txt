@@ -46,6 +46,7 @@ add_library(dbweave_ui STATIC
     insertbindung.cpp
     rapportdialog.cpp
     cursordirdialog.cpp
+    cursorgotodialog.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)

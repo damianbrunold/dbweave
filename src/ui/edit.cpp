@@ -884,3 +884,18 @@ void __fastcall TDBWFRM::EditCursordirectionClick ()
 	cursorhandler->EnableCursor();
 	refresh();
 }
+
+/*-----------------------------------------------------------------*/
+#include "cursorgotodialog.h"
+
+void __fastcall TDBWFRM::CursorGotoClick ()
+{
+	if (!cursorhandler) return;
+	const bool pegplan = ViewSchlagpatrone && ViewSchlagpatrone->isChecked();
+	CursorGotoDialog dlg(this, kbd_field, pegplan);
+	if (dlg.exec() == QDialog::Accepted) {
+		cursorhandler->GotoField(dlg.selected());
+		UpdateStatusBar();
+		refresh();
+	}
+}
