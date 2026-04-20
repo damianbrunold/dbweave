@@ -34,6 +34,8 @@
 /*-----------------------------------------------------------------*/
 void TDBWFRM::DrawTool(int _i, int _j, int _i1, int _j1)
 {
+    if (GewebeLocked())
+        return;
     switch (tool) {
     case TOOL_POINT:
         return;

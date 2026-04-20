@@ -43,6 +43,8 @@ void TDBWFRM::SpInvert()
 {
     if (!(ViewSchlagpatrone && ViewSchlagpatrone->isChecked()))
         return;
+    if (GewebeLocked())
+        return;
 
     const int t1 = GetFirstTritt();
     const int t2 = GetLastTritt();
@@ -129,6 +131,10 @@ void TDBWFRM::SteigungInc()
         selection = savesel;
         return;
     }
+    if (selection.feld == GEWEBE && GewebeLocked()) {
+        selection = savesel;
+        return;
+    }
     IncrementSteigung(selection.begin.i, selection.begin.j, selection.end.i, selection.end.j,
                       selection.feld);
     if (selection.feld != GEWEBE)
@@ -148,6 +154,10 @@ void TDBWFRM::SteigungDec()
     RANGE savesel = selection;
     selection.Normalize();
     if (!selection.Valid() || !allowedForSteigung(this, selection.feld)) {
+        selection = savesel;
+        return;
+    }
+    if (selection.feld == GEWEBE && GewebeLocked()) {
         selection = savesel;
         return;
     }

@@ -29,8 +29,25 @@
 #include "cursorimpl.h"
 #include "mainwindow.h"
 #include "datamodule.h"
+#include <QAction>
 #include <QPainter>
 #include <QPen>
+/*-----------------------------------------------------------------*/
+/*  A field is "skipped" by cursor traversal when the user can't
+    interact with it in the current mode. Extends the legacy
+    ViewSchlagpatrone-skips-AUFKNUEPFUNG rule with the port's
+    OptionsLockGewebe-skips-GEWEBE rule.                          */
+static bool isFieldSkipped(FELD _feld, TDBWFRM* _frm)
+{
+    if (!_frm)
+        return false;
+    if (_feld == GEWEBE && _frm->OptionsLockGewebe && _frm->OptionsLockGewebe->isChecked())
+        return true;
+    if (_feld == AUFKNUEPFUNG && _frm->ViewSchlagpatrone
+        && _frm->ViewSchlagpatrone->isChecked())
+        return true;
+    return false;
+}
 /*-----------------------------------------------------------------*/
 #define MAXX (fb.pos.width / fb.gw)
 #define MAXY (fb.pos.height / fb.gh)
@@ -156,6 +173,10 @@ void CrCursorHandlerImpl::SetField(bool _set, TShiftState _shift)
 /*-----------------------------------------------------------------*/
 void CrCursorHandlerImpl::SetCursor(FELD _feld, int _i, int _j, bool _clearselection /*=true*/)
 {
+    /*  Refuse to move the cursor onto a skipped field -- this keeps
+        mouse-clicks on a locked gewebe from hijacking the focus.   */
+    if (isFieldSkipped(_feld, frm))
+        return;
     DisableCursor();
     CrFeld* p = GetFeld(_feld);
     if (p) {
@@ -280,8 +301,7 @@ void CrCursorHandlerImpl::GotoNextField()
         int safety = 0;
         do {
             feld = feld->next;
-            if (frm->ViewSchlagpatrone && frm->ViewSchlagpatrone->isChecked()
-                && feld->feld == AUFKNUEPFUNG)
+            while (isFieldSkipped(feld->feld, frm))
                 feld = feld->next;
             if (++safety > 20)
                 break; // avoid infinite loop if no field visible
@@ -304,8 +324,7 @@ void CrCursorHandlerImpl::GotoPrevField()
         int safety = 0;
         do {
             feld = feld->prev;
-            if (frm->ViewSchlagpatrone && frm->ViewSchlagpatrone->isChecked()
-                && feld->feld == AUFKNUEPFUNG)
+            while (isFieldSkipped(feld->feld, frm))
                 feld = feld->prev;
             if (++safety > 20)
                 break;
@@ -324,7 +343,7 @@ void CrCursorHandlerImpl::GotoField(FELD _feld)
     dbw3_assert(feld);
     dbw3_assert(frm);
     CrFeld* p = GetFeld(_feld);
-    if (!p || !p->IsVisible())
+    if (!p || !p->IsVisible() || isFieldSkipped(_feld, frm))
         return;
     DisableCursor();
     feld = p;

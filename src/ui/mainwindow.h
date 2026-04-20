@@ -115,10 +115,10 @@ public:
 
     QAction* TfMinimalZ = nullptr;
     QAction* TfMinimalS = nullptr;
-    QAction* TfGeradeZ = nullptr;
-    QAction* TfGeradeS = nullptr;
     QAction* TfGesprungen = nullptr;
     QAction* TfBelassen = nullptr;
+
+    QAction* OptionsLockGewebe = nullptr;
 
     QAction* ViewSchlagpatrone = nullptr;
     QAction* ViewEinzug = nullptr;
@@ -475,6 +475,14 @@ public:
     void RecalcSchlagpatrone();
     void RecalcTrittfolgeAufknuepfung();
     void RecalcFixEinzug();
+
+    /*  Returns true when OptionsLockGewebe is checked. Each caller
+        that would mutate gewebe should bail out (with a beep) when
+        this returns true. SetGewebe() and RecalcAll() already
+        short-circuit internally; this helper covers the code paths
+        that write gewebe.feld directly (edit, bereiche, rapport,
+        insert/delete kette/schuss, import, ...).                    */
+    bool GewebeLocked();
 
     /*  --- Selection --------------------------------------------
         The RANGE tracks a rubber-band rectangle on GEWEBE / EINZUG

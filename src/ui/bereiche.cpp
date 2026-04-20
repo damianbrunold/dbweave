@@ -31,6 +31,8 @@
 /*  schlagpatrone.cpp ports. */
 void TDBWFRM::ClearTrittfolgeClick()
 {
+    if (GewebeLocked())
+        return;
     for (int j = 0; j < Data->MAXY2; j++) {
         for (int i = 0; i < Data->MAXX2; i++)
             trittfolge.feld.Set(i, j, 0);
@@ -48,6 +50,8 @@ void TDBWFRM::ClearTrittfolgeClick()
 
 void TDBWFRM::TfSpiegelnClick()
 {
+    if (GewebeLocked())
+        return;
     if (TfBelassen)
         TfBelassen->setChecked(true);
     for (int j = schuesse.a; j <= (schuesse.b - schuesse.a) / 2; j++) {
@@ -81,6 +85,8 @@ void TDBWFRM::SpSpiegelnClick()
 void TDBWFRM::SpInvertClick()
 {
     if (!ViewSchlagpatrone || !ViewSchlagpatrone->isChecked())
+        return;
+    if (GewebeLocked())
         return;
 
     const int t1 = GetFirstTritt();
@@ -164,6 +170,8 @@ void TDBWFRM::CopyTrittfolgeEinzugClick()
     them over the selection on Apply.                               */
 void TDBWFRM::RangePatternsClick()
 {
+    if (GewebeLocked())
+        return;
     if (cursorhandler)
         cursorhandler->DisableCursor();
     if (!bereichundo) {

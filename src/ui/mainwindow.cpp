@@ -99,8 +99,6 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 
     TfMinimalZ = mk(/*checked=*/true);
     TfMinimalS = mk();
-    TfGeradeZ = mk();
-    TfGeradeS = mk();
     TfGesprungen = mk();
     TfBelassen = mk();
 
@@ -647,6 +645,25 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     connect(actCopyEzTf, &QAction::triggered, this, [this] { CopyEinzugTrittfolgeClick(); });
     connect(EzFixiert, &QAction::triggered, this, [this] { EditFixeinzug(); });
 
+    /*  Einzug style radio items -- rebuild everything from the
+        current gewebe via RecalcAll(). The per-style Rearrange
+        helpers alone don't always produce a clean result when
+        switching between e.g. NormalZ and Chorig2, so we let the
+        full recalc handle it (same path as a gewebe edit).       */
+    auto runRecalc = [this] {
+        RecalcAll();
+        CalcRapport();
+        UpdateRapport();
+        UpdateStatusBar();
+        refresh();
+        SetModified();
+        if (undo)
+            undo->Snapshot();
+    };
+    for (QAction* a : { EzMinimalZ, EzMinimalS, EzGeradeZ, EzGeradeS,
+                        EzChorig2, EzChorig3, EzBelassen })
+        connect(a, &QAction::triggered, this, runRecalc);
+
     /*  ---------- Tre&adling (MenuTrittfolge) ---------------- */
     treadMenu = addMenu(menuBar(), "Tre&adling", "&Trittfolge");
     QAction* actTfSpiegeln = menuAct(treadMenu, "&Mirror", "&Spiegeln", nullptr,
@@ -663,21 +680,13 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     registerLang(TfMinimalS, QStringLiteral("Normal &falling"), QStringLiteral("Normal &fallend"),
                  QStringLiteral("Arranges the treadling falling"),
                  QStringLiteral("Ordnet die Trittfolge fallend an"));
-    registerLang(TfGeradeZ, QStringLiteral("&Straight rising"),
-                 QStringLiteral("&Gerade steigend"),
-                 QStringLiteral("Arranges the treadling straight rising"),
-                 QStringLiteral("Ordnet die Trittfolge gerade steigend an"));
-    registerLang(TfGeradeS, QStringLiteral("S&traight falling"),
-                 QStringLiteral("G&erade fallend"),
-                 QStringLiteral("Arranges the treadling straight falling"),
-                 QStringLiteral("Ordnet die Trittfolge gerade fallend an"));
     registerLang(TfGesprungen, QStringLiteral("Cr&ossed"), QStringLiteral("Gesp&rungen"),
                  QStringLiteral("Arranges the treadling crossed"),
                  QStringLiteral("Ordnet die Trittfolge gesprungen an"));
     registerLang(TfBelassen, QStringLiteral("Fi&xed"), QStringLiteral("Fi&xiert"),
                  QStringLiteral("Tries to leave the treadling as is"),
                  QStringLiteral("Versucht die Trittfolge so zu belassen wie sie ist"));
-    for (QAction* a : { TfMinimalZ, TfMinimalS, TfGeradeZ, TfGeradeS, TfGesprungen, TfBelassen }) {
+    for (QAction* a : { TfMinimalZ, TfMinimalS, TfGesprungen, TfBelassen }) {
         tfGroup->addAction(a);
         treadMenu->addAction(a);
     }
@@ -689,6 +698,14 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     connect(actTfSpiegeln, &QAction::triggered, this, [this] { TfSpiegelnClick(); });
     connect(actClearTf, &QAction::triggered, this, [this] { ClearTrittfolgeClick(); });
     connect(actCopyTfEz, &QAction::triggered, this, [this] { CopyTrittfolgeEinzugClick(); });
+
+    /*  Trittfolge style radio items -- same full-recalc path as
+        einzug (see above). TfBelassen goes through the same path;
+        RearrangeTritte checks TfBelassen internally and skips the
+        reorder step, so the recalc still rebuilds trittfolge but
+        leaves treadle order alone.                                */
+    for (QAction* a : { TfMinimalZ, TfMinimalS, TfGesprungen, TfBelassen })
+        connect(a, &QAction::triggered, this, runRecalc);
 
     /*  ---------- &Pegplan (MenuSchlagpatrone) --------------- */
     spMenu = addMenu(menuBar(), "&Pegplan", "&Schlagpatrone");
@@ -934,10 +951,20 @@ TDBWFRM::TDBWFRM(QWidget* parent)
 
     /*  ---------- E&xtras (MenuExtras) ----------------------- */
     QMenu* extrasMenu = addMenu(menuBar(), "E&xtras", "E&xtras");
-    QAction* actLockGewebe = menuAct(extrasMenu, "Pattern &locked", "&Bindung gesperrt", nullptr,
-                                     "Locks the pattern; No changes can be made anymore",
-                                     "Sperrt die Bindung; Keine Änderungen mehr möglich");
-    actLockGewebe->setEnabled(false);
+    OptionsLockGewebe = menuAct(extrasMenu, "Pattern &locked", "&Bindung gesperrt", nullptr,
+                                "Locks the pattern; No changes can be made anymore",
+                                "Sperrt die Bindung; Keine Änderungen mehr möglich");
+    OptionsLockGewebe->setCheckable(true);
+    connect(OptionsLockGewebe, &QAction::toggled, this, [this](bool) {
+        /*  Status-bar shows "Bindung gesperrt" while locked. If the
+            cursor is currently sitting on gewebe when the lock turns
+            on, move it to the next traversable field -- gewebe is
+            now skipped by Tab / Shift-Tab and by mouse clicks.     */
+        if (OptionsLockGewebe->isChecked() && kbd_field == GEWEBE && cursorhandler)
+            cursorhandler->GotoNextField();
+        UpdateStatusBar();
+        refresh();
+    });
     QMenu* cursorMenu = addSubmenu(extrasMenu, "&Cursor", "&Cursor");
     QAction* actCursorLocked = menuAct(cursorMenu, "&Contained", "&In Rapport", nullptr,
                                        "Restricts the cursor position within the repeat",

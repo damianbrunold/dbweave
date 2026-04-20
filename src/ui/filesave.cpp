@@ -193,8 +193,12 @@ bool TDBWFRM::Save()
         };
         QAction* ezActs[8] = { EzFixiert,  EzMinimalZ, EzMinimalS, EzGeradeZ,
                                EzGeradeS,  EzBelassen, EzChorig2,  EzChorig3 };
+        /*  Slots 3 and 4 (formerly TfGeradeZ / TfGeradeS) are kept as
+            nullptr so the persisted style index stays compatible with
+            files written by older versions; those styles were never
+            implemented and the menu entries have been removed.      */
         QAction* tfActs[6] = { TfBelassen, TfMinimalZ,   TfMinimalS,
-                               TfGeradeZ,  TfGeradeS,    TfGesprungen };
+                               nullptr,    nullptr,      TfGesprungen };
 
         writer.BeginSection("view", "Ansicht");
         writer.BeginSection("general");
@@ -245,6 +249,8 @@ bool TDBWFRM::Save()
         else if (GewebeNone && GewebeNone->isChecked())
             g = 3;
         writer.WriteFieldInt("state", g);
+        writer.WriteFieldInt("locked",
+                             (OptionsLockGewebe && OptionsLockGewebe->isChecked()) ? 1 : 0);
         writer.WriteFieldInt("withgrid", fewithraster ? 1 : 0);
         writer.EndSection();
 

@@ -57,6 +57,8 @@ int TDBWFRM::SelectUserdef(const QString& _title)
 /*-----------------------------------------------------------------*/
 void TDBWFRM::InsertUserdef(int _i, bool _transparent)
 {
+    if (GewebeLocked())
+        return;
     dbw3_assert(_i >= 0);
     dbw3_assert(_i < MAXUSERDEF);
 

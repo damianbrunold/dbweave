@@ -150,10 +150,6 @@ void UrUndoItem::SetData(TDBWFRM* _mainfrm)
         trittfolgenstil = _mainfrm->TfMinimalZ;
     else if (_mainfrm->TfMinimalS && _mainfrm->TfMinimalS->isChecked())
         trittfolgenstil = _mainfrm->TfMinimalS;
-    else if (_mainfrm->TfGeradeZ && _mainfrm->TfGeradeZ->isChecked())
-        trittfolgenstil = _mainfrm->TfGeradeZ;
-    else if (_mainfrm->TfGeradeS && _mainfrm->TfGeradeS->isChecked())
-        trittfolgenstil = _mainfrm->TfGeradeS;
     else if (_mainfrm->TfGesprungen && _mainfrm->TfGesprungen->isChecked())
         trittfolgenstil = _mainfrm->TfGesprungen;
     else if (_mainfrm->TfBelassen && _mainfrm->TfBelassen->isChecked())

@@ -25,6 +25,8 @@ void TDBWFRM::KoeperEinfuegen(int _h, int _s)
 {
     if (kbd_field != GEWEBE)
         return;
+    if (GewebeLocked())
+        return;
 
     const int posi = gewebe.kbd.i + scroll_x1;
     const int posj = gewebe.kbd.j + scroll_y2;
@@ -71,6 +73,8 @@ static inline void FSet(FeldGridChar& _m, int _i, int _j, char _s)
 void TDBWFRM::AtlasEinfuegen(int _n)
 {
     if (kbd_field != GEWEBE)
+        return;
+    if (GewebeLocked())
         return;
 
     const int posi = gewebe.kbd.i + scroll_x1;

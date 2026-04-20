@@ -149,6 +149,8 @@ void TDBWFRM::DeleteKetteClick()
     dbw3_assert(kbd_field == EINZUG || kbd_field == GEWEBE);
     if (!(kbd_field == EINZUG || kbd_field == GEWEBE))
         return;
+    if (GewebeLocked())
+        return;
 
     if (selection.Valid() && (selection.feld == GEWEBE || selection.feld == EINZUG)) {
         for (int i = selection.begin.i; i <= selection.end.i; i++)
@@ -174,6 +176,8 @@ void TDBWFRM::DeleteSchussClick()
 {
     dbw3_assert(kbd_field == TRITTFOLGE || kbd_field == GEWEBE);
     if (!(kbd_field == TRITTFOLGE || kbd_field == GEWEBE))
+        return;
+    if (GewebeLocked())
         return;
 
     if (selection.Valid() && (selection.feld == GEWEBE || selection.feld == TRITTFOLGE)) {

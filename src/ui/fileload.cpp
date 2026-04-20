@@ -700,10 +700,12 @@ void FhLoader::LoadViewGeneral(FfReader* _reader)
 void FhLoader::LoadViewGewebe(FfReader* _reader)
 {
     int state = 0; /* 0=Normal 1=Farbeffekt 2=Simulation 3=None */
+    int locked = 0;
     int withgrid = mainfrm->fewithraster ? 1 : 0;
     BEGIN_LOAD_MAP
     BEGIN_FIELD_MAP
     _FIELD_MAP_INT("state", state, int)
+    FIELD_MAP_INT("locked", locked, int)
     FIELD_MAP_INT("withgrid", withgrid, int)
     DEFAULT_FIELD
     BEGIN_SECTION_MAP
@@ -714,6 +716,7 @@ void FhLoader::LoadViewGewebe(FfReader* _reader)
     setChecked(mainfrm->GewebeFarbeffekt, state == 1);
     setChecked(mainfrm->GewebeSimulation, state == 2);
     setChecked(mainfrm->GewebeNone, state == 3);
+    setChecked(mainfrm->OptionsLockGewebe, locked != 0);
     mainfrm->fewithraster = (withgrid != 0);
 }
 /*-----------------------------------------------------------------*/
@@ -804,8 +807,10 @@ void FhLoader::LoadViewTrittfolge(FfReader* _reader)
     case 0: setChecked(mainfrm->TfBelassen, true); break;
     case 1: setChecked(mainfrm->TfMinimalZ, true); break;
     case 2: setChecked(mainfrm->TfMinimalS, true); break;
-    case 3: setChecked(mainfrm->TfGeradeZ, true); break;
-    case 4: setChecked(mainfrm->TfGeradeS, true); break;
+    /*  Styles 3/4 (Gerade rising/falling) were never implemented;
+        legacy files saved with those indices fall back to MinimalZ. */
+    case 3:
+    case 4: setChecked(mainfrm->TfMinimalZ, true); break;
     case 5: setChecked(mainfrm->TfGesprungen, true); break;
     default: setChecked(mainfrm->TfMinimalZ, true); break;
     }

@@ -216,6 +216,8 @@ void ImportBmpDialog::accept()
     the origin. Matches legacy importbmp.cpp one-to-one.          */
 void TDBWFRM::ImportBitmapClick()
 {
+    if (GewebeLocked())
+        return;
     const QString fn = QFileDialog::getOpenFileName(
         this, LANG_STR("Import picture", "Bild importieren"), QString(),
         LANG_STR("Images (*.bmp *.png *.jpg *.jpeg *.gif);;All files (*)",

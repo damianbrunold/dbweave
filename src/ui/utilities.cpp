@@ -31,6 +31,10 @@ void TDBWFRM::FillKoeper()
         selection = savesel;
         return;
     }
+    if (GewebeLocked()) {
+        selection = savesel;
+        return;
+    }
 
     if (selection.begin.i == selection.end.i) {
         /*  Vertical seed: extend diagonally to the right. */

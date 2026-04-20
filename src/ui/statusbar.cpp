@@ -153,8 +153,11 @@ void TDBWFRM::UpdateStatusBar()
     }
     sbRapport->setText(rap);
 
-    /*  Zoom. */
-    static const int ZOOM_PX[10] = { 5, 7, 9, 11, 13, 15, 17, 19, 21, 23 };
-    const int z = (currentzoom < 0 ? 0 : (currentzoom > 9 ? 9 : currentzoom));
-    sbZoom->setText(QStringLiteral("Zoom: %1 px").arg(ZOOM_PX[z]));
+    /*  Lock indicator -- replaces the legacy zoom-in-pixels panel.
+        Only shown while OptionsLockGewebe is checked; blank otherwise
+        so the space doesn't draw attention when not meaningful.    */
+    if (OptionsLockGewebe && OptionsLockGewebe->isChecked())
+        sbZoom->setText(LANG_STR("Pattern locked", "Bindung gesperrt"));
+    else
+        sbZoom->setText(QString());
 }

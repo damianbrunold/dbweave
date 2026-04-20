@@ -135,6 +135,8 @@ bool TDBWFRM::CopySelection(bool _movecursor)
 /*-----------------------------------------------------------------*/
 void TDBWFRM::CutSelection()
 {
+    if (selection.feld == GEWEBE && GewebeLocked())
+        return;
     RANGE savesel = selection;
     if (CopySelection(/*_movecursor=*/false)) {
         selection = savesel;
@@ -148,6 +150,8 @@ void TDBWFRM::CutSelection()
 /*-----------------------------------------------------------------*/
 void TDBWFRM::PasteSelection(bool _transparent)
 {
+    if (kbd_field == GEWEBE && GewebeLocked())
+        return;
     const QString s = QApplication::clipboard()->text();
     if (!s.startsWith(QLatin1String("dbw")))
         return;
@@ -263,6 +267,8 @@ void TDBWFRM::PasteSelection(bool _transparent)
 /*-----------------------------------------------------------------*/
 void TDBWFRM::DeleteSelection()
 {
+    if (selection.feld == GEWEBE && GewebeLocked())
+        return;
     RANGE savesel = selection;
     selection.Normalize();
     if (!selection.Valid()) {
@@ -311,6 +317,8 @@ void TDBWFRM::DeleteSelection()
 /*-----------------------------------------------------------------*/
 void TDBWFRM::InvertSelection()
 {
+    if (selection.feld == GEWEBE && GewebeLocked())
+        return;
     RANGE savesel = selection;
     selection.Normalize();
     if (!selection.Valid()) {
@@ -362,6 +370,8 @@ void TDBWFRM::InvertSelection()
 /*-----------------------------------------------------------------*/
 void TDBWFRM::MirrorHorzSelection()
 {
+    if (selection.feld == GEWEBE && GewebeLocked())
+        return;
     RANGE savesel = selection;
     selection.Normalize();
     if (!selection.Valid()) {
@@ -419,6 +429,8 @@ void TDBWFRM::MirrorHorzSelection()
 /*-----------------------------------------------------------------*/
 void TDBWFRM::MirrorVertSelection()
 {
+    if (selection.feld == GEWEBE && GewebeLocked())
+        return;
     RANGE savesel = selection;
     selection.Normalize();
     if (!selection.Valid()) {
@@ -476,6 +488,8 @@ void TDBWFRM::MirrorVertSelection()
 /*-----------------------------------------------------------------*/
 void TDBWFRM::RotateSelection()
 {
+    if (selection.feld == GEWEBE && GewebeLocked())
+        return;
     RANGE savesel = selection;
     selection.Normalize();
     if (!selection.Valid()) {
@@ -553,6 +567,8 @@ static void rollTrittfolgeEmpty(TDBWFRM*, int, int)
 
 void TDBWFRM::RollUpSelection()
 {
+    if (selection.feld == GEWEBE && GewebeLocked())
+        return;
     RANGE savesel = selection;
     selection.Normalize();
     if (!selection.Valid()) {
@@ -613,6 +629,8 @@ void TDBWFRM::RollUpSelection()
 
 void TDBWFRM::RollDownSelection()
 {
+    if (selection.feld == GEWEBE && GewebeLocked())
+        return;
     RANGE savesel = selection;
     selection.Normalize();
     if (!selection.Valid()) {
@@ -673,6 +691,8 @@ void TDBWFRM::RollDownSelection()
 
 void TDBWFRM::RollLeftSelection()
 {
+    if (selection.feld == GEWEBE && GewebeLocked())
+        return;
     RANGE savesel = selection;
     selection.Normalize();
     if (!selection.Valid()) {
@@ -730,6 +750,8 @@ void TDBWFRM::RollLeftSelection()
 
 void TDBWFRM::RollRightSelection()
 {
+    if (selection.feld == GEWEBE && GewebeLocked())
+        return;
     RANGE savesel = selection;
     selection.Normalize();
     if (!selection.Valid()) {
@@ -788,6 +810,8 @@ void TDBWFRM::RollRightSelection()
 /*-----------------------------------------------------------------*/
 void TDBWFRM::CentralsymSelection()
 {
+    if (selection.feld == GEWEBE && GewebeLocked())
+        return;
     RANGE savesel = selection;
     selection.Normalize();
     if (!selection.Valid()) {
@@ -875,6 +899,8 @@ void TDBWFRM::CentralsymSelection()
 /*-----------------------------------------------------------------*/
 void TDBWFRM::SwitchRange(int _range)
 {
+    if (selection.feld == GEWEBE && GewebeLocked())
+        return;
     RANGE savesel = selection;
     selection.Normalize();
     if (!selection.Valid()) {

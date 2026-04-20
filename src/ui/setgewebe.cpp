@@ -32,6 +32,8 @@ void TDBWFRM::SetGewebe(int _i, int _j, bool _set, int _range)
 {
     if (GewebeNone && GewebeNone->isChecked())
         return;
+    if (GewebeLocked())
+        return;
 
     QCursor oldcursor = cursor();
     setCursor(Qt::WaitCursor);

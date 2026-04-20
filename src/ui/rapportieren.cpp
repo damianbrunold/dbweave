@@ -169,6 +169,8 @@ void TDBWFRM::ClearSchussfaden(int _j)
 /*-----------------------------------------------------------------*/
 void TDBWFRM::RappRapportierenClick()
 {
+    if (GewebeLocked())
+        return;
     RapportDialog dlg(this);
     dlg.setRepeatAll(false);
     const int kx = kette.b - kette.a + 1;
@@ -204,6 +206,8 @@ void TDBWFRM::RappRapportierenClick()
 /*-----------------------------------------------------------------*/
 void TDBWFRM::RappReduzierenClick()
 {
+    if (GewebeLocked())
+        return;
     RapportKette(1, false);
     RapportSchuss(1, false);
     if (EzFixiert && EzFixiert->isChecked())

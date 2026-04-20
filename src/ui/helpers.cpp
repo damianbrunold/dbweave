@@ -19,10 +19,21 @@
 #include "mainwindow.h"
 #include "datamodule.h"
 #include "undoredo.h"
+#include <QAction>
+#include <QApplication>
 #include <algorithm>
 #include <cstring>
 /*-----------------------------------------------------------------*/
 using std::max;
+/*-----------------------------------------------------------------*/
+bool TDBWFRM::GewebeLocked()
+{
+    if (OptionsLockGewebe && OptionsLockGewebe->isChecked()) {
+        QApplication::beep();
+        return true;
+    }
+    return false;
+}
 /*-----------------------------------------------------------------*/
 void TDBWFRM::ToggleGewebe(int _i, int _j)
 {

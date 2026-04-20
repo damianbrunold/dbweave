@@ -140,6 +140,10 @@ void TDBWFRM::handleCanvasMousePress(int _x, int _y, bool _shift, bool _ctrl)
     Physical2Logical(_x, _y, f, i, j);
     if (f == INVALID)
         return;
+    /*  Locked gewebe rejects all mouse input: no cursor move, no
+        selection, no tool drag. Beep for feedback, like SetGewebe.  */
+    if (f == GEWEBE && GewebeLocked())
+        return;
 
     mousedown = true;
     md_feld = f;

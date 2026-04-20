@@ -222,10 +222,6 @@ g_weiter2:
                     if (i2 <= i1)
                         goto g_end;
                 }
-    } else if (TfGeradeZ && TfGeradeZ->isChecked()) {
-        // xxxx RTD (legacy tag -- "to do")
-    } else if (TfGeradeS && TfGeradeS->isChecked()) {
-        // xxxx RTD (legacy tag -- "to do")
     } else if (TfGesprungen && TfGesprungen->isChecked()) {
         int b = 0;
         for (j = schuesse.a; j <= schuesse.b; j++)

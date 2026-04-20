@@ -20,6 +20,7 @@
 #include "datamodule.h"
 #include "assert_compat.h"
 
+#include <QAction>
 #include <QCursor>
 
 #include <algorithm>
@@ -355,6 +356,11 @@ void TDBWFRM::RecalcAll()
     /*  Diese Funktion sollte nur fuer die Bereichsmanipulationen
         eingesetzt werden. Deshalb wird das Undo hier nicht
         nachgefuehrt, da es dort schon wird.                     */
+    /*  When the pattern is locked, einzug / trittfolge / aufknuepfung
+        must not be rebuilt from gewebe -- the user has chosen to
+        build them by hand and a recalc would destroy that work.    */
+    if (OptionsLockGewebe && OptionsLockGewebe->isChecked())
+        return;
     QCursor old = cursor();
     setCursor(Qt::WaitCursor);
 

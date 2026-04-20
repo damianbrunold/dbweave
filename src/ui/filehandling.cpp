@@ -147,6 +147,8 @@ void TDBWFRM::ResetDocument()
         ViewHlines->setChecked(true);
     if (Inverserepeat)
         Inverserepeat->setChecked(false);
+    if (OptionsLockGewebe)
+        OptionsLockGewebe->setChecked(false);
     fewithraster = false;
     /*  Orientation / shed / reed visibility follow the user's saved
         Grundeinstellung. Ensures that File > New creates a document
