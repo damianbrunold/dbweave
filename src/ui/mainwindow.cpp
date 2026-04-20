@@ -14,6 +14,7 @@
 #include "palettepanel.h"
 #include "aboutdialog.h"
 #include "techinfodialog.h"
+#include "overviewdialog.h"
 #include "undoredo.h"
 #include "rapport.h"
 #include "einzug.h"
@@ -582,7 +583,10 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         = menuAct(viewMenu, "Overv&iew", "Übe&rsicht", nullptr, "Enters an overview-mode",
                   "Schaltet in einen Übersichtsmodus um");
     actOverview->setShortcut(QKeySequence(Qt::Key_F4));
-    actOverview->setEnabled(false);
+    connect(actOverview, &QAction::triggered, this, [this] {
+        OverviewDialog dlg(this, this);
+        dlg.exec();
+    });
 
     connect(actZoomIn, &QAction::triggered, this, [this] { zoomIn(); });
     connect(actZoomOut, &QAction::triggered, this, [this] { zoomOut(); });

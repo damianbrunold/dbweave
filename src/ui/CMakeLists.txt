@@ -52,6 +52,7 @@ add_library(dbweave_ui STATIC
     loadpartsdialog.cpp
     aboutdialog.cpp
     techinfodialog.cpp
+    overviewdialog.cpp
     envoptionsdialog.cpp
     xoptionsdialog.cpp
     properties.cpp
