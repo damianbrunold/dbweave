@@ -172,6 +172,70 @@ private slots:
         PUNKT dot) are inherently 1-pixel biased on even widths -- a
         consequence of putting 2 pixels around an integer axis, not
         of the painter code -- so the even case is skipped here.   */
+    /*  Same mirror-symmetry check at a cell width that triggers
+        the 3-pixel stroke ramp. Only fillRect-based symbols are
+        pixel-symmetric at wider strokes: Qt's aliased rasteriser
+        rounds SquareCap extensions on diagonals and ellipse
+        outlines asymmetrically by 1-2 pixels -- a known Qt
+        limitation, not our arithmetic. The visible asymmetry is
+        below perception at the thick-pen sizes where it occurs. */
+    void symbols_are_mirror_symmetric_at_large_width()
+    {
+        constexpr int OSZ = 29; /* odd, in the 3-pixel stroke regime */
+        struct Case {
+            DARSTELLUNG d;
+            const char* name;
+        };
+        const Case cases[] = {
+            { STRICH, "STRICH" },
+            { PUNKT, "PUNKT" },
+            { AUSGEFUELLT, "AUSGEFUELLT" },
+        };
+        for (const Case& c : cases) {
+            QImage img(OSZ + 1, OSZ + 1, QImage::Format_ARGB32);
+            img.fill(Qt::white);
+            {
+                QPainter p(&img);
+                PaintCell(p, c.d, 0, 0, OSZ, OSZ, QColor(Qt::black), false, -1, QColor(Qt::white));
+            }
+            for (int y = 0; y <= OSZ; y++) {
+                for (int x = 0; x <= OSZ; x++) {
+                    const QRgb p = img.pixel(x, y);
+                    QVERIFY2(img.pixel(OSZ - x, y) == p,
+                             qPrintable(QString("%1: horizontal asymmetry at (%2,%3)")
+                                            .arg(c.name)
+                                            .arg(x)
+                                            .arg(y)));
+                    QVERIFY2(img.pixel(x, OSZ - y) == p,
+                             qPrintable(QString("%1: vertical asymmetry at (%2,%3)")
+                                            .arg(c.name)
+                                            .arg(x)
+                                            .arg(y)));
+                }
+            }
+        }
+    }
+
+    /*  Stroke thickness should actually grow with cell size --
+        otherwise symbols look hair-thin at high zoom.         */
+    void strokes_scale_with_cell_size()
+    {
+        auto drawKreuz = [](int sz) {
+            QImage img(sz + 1, sz + 1, QImage::Format_ARGB32);
+            img.fill(Qt::white);
+            QPainter p(&img);
+            PaintCell(p, KREUZ, 0, 0, sz, sz, QColor(Qt::black), false, -1, QColor(Qt::white));
+            return img;
+        };
+        const int small = countFG(drawKreuz(20));
+        const int large = countFG(drawKreuz(40));
+        /*  Small: two 1-pixel diagonals of length ~17 -> ~33 FG.
+            Large: two 5-pixel-thick diagonals of length ~35    ->
+            roughly 5x more. Use a conservative 3x floor.       */
+        QVERIFY2(large > small * 3,
+                 qPrintable(QString("expected large (%1) > 3 * small (%2)").arg(large).arg(small)));
+    }
+
     void symbols_are_mirror_symmetric()
     {
         constexpr int OSZ = 21; /* odd cell width */
