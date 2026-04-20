@@ -877,9 +877,9 @@ TDBWFRM::TDBWFRM(QWidget* parent)
                   "Ersetzt die Farbe an der Cursorposition global");
     colorMenu->addSeparator();
     QAction* actKwieS = menuAct(colorMenu, "Warp colors as weft colors", "Kett- wie Schussfarben");
-    actKwieS->setEnabled(false);
+    connect(actKwieS, &QAction::triggered, this, [this] { KettfarbenWieSchussfarbenClick(); });
     QAction* actSwieK = menuAct(colorMenu, "Weft colors as warp colors", "Schuss- wie Kettfarben");
-    actSwieK->setEnabled(false);
+    connect(actSwieK, &QAction::triggered, this, [this] { SchussfarbenWieKettfarbenClick(); });
     QAction* actSwapCols
         = menuAct(colorMenu, "&Switch colors", "F&arben vertauschen", nullptr,
                   "Switches warp and weft colors", "Vertauscht Kett- und Schussfarben");
@@ -1215,6 +1215,14 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         });
         cursorTimer->start();
     }
+
+    /*  Seed the undo stack with a snapshot of the fresh-document
+        state so the user's first action on the startup document is
+        undoable. Without this, UrUndo::Undo() returns false because
+        current->Prev() is still empty (ResetDocument takes the same
+        snapshot on File > New).                                  */
+    if (undo)
+        undo->Snapshot();
 }
 
 TDBWFRM::~TDBWFRM()

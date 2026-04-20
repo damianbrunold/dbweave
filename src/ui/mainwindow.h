@@ -848,6 +848,8 @@ public:
     void SetSchussfarbeClick();
     void ReplaceColorClick();
     void SwitchColorsClick();
+    void KettfarbenWieSchussfarbenClick();
+    void SchussfarbenWieKettfarbenClick();
     void BlockExpandEinzug(int _count);
     void BlockExpandTrittfolge(int _count);
     void BlockExpandAufknuepfung(int _x, int _y);

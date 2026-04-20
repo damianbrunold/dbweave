@@ -21,6 +21,8 @@
 #include "undoredo.h"
 #include "choosecolordialog.h"
 
+#include <algorithm>
+
 /*-----------------------------------------------------------------*/
 int TDBWFRM::SelectColorIndex(int _index)
 {
@@ -113,6 +115,41 @@ void TDBWFRM::SwitchColorsClick()
         kettfarben.feld.Set(i, schussfarben.feld.Get(i));
         schussfarben.feld.Set(i, col);
     }
+    refresh();
+    SetModified();
+    if (undo)
+        undo->Snapshot();
+}
+
+/*-----------------------------------------------------------------*/
+/*  Overwrite every warp colour with the matching weft colour up to
+    the min of the two axis lengths; pad any remaining warp indices
+    with the default weft colour. Verbatim port of legacy
+    KettfarbenWieSchussfarbenClick. */
+void TDBWFRM::KettfarbenWieSchussfarbenClick()
+{
+    const int maxi = std::min(int(Data->MAXY2), int(Data->MAXX1));
+    for (int j = 0; j < maxi; j++)
+        kettfarben.feld.Set(j, schussfarben.feld.Get(j));
+    if (Data->MAXY2 > Data->MAXX1)
+        for (int j = Data->MAXX1; j < Data->MAXY2; j++)
+            kettfarben.feld.Set(j, char(DEFAULT_COLORV));
+    refresh();
+    SetModified();
+    if (undo)
+        undo->Snapshot();
+}
+
+/*-----------------------------------------------------------------*/
+void TDBWFRM::SchussfarbenWieKettfarbenClick()
+{
+    const int maxi = std::min(int(Data->MAXX1), int(Data->MAXY2));
+    for (int i = 0; i < maxi; i++)
+        schussfarben.feld.Set(i, kettfarben.feld.Get(i));
+    /*  Legacy pads with DEFAULT_COLORH up to MAXY1 when MAXX1>MAXY2;
+        the target is schussfarben which is bounded by MAXY2, so the
+        loop is capped at MAXY2 here (the legacy loop beyond MAXY2
+        would have written out of bounds). */
     refresh();
     SetModified();
     if (undo)
