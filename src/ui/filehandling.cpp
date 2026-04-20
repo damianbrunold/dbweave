@@ -100,9 +100,8 @@ void TDBWFRM::ResetDocument()
         klammern[i].repetitions = 0;
     }
 
-    /*  Fix-einzug state. */
-    delete[] fixeinzug;
-    fixeinzug = nullptr;
+    /*  Fix-einzug state. AllocBuffersX1 above already (re)allocated
+        fixeinzug zero-initialised; just reset the companion counters. */
     firstfree = 1;
     fixsize = 0;
 

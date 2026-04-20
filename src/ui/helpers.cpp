@@ -173,6 +173,17 @@ void TDBWFRM::AllocBuffersX1()
     blatteinzug.feld.Resize(Data->MAXX1, 0);
     gewebe.feld.Resize(Data->MAXX1, Data->MAXY2, 0);
     resizeScratch(xbuf, Data->MAXX1);
+    /*  Match legacy AllocBuffersX1: always provide a zero-initialised
+        fixeinzug buffer sized to MAXX1 so EditFixeinzug and the
+        RecalcEinzugFixiert path can populate it on demand. Without
+        this, a freshly-created document (or a .dbw loaded without a
+        fixeinzug section) leaves fixeinzug == nullptr and the
+        "Benutzerdefiniert..." dialog silently bails out. */
+    delete[] fixeinzug;
+    fixeinzug = new short[Data->MAXX1];
+    std::memset(fixeinzug, 0, Data->MAXX1 * sizeof(short));
+    firstfree = 0;
+    fixsize = 0;
 }
 /*-----------------------------------------------------------------*/
 void TDBWFRM::AllocBuffersX2()

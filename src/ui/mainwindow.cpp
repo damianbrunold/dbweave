@@ -120,6 +120,12 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     /*  Scratch buffers for RcRecalcAll. */
     xbuf = new char[Data->MAXX1];
     ybuf = new char[Data->MAXY2];
+    /*  Fixeinzug snapshot buffer (legacy allocated this in
+        AllocBuffersX1, which the Qt port only runs via the file
+        loader). Without it, EditFixeinzug bails out on the startup
+        document because fixeinzug == nullptr.                   */
+    fixeinzug = new short[Data->MAXX1];
+    std::memset(fixeinzug, 0, Data->MAXX1 * sizeof(short));
 
     /*  Blockmuster undo ring. Allocated once per mainwindow; the
         Muster array it references lives as member state so no

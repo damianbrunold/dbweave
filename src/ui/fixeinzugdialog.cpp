@@ -293,7 +293,20 @@ FixeinzugDialog::FixeinzugDialog(TDBWFRM* _frm, QWidget* _parent)
     sbH = new QScrollBar(Qt::Horizontal, this);
     sbH->setRange(0, Data->MAXX1);
     sbH->setPageStep(32);
-    connect(sbH, &QScrollBar::valueChanged, this, [this](int _v) { canvas->setScrollX(_v); });
+    /*  Under righttoleft the canvas mirrors the warp axis (warp 0 is
+        drawn at the right edge), so invert the scrollbar value the
+        same way the main pattern canvas does: thumb-at-right then
+        corresponds to "warp 0 visible on the right" (scrollx=0),
+        thumb-at-left corresponds to the highest-warp end.         */
+    connect(sbH, &QScrollBar::valueChanged, this, [this](int _v) {
+        const int sx = frm->righttoleft ? sbH->maximum() - _v : _v;
+        canvas->setScrollX(sx);
+    });
+    /*  Seed initial thumb position so a rtl document opens with
+        scrollx=0 (warp 0 rightmost) instead of at the mirrored
+        extreme. */
+    if (frm->righttoleft)
+        sbH->setValue(sbH->maximum());
 
     /*  Menu bar hosted on a QWidget parent (QDialog has no native
         menu-bar slot). */

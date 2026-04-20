@@ -242,7 +242,25 @@ void TDBWFRM::DrawEinzug(int _i, int _j)
     /*  einzug.feld holds 1-based shaft indices; cell (_i, _j) is set
         when einzug[scroll_x1+_i] - 1 == scroll_y1+_j. */
     if (einzug.feld.Get(scroll_x1 + _i) - 1 == (scroll_y1 + _j)) {
-        PaintCell(*p, einzug.darstellung, x, y, xx, yy, QColor(Qt::black), /*dontclear=*/false,
+        /*  When the einzug is fixated (fixeinzug snapshot present),
+            highlight threads whose shaft assignment no longer matches
+            the snapshot. fixeinzug is packed (empty warps skipped) and
+            tiled across MAXX1 by UpdateEinzugFixiert, so the snapshot
+            slot for warp w is fixeinzug[count of non-empty warps
+            strictly before w]. Drawn in red to make mismatches
+            obvious while the user is editing; matches stay black. */
+        QColor cellColor(Qt::black);
+        const int warp = scroll_x1 + _i;
+        const bool fixActive = EzFixiert && EzFixiert->isChecked();
+        if (fixActive && fixeinzug && fixeinzug[0] != 0) {
+            int k = 0;
+            for (int n = 0; n < warp; n++)
+                if (einzug.feld.Get(n) != 0)
+                    k++;
+            if (einzug.feld.Get(warp) != fixeinzug[k])
+                cellColor = QColor(Qt::red);
+        }
+        PaintCell(*p, einzug.darstellung, x, y, xx, yy, cellColor, /*dontclear=*/false,
                   scroll_y1 + _j, bkground);
     } else {
         ClearCell(*p, x, y, xx, yy, bkground);
