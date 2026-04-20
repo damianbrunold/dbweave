@@ -15,6 +15,10 @@
 #include <QIcon>
 #include <QLocale>
 #include <QMessageBox>
+#include <QPalette>
+#include <QStyle>
+#include <QStyleFactory>
+#include <QStyleHints>
 
 #include "datamodule.h"
 #include "language.h"
@@ -43,6 +47,49 @@ int main(int argc, char* argv[])
         Qt::HighDpiScaleFactorRoundingPolicy::Round);
 
     QApplication app(argc, argv);
+
+    /*  Force the light color scheme unconditionally: the shipped menu
+        and toolbar icons are drawn for a light background, so a
+        system-level dark scheme produces unusable contrast against
+        them. Revisit once the port ships dark-mode-aware icon sets
+        and a real theme selector.
+
+        We force the Fusion style plus an explicit light palette.
+        styleHints()->setColorScheme() alone isn't enough on Linux:
+        the native platform theme plugin (Breeze / Adwaita / ...)
+        reads the desktop's color scheme directly and paints menus
+        and toolbars dark regardless. Swapping in Fusion bypasses
+        the platform plugin so the palette we install here is what
+        actually gets drawn.                                        */
+#if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
+    QGuiApplication::styleHints()->setColorScheme(Qt::ColorScheme::Light);
+#endif
+    QApplication::setStyle(QStyleFactory::create(QStringLiteral("Fusion")));
+    {
+        /*  Chrome face is pulled a couple of shades darker than the
+            Windows default (240) so it meets the lightened canvas
+            (224) halfway, giving a smoother chrome-to-canvas
+            transition.                                             */
+        QPalette pal;
+        pal.setColor(QPalette::Window, QColor(232, 232, 232));
+        pal.setColor(QPalette::WindowText, Qt::black);
+        pal.setColor(QPalette::Base, Qt::white);
+        pal.setColor(QPalette::AlternateBase, QColor(238, 238, 238));
+        pal.setColor(QPalette::ToolTipBase, QColor(255, 255, 220));
+        pal.setColor(QPalette::ToolTipText, Qt::black);
+        pal.setColor(QPalette::Text, Qt::black);
+        pal.setColor(QPalette::Button, QColor(232, 232, 232));
+        pal.setColor(QPalette::ButtonText, Qt::black);
+        pal.setColor(QPalette::BrightText, Qt::red);
+        pal.setColor(QPalette::Link, QColor(0, 0, 238));
+        pal.setColor(QPalette::Highlight, QColor(0, 120, 215));
+        pal.setColor(QPalette::HighlightedText, Qt::white);
+        pal.setColor(QPalette::PlaceholderText, QColor(120, 120, 120));
+        pal.setColor(QPalette::Disabled, QPalette::WindowText, QColor(120, 120, 120));
+        pal.setColor(QPalette::Disabled, QPalette::Text, QColor(120, 120, 120));
+        pal.setColor(QPalette::Disabled, QPalette::ButtonText, QColor(120, 120, 120));
+        QApplication::setPalette(pal);
+    }
 
     /*  Legacy DB-WEAVE always showed icons next to menu entries.
         Qt defaults to hiding them on platforms whose HIG discourages

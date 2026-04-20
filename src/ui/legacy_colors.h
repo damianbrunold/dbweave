@@ -13,13 +13,17 @@
 
 #include <QColor>
 
+/*  Lightened from the legacy Windows "3DFace" (192,192,192) so the
+    canvas blends smoothly into the chrome palette (~232,232,232).
+    The shadow used for grid lines and strongline dividers is pulled
+    up in step so line contrast against the lighter face is kept. */
 inline QColor legacyBtnFace()
 {
-    return QColor(192, 192, 192);
+    return QColor(224, 224, 224);
 }
 inline QColor legacyBtnShadow()
 {
-    return QColor(128, 128, 128);
+    return QColor(160, 160, 160);
 }
 
 #endif
