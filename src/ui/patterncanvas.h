@@ -23,6 +23,7 @@
 #ifndef DBWEAVE_UI_PATTERNCANVAS_H
 #define DBWEAVE_UI_PATTERNCANVAS_H
 
+#include <QImage>
 #include <QWidget>
 
 class QScrollBar;
@@ -77,6 +78,14 @@ private:
 
     bool hoverHDivider(int _x, int _y) const;
     bool hoverVDivider(int _x, int _y) const;
+
+    /*  Off-screen back-buffer for paintEvent. Kept at DPR 1.0 so one
+        integer logical pixel in our coord system maps to exactly one
+        pixel in the image -- no fractional-DPI rounding to break the
+        symmetry of AUSGEFUELLT / PUNKT / KREUZ etc. The final blit
+        into the widget's painter lets Qt's raster engine handle any
+        screen-DPI scaling in one pass, instead of per-primitive.   */
+    QImage backbuffer;
 };
 
 #endif

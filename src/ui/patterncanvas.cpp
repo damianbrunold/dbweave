@@ -610,13 +610,30 @@ void PatternCanvas::wheelEvent(QWheelEvent* _e)
 
 void PatternCanvas::paintEvent(QPaintEvent* /*_e*/)
 {
-    QPainter p(this);
+    /*  Render into an off-screen QImage at DPR 1.0 (one logical
+        pixel in our coord system = one image pixel), then blit the
+        whole image into the widget's painter in one pass. This
+        keeps every PaintCell / DrawLine coordinate landing on
+        integer pixels inside the buffer, so AUSGEFUELLT's 1-pixel
+        margin stays symmetric even when the widget is drawn at a
+        fractional device-pixel ratio (typical on Windows at 125%
+        or 150% scaling). The final drawImage upscales uniformly to
+        the screen's device resolution.                            */
+    if (width() <= 0 || height() <= 0)
+        return;
+    if (backbuffer.size() != size() || backbuffer.isNull()) {
+        backbuffer = QImage(size(), QImage::Format_ARGB32_Premultiplied);
+        /*  DPR stays at the default 1.0 -- logical coords in the
+            image equal pixel coords.                              */
+    }
+
+    QPainter p(&backbuffer);
     p.setRenderHint(QPainter::Antialiasing, false);
 
     /*  Legacy filled the whole form with clBtnFace. Use the hard-
         coded legacy grey instead of the theme's QPalette::Button
         so the canvas stays readable on dark desktops.          */
-    p.fillRect(rect(), kLegacyBtnFace);
+    p.fillRect(backbuffer.rect(), kLegacyBtnFace);
 
     /*  Expose the painter to TDBWFRM so the legacy-style DrawX cell
         primitives can paint without each one taking a painter arg.
@@ -897,4 +914,12 @@ void PatternCanvas::paintEvent(QPaintEvent* /*_e*/)
         frm->cursorhandler->DrawCursor();
 
     frm->currentPainter = nullptr;
+    p.end();
+
+    /*  Blit the backbuffer to the widget in one pass. Any DPI
+        scaling Qt applies happens here, over the whole image, and
+        therefore cannot introduce the per-primitive rounding
+        asymmetry we were seeing on fractional-DPR Windows.      */
+    QPainter widgetPainter(this);
+    widgetPainter.drawImage(0, 0, backbuffer);
 }
