@@ -18,7 +18,7 @@ option(DBWEAVE_BUILD_TESTS "Build unit tests" ON)
 option(DBWEAVE_BUILD_LOOM  "Build loom/serial-port support (requires Qt6SerialPort)" OFF)
 
 # Qt 6.5 LTS minimum.
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets PrintSupport)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets PrintSupport Svg)
 if(DBWEAVE_BUILD_LOOM)
     find_package(Qt6 6.5 REQUIRED COMPONENTS SerialPort)
 endif()

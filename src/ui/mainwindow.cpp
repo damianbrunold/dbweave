@@ -255,9 +255,19 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         = menuAct(importMenu, "&WIF file...", "&WIF Datei...", nullptr,
                   "Imports the pattern from a WIF file", "Importiert das Muster einer WIF Datei");
     QMenu* exportMenu = addSubmenu(fileMenu, "&Export", "E&xportieren");
-    QAction* actExportBmp = menuAct(exportMenu, "&Bitmap file...", "&Bitmap Datei...", nullptr,
-                                    "Exports the pattern to a bitmap file",
-                                    "Exportiert das Muster in eine Bilddatei");
+    QAction* actExportPng
+        = menuAct(exportMenu, "&PNG file...", "&PNG Datei...", nullptr,
+                  "Exports the pattern as a PNG image", "Exportiert das Muster als PNG-Bild");
+    QAction* actExportJpeg
+        = menuAct(exportMenu, "&JPEG file...", "&JPEG Datei...", nullptr,
+                  "Exports the pattern as a JPEG image", "Exportiert das Muster als JPEG-Bild");
+    QAction* actExportSvg = menuAct(exportMenu, "&SVG file...", "&SVG Datei...", nullptr,
+                                    "Exports the pattern as an SVG vector file",
+                                    "Exportiert das Muster als SVG-Vektordatei");
+    QAction* actExportPdf
+        = menuAct(exportMenu, "PD&F file...", "PD&F Datei...", nullptr,
+                  "Exports the pattern as a PDF file", "Exportiert das Muster als PDF-Datei");
+    exportMenu->addSeparator();
     QAction* actExportWIF
         = menuAct(exportMenu, "&WIF file...", "&WIF Datei...", nullptr,
                   "Exports the pattern to a WIF file", "Exportiert das Muster in eine WIF Datei");
@@ -306,7 +316,10 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     connect(actPrint, &QAction::triggered, this, [this] { FilePrintClick(); });
     connect(actPreview, &QAction::triggered, this, [this] { FilePrintpreviewClick(); });
     connect(actImportWIF, &QAction::triggered, this, [this] { ImportWIFClick(); });
-    connect(actExportBmp, &QAction::triggered, this, [this] { DateiExportBitmapClick(); });
+    connect(actExportPng, &QAction::triggered, this, [this] { DateiExportPngClick(); });
+    connect(actExportJpeg, &QAction::triggered, this, [this] { DateiExportJpegClick(); });
+    connect(actExportSvg, &QAction::triggered, this, [this] { DateiExportSvgClick(); });
+    connect(actExportPdf, &QAction::triggered, this, [this] { DateiExportPdfClick(); });
     connect(actExportWIF, &QAction::triggered, this, [this] { DateiExportWifClick(); });
     connect(actQuit, &QAction::triggered, this, &TDBWFRM::close);
 

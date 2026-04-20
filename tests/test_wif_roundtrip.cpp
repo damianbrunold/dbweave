@@ -256,7 +256,7 @@ private slots:
         QTemporaryDir tmp;
         QVERIFY(tmp.isValid());
         const QString out = tmp.filePath("stripes.png");
-        DBWFRM->DoExportBitmap(out);
+        DBWFRM->DoExportPng(out);
 
         QImage img(out);
         QVERIFY(!img.isNull());
@@ -270,6 +270,37 @@ private slots:
                 colours.insert(img.pixel(cx + dx, cy + dy));
         QVERIFY2(colours.size() > 1, "gewebe quadrant is a single solid colour -- drawRect likely "
                                      "filled over fillRect output");
+    }
+
+    /*  Smoke-test all four exporters: each must produce a non-empty
+        file with a sensible magic header / preamble. */
+    void all_formats_produce_valid_files()
+    {
+        DBWFRM->filename = samplePath("stripes.dbw");
+        LOADSTAT stat;
+        QVERIFY(DBWFRM->Load(stat, LOADALL));
+
+        QTemporaryDir tmp;
+        QVERIFY(tmp.isValid());
+        const QString png = tmp.filePath("x.png");
+        const QString jpg = tmp.filePath("x.jpg");
+        const QString svg = tmp.filePath("x.svg");
+        const QString pdf = tmp.filePath("x.pdf");
+        DBWFRM->DoExportPng(png);
+        DBWFRM->DoExportJpeg(jpg);
+        DBWFRM->DoExportSvg(svg);
+        DBWFRM->DoExportPdf(pdf);
+
+        auto head = [](const QString& path, qint64 n) {
+            QFile f(path);
+            if (!f.open(QIODevice::ReadOnly))
+                return QByteArray();
+            return f.read(n);
+        };
+        QVERIFY2(head(png, 4).startsWith("\x89PNG"), "PNG magic");
+        QVERIFY2(head(jpg, 2).startsWith("\xFF\xD8"), "JPEG magic");
+        QVERIFY2(head(svg, 5).startsWith("<?xml"), "SVG header");
+        QVERIFY2(head(pdf, 4).startsWith("%PDF"), "PDF magic");
     }
 };
 

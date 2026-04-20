@@ -9,26 +9,33 @@
     (at your option) any later version.
 */
 
-/*  Bitmap export — a simplified Qt port of legacy exportbitmap.cpp
+/*  Pattern export — a simplified Qt port of legacy exportbitmap.cpp
     DoExportBitmap. The legacy routine is a 650-line render that
     reproduces the full screen layout on an off-screen TBitmap with
     every view-option toggle honoured (Simulation, Farbeffekt,
     Hilfslinien, blatteinzug, colour strips, rapport markers). This
     port covers the four core grids (einzug, aufknuepfung,
     trittfolge, gewebe) rendered in the active darstellung — the
-    common case. Richer options can be added as they are needed. */
+    common case.
 
-#include "mainwindow.h"
+    The paintPattern() helper targets any QPaintDevice, so the same
+    code drives raster output (PNG/JPEG) and vector output (SVG/PDF). */
+
+#include "colors_compat.h"
 #include "datamodule.h"
+#include "draw_cell.h"
+#include "mainwindow.h"
 #include "palette.h"
 #include "rangecolors.h"
-#include "draw_cell.h"
-#include "colors_compat.h"
 
 #include <QFileInfo>
 #include <QImage>
 #include <QMessageBox>
+#include <QPageLayout>
+#include <QPageSize>
 #include <QPainter>
+#include <QPdfWriter>
+#include <QSvgGenerator>
 
 static QColor qcolorFromTColor(TColor _c)
 {
@@ -42,43 +49,44 @@ static QColor paletteColor(int _idx)
 }
 
 /*-----------------------------------------------------------------*/
-void TDBWFRM::DoExportBitmap(const QString& _filename)
+void TDBWFRM::patternPixelSize(int& _w, int& _h, int _gw, int _gh, int& _shafts, int& _treadles)
 {
-    const int gw = 16;
-    const int gh = 16;
-
-    /*  Count used shafts/treadles so the exported image covers only
-        the live range, not the full MAXY1/MAXX2. */
-    int shafts = 0;
+    _shafts = 0;
     if (ViewEinzug && ViewEinzug->isChecked()) {
         for (int i = kette.a; i <= kette.b; i++) {
             const int s = einzug.feld.Get(i);
-            if (s > shafts)
-                shafts = s;
+            if (s > _shafts)
+                _shafts = s;
         }
     }
-    int treadles = 0;
+    _treadles = 0;
     if (ViewTrittfolge && ViewTrittfolge->isChecked()) {
         for (int i = Data->MAXX2 - 1; i >= 0; i--)
             for (int j = schuesse.a; j <= schuesse.b; j++)
                 if (trittfolge.feld.Get(i, j) != 0)
-                    if (treadles < i + 1)
-                        treadles = i + 1;
+                    if (_treadles < i + 1)
+                        _treadles = i + 1;
     }
+    const int sdy = _shafts != 0 ? 1 : 0;
+    const int tdx = _treadles != 0 ? 1 : 0;
+    const int dx = kette.count();
+    const int dy = schuesse.count();
+    _w = _gw * (dx + tdx + _treadles) + 1;
+    _h = _gh * (dy + sdy + _shafts) + 1;
+}
 
+/*-----------------------------------------------------------------*/
+void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _treadles)
+{
+    const int gw = _gw;
+    const int gh = _gh;
+    const int shafts = _shafts;
+    const int treadles = _treadles;
     const int sdy = shafts != 0 ? 1 : 0;
     const int tdx = treadles != 0 ? 1 : 0;
-
     const int dx = kette.count();
     const int dy = schuesse.count();
 
-    const int W = gw * (dx + tdx + treadles) + 1;
-    const int H = gh * (dy + sdy + shafts) + 1;
-
-    QImage img(W, H, QImage::Format_RGB32);
-    img.fill(QColor(212, 208, 200));
-
-    QPainter p(&img);
     p.setRenderHint(QPainter::Antialiasing, false);
     /*  PaintCell() mutates the painter's brush as a side effect;
         QPainter::drawRect honours that brush and would fill each
@@ -198,17 +206,98 @@ void TDBWFRM::DoExportBitmap(const QString& _filename)
         p.setBrush(Qt::NoBrush);
         p.drawRect(x0, y0, dx * gw, dy * gh);
     }
+}
 
+/*-----------------------------------------------------------------*/
+/*  Raster export (PNG / JPEG). */
+static bool doExportRaster(TDBWFRM* _frm, const QString& _filename, const char* _format)
+{
+    const int gw = 16;
+    const int gh = 16;
+    int W = 0, H = 0, shafts = 0, treadles = 0;
+    _frm->patternPixelSize(W, H, gw, gh, shafts, treadles);
+
+    QImage img(W, H, QImage::Format_RGB32);
+    img.fill(QColor(212, 208, 200));
+
+    QPainter p(&img);
+    _frm->paintPattern(p, gw, gh, shafts, treadles);
     p.end();
 
-    const QString suffix = QFileInfo(_filename).suffix().toLower();
-    const char* format = nullptr;
-    if (suffix == QStringLiteral("bmp"))
-        format = "BMP";
-    else if (suffix == QStringLiteral("png"))
-        format = "PNG";
-    if (!img.save(_filename, format)) {
+    return img.save(_filename, _format);
+}
+
+void TDBWFRM::DoExportPng(const QString& _filename)
+{
+    if (!doExportRaster(this, _filename, "PNG"))
         QMessageBox::warning(this, tr("Export"),
-                             tr("Failed to write bitmap file:\n%1").arg(_filename));
-    }
+                             tr("Failed to write PNG file:\n%1").arg(_filename));
+}
+
+void TDBWFRM::DoExportJpeg(const QString& _filename)
+{
+    if (!doExportRaster(this, _filename, "JPEG"))
+        QMessageBox::warning(this, tr("Export"),
+                             tr("Failed to write JPEG file:\n%1").arg(_filename));
+}
+
+/*-----------------------------------------------------------------*/
+void TDBWFRM::DoExportSvg(const QString& _filename)
+{
+    const int gw = 16;
+    const int gh = 16;
+    int W = 0, H = 0, shafts = 0, treadles = 0;
+    patternPixelSize(W, H, gw, gh, shafts, treadles);
+
+    QSvgGenerator gen;
+    gen.setFileName(_filename);
+    gen.setSize(QSize(W, H));
+    gen.setViewBox(QRect(0, 0, W, H));
+    gen.setTitle(QFileInfo(filename).fileName());
+    gen.setDescription(QStringLiteral("DB-WEAVE weaving pattern"));
+
+    QPainter p(&gen);
+    /*  The SVG generator has no background; paint one so the exported
+        file matches the raster output. */
+    p.fillRect(QRect(0, 0, W, H), QColor(212, 208, 200));
+    paintPattern(p, gw, gh, shafts, treadles);
+    const bool ok = p.end();
+    if (!ok)
+        QMessageBox::warning(this, tr("Export"),
+                             tr("Failed to write SVG file:\n%1").arg(_filename));
+}
+
+/*-----------------------------------------------------------------*/
+void TDBWFRM::DoExportPdf(const QString& _filename)
+{
+    const int gw = 16;
+    const int gh = 16;
+    int Wpx = 0, Hpx = 0, shafts = 0, treadles = 0;
+    patternPixelSize(Wpx, Hpx, gw, gh, shafts, treadles);
+
+    QPdfWriter pdf(_filename);
+    pdf.setCreator(QStringLiteral("DB-WEAVE"));
+    pdf.setTitle(QFileInfo(filename).fileName());
+    pdf.setPageSize(QPageSize(QPageSize::A4));
+    pdf.setPageMargins(QMarginsF(10, 10, 10, 10), QPageLayout::Millimeter);
+
+    QPainter p(&pdf);
+    /*  Scale the pattern to fit the printable page while preserving
+        aspect ratio. QPdfWriter reports its logical geometry in device
+        units (the pdf resolution), so viewport/window get the fit. */
+    const QRect page = p.viewport();
+    const double sx = double(page.width()) / Wpx;
+    const double sy = double(page.height()) / Hpx;
+    const double s = qMin(sx, sy);
+    const int w = int(Wpx * s);
+    const int h = int(Hpx * s);
+    p.setViewport(page.x() + (page.width() - w) / 2, page.y() + (page.height() - h) / 2, w, h);
+    p.setWindow(0, 0, Wpx, Hpx);
+
+    p.fillRect(QRect(0, 0, Wpx, Hpx), QColor(212, 208, 200));
+    paintPattern(p, gw, gh, shafts, treadles);
+    const bool ok = p.end();
+    if (!ok)
+        QMessageBox::warning(this, tr("Export"),
+                             tr("Failed to write PDF file:\n%1").arg(_filename));
 }

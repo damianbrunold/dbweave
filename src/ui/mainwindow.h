@@ -772,10 +772,19 @@ public:
     void ImportWIFClick();
     void ImportBitmapClick();
     bool DateiImportieren(const QString& _filename);
-    void DateiExportBitmapClick();
+    void DateiExportPngClick();
+    void DateiExportJpegClick();
+    void DateiExportSvgClick();
+    void DateiExportPdfClick();
     void DateiExportWifClick();
     void DateiExportieren(const QString& _filename);
-    void DoExportBitmap(const QString& _filename);
+
+    void patternPixelSize(int& _w, int& _h, int _gw, int _gh, int& _shafts, int& _treadles);
+    void paintPattern(QPainter& _p, int _gw, int _gh, int _shafts, int _treadles);
+    void DoExportPng(const QString& _filename);
+    void DoExportJpeg(const QString& _filename);
+    void DoExportSvg(const QString& _filename);
+    void DoExportPdf(const QString& _filename);
 
     /*  Schlagpatrone (pegplan) / trittfolge clickhandlers. */
     void ClearSchlagpatroneClick();

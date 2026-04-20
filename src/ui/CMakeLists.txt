@@ -98,6 +98,7 @@ target_link_libraries(dbweave_ui
         Qt6::Gui
         Qt6::Widgets
         Qt6::PrintSupport
+        Qt6::Svg
         dbweave_compat
         dbweave_domain
 )

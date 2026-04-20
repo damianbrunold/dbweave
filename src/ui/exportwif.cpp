@@ -26,6 +26,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QMessageBox>
+#include <QStandardPaths>
 #include <QTextStream>
 
 /*-----------------------------------------------------------------*/
@@ -331,36 +332,61 @@ void TDBWFRM::DateiExportieren(const QString& _filename)
 }
 
 /*-----------------------------------------------------------------*/
-void TDBWFRM::DateiExportBitmapClick()
+/*  Opens a Save-As dialog preset to the platform's Documents folder,
+    with one name filter and a matching default suffix. Returns the
+    chosen path or an empty string on cancel. */
+static QString askExportFile(QWidget* _parent, const QString& _title, const QString& _filter,
+                             const QString& _suffix)
 {
-    QFileDialog dlg(this, LANG_STR("Export bitmap", "Bitmap exportieren"));
+    QFileDialog dlg(_parent, _title);
     dlg.setAcceptMode(QFileDialog::AcceptSave);
-    const QString bmpFilter = QStringLiteral("Bitmap (*.bmp)");
-    const QString pngFilter = QStringLiteral("PNG (*.png)");
-    dlg.setNameFilters({ bmpFilter, pngFilter });
-    dlg.setDefaultSuffix(QStringLiteral("bmp"));
-    QObject::connect(&dlg, &QFileDialog::filterSelected, &dlg, [&dlg, bmpFilter](const QString& f) {
-        dlg.setDefaultSuffix(f == bmpFilter ? QStringLiteral("bmp") : QStringLiteral("png"));
-    });
+    dlg.setNameFilter(_filter);
+    dlg.setDefaultSuffix(_suffix);
+    const QString docs = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    if (!docs.isEmpty())
+        dlg.setDirectory(docs);
     if (dlg.exec() != QDialog::Accepted)
-        return;
+        return QString();
     const QStringList files = dlg.selectedFiles();
-    if (files.isEmpty())
-        return;
-    DoExportBitmap(files.first());
+    return files.isEmpty() ? QString() : files.first();
 }
 
-/*-----------------------------------------------------------------*/
+void TDBWFRM::DateiExportPngClick()
+{
+    const QString fn = askExportFile(this, LANG_STR("Export PNG", "PNG exportieren"),
+                                     QStringLiteral("PNG (*.png)"), QStringLiteral("png"));
+    if (!fn.isEmpty())
+        DoExportPng(fn);
+}
+
+void TDBWFRM::DateiExportJpegClick()
+{
+    const QString fn = askExportFile(this, LANG_STR("Export JPEG", "JPEG exportieren"),
+                                     QStringLiteral("JPEG (*.jpg *.jpeg)"), QStringLiteral("jpg"));
+    if (!fn.isEmpty())
+        DoExportJpeg(fn);
+}
+
+void TDBWFRM::DateiExportSvgClick()
+{
+    const QString fn = askExportFile(this, LANG_STR("Export SVG", "SVG exportieren"),
+                                     QStringLiteral("SVG (*.svg)"), QStringLiteral("svg"));
+    if (!fn.isEmpty())
+        DoExportSvg(fn);
+}
+
+void TDBWFRM::DateiExportPdfClick()
+{
+    const QString fn = askExportFile(this, LANG_STR("Export PDF", "PDF exportieren"),
+                                     QStringLiteral("PDF (*.pdf)"), QStringLiteral("pdf"));
+    if (!fn.isEmpty())
+        DoExportPdf(fn);
+}
+
 void TDBWFRM::DateiExportWifClick()
 {
-    QFileDialog dlg(this, LANG_STR("Export WIF", "WIF exportieren"));
-    dlg.setAcceptMode(QFileDialog::AcceptSave);
-    dlg.setNameFilter(QStringLiteral("WIF (*.wif)"));
-    dlg.setDefaultSuffix(QStringLiteral("wif"));
-    if (dlg.exec() != QDialog::Accepted)
-        return;
-    const QStringList files = dlg.selectedFiles();
-    if (files.isEmpty())
-        return;
-    DateiExportieren(files.first());
+    const QString fn = askExportFile(this, LANG_STR("Export WIF", "WIF exportieren"),
+                                     QStringLiteral("WIF (*.wif)"), QStringLiteral("wif"));
+    if (!fn.isEmpty())
+        DateiExportieren(fn);
 }
