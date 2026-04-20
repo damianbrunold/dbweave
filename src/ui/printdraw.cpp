@@ -51,6 +51,13 @@ void PrPrinter::PrPaintCell(DARSTELLUNG _d, int _x, int _y, int _xx, int _yy, TC
         penwidth = penwidth * zoomTable[mainfrm->currentzoom] / zoomTable[3];
         pen.setWidth(XSCALE(penwidth));
     }
+    /*  Round caps soften the stroke ends for STRICH / KREUZ / PUNKT /
+        STEIGEND / FALLEND / SMALLKREUZ when printing, avoiding the
+        sharp rectangular tips that otherwise read as harsh on paper.
+        Screen rendering (draw_cell.cpp) keeps flat caps so small
+        on-screen symbols stay crisp.                                */
+    pen.setCapStyle(Qt::RoundCap);
+    pen.setJoinStyle(Qt::RoundJoin);
 
     canvas->setPen(pen);
     canvas->setBrush(QBrush(qcolFromTColor(_col)));
