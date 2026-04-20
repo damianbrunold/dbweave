@@ -228,12 +228,11 @@ void TDBWFRM::FileNewTemplateClick()
     filename = chosen;
     LOADSTAT stat = UNKNOWN_FAILURE;
     if (!Load(stat, LOADALL)) {
-        QMessageBox::warning(
-            this, QStringLiteral("DB-WEAVE"),
-            LANG_STR("Could not load template '%1' (status %2).",
-                     "Vorlage '%1' konnte nicht geladen werden (Status %2).")
-                .arg(chosen)
-                .arg(int(stat)));
+        QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
+                             LANG_STR("Could not load template '%1' (status %2).",
+                                      "Vorlage '%1' konnte nicht geladen werden (Status %2).")
+                                 .arg(chosen)
+                                 .arg(int(stat)));
         return;
     }
     /*  The loaded file lives under its template path; reset filename
@@ -264,15 +263,40 @@ void TDBWFRM::FileOpen()
     LOADSTAT stat = UNKNOWN_FAILURE;
     const bool ok = Load(stat, LOADALL);
     if (!ok) {
-        QMessageBox::warning(
-            this, QStringLiteral("DB-WEAVE"),
-            LANG_STR("Could not open '%1' (status %2).",
-                     "'%1' konnte nicht geöffnet werden (Status %2).")
-                .arg(chosen)
-                .arg(int(stat)));
+        QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
+                             LANG_STR("Could not open '%1' (status %2).",
+                                      "'%1' konnte nicht geöffnet werden (Status %2).")
+                                 .arg(chosen)
+                                 .arg(int(stat)));
         return;
     }
     AddToMRU(chosen);
+    SetModified(false);
+    refresh();
+}
+
+/*  FileRevertClick — reload the currently open file, discarding any
+    unsaved changes. Legacy FileRevertClick does the same with no
+    confirmation prompt; the menu action stays disabled when there is
+    no filename or nothing has been modified, which is our gate here. */
+void TDBWFRM::FileRevertClick()
+{
+    if (filename.isEmpty())
+        return;
+    if (!modified)
+        return;
+    if (file && file->IsOpen())
+        file->Close();
+    LOADSTAT stat = UNKNOWN_FAILURE;
+    const bool ok = Load(stat, LOADALL);
+    if (!ok) {
+        QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
+                             LANG_STR("Could not reload '%1' (status %2).",
+                                      "'%1' konnte nicht neu geladen werden (Status %2).")
+                                 .arg((QString)filename)
+                                 .arg(int(stat)));
+        return;
+    }
     SetModified(false);
     refresh();
 }
@@ -332,14 +356,12 @@ bool TDBWFRM::AskSave()
             if (!IsFreeSchaft(j))
                 anyShaft = true;
         const bool anyTritt = GetFirstTritt() <= GetLastTritt();
-        const bool hasContent
-            = kette.b != -1 || schuesse.b != -1 || anyShaft || anyTritt;
+        const bool hasContent = kette.b != -1 || schuesse.b != -1 || anyShaft || anyTritt;
         if (!hasContent)
             return true;
     }
-    const QString msg = LANG_STR(
-        "The pattern has unsaved changes. Save them now?",
-        "Das Muster hat ungespeicherte Änderungen. Jetzt speichern?");
+    const QString msg = LANG_STR("The pattern has unsaved changes. Save them now?",
+                                 "Das Muster hat ungespeicherte Änderungen. Jetzt speichern?");
     QMessageBox::StandardButton choice = QMessageBox::question(
         this, QStringLiteral("DB-WEAVE"), msg,
         QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, QMessageBox::Yes);
@@ -431,9 +453,9 @@ void TDBWFRM::OpenFromMRU(int _index)
         return;
     const QString path = mru.at(_index);
     if (!QFileInfo::exists(path)) {
-        QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
-                             LANG_STR("'%1' no longer exists.", "'%1' existiert nicht mehr.")
-                                 .arg(path));
+        QMessageBox::warning(
+            this, QStringLiteral("DB-WEAVE"),
+            LANG_STR("'%1' no longer exists.", "'%1' existiert nicht mehr.").arg(path));
         mru.removeAt(_index);
         UpdateMRUMenu();
         SaveMRU();
@@ -444,12 +466,11 @@ void TDBWFRM::OpenFromMRU(int _index)
     filename = path;
     LOADSTAT stat = UNKNOWN_FAILURE;
     if (!Load(stat, LOADALL)) {
-        QMessageBox::warning(
-            this, QStringLiteral("DB-WEAVE"),
-            LANG_STR("Could not open '%1' (status %2).",
-                     "'%1' konnte nicht geöffnet werden (Status %2).")
-                .arg(path)
-                .arg(int(stat)));
+        QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
+                             LANG_STR("Could not open '%1' (status %2).",
+                                      "'%1' konnte nicht geöffnet werden (Status %2).")
+                                 .arg(path)
+                                 .arg(int(stat)));
         return;
     }
     AddToMRU(path);
@@ -488,12 +509,11 @@ void TDBWFRM::LoadPartsClick()
         file->Close();
 
     if (!ok) {
-        QMessageBox::warning(
-            this, QStringLiteral("DB-WEAVE"),
-            LANG_STR("Could not load parts from '%1' (status %2).",
-                     "Teile aus '%1' konnten nicht geladen werden (Status %2).")
-                .arg(chosen)
-                .arg(int(stat)));
+        QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
+                             LANG_STR("Could not load parts from '%1' (status %2).",
+                                      "Teile aus '%1' konnten nicht geladen werden (Status %2).")
+                                 .arg(chosen)
+                                 .arg(int(stat)));
         return;
     }
     SetModified();

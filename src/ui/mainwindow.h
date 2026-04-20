@@ -711,6 +711,7 @@ public:
     void LoadPartsClick();
     void FileNewClick();
     void FileNewTemplateClick();
+    void FileRevertClick();
 
     /*  Extras > Grundeinstellung presets. Flip the four darstellungen,
         right-to-left / top-to-bottom orientation, sinking-shed flag,

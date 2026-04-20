@@ -242,7 +242,12 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         = menuAct(fileMenu, "Revert &changes", "Änderungen ver&werfen", nullptr,
                   "Discards any changes and restores the last saved state of the pattern",
                   "Verwirft alle Änderungen und kehrt zum letzten gespeicherten Zustand zurück");
-    actFileRevert->setEnabled(false);
+    connect(actFileRevert, &QAction::triggered, this, [this] { FileRevertClick(); });
+    /*  Mirror legacy idle.cpp: Revert is only meaningful when there
+        is a backing file AND unsaved edits. Update the enabled state
+        each time the File menu opens. */
+    connect(fileMenu, &QMenu::aboutToShow, this,
+            [this, actFileRevert] { actFileRevert->setEnabled(!filename.isEmpty() && modified); });
     fileMenu->addSeparator();
     QMenu* importMenu = addSubmenu(fileMenu, "I&mport", "I&mport");
     QAction* actImportWIF
