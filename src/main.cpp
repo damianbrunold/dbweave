@@ -11,6 +11,7 @@
 
 #include <QApplication>
 #include <QFileInfo>
+#include <QGuiApplication>
 #include <QIcon>
 #include <QLocale>
 #include <QMessageBox>
@@ -28,6 +29,18 @@ int main(int argc, char* argv[])
         the linker. Force initialisation before any QIcon is built
         from ":/icons/*".                                        */
     Q_INIT_RESOURCE(icons);
+
+    /*  Pattern rendering needs pixel-exact control: every cell
+        symbol uses a 1-pixel margin inside the cell border, which
+        collapses to an asymmetric 0/1-pixel margin when a
+        fractional device-pixel ratio (common on Windows at 125%
+        or 150% display scaling) rounds integer logical coords
+        unevenly. Force integer DPR globally so one logical pixel
+        always equals a whole number of device pixels. A 150%
+        setting rounds up to 200% (crisp but slightly larger UI);
+        125% rounds to 100% (crisp but slightly smaller).         */
+    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(
+        Qt::HighDpiScaleFactorRoundingPolicy::Round);
 
     QApplication app(argc, argv);
 
