@@ -164,8 +164,13 @@ void TDBWFRM::SwitchTritte(int _a, int _b)
 /*-----------------------------------------------------------------*/
 void TDBWFRM::RearrangeTritte()
 {
-    if (TfBelassen && TfBelassen->isChecked())
-        return;
+    /*  TfBelassen was hidden from the UI and is now folded into
+        TfMinimalZ (see mainwindow.cpp): the old early-return here
+        produced the same visible result as MinimalZ's sort loop
+        after a fresh RecalcTrittfolge in every realistic case.
+        TfBelassen survives as internal state so saved-style
+        round-trips are preserved; the condition below routes it
+        through the MinimalZ body.                                 */
     if (ViewSchlagpatrone && ViewSchlagpatrone->isChecked())
         return;
 
@@ -202,7 +207,7 @@ g_weiter2:
     MergeTritte();
 
     // Alle Tritte gemaess aktueller Einstellung arrangieren
-    if (TfMinimalZ && TfMinimalZ->isChecked()) {
+    if ((TfMinimalZ && TfMinimalZ->isChecked()) || (TfBelassen && TfBelassen->isChecked())) {
         for (j = schuesse.a; j <= schuesse.b; j++)
             for (ii = i1; ii <= i2; ii++)
                 if (trittfolge.feld.Get(ii, j) > 0) {

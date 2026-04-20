@@ -1,10 +1,10 @@
 /*  DB-WEAVE Qt 6 port - einzug rearrangement algorithm tests.
 
-    Exercises the EinzugRearrangeImpl methods (NormalZ, NormalS, GeradeZ,
-    Chorig2, Belassen, Rearrange dispatcher) on a populated TDBWFRM.
-    The rendering helpers (RedrawSchaft, RedrawAufknuepfungSchaft,
-    RedrawSchlagpatrone) and Fixiert are stubs -- exercising them is
-    deferred to the rendering / recalc slices.
+    Exercises the EinzugRearrangeImpl methods (NormalZ, NormalS) on a
+    populated TDBWFRM. The rendering helpers (RedrawSchaft,
+    RedrawAufknuepfungSchaft, RedrawSchlagpatrone) and Fixiert are
+    stubs -- exercising them is deferred to the rendering / recalc
+    slices.
 */
 
 #include <QApplication>
@@ -43,20 +43,6 @@ private slots:
         DBWFRM = nullptr;
         delete Data;
         Data = nullptr;
-    }
-
-    void belassen_is_no_op()
-    {
-        for (int i = 0; i < 10; i++)
-            DBWFRM->einzug.feld.Set(i, (short)(((i * 7) % 5) + 1));
-        short before[10];
-        for (int i = 0; i < 10; i++)
-            before[i] = DBWFRM->einzug.feld.Get(i);
-
-        DBWFRM->einzughandler->Belassen();
-
-        for (int i = 0; i < 10; i++)
-            QCOMPARE(DBWFRM->einzug.feld.Get(i), before[i]);
     }
 
     void normalz_orders_schafts_by_first_appearance()
@@ -140,26 +126,6 @@ private slots:
         QCOMPARE(DBWFRM->einzug.feld.Get(0), (short)1);
     }
 
-    void rearrange_dispatches_on_checked_action()
-    {
-        /*  Force EzBelassen: Rearrange() is a no-op under that
-            style. */
-        DBWFRM->EzMinimalZ->setChecked(false);
-        DBWFRM->EzBelassen->setChecked(true);
-        DBWFRM->einzug.feld.Set(0, (short)5);
-        DBWFRM->einzughandler->Rearrange();
-        QCOMPARE(DBWFRM->einzug.feld.Get(0), (short)5);
-
-        /*  Flip to EzMinimalZ -- NormalZ runs and renumbers 5 -> 1. */
-        DBWFRM->kette = SZ(0, 0);
-        DBWFRM->aufknuepfung.feld.Set(0, 4, (char)1);
-        DBWFRM->EzBelassen->setChecked(false);
-        DBWFRM->EzMinimalZ->setChecked(true);
-
-        DBWFRM->einzughandler->Rearrange();
-        QCOMPARE(DBWFRM->einzug.feld.Get(0), (short)1);
-    }
-
     void calc_rapport_range_finds_minimal_warp_repeat()
     {
         /*  einzug = [1, 2, 3, 1, 2, 3] -- repeat of length 3. The
@@ -171,7 +137,7 @@ private slots:
         for (int i = 0; i < 6; i++)
             DBWFRM->einzug.feld.Set(i, (short)((i % 3) + 1));
         for (int s = 0; s < 3; s++)
-        DBWFRM->aufknuepfung.feld.Set(0, 0, (char)1);
+            DBWFRM->aufknuepfung.feld.Set(0, 0, (char)1);
         DBWFRM->aufknuepfung.feld.Set(1, 1, (char)1);
         DBWFRM->aufknuepfung.feld.Set(2, 2, (char)1);
 

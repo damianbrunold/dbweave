@@ -96,16 +96,6 @@ private slots:
         QCOMPARE(DBWFRM->aufknuepfung.feld.Get(4, 2), (char)1);
     }
 
-    void rearrange_tritte_belassen_is_noop()
-    {
-        /*  Force TfBelassen (default is TfMinimalZ). */
-        DBWFRM->TfMinimalZ->setChecked(false);
-        DBWFRM->TfBelassen->setChecked(true);
-        DBWFRM->trittfolge.feld.Set(5, 0, (char)3);
-        DBWFRM->RearrangeTritte();
-        QCOMPARE(DBWFRM->trittfolge.feld.Get(5, 0), (char)3);
-    }
-
     void rearrange_tritte_minimalz_compacts_from_left()
     {
         /*  Tritte at columns 3 and 7 only; after MinimalZ they

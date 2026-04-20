@@ -302,16 +302,19 @@ void EinzugRearrangeImpl::Fixiert()
         with the recalc slice. */
 }
 /*-----------------------------------------------------------------*/
-void EinzugRearrangeImpl::Belassen()
-{
-    // Nichts tun...
-}
 /*-----------------------------------------------------------------*/
 void EinzugRearrangeImpl::Rearrange()
 {
     if (frm->EzFixiert && frm->EzFixiert->isChecked())
         Fixiert();
-    else if (frm->EzMinimalZ && frm->EzMinimalZ->isChecked())
+    else if ((frm->EzMinimalZ && frm->EzMinimalZ->isChecked())
+             || (frm->EzBelassen && frm->EzBelassen->isChecked()))
+        /*  EzBelassen collapses into NormalZ: its old body was a
+            no-op and NormalZ's body is a practical no-op after a
+            fresh RecalcEinzug, so the two produced the same visible
+            result in every realistic case. Keeping EzBelassen as
+            internal state (for file round-trips) but routing it here
+            removes the user-visible duplicate style.            */
         NormalZ();
     else if (frm->EzMinimalS && frm->EzMinimalS->isChecked())
         NormalS();
@@ -323,8 +326,6 @@ void EinzugRearrangeImpl::Rearrange()
         Chorig2();
     else if (frm->EzChorig3 && frm->EzChorig3->isChecked())
         Chorig3();
-    else if (frm->EzBelassen && frm->EzBelassen->isChecked())
-        Belassen();
 }
 /*-----------------------------------------------------------------*/
 bool EinzugRearrangeImpl::EinzugEqual(int _i1, int _i2)

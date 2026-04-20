@@ -32,7 +32,6 @@ public:
     virtual void Chorig2() = 0;
     virtual void Chorig3() = 0;
     virtual void Fixiert() = 0;
-    virtual void Belassen() = 0;
 
     virtual bool IsEmptySchaft(int _j) = 0;
     virtual void RedrawSchaft(int _j) = 0;

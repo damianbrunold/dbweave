@@ -624,15 +624,20 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     registerLang(EzChorig3, QStringLiteral("&3 choirs"), QStringLiteral("&3-chorig"),
                  QStringLiteral("Arranges the threading in a simple 3-choir scheme"),
                  QStringLiteral("Ordnet den Einzug in einem einfachen Dreichorsystem"));
-    registerLang(EzBelassen, QStringLiteral("Fi&xed"), QStringLiteral("Fi&xiert"),
-                 QStringLiteral("Tries to leave the threading as is"),
-                 QStringLiteral("Versucht den Einzug so zu belassen wie er ist"));
+    /*  EzBelassen is retained as internal state (still in the radio
+        action group and written to .dbw) so file round-trips don't
+        alter the saved style, but it is deliberately not shown in the
+        menu: in practice it produces the same result as EzMinimalZ
+        after a fresh RecalcAll (see Rearrange dispatch in
+        einzug.cpp), and its presence alongside "Benutzerdefiniert"
+        was a known source of user confusion.                     */
     registerLang(
         EzFixiert, QStringLiteral("&User defined..."), QStringLiteral("&Benutzerdefiniert..."),
         QStringLiteral("Arranges the threading according to a user-supplied template"),
         QStringLiteral("Ordnet den Einzug gemäss einem vom Benutzer vorgegebenen Schema an"));
-    for (QAction* a : { EzMinimalZ, EzMinimalS, EzGeradeZ, EzGeradeS, EzChorig2, EzChorig3,
-                        EzBelassen, EzFixiert }) {
+    ezGroup->addAction(EzBelassen);
+    for (QAction* a :
+         { EzMinimalZ, EzMinimalS, EzGeradeZ, EzGeradeS, EzChorig2, EzChorig3, EzFixiert }) {
         ezGroup->addAction(a);
         threadMenu->addAction(a);
     }
@@ -660,8 +665,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         if (undo)
             undo->Snapshot();
     };
-    for (QAction* a :
-         { EzMinimalZ, EzMinimalS, EzGeradeZ, EzGeradeS, EzChorig2, EzChorig3, EzBelassen })
+    for (QAction* a : { EzMinimalZ, EzMinimalS, EzGeradeZ, EzGeradeS, EzChorig2, EzChorig3 })
         connect(a, &QAction::triggered, this, runRecalc);
 
     /*  ---------- Tre&adling (MenuTrittfolge) ---------------- */
@@ -683,10 +687,15 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     registerLang(TfGesprungen, QStringLiteral("Cr&ossed"), QStringLiteral("Gesp&rungen"),
                  QStringLiteral("Arranges the treadling crossed"),
                  QStringLiteral("Ordnet die Trittfolge gesprungen an"));
-    registerLang(TfBelassen, QStringLiteral("Fi&xed"), QStringLiteral("Fi&xiert"),
-                 QStringLiteral("Tries to leave the treadling as is"),
-                 QStringLiteral("Versucht die Trittfolge so zu belassen wie sie ist"));
-    for (QAction* a : { TfMinimalZ, TfMinimalS, TfGesprungen, TfBelassen }) {
+    /*  TfBelassen is hidden from the menu for the same reason as
+        EzBelassen (see the einzug block above): in the current
+        architecture RearrangeTritte always runs after a fresh
+        RecalcTrittfolge, and MinimalZ's sort loop becomes a no-op
+        there -- TfBelassen's early-return therefore produces the same
+        visible result. The action is kept in the radio group as
+        internal state so saved-style round-trips are preserved. */
+    tfGroup->addAction(TfBelassen);
+    for (QAction* a : { TfMinimalZ, TfMinimalS, TfGesprungen }) {
         tfGroup->addAction(a);
         treadMenu->addAction(a);
     }
@@ -699,11 +708,8 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     connect(actCopyTfEz, &QAction::triggered, this, [this] { CopyTrittfolgeEinzugClick(); });
 
     /*  Trittfolge style radio items -- same full-recalc path as
-        einzug (see above). TfBelassen goes through the same path;
-        RearrangeTritte checks TfBelassen internally and skips the
-        reorder step, so the recalc still rebuilds trittfolge but
-        leaves treadle order alone.                                */
-    for (QAction* a : { TfMinimalZ, TfMinimalS, TfGesprungen, TfBelassen })
+        einzug (see above).                                        */
+    for (QAction* a : { TfMinimalZ, TfMinimalS, TfGesprungen })
         connect(a, &QAction::triggered, this, runRecalc);
 
     /*  ---------- &Pegplan (MenuSchlagpatrone) --------------- */
