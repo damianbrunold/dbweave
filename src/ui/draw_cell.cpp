@@ -17,16 +17,20 @@
 #include <QRect>
 #include <QString>
 
-/*  VCL's TCanvas::Rectangle(x1, y1, x2, y2) draws the outline using the
-    current pen and fills the interior with the current brush, inclusive
-    of (x1, y1) and EXCLUSIVE of (x2, y2). Translating to QPainter means
-    drawRect with width = x2-x1-1, height = y2-y1-1 when we want the same
-    coverage, because QPainter::drawRect draws the outline ON the edge
-    pixels of the given rectangle (its "cosmetic" pen semantic expands
-    outward). Matching legacy pixel output exactly requires compensating
-    for that one-pixel difference.
+/*  Coordinate conventions
+    ------------------------
+    A cell occupies pixels [_x, _xx] x [_y, _yy]; the grid-frame lines
+    at _x, _xx, _y, _yy are shared with the neighbouring cells and are
+    painted elsewhere. The cell interior is [_x+1, _xx-1] x [_y+1, _yy-1].
+    Symbols leave an additional 1-pixel margin inside the interior,
+    i.e. they live in [_x+2, _xx-2] x [_y+2, _yy-2].
 
-    All cell rendering intentionally disables antialiasing so the output
+    Endpoints are inclusive throughout, matching QPainter::drawLine,
+    QPainter::fillRect(QRect, ...) and QPainter::drawEllipse(QRect).
+    That means, for pixel X spanning cols A..B inclusive, the call is
+    fillRect(QRect(A, Y, B - A + 1, ...)) and drawLine(A, Y, B, Y).
+
+    All cell rendering intentionally disables antialiasing so output
     is deterministic across Qt minor versions and CPU architectures,
     which is a hard requirement for the golden-pixel tests in
     tests/test_draw_cell.cpp. */
@@ -34,32 +38,23 @@
 namespace
 {
 
-void fillRect(QPainter& p, int x1, int y1, int x2, int y2, const QColor& c)
-{
-    p.fillRect(QRect(x1, y1, x2 - x1, y2 - y1), c);
-}
-
 void line(QPainter& p, int x1, int y1, int x2, int y2)
 {
     p.drawLine(x1, y1, x2, y2);
 }
 
-/*  The VCL Rectangle primitive outlines AND fills. We reproduce that
-    by painting one solid rectangle using the current brush; the pen
-    colour has already been set to match by PaintCell. */
-void solidRect(QPainter& p, int x1, int y1, int x2, int y2)
+/*  Inclusive-inclusive pixel rect: fills pixels [x1, x2] x [y1, y2]. */
+void fillBox(QPainter& p, int x1, int y1, int x2, int y2, const QColor& c)
 {
-    p.fillRect(QRect(x1, y1, x2 - x1, y2 - y1), p.brush().color());
+    p.fillRect(QRect(x1, y1, x2 - x1 + 1, y2 - y1 + 1), c);
 }
 
 } // namespace
 
 void ClearCell(QPainter& _p, int _x, int _y, int _xx, int _yy, const QColor& _bkground)
 {
-    /*  Legacy: Rectangle(_x+1, _y+1, _xx, _yy) -> inclusive (_x+1, _y+1),
-        exclusive (_xx, _yy). Under fillRect this is a box of
-        (_xx - _x - 1) x (_yy - _y - 1) starting at (_x+1, _y+1).       */
-    fillRect(_p, _x + 1, _y + 1, _xx, _yy, _bkground);
+    /*  Cell interior: pixels [_x+1, _xx-1] x [_y+1, _yy-1] inclusive. */
+    fillBox(_p, _x + 1, _y + 1, _xx - 1, _yy - 1, _bkground);
 }
 
 void PaintCell(QPainter& _p, DARSTELLUNG _darstellung, int _x, int _y, int _xx, int _yy,
@@ -76,63 +71,66 @@ void PaintCell(QPainter& _p, DARSTELLUNG _darstellung, int _x, int _y, int _xx, 
 
     switch (_darstellung) {
     case AUSGEFUELLT:
-        solidRect(_p, _x + 2, _y + 2, _xx - 1, _yy - 1);
+        fillBox(_p, _x + 2, _y + 2, _xx - 2, _yy - 2, _color);
         break;
 
-    case STRICH:
-        line(_p, (_x + _xx) / 2, _yy - 2, (_x + _xx) / 2, _y + 1);
-        line(_p, (_x + _xx) / 2 + 1, _yy - 2, (_x + _xx) / 2 + 1, _y + 1);
+    case STRICH: {
+        const int cx = (_x + _xx) / 2;
+        line(_p, cx, _y + 2, cx, _yy - 2);
+        line(_p, cx + 1, _y + 2, cx + 1, _yy - 2);
         break;
+    }
 
     case KREUZ:
-        line(_p, _x + 2, _yy - 2, _xx - 1, _y + 1);
-        line(_p, _x + 2, _y + 2, _xx - 1, _yy - 1);
+        line(_p, _x + 2, _yy - 2, _xx - 2, _y + 2);
+        line(_p, _x + 2, _y + 2, _xx - 2, _yy - 2);
         break;
 
     case PUNKT: {
-        const int x = (_x + _xx) / 2;
-        const int y = (_y + _yy) / 2;
-        line(_p, x, y, x + 2, y);
-        line(_p, x, y + 1, x + 2, y + 1);
+        const int cx = (_x + _xx) / 2;
+        const int cy = (_y + _yy) / 2;
+        _p.fillRect(QRect(cx, cy, 2, 2), _color);
         break;
     }
 
     case KREIS:
-        /*  Legacy: Arc(x1, y1, x2, y2, sx, sy, ex, ey) with start
-            == end == (x, y) draws a full ellipse. */
+        /*  Note: QPainter::drawEllipse(QRect(x,y,w,h)) renders into
+            pixel bounding box [x, x+w] x [y, y+h] -- inclusive on
+            BOTH ends, unlike fillRect. So for an ellipse inscribed
+            in pixels [_x+2, _xx-2] x [_y+2, _yy-2] the width is
+            (_xx-2) - (_x+2) = _xx - _x - 4.                         */
         _p.setBrush(Qt::NoBrush);
-        _p.drawEllipse(QRect(_x + 2, _y + 2, (_xx - 1) - (_x + 2), (_yy - 1) - (_y + 2)));
+        _p.drawEllipse(QRect(_x + 2, _y + 2, _xx - _x - 4, _yy - _y - 4));
         _p.setBrush(QBrush(_color));
         break;
 
     case STEIGEND:
-        line(_p, _x + 2, _yy - 2, _xx - 1, _y + 1);
+        line(_p, _x + 2, _yy - 2, _xx - 2, _y + 2);
         break;
 
     case FALLEND:
-        line(_p, _x + 2, _y + 2, _xx - 1, _yy - 1);
+        line(_p, _x + 2, _y + 2, _xx - 2, _yy - 2);
         break;
 
     case SMALLKREIS:
         if (_xx - _x >= 9) {
             _p.setBrush(Qt::NoBrush);
-            _p.drawEllipse(QRect(_x + 4, _y + 4, (_xx - 3) - (_x + 4), (_yy - 3) - (_y + 4)));
+            _p.drawEllipse(QRect(_x + 4, _y + 4, _xx - _x - 8, _yy - _y - 8));
             _p.setBrush(QBrush(_color));
         } else {
-            const int x = (_x + _xx) / 2;
-            const int y = (_y + _yy) / 2;
-            line(_p, x, y, x + 2, y);
-            line(_p, x, y + 1, x + 2, y + 1);
+            const int cx = (_x + _xx) / 2;
+            const int cy = (_y + _yy) / 2;
+            _p.fillRect(QRect(cx, cy, 2, 2), _color);
         }
         break;
 
     case SMALLKREUZ:
         if (_xx - _x >= 9) {
-            line(_p, _x + 4, _yy - 4, _xx - 3, _y + 3);
-            line(_p, _x + 4, _y + 4, _xx - 3, _yy - 3);
+            line(_p, _x + 4, _yy - 4, _xx - 4, _y + 4);
+            line(_p, _x + 4, _y + 4, _xx - 4, _yy - 4);
         } else {
-            line(_p, _x + 2, _yy - 2, _xx - 1, _y + 1);
-            line(_p, _x + 2, _y + 2, _xx - 1, _yy - 1);
+            line(_p, _x + 2, _yy - 2, _xx - 2, _y + 2);
+            line(_p, _x + 2, _y + 2, _xx - 2, _yy - 2);
         }
         break;
 
@@ -144,10 +142,9 @@ void PaintCell(QPainter& _p, DARSTELLUNG _darstellung, int _x, int _y, int _xx, 
             _p.setFont(f);
             _p.setPen(QPen(_color));
             const QString nr = QString::number(_number + 1);
-            _p.drawText(QRect(_x + 1, _y + 1, (_xx - 1) - (_x + 1), (_yy - 1) - (_y + 1)),
-                        Qt::AlignCenter, nr);
+            _p.drawText(QRect(_x + 1, _y + 1, _xx - _x - 2, _yy - _y - 2), Qt::AlignCenter, nr);
         } else {
-            solidRect(_p, _x + 2, _y + 2, _xx - 1, _yy - 1);
+            fillBox(_p, _x + 2, _y + 2, _xx - 2, _yy - 2, _color);
         }
         break;
     }

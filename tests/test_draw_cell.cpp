@@ -95,15 +95,21 @@ private slots:
         QCOMPARE(img.pixel(SZ - 1, 0), BG);
     }
 
-    void punkt_paints_small_center_dash()
+    void punkt_paints_small_center_square()
     {
         QImage img = render(PUNKT);
         const int cx = SZ / 2;
         const int cy = SZ / 2;
+        /*  2x2 dot straddling the cell midpoint. */
         QCOMPARE(img.pixel(cx, cy), FG);
         QCOMPARE(img.pixel(cx + 1, cy), FG);
-        QCOMPARE(img.pixel(cx + 2, cy), FG);
-        /*  Well away from the dash is background. */
+        QCOMPARE(img.pixel(cx, cy + 1), FG);
+        QCOMPARE(img.pixel(cx + 1, cy + 1), FG);
+        /*  Neighbours outside the dot are background. */
+        QCOMPARE(img.pixel(cx - 1, cy), BG);
+        QCOMPARE(img.pixel(cx + 2, cy), BG);
+        QCOMPARE(img.pixel(cx, cy - 1), BG);
+        QCOMPARE(img.pixel(cx, cy + 2), BG);
         QCOMPARE(img.pixel(1, 1), BG);
         QCOMPARE(img.pixel(SZ - 2, SZ - 2), BG);
     }
@@ -154,6 +160,77 @@ private slots:
             outline are background. */
         QCOMPARE(img.pixel(SZ / 2, SZ / 2), BG);
         QVERIFY(countFG(img) > 0);
+    }
+
+    /*  For every symbol, the drawn pixels must form a set that is
+        symmetric under reflection across both cell axes. If a line
+        extends one pixel further in one direction than another (the
+        GDI-vs-Qt endpoint-semantics trap) this catches it.
+
+        Rendered at an ODD cell width so the axis of symmetry falls
+        between pixels. Two-pixel-wide features (STRICH centreline,
+        PUNKT dot) are inherently 1-pixel biased on even widths -- a
+        consequence of putting 2 pixels around an integer axis, not
+        of the painter code -- so the even case is skipped here.   */
+    void symbols_are_mirror_symmetric()
+    {
+        constexpr int OSZ = 21; /* odd cell width */
+        struct Case {
+            DARSTELLUNG d;
+            const char* name;
+        };
+        const Case cases[] = {
+            { AUSGEFUELLT, "AUSGEFUELLT" },
+            { STRICH, "STRICH" },
+            { KREUZ, "KREUZ" },
+            { PUNKT, "PUNKT" },
+            { KREIS, "KREIS" },
+            { SMALLKREIS, "SMALLKREIS" },
+            { SMALLKREUZ, "SMALLKREUZ" },
+            { STEIGEND, "STEIGEND" }, /* symmetric under 180deg rotation */
+            { FALLEND, "FALLEND" },
+        };
+        for (const Case& c : cases) {
+            QImage img(OSZ + 1, OSZ + 1, QImage::Format_ARGB32);
+            img.fill(Qt::white);
+            {
+                QPainter p(&img);
+                PaintCell(p, c.d, 0, 0, OSZ, OSZ, QColor(Qt::black), false, -1, QColor(Qt::white));
+            }
+            /*  Painter ops are written as {_x+k, _xx-k} pairs, so
+                pixel index i mirrors to (_xx + _x) - i = OSZ - i.
+                Valid for i in [0, OSZ] -- the full image extent.    */
+            if (c.d == STEIGEND || c.d == FALLEND) {
+                /*  Single diagonal: mirror-symmetric under 180deg
+                    rotation (both axes at once), not under either
+                    axis alone.                                      */
+                for (int y = 0; y <= OSZ; y++) {
+                    for (int x = 0; x <= OSZ; x++) {
+                        QVERIFY2(img.pixel(OSZ - x, OSZ - y) == img.pixel(x, y),
+                                 qPrintable(QString("%1: rotational asymmetry at (%2,%3)")
+                                                .arg(c.name)
+                                                .arg(x)
+                                                .arg(y)));
+                    }
+                }
+            } else {
+                for (int y = 0; y <= OSZ; y++) {
+                    for (int x = 0; x <= OSZ; x++) {
+                        const QRgb p = img.pixel(x, y);
+                        QVERIFY2(img.pixel(OSZ - x, y) == p,
+                                 qPrintable(QString("%1: horizontal asymmetry at (%2,%3)")
+                                                .arg(c.name)
+                                                .arg(x)
+                                                .arg(y)));
+                        QVERIFY2(img.pixel(x, OSZ - y) == p,
+                                 qPrintable(QString("%1: vertical asymmetry at (%2,%3)")
+                                                .arg(c.name)
+                                                .arg(x)
+                                                .arg(y)));
+                    }
+                }
+            }
+        }
     }
 
     void number_negative_falls_back_to_filled_rect()
