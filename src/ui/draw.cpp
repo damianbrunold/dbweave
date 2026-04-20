@@ -98,14 +98,20 @@ void TDBWFRM::DrawGewebe(int _i, int _j)
         return;
     }
 
-    /*  Default (GewebeNormal): paint the range colour. */
+    /*  Default (GewebeNormal / "Patrone"): range colour with a
+        1-pixel btnFace margin around it. Legacy DrawGewebeNormal
+        achieved the margin implicitly with Rectangle(Pen=clBtnFace,
+        Brush=rangeColor); we use PaintCell(AUSGEFUELLT, ...) which
+        ClearCells to bkground first then fills the inset block, so
+        the visible result matches AUSGEFUELLT in the threading /
+        treadling / tie-up fields.                                  */
     const int range = gewebe.feld.Get(scroll_x1 + _i, scroll_y2 + _j);
     if (range <= 0) {
         p->fillRect(QRect(x + 1, y + 1, xx - x - 1, yy - y - 1), bkground);
         return;
     }
-    p->fillRect(QRect(x + 1, y + 1, xx - x - 1, yy - y - 1),
-                qColorFromTColor(GetRangeColor(range)));
+    PaintCell(*p, AUSGEFUELLT, x, y, xx, yy, qColorFromTColor(GetRangeColor(range)),
+              /*dontclear=*/false, -1, bkground);
 }
 /*-----------------------------------------------------------------*/
 void TDBWFRM::DrawGewebeRapport(int _i, int _j, int _x, int _y, int _xx, int _yy)
@@ -115,8 +121,13 @@ void TDBWFRM::DrawGewebeRapport(int _i, int _j, int _x, int _y, int _xx, int _yy
         return;
 
     const char s = gewebe.feld.Get(scroll_x1 + _i, scroll_y2 + _j);
-    const QColor fg = (s != ABBINDUNG && s > 0) ? QColor(Qt::red) : legacyBtnFace();
-    p->fillRect(QRect(_x + 1, _y + 1, _xx - _x - 1, _yy - _y - 1), fg);
+    const QColor bkground = legacyBtnFace();
+    if (s != ABBINDUNG && s > 0) {
+        PaintCell(*p, AUSGEFUELLT, _x, _y, _xx, _yy, QColor(Qt::red), /*dontclear=*/false, -1,
+                  bkground);
+    } else {
+        ClearCell(*p, _x, _y, _xx, _yy, bkground);
+    }
 }
 /*-----------------------------------------------------------------*/
 void TDBWFRM::DrawGewebeFarbeffekt(int _i, int _j, int _x, int _y, int _xx, int _yy)
