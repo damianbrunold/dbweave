@@ -106,6 +106,28 @@ PatternCanvas::PatternCanvas(TDBWFRM* _frm, QWidget* _parent)
 
 PatternCanvas::~PatternCanvas() = default;
 
+void PatternCanvas::syncScrollbarsFromFrm()
+{
+    /*  Inverse of the valueChanged lambdas above: compute the slider
+        value that corresponds to the desired frm->scroll_* value.
+        QAbstractSlider::setValue is a no-op when the value is
+        unchanged, so this is safe to call unconditionally.         */
+    if (sbHorz1) {
+        const int v = frm->righttoleft ? sbHorz1->maximum() - frm->scroll_x1 : frm->scroll_x1;
+        sbHorz1->setValue(v);
+    }
+    if (sbHorz2) {
+        sbHorz2->setValue(frm->scroll_x2);
+    }
+    if (sbVert1) {
+        const int v = frm->toptobottom ? frm->scroll_y1 : sbVert1->maximum() - frm->scroll_y1;
+        sbVert1->setValue(v);
+    }
+    if (sbVert2) {
+        sbVert2->setValue(sbVert2->maximum() - frm->scroll_y2);
+    }
+}
+
 void PatternCanvas::resizeEvent(QResizeEvent* /*_e*/)
 {
     /*  Re-layout on every resize so fields and scrollbars reflow
@@ -374,39 +396,37 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
           sbHorz2: never invert
           sbVert1: invert unless toptobottom
           sbVert2: always invert                                    */
-    auto setupHorz
-        = [&](QScrollBar* sb, int x, int y, int w, int maxScroll, int pageCells, int& scrollVal,
-              bool invert) {
-              if (w <= 0 || pageCells <= 0) {
-                  sb->hide();
-                  return;
-              }
-              sb->setGeometry(x, y, w, SB_SIZE);
-              sb->blockSignals(true);
-              sb->setRange(0, maxScroll);
-              sb->setPageStep(pageCells);
-              sb->setSingleStep(1);
-              sb->setValue(invert ? maxScroll - scrollVal : scrollVal);
-              sb->blockSignals(false);
-              sb->setVisible(maxScroll > 0);
-          };
+    auto setupHorz = [&](QScrollBar* sb, int x, int y, int w, int maxScroll, int pageCells,
+                         int& scrollVal, bool invert) {
+        if (w <= 0 || pageCells <= 0) {
+            sb->hide();
+            return;
+        }
+        sb->setGeometry(x, y, w, SB_SIZE);
+        sb->blockSignals(true);
+        sb->setRange(0, maxScroll);
+        sb->setPageStep(pageCells);
+        sb->setSingleStep(1);
+        sb->setValue(invert ? maxScroll - scrollVal : scrollVal);
+        sb->blockSignals(false);
+        sb->setVisible(maxScroll > 0);
+    };
 
-    auto setupVert
-        = [&](QScrollBar* sb, int x, int y, int h, int maxScroll, int pageCells, int& scrollVal,
-              bool invert) {
-              if (h <= 0 || pageCells <= 0) {
-                  sb->hide();
-                  return;
-              }
-              sb->setGeometry(x, y, SB_SIZE, h);
-              sb->blockSignals(true);
-              sb->setRange(0, maxScroll);
-              sb->setPageStep(pageCells);
-              sb->setSingleStep(1);
-              sb->setValue(invert ? maxScroll - scrollVal : scrollVal);
-              sb->blockSignals(false);
-              sb->setVisible(maxScroll > 0);
-          };
+    auto setupVert = [&](QScrollBar* sb, int x, int y, int h, int maxScroll, int pageCells,
+                         int& scrollVal, bool invert) {
+        if (h <= 0 || pageCells <= 0) {
+            sb->hide();
+            return;
+        }
+        sb->setGeometry(x, y, SB_SIZE, h);
+        sb->blockSignals(true);
+        sb->setRange(0, maxScroll);
+        sb->setPageStep(pageCells);
+        sb->setSingleStep(1);
+        sb->setValue(invert ? maxScroll - scrollVal : scrollVal);
+        sb->blockSignals(false);
+        sb->setVisible(maxScroll > 0);
+    };
 
     setupHorz(sbHorz1, frm->gewebe.pos.x0, H - SB_SIZE, frm->gewebe.pos.width, maxX1, gewebe_cols,
               frm->scroll_x1, frm->righttoleft);
@@ -656,41 +676,40 @@ void PatternCanvas::paintEvent(QPaintEvent* /*_e*/)
         the field is blanked to btnFace first, then only the Rahmen
         (grid lines + strongline + outer frame) is drawn. Cell
         symbols / fills are skipped. */
-    auto paintField
-        = [this, &p](FeldBase& fb, void (TDBWFRM::*draw)(int, int),
-                     void (TDBWFRM::*rahmen)(int, int), bool _blankContent) {
-              if (fb.gw <= 0 || fb.gh <= 0)
-                  return;
-              if (fb.pos.width <= 0 || fb.pos.height <= 0)
-                  return;
-              if (_blankContent) {
-                  p.setPen(Qt::NoPen);
-                  p.setBrush(kLegacyBtnFace);
-                  p.drawRect(fb.pos.x0, fb.pos.y0, fb.pos.width, fb.pos.height);
-              }
-              const int cols = fb.pos.width / fb.gw;
-              const int rows = fb.pos.height / fb.gh;
-              /*  Cells first, Rahmen second so the strongline lines draw
-                  on top of cell fills without getting overwritten. */
-              if (!_blankContent) {
-                  for (int i = 0; i < cols; i++)
-                      for (int j = 0; j < rows; j++)
-                          (frm->*draw)(i, j);
-              }
-              if (rahmen) {
-                  for (int i = 0; i < cols; i++)
-                      for (int j = 0; j < rows; j++)
-                          (frm->*rahmen)(i, j);
-              }
-          };
+    auto paintField = [this, &p](FeldBase& fb, void (TDBWFRM::*draw)(int, int),
+                                 void (TDBWFRM::*rahmen)(int, int), bool _blankContent) {
+        if (fb.gw <= 0 || fb.gh <= 0)
+            return;
+        if (fb.pos.width <= 0 || fb.pos.height <= 0)
+            return;
+        if (_blankContent) {
+            p.setPen(Qt::NoPen);
+            p.setBrush(kLegacyBtnFace);
+            p.drawRect(fb.pos.x0, fb.pos.y0, fb.pos.width, fb.pos.height);
+        }
+        const int cols = fb.pos.width / fb.gw;
+        const int rows = fb.pos.height / fb.gh;
+        /*  Cells first, Rahmen second so the strongline lines draw
+            on top of cell fills without getting overwritten. */
+        if (!_blankContent) {
+            for (int i = 0; i < cols; i++)
+                for (int j = 0; j < rows; j++)
+                    (frm->*draw)(i, j);
+        }
+        if (rahmen) {
+            for (int i = 0; i < cols; i++)
+                for (int j = 0; j < rows; j++)
+                    (frm->*rahmen)(i, j);
+        }
+    };
 
     const bool onlyGewebe = frm->ViewOnlyGewebe && frm->ViewOnlyGewebe->isChecked();
     const bool gewebeNone = frm->GewebeNone && frm->GewebeNone->isChecked();
 
     if (frm->ViewEinzug && frm->ViewEinzug->isChecked()) {
         paintField(frm->einzug, &TDBWFRM::DrawEinzug, &TDBWFRM::DrawEinzugRahmen, onlyGewebe);
-        paintField(frm->aufknuepfung, &TDBWFRM::DrawAufknuepfung,
-                   &TDBWFRM::DrawAufknuepfungRahmen, onlyGewebe);
+        paintField(frm->aufknuepfung, &TDBWFRM::DrawAufknuepfung, &TDBWFRM::DrawAufknuepfungRahmen,
+                   onlyGewebe);
     }
 
     if (frm->ViewTrittfolge && frm->ViewTrittfolge->isChecked())
@@ -746,8 +765,7 @@ void PatternCanvas::paintEvent(QPaintEvent* /*_e*/)
         const int y0 = frm->kettfarben.pos.y0;
         const int h = frm->kettfarben.pos.height;
         for (int i = 0; i < cols; i++) {
-            const int idx = frm->righttoleft ? frm->scroll_x1 + (cols - 1 - i)
-                                             : frm->scroll_x1 + i;
+            const int idx = frm->righttoleft ? frm->scroll_x1 + (cols - 1 - i) : frm->scroll_x1 + i;
             const int x = frm->kettfarben.pos.x0 + i * frm->kettfarben.gw;
             p.setPen(Qt::NoPen);
             p.setBrush(palCol(frm->kettfarben.feld.Get(idx)));
@@ -771,7 +789,7 @@ void PatternCanvas::paintEvent(QPaintEvent* /*_e*/)
         const int w = frm->schussfarben.pos.width;
         for (int j = 0; j < rows; j++) {
             const int y = frm->schussfarben.pos.y0 + frm->schussfarben.pos.height
-                - (j + 1) * frm->schussfarben.gh;
+                          - (j + 1) * frm->schussfarben.gh;
             p.setPen(Qt::NoPen);
             p.setBrush(palCol(frm->schussfarben.feld.Get(frm->scroll_y2 + j)));
             p.drawRect(x0, y, w, frm->schussfarben.gh);
@@ -792,8 +810,7 @@ void PatternCanvas::paintEvent(QPaintEvent* /*_e*/)
         const int h = frm->blatteinzug.pos.height;
         const int half = h / 2;
         for (int i = 0; i < cols; i++) {
-            const int idx = frm->righttoleft ? frm->scroll_x1 + (cols - 1 - i)
-                                             : frm->scroll_x1 + i;
+            const int idx = frm->righttoleft ? frm->scroll_x1 + (cols - 1 - i) : frm->scroll_x1 + i;
             const int x = frm->blatteinzug.pos.x0 + i * frm->blatteinzug.gw;
             const int gw = frm->blatteinzug.gw;
             const bool on = frm->blatteinzug.feld.Get(idx);

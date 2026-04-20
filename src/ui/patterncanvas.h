@@ -44,6 +44,12 @@ public:
         Safe to call before the widget has ever been shown (tests). */
     void recomputeLayout(int _gw = 0, int _gh = 0);
 
+    /*  Push frm->scroll_x1/x2/y1/y2 into the scrollbar thumb
+        positions. Needed after keyboard-driven viewport scrolls
+        (Home/End/PageUp/PageDown) that mutate the scroll_* members
+        directly. */
+    void syncScrollbarsFromFrm();
+
 protected:
     void paintEvent(QPaintEvent* _e) override;
     void resizeEvent(QResizeEvent* _e) override;

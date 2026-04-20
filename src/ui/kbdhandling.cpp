@@ -10,20 +10,22 @@
 */
 
 /*  Port scope:
-      * Arrow-key cursor motion (one cell per press, Shift extends
-        selection).
+      * Arrow-key cursor motion. Plain = 1 cell; Ctrl = strongline
+        spacing; Alt = 2x strongline (legacy CURSOR_LARGE_SKIP_X/Y).
+        Shift extends selection; on the first step from a 1-wide
+        selection the step is reduced by one cell so the expansion
+        lands cleanly on the strongline grid.
+      * Ctrl+Alt+Arrow toggles the active cursor direction.
       * Space toggles the current cell via cursorhandler.
       * Digits 1-9 set currentrange; 0 unset/paints background.
-      * Tab / Shift+Tab (and Enter) switch focused field.
+      * Tab / Shift+Tab / Enter / Escape / F6 / Shift+F6 switch field.
+      * Home / End / PageUp / PageDown and their Ctrl variants jump
+        or scroll the viewport, mirroring legacy kbdscroll.cpp.
 
     Deferred:
-      * Ctrl/Alt-modified large-skip steps (needs CURSOR_LARGE_SKIP_X
-        calibration from the viewport size).
-      * Home/End/PageUp/PageDown (HandleHomeKey etc.).
       * Copy/paste shortcuts (K, E, T) -- need clipboard ops.
       * F12 highlight.
       * Userdef shortcuts (Shift+Ctrl+C/V/B).
-      * Ctrl+Alt cursor-direction toggle.
 */
 
 #include "mainwindow.h"
@@ -80,32 +82,131 @@ void TDBWFRM::handleCanvasKeyPress(int _key, int _modifiers)
         return;
 
     const bool shift = (_modifiers & Qt::ShiftModifier) != 0;
-    /*  The cursor API takes a TShiftState compat object; use the
-        select-only convention from the keyboard layer. The Move*
-        methods' _select flag comes through as shift only.          */
-
-    /*  Ctrl / Alt widens the arrow step to speed navigation.
-        Legacy used the field's strongline distance; the port fixes
-        it at 4 / 8 cells which matches the default strongline=4. */
     const bool alt = (_modifiers & Qt::AltModifier) != 0;
     const bool ctrl = (_modifiers & Qt::ControlModifier) != 0;
-    const int step = alt ? 8 : (ctrl ? 4 : 1);
+
+    /*  Legacy CURSOR_LARGE_SKIP_X/Y are derived from the gewebe
+        field's strongline spacing (see legacy/filehandling.cpp:249):
+            CURSOR_LARGE_SKIP_X = gewebe.pos.strongline_x * 2
+            CURSOR_LARGE_SKIP_Y = gewebe.pos.strongline_y * 2
+        Alt uses the full large skip, Ctrl uses half (one strongline). */
+    const int largeSkipX = std::max(1, gewebe.pos.strongline_x * 2);
+    const int largeSkipY = std::max(1, gewebe.pos.strongline_y * 2);
+
+    auto horzStep = [&]() {
+        int s;
+        if (alt)
+            s = largeSkipX;
+        else if (ctrl)
+            s = largeSkipX / 2;
+        else
+            return 1;
+        /*  First expansion from a 1-wide selection: trim one cell so
+            the resulting selection edge lands on a strongline. */
+        if (shift && selection.Width() == 1)
+            s -= 1;
+        return std::max(1, s);
+    };
+    auto vertStep = [&]() {
+        int s;
+        if (alt)
+            s = largeSkipY;
+        else if (ctrl)
+            s = largeSkipY / 2;
+        else
+            return 1;
+        if (shift && selection.Height() == 1)
+            s -= 1;
+        return std::max(1, s);
+    };
+
+    /*  Ctrl+Alt+Arrow toggles cursor-direction flags for the active
+        field, respecting righttoleft / toptobottom (legacy
+        kbdhandling.cpp:168-226). */
+    auto toggleCursorDirection = [&](int _key) {
+        CURSORDIRECTION cd = cursorhandler->GetCursorDirection();
+        const bool horzField = (kbd_field == GEWEBE || kbd_field == EINZUG
+                                || kbd_field == KETTFARBEN || kbd_field == BLATTEINZUG);
+        const bool vertField = (kbd_field == EINZUG || kbd_field == AUFKNUEPFUNG);
+        if (_key == Qt::Key_Left) {
+            if (righttoleft && horzField) {
+                if (cd & CD_LEFT)
+                    cd = CURSORDIRECTION(cd & ~CD_LEFT);
+                else
+                    cd = CURSORDIRECTION(cd | CD_RIGHT);
+            } else {
+                if (cd & CD_RIGHT)
+                    cd = CURSORDIRECTION(cd & ~CD_RIGHT);
+                else
+                    cd = CURSORDIRECTION(cd | CD_LEFT);
+            }
+        } else if (_key == Qt::Key_Right) {
+            if (righttoleft && horzField) {
+                if (cd & CD_RIGHT)
+                    cd = CURSORDIRECTION(cd & ~CD_RIGHT);
+                else
+                    cd = CURSORDIRECTION(cd | CD_LEFT);
+            } else {
+                if (cd & CD_LEFT)
+                    cd = CURSORDIRECTION(cd & ~CD_LEFT);
+                else
+                    cd = CURSORDIRECTION(cd | CD_RIGHT);
+            }
+        } else if (_key == Qt::Key_Up) {
+            if (toptobottom && vertField) {
+                if (cd & CD_UP)
+                    cd = CURSORDIRECTION(cd & ~CD_UP);
+                else
+                    cd = CURSORDIRECTION(cd | CD_DOWN);
+            } else {
+                if (cd & CD_DOWN)
+                    cd = CURSORDIRECTION(cd & ~CD_DOWN);
+                else
+                    cd = CURSORDIRECTION(cd | CD_UP);
+            }
+        } else if (_key == Qt::Key_Down) {
+            if (toptobottom && vertField) {
+                if (cd & CD_DOWN)
+                    cd = CURSORDIRECTION(cd & ~CD_DOWN);
+                else
+                    cd = CURSORDIRECTION(cd | CD_UP);
+            } else {
+                if (cd & CD_UP)
+                    cd = CURSORDIRECTION(cd & ~CD_UP);
+                else
+                    cd = CURSORDIRECTION(cd | CD_DOWN);
+            }
+        }
+        cursorhandler->SetCursorDirection(cd);
+    };
 
     switch (_key) {
     case Qt::Key_Left:
-        cursorhandler->MoveCursorLeft(step, shift);
+        if (ctrl && alt)
+            toggleCursorDirection(Qt::Key_Left);
+        else
+            cursorhandler->MoveCursorLeft(horzStep(), shift);
         refresh();
         return;
     case Qt::Key_Right:
-        cursorhandler->MoveCursorRight(step, shift);
+        if (ctrl && alt)
+            toggleCursorDirection(Qt::Key_Right);
+        else
+            cursorhandler->MoveCursorRight(horzStep(), shift);
         refresh();
         return;
     case Qt::Key_Up:
-        cursorhandler->MoveCursorUp(step, shift);
+        if (ctrl && alt)
+            toggleCursorDirection(Qt::Key_Up);
+        else
+            cursorhandler->MoveCursorUp(vertStep(), shift);
         refresh();
         return;
     case Qt::Key_Down:
-        cursorhandler->MoveCursorDown(step, shift);
+        if (ctrl && alt)
+            toggleCursorDirection(Qt::Key_Down);
+        else
+            cursorhandler->MoveCursorDown(vertStep(), shift);
         refresh();
         return;
 
@@ -133,6 +234,15 @@ void TDBWFRM::handleCanvasKeyPress(int _key, int _modifiers)
         refresh();
         return;
 
+    case Qt::Key_F6:
+        if (shift)
+            cursorhandler->GotoPrevField();
+        else
+            cursorhandler->GotoNextField();
+        refresh();
+        return;
+
+    case Qt::Key_Escape:
     case Qt::Key_Backtab:
         cursorhandler->GotoPrevField();
         refresh();
@@ -180,11 +290,19 @@ void TDBWFRM::handleCanvasKeyPress(int _key, int _modifiers)
             return;
         }
         if (fb && sx) {
-            if (fb->kbd.i > 0) {
+            const int cols = fb->gw > 0 ? fb->pos.width / fb->gw : 0;
+            const int absI = *sx + fb->kbd.i;
+            if (ctrl) {
+                const int oldSx = *sx;
+                *sx = std::max(0, *sx - std::max(1, cols / 2));
+                const int delta = oldSx - *sx;
+                const int newAbsI = std::max(0, absI - delta);
+                cursorhandler->SetCursor(f, newAbsI, sy + fb->kbd.j, true);
+            } else if (fb->kbd.i > 0) {
                 cursorhandler->SetCursor(f, *sx, sy + fb->kbd.j, true);
             } else {
-                *sx = 0;
-                cursorhandler->SetCursor(f, 0, sy + fb->kbd.j, true);
+                *sx = std::max(0, *sx - std::max(1, cols / 2));
+                cursorhandler->SetCursor(f, *sx, sy + fb->kbd.j, true);
             }
             refresh();
         }
@@ -239,11 +357,19 @@ void TDBWFRM::handleCanvasKeyPress(int _key, int _modifiers)
         }
         if (fb && sx) {
             const int cols = fb->gw > 0 ? fb->pos.width / fb->gw : 0;
-            if (fb->kbd.i < cols - 1) {
+            const int maxScroll = std::max(0, maxx - cols);
+            const int absI = *sx + fb->kbd.i;
+            if (ctrl) {
+                const int oldSx = *sx;
+                *sx = std::min(maxScroll, *sx + std::max(1, cols / 2));
+                const int delta = *sx - oldSx;
+                const int newAbsI = std::min(maxx - 1, absI + delta);
+                cursorhandler->SetCursor(f, newAbsI, sy + fb->kbd.j, true);
+            } else if (fb->kbd.i < cols - 1) {
                 cursorhandler->SetCursor(f, *sx + cols - 1, sy + fb->kbd.j, true);
             } else {
-                *sx = std::max(0, maxx - cols);
-                cursorhandler->SetCursor(f, maxx - 1, sy + fb->kbd.j, true);
+                *sx = std::min(maxScroll, *sx + std::max(1, cols / 2));
+                cursorhandler->SetCursor(f, *sx + cols - 1, sy + fb->kbd.j, true);
             }
             refresh();
         }
@@ -294,10 +420,18 @@ void TDBWFRM::handleCanvasKeyPress(int _key, int _modifiers)
         }
         if (fb && sy) {
             const int rows = fb->gh > 0 ? fb->pos.height / fb->gh : 0;
-            if (fb->kbd.j < rows - 1) {
+            const int maxScroll = std::max(0, maxy - rows);
+            const int absJ = *sy + fb->kbd.j;
+            if (ctrl) {
+                const int oldSy = *sy;
+                *sy = std::min(maxScroll, *sy + std::max(1, rows / 2));
+                const int delta = *sy - oldSy;
+                const int newAbsJ = std::min(maxy - 1, absJ + delta);
+                cursorhandler->SetCursor(f, sx + fb->kbd.i, newAbsJ, true);
+            } else if (fb->kbd.j < rows - 1) {
                 cursorhandler->SetCursor(f, sx + fb->kbd.i, *sy + rows - 1, true);
             } else {
-                *sy = std::min(*sy + rows, std::max(0, maxy - rows));
+                *sy = std::min(*sy + rows, maxScroll);
                 cursorhandler->SetCursor(f, sx + fb->kbd.i, *sy + rows - 1, true);
             }
             refresh();
@@ -341,10 +475,17 @@ void TDBWFRM::handleCanvasKeyPress(int _key, int _modifiers)
         }
         if (fb && sy) {
             const int rows = fb->gh > 0 ? fb->pos.height / fb->gh : 0;
-            if (fb->kbd.j > 0) {
+            const int absJ = *sy + fb->kbd.j;
+            if (ctrl) {
+                const int oldSy = *sy;
+                *sy = std::max(0, *sy - std::max(1, rows / 2));
+                const int delta = oldSy - *sy;
+                const int newAbsJ = std::max(0, absJ - delta);
+                cursorhandler->SetCursor(f, sx + fb->kbd.i, newAbsJ, true);
+            } else if (fb->kbd.j > 0) {
                 cursorhandler->SetCursor(f, sx + fb->kbd.i, *sy, true);
             } else {
-                *sy = std::max(0, *sy - rows);
+                *sy = std::max(0, *sy - std::max(1, rows / 2));
                 cursorhandler->SetCursor(f, sx + fb->kbd.i, *sy, true);
             }
             refresh();
