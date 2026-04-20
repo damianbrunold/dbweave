@@ -261,10 +261,6 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     QAction* actExportWIF
         = menuAct(exportMenu, "&WIF file...", "&WIF Datei...", nullptr,
                   "Exports the pattern to a WIF file", "Exportiert das Muster in eine WIF Datei");
-    QAction* actExportDBW35 = menuAct(exportMenu, "&DB-WEAVE 3.5 file...", "&DB-WEAVE 3.5 Datei...",
-                                      nullptr, "Exports the pattern to a DB-WEAVE 3.5 file",
-                                      "Exportiert das Muster in eine DB-WEAVE 3.5 Datei");
-    actExportDBW35->setEnabled(false);
     fileMenu->addSeparator();
     QAction* actFileProps = menuAct(fileMenu, "Propert&ies...", "&Eigenschaften...", nullptr,
                                     "Edits the properties of the pattern",
@@ -310,8 +306,8 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     connect(actPrint, &QAction::triggered, this, [this] { FilePrintClick(); });
     connect(actPreview, &QAction::triggered, this, [this] { FilePrintpreviewClick(); });
     connect(actImportWIF, &QAction::triggered, this, [this] { ImportWIFClick(); });
-    connect(actExportBmp, &QAction::triggered, this, [this] { DateiExportClick(); });
-    connect(actExportWIF, &QAction::triggered, this, [this] { DateiExportClick(); });
+    connect(actExportBmp, &QAction::triggered, this, [this] { DateiExportBitmapClick(); });
+    connect(actExportWIF, &QAction::triggered, this, [this] { DateiExportWifClick(); });
     connect(actQuit, &QAction::triggered, this, &TDBWFRM::close);
 
     /*  ---------- &Edit (MenuBearbeiten) --------------------- */

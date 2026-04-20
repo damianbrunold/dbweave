@@ -771,7 +771,9 @@ public:
     /*  Import / export (Phase 7 batch 8). */
     void ImportWIFClick();
     void ImportBitmapClick();
-    void DateiExportClick();
+    bool DateiImportieren(const QString& _filename);
+    void DateiExportBitmapClick();
+    void DateiExportWifClick();
     void DateiExportieren(const QString& _filename);
     void DoExportBitmap(const QString& _filename);
 

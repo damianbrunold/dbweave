@@ -25,7 +25,9 @@
 #include "draw_cell.h"
 #include "colors_compat.h"
 
+#include <QFileInfo>
 #include <QImage>
+#include <QMessageBox>
 #include <QPainter>
 
 static QColor qcolorFromTColor(TColor _c)
@@ -78,6 +80,11 @@ void TDBWFRM::DoExportBitmap(const QString& _filename)
 
     QPainter p(&img);
     p.setRenderHint(QPainter::Antialiasing, false);
+    /*  PaintCell() mutates the painter's brush as a side effect;
+        QPainter::drawRect honours that brush and would fill each
+        quadrant's outline rect solid-colour. Keep the brush empty
+        so the quadrant borders are strokes, not fills. */
+    p.setBrush(Qt::NoBrush);
 
     /*  Einzug (top-left). */
     if (shafts != 0) {
@@ -97,6 +104,7 @@ void TDBWFRM::DoExportBitmap(const QString& _filename)
             PaintCell(p, einzug.darstellung, x, y, x + gw, y + gh, QColor(Qt::black));
         }
         p.setPen(Qt::black);
+        p.setBrush(Qt::NoBrush);
         p.drawRect(x0, y0, dx * gw, shafts * gh);
     }
 
@@ -125,6 +133,7 @@ void TDBWFRM::DoExportBitmap(const QString& _filename)
                 PaintCell(p, darst, x, y, x + gw, y + gh, col);
             }
         p.setPen(Qt::black);
+        p.setBrush(Qt::NoBrush);
         p.drawRect(x0, y0, treadles * gw, shafts * gh);
     }
 
@@ -151,6 +160,7 @@ void TDBWFRM::DoExportBitmap(const QString& _filename)
                 PaintCell(p, darst, x, y, x + gw, y + gh, col);
             }
         p.setPen(Qt::black);
+        p.setBrush(Qt::NoBrush);
         p.drawRect(x0, y0, treadles * gw, dy * gh);
     }
 
@@ -185,9 +195,20 @@ void TDBWFRM::DoExportBitmap(const QString& _filename)
             }
         }
         p.setPen(Qt::black);
+        p.setBrush(Qt::NoBrush);
         p.drawRect(x0, y0, dx * gw, dy * gh);
     }
 
     p.end();
-    img.save(_filename);
+
+    const QString suffix = QFileInfo(_filename).suffix().toLower();
+    const char* format = nullptr;
+    if (suffix == QStringLiteral("bmp"))
+        format = "BMP";
+    else if (suffix == QStringLiteral("png"))
+        format = "PNG";
+    if (!img.save(_filename, format)) {
+        QMessageBox::warning(this, tr("Export"),
+                             tr("Failed to write bitmap file:\n%1").arg(_filename));
+    }
 }

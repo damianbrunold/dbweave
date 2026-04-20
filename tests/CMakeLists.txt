@@ -164,3 +164,9 @@ qt_add_executable(test_input
 )
 target_link_libraries(test_input PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test dbweave_ui)
 add_test(NAME input COMMAND test_input)
+
+qt_add_executable(test_wif_roundtrip
+    test_wif_roundtrip.cpp
+)
+target_link_libraries(test_wif_roundtrip PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test dbweave_ui)
+add_test(NAME wif_roundtrip COMMAND test_wif_roundtrip)

@@ -25,6 +25,7 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QMessageBox>
 #include <QTextStream>
 
 /*-----------------------------------------------------------------*/
@@ -330,24 +331,36 @@ void TDBWFRM::DateiExportieren(const QString& _filename)
 }
 
 /*-----------------------------------------------------------------*/
-/*  TDBWFRM::DateiExportClick — pops a Save-as dialog with BMP /
-    WIF / PNG filter options and dispatches based on suffix, matching
-    legacy export.cpp semantics (minus the dbw-3.5 "old format"
-    branch, which is essentially a legacy-Save-As and will land when
-    the file-I/O slice rounds out).                                */
-void TDBWFRM::DateiExportClick()
+void TDBWFRM::DateiExportBitmapClick()
 {
-    const QString fn = QFileDialog::getSaveFileName(
-        this, LANG_STR("Export", "Exportieren"), QString(),
-        LANG_STR("Bitmap (*.bmp);;PNG (*.png);;WIF (*.wif)",
-                 "Bitmap (*.bmp);;PNG (*.png);;WIF (*.wif)"));
-    if (fn.isEmpty())
+    QFileDialog dlg(this, LANG_STR("Export bitmap", "Bitmap exportieren"));
+    dlg.setAcceptMode(QFileDialog::AcceptSave);
+    const QString bmpFilter = QStringLiteral("Bitmap (*.bmp)");
+    const QString pngFilter = QStringLiteral("PNG (*.png)");
+    dlg.setNameFilters({ bmpFilter, pngFilter });
+    dlg.setDefaultSuffix(QStringLiteral("bmp"));
+    QObject::connect(&dlg, &QFileDialog::filterSelected, &dlg, [&dlg, bmpFilter](const QString& f) {
+        dlg.setDefaultSuffix(f == bmpFilter ? QStringLiteral("bmp") : QStringLiteral("png"));
+    });
+    if (dlg.exec() != QDialog::Accepted)
         return;
+    const QStringList files = dlg.selectedFiles();
+    if (files.isEmpty())
+        return;
+    DoExportBitmap(files.first());
+}
 
-    const QString suffix = QFileInfo(fn).suffix().toLower();
-    if (suffix == QStringLiteral("wif")) {
-        DateiExportieren(fn);
-    } else {
-        DoExportBitmap(fn);
-    }
+/*-----------------------------------------------------------------*/
+void TDBWFRM::DateiExportWifClick()
+{
+    QFileDialog dlg(this, LANG_STR("Export WIF", "WIF exportieren"));
+    dlg.setAcceptMode(QFileDialog::AcceptSave);
+    dlg.setNameFilter(QStringLiteral("WIF (*.wif)"));
+    dlg.setDefaultSuffix(QStringLiteral("wif"));
+    if (dlg.exec() != QDialog::Accepted)
+        return;
+    const QStringList files = dlg.selectedFiles();
+    if (files.isEmpty())
+        return;
+    DateiExportieren(files.first());
 }
