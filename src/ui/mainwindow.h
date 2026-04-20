@@ -552,9 +552,27 @@ public:
         weft range. */
     void SpInvert();
 
-    /*  First / last used treadle indices (-1 if none used). */
+    /*  First / last used treadle / shaft indices. */
     int GetFirstTritt();
     int GetLastTritt();
+    int GetFirstSchaft();
+    int GetLastSchaft();
+
+    /*  --- Aufknuepfung (tie-up) menu operations. -------------------
+        Act on the tie-up rectangle bounded by first/last in-use
+        shaft x first/last in-use treadle. All use RecalcGewebe to
+        repaint the fabric preview, never RecalcAll, so they don't
+        regenerate einzug / trittfolge from gewebe and are safe under
+        GewebeLocked. No-op in schlagpatrone view.                  */
+    void AufInvertClick();
+    void ClearAufknuepfungClick();
+    void AufZentralsymmClick();
+    void AufRollUpClick();
+    void AufRollDownClick();
+    void AufRollLeftClick();
+    void AufRollRightClick();
+    void AufSteigungIncClick();
+    void AufSteigungDecClick();
 
     /*  --- Edit-menu operations on the selection ----------------
         All bodies live in src/ui/edit.cpp. Each op reads

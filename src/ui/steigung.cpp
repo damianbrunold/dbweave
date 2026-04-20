@@ -39,6 +39,22 @@ int TDBWFRM::GetLastTritt()
     return 0;
 }
 
+int TDBWFRM::GetFirstSchaft()
+{
+    for (int j = 0; j < Data->MAXY1; j++)
+        if (!IsFreeSchaft(j))
+            return j;
+    return Data->MAXY1 - 1;
+}
+
+int TDBWFRM::GetLastSchaft()
+{
+    for (int j = Data->MAXY1 - 1; j >= 0; j--)
+        if (!IsFreeSchaft(j))
+            return j;
+    return 0;
+}
+
 void TDBWFRM::SpInvert()
 {
     if (!(ViewSchlagpatrone && ViewSchlagpatrone->isChecked()))

@@ -729,46 +729,46 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     QMenu* aufMenu = addMenu(menuBar(), "Tie-&up", "A&ufknüpfung");
     QAction* actAufInvert = menuAct(aufMenu, "&Invert", "&Invertieren", "sb_invert",
                                     "Inverts the tie-up", "Invertiert die Aufknüpfung");
-    actAufInvert->setEnabled(false);
+    connect(actAufInvert, &QAction::triggered, this, [this] { AufInvertClick(); });
     QAction* actClearAuf = menuAct(aufMenu, "&Delete", "&Löschen", nullptr, "Deletes the tie-up",
                                    "Löscht die Aufknüpfung");
-    actClearAuf->setEnabled(false);
+    connect(actClearAuf, &QAction::triggered, this, [this] { ClearAufknuepfungClick(); });
     QMenu* aufRollMenu = addSubmenu(aufMenu, "&Roll", "&Rollen");
     QAction* actAufRollUp = menuAct(aufRollMenu, "&Up", "Nach &oben", nullptr,
                                     "Rolls the tie-up up", "Rollt die Aufknüpfung nach oben");
     /*  Legacy AufRoll shortcuts are Ctrl+Shift+6/7/8/9; keeps Ctrl+Shift+Arrow
         free for future use and matches legacy/dbw3_form.dfm. */
     actAufRollUp->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_6));
-    actAufRollUp->setEnabled(false);
+    connect(actAufRollUp, &QAction::triggered, this, [this] { AufRollUpClick(); });
     QAction* actAufRollDown = menuAct(aufRollMenu, "&Down", "Nach &unten", nullptr,
                                       "Rolls the tie-up down", "Rollt die Aufknüpfung nach unten");
     actAufRollDown->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_7));
-    actAufRollDown->setEnabled(false);
+    connect(actAufRollDown, &QAction::triggered, this, [this] { AufRollDownClick(); });
     QAction* actAufRollLeft = menuAct(aufRollMenu, "&Left", "Nach &links", nullptr,
                                       "Rolls the tie-up left", "Rollt die Aufknüpfung nach links");
     actAufRollLeft->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_8));
-    actAufRollLeft->setEnabled(false);
+    connect(actAufRollLeft, &QAction::triggered, this, [this] { AufRollLeftClick(); });
     QAction* actAufRollRight
         = menuAct(aufRollMenu, "&Right", "Nach &rechts", nullptr, "Rolls the tie-up right",
                   "Rollt die Aufknüpfung nach rechts");
     actAufRollRight->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_9));
-    actAufRollRight->setEnabled(false);
+    connect(actAufRollRight, &QAction::triggered, this, [this] { AufRollRightClick(); });
     QMenu* aufSlopeMenu = addSubmenu(aufMenu, "&Slope", "&Steigung");
     QAction* actAufSlopeInc
         = menuAct(aufSlopeMenu, "&Increase", "&Erhöhen", nullptr,
                   "Increases the slope of the tie-up", "Erhöht die Steigung der Aufknüpfung");
     actAufSlopeInc->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_H));
-    actAufSlopeInc->setEnabled(false);
+    connect(actAufSlopeInc, &QAction::triggered, this, [this] { AufSteigungIncClick(); });
     QAction* actAufSlopeDec
         = menuAct(aufSlopeMenu, "&Decrease", "&Vermindern", nullptr,
                   "Decreases the slope of the tie-up", "Vermindert die Steigung der Aufknüpfung");
     actAufSlopeDec->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_J));
-    actAufSlopeDec->setEnabled(false);
+    connect(actAufSlopeDec, &QAction::triggered, this, [this] { AufSteigungDecClick(); });
     QAction* actAufZentralsymm
         = menuAct(aufMenu, "Ma&ke central symmetric", "&Zentralsymmetrisch", "sb_centralsym",
                   "Tries to make the tie-up central symmetric",
                   "Versucht die Aufknüpfung zentralsymmetrisch zu machen");
-    actAufZentralsymm->setEnabled(false);
+    connect(actAufZentralsymm, &QAction::triggered, this, [this] { AufZentralsymmClick(); });
 
     /*  ---------- &Insert (MenuEinfuegen) -------------------- */
     QMenu* insertMenu = addMenu(menuBar(), "&Insert", "Ei&nfügen");
