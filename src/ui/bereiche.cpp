@@ -31,8 +31,10 @@
 /*  schlagpatrone.cpp ports. */
 void TDBWFRM::ClearTrittfolgeClick()
 {
-    if (GewebeLocked())
-        return;
+    /*  Not gated by GewebeLocked: this clears trittfolge (and the
+        corresponding gewebe rows in lockstep) without triggering a
+        recalc-from-gewebe, so it doesn't regenerate einzug /
+        trittfolge / aufknuepfung from scratch. Matches legacy. */
     for (int j = 0; j < Data->MAXY2; j++) {
         for (int i = 0; i < Data->MAXX2; i++)
             trittfolge.feld.Set(i, j, 0);
@@ -48,12 +50,41 @@ void TDBWFRM::ClearTrittfolgeClick()
         undo->Snapshot();
 }
 
+void TDBWFRM::EzSpiegelnClick()
+{
+    /*  Mirror einzug (and the gewebe warp columns) horizontally across
+        [kette.a, kette.b]. Legacy additionally flipped EzBelassen to
+        keep the manually mirrored shaft numbering across the next
+        recalc, but EzBelassen is now folded into EzMinimalZ so that
+        guard is a no-op. Not gated by GewebeLocked: legacy reserved
+        the pattern-lock check for interactive cell edits (cursor /
+        mouse), not menu-driven mirror ops. */
+    for (int i = kette.a; i <= (kette.b - kette.a) / 2; i++) {
+        const int mirror = kette.b - (i - kette.a);
+        short s = einzug.feld.Get(i);
+        einzug.feld.Set(i, einzug.feld.Get(mirror));
+        einzug.feld.Set(mirror, s);
+        for (int j = schuesse.a; j <= schuesse.b; j++) {
+            char g = gewebe.feld.Get(i, j);
+            gewebe.feld.Set(i, j, gewebe.feld.Get(mirror, j));
+            gewebe.feld.Set(mirror, j, g);
+        }
+    }
+    UpdateRapport();
+    refresh();
+    SetModified();
+    if (undo)
+        undo->Snapshot();
+}
+
 void TDBWFRM::TfSpiegelnClick()
 {
-    if (GewebeLocked())
-        return;
-    if (TfBelassen)
-        TfBelassen->setChecked(true);
+    /*  TfBelassen flip from the legacy implementation dropped for the
+        same reason as EzSpiegelnClick: TfBelassen now routes through
+        TfMinimalZ, so forcing it would not preserve the mirrored
+        treadle numbering anyway. Not gated by GewebeLocked: legacy
+        reserved the pattern-lock check for interactive cell edits,
+        not menu-driven mirror ops. */
     for (int j = schuesse.a; j <= (schuesse.b - schuesse.a) / 2; j++) {
         for (int i = 0; i < Data->MAXX2; i++) {
             char s = trittfolge.feld.Get(i, j);
@@ -86,8 +117,8 @@ void TDBWFRM::SpInvertClick()
 {
     if (!ViewSchlagpatrone || !ViewSchlagpatrone->isChecked())
         return;
-    if (GewebeLocked())
-        return;
+    /*  Not gated by GewebeLocked: inverts only the trittfolge, never
+        touches gewebe, and never triggers RecalcAll.              */
 
     const int t1 = GetFirstTritt();
     const int t2 = GetLastTritt();

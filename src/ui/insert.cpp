@@ -185,8 +185,8 @@ void TDBWFRM::InsertKetteClick()
     dbw3_assert(kbd_field == EINZUG || kbd_field == GEWEBE);
     if (!(kbd_field == EINZUG || kbd_field == GEWEBE))
         return;
-    if (GewebeLocked())
-        return;
+    /*  Not gated by GewebeLocked: inserts an empty column across
+        every field in lockstep without triggering RecalcAll.    */
 
     RANGE savesel = selection;
     selection.Normalize();
@@ -219,8 +219,8 @@ void TDBWFRM::InsertSchussClick()
     dbw3_assert(kbd_field == TRITTFOLGE || kbd_field == GEWEBE);
     if (!(kbd_field == TRITTFOLGE || kbd_field == GEWEBE))
         return;
-    if (GewebeLocked())
-        return;
+    /*  Not gated by GewebeLocked: inserts an empty row across every
+        field in lockstep without triggering RecalcAll.          */
 
     RANGE savesel = selection;
     selection.Normalize();

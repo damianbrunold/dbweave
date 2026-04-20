@@ -169,8 +169,9 @@ void TDBWFRM::ClearSchussfaden(int _j)
 /*-----------------------------------------------------------------*/
 void TDBWFRM::RappRapportierenClick()
 {
-    if (GewebeLocked())
-        return;
+    /*  Not gated by GewebeLocked: replicates the current rapport
+        across gewebe / einzug / trittfolge / colours in lockstep and
+        does not trigger a recalc-from-gewebe.                     */
     RapportDialog dlg(this);
     dlg.setRepeatAll(false);
     const int kx = kette.b - kette.a + 1;
@@ -206,8 +207,10 @@ void TDBWFRM::RappRapportierenClick()
 /*-----------------------------------------------------------------*/
 void TDBWFRM::RappReduzierenClick()
 {
-    if (GewebeLocked())
-        return;
+    /*  Not gated by GewebeLocked: reducing the pattern to a single
+        rapport is a deliberate user action on structural data and
+        is undoable. Under EzFixiert it triggers a RecalcAll below,
+        which the user can back out of via undo if unwanted.     */
     RapportKette(1, false);
     RapportSchuss(1, false);
     if (EzFixiert && EzFixiert->isChecked())

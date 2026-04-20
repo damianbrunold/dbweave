@@ -350,8 +350,7 @@ public:
     };
     std::vector<LangEntry> langEntries;
     void registerLang(QAction* _a, const QString& _en, const QString& _de,
-                      const QString& _en_tip = QString(),
-                      const QString& _de_tip = QString());
+                      const QString& _en_tip = QString(), const QString& _de_tip = QString());
     void registerLangMenu(class QMenu* _m, const QString& _en, const QString& _de);
     void registerLangWidget(class QWidget* _w, const QString& _en, const QString& _de);
 
@@ -382,10 +381,11 @@ public:
         discarded changes). Called from closeEvent and also before
         FileOpen / FileNew replace the current document.             */
     bool AskSave();
+
 protected:
     void closeEvent(class QCloseEvent* _event) override;
-public:
 
+public:
     /*  Status-bar labels; created in the ctor and addPermanent-ed
         onto statusBar() so they stay right-aligned. UpdateStatusBar
         populates them on every refresh().                         */
@@ -762,6 +762,7 @@ public:
     void SpInvertClick();
     void ClearTrittfolgeClick();
     void TfSpiegelnClick();
+    void EzSpiegelnClick();
 
     /*  Einzug ↔ Trittfolge transfer. */
     void CopyEinzugTrittfolgeClick();

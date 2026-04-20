@@ -43,8 +43,10 @@ void TDBWFRM::SpInvert()
 {
     if (!(ViewSchlagpatrone && ViewSchlagpatrone->isChecked()))
         return;
-    if (GewebeLocked())
-        return;
+    /*  Not gated by GewebeLocked: inverts the schlagpatrone
+        (trittfolge + gewebe cells in lockstep) but never triggers a
+        recalc-from-gewebe, so einzug/trittfolge/aufknuepfung are not
+        regenerated. */
 
     const int t1 = GetFirstTritt();
     const int t2 = GetLastTritt();

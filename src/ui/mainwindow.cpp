@@ -600,7 +600,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     QAction* actEzSpiegeln = menuAct(threadMenu, "&Mirror all", "&Spiegeln", nullptr,
                                      "Mirrors the threading in horizontal direction",
                                      "Spiegelt den Einzug in horizontaler Richtung");
-    actEzSpiegeln->setEnabled(false);
+    connect(actEzSpiegeln, &QAction::triggered, this, [this] { EzSpiegelnClick(); });
     QAction* actClearEinzug = menuAct(threadMenu, "&Delete", "&Löschen", nullptr,
                                       "Deletes the threading", "Löscht den Einzug");
     threadMenu->addSeparator();
