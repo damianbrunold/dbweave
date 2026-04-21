@@ -94,6 +94,27 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
         so the quadrant borders are strokes, not fills. */
     p.setBrush(Qt::NoBrush);
 
+    /*  Draw one cell in either filled or symbol mode, matching the
+        print path's "filled means filled" look: AUSGEFUELLT covers
+        the whole cell edge-to-edge (exactly gw x gh) so neighbouring
+        filled cells merge -- the right neighbour's left edge lands
+        on the shared grid line and overpaints it. Adding +1 here
+        would make each cell 1 logical unit wider than its footprint,
+        which is invisible at raster scale but produces obvious
+        overshoot once the PDF writer scales the geometry up to the
+        printable page.
+        Symbol darstellungen (KREUZ, PUNKT, STRICH, KREIS, ...) leave
+        the background untouched so the image's white/transparent
+        backdrop shows through instead of the editor's btnFace grey. */
+    auto paintExportCell = [&p](DARSTELLUNG _d, int _x, int _y, int _gw, int _gh,
+                                const QColor& _col) {
+        if (_d == AUSGEFUELLT) {
+            p.fillRect(_x, _y, _gw, _gh, _col);
+        } else {
+            PaintCell(p, _d, _x, _y, _x + _gw, _y + _gh, _col, /*_dontclear=*/true);
+        }
+    };
+
     /*  Einzug (top-left). */
     if (shafts != 0) {
         const int x0 = 0;
@@ -109,7 +130,7 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
                 continue;
             const int x = righttoleft ? x0 + (dx - i - 1) * gw : x0 + i * gw;
             const int y = toptobottom ? y0 + (s - 1) * gh : y0 + (shafts - s) * gh;
-            PaintCell(p, einzug.darstellung, x, y, x + gw, y + gh, QColor(Qt::black));
+            paintExportCell(einzug.darstellung, x, y, gw, gh, QColor(Qt::black));
         }
         p.setPen(Qt::black);
         p.setBrush(Qt::NoBrush);
@@ -138,7 +159,7 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
                 QColor col = QColor(Qt::black);
                 if (s >= 1 && s <= 9)
                     col = qcolorFromTColor(GetRangeColor(s));
-                PaintCell(p, darst, x, y, x + gw, y + gh, col);
+                paintExportCell(darst, x, y, gw, gh, col);
             }
         p.setPen(Qt::black);
         p.setBrush(Qt::NoBrush);
@@ -165,7 +186,7 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
                 QColor col = QColor(Qt::black);
                 if (s >= 1 && s <= 9)
                     col = qcolorFromTColor(GetRangeColor(s));
-                PaintCell(p, darst, x, y, x + gw, y + gh, col);
+                paintExportCell(darst, x, y, gw, gh, col);
             }
         p.setPen(Qt::black);
         p.setBrush(Qt::NoBrush);
@@ -198,7 +219,11 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
                     QColor col = QColor(Qt::black);
                     if (s >= 1 && s <= 9)
                         col = qcolorFromTColor(GetRangeColor(s));
-                    p.fillRect(x + 1, y + 1, gw - 2, gh - 2, col);
+                    /*  Fill the cell footprint exactly; the right /
+                        bottom neighbour's own fill covers the shared
+                        grid line. See paintExportCell above for why
+                        +1 would break PDF output.                   */
+                    p.fillRect(x, y, gw, gh, col);
                 }
             }
         }
@@ -209,7 +234,9 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
 }
 
 /*-----------------------------------------------------------------*/
-/*  Raster export (PNG / JPEG). */
+/*  Raster export (PNG / JPEG). Both use a white background; the
+    legacy Windows btnFace grey made exports look like screenshots
+    of the editor, which was rarely what users wanted.             */
 static bool doExportRaster(TDBWFRM* _frm, const QString& _filename, const char* _format)
 {
     const int gw = 16;
@@ -218,7 +245,7 @@ static bool doExportRaster(TDBWFRM* _frm, const QString& _filename, const char* 
     _frm->patternPixelSize(W, H, gw, gh, shafts, treadles);
 
     QImage img(W, H, QImage::Format_RGB32);
-    img.fill(QColor(212, 208, 200));
+    img.fill(QColor(Qt::white));
 
     QPainter p(&img);
     _frm->paintPattern(p, gw, gh, shafts, treadles);
@@ -257,9 +284,7 @@ void TDBWFRM::DoExportSvg(const QString& _filename)
     gen.setDescription(QStringLiteral("DB-WEAVE weaving pattern"));
 
     QPainter p(&gen);
-    /*  The SVG generator has no background; paint one so the exported
-        file matches the raster output. */
-    p.fillRect(QRect(0, 0, W, H), QColor(212, 208, 200));
+    p.fillRect(QRect(0, 0, W, H), QColor(Qt::white));
     paintPattern(p, gw, gh, shafts, treadles);
     const bool ok = p.end();
     if (!ok)
@@ -294,7 +319,7 @@ void TDBWFRM::DoExportPdf(const QString& _filename)
     p.setViewport(page.x() + (page.width() - w) / 2, page.y() + (page.height() - h) / 2, w, h);
     p.setWindow(0, 0, Wpx, Hpx);
 
-    p.fillRect(QRect(0, 0, Wpx, Hpx), QColor(212, 208, 200));
+    p.fillRect(QRect(0, 0, Wpx, Hpx), QColor(Qt::white));
     paintPattern(p, gw, gh, shafts, treadles);
     const bool ok = p.end();
     if (!ok)
