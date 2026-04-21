@@ -13,6 +13,7 @@
 #include "steuerung.h"
 #include "legacy_colors.h"
 
+#include <QMouseEvent>
 #include <QPainter>
 
 SteuerungCanvas::SteuerungCanvas(TSTRGFRM* _frm)
@@ -45,17 +46,21 @@ void SteuerungCanvas::resizeEvent(QResizeEvent* /*_e*/)
         frm->CalcSizes();
 }
 
-void SteuerungCanvas::mousePressEvent(QMouseEvent* /*_e*/)
+void SteuerungCanvas::mousePressEvent(QMouseEvent* _e)
 {
-    /*  Stage 7d will dispatch click-in-schlagpatrone / click-in-klammer. */
+    if (frm)
+        frm->FormMouseDown(_e);
+    setFocus();
 }
 
-void SteuerungCanvas::mouseMoveEvent(QMouseEvent* /*_e*/)
+void SteuerungCanvas::mouseMoveEvent(QMouseEvent* _e)
 {
-    /*  Stage 7d will handle klammer drag. */
+    if (frm)
+        frm->FormMouseMove(_e);
 }
 
-void SteuerungCanvas::mouseReleaseEvent(QMouseEvent* /*_e*/)
+void SteuerungCanvas::mouseReleaseEvent(QMouseEvent* _e)
 {
-    /*  Stage 7d will end klammer drag. */
+    if (frm)
+        frm->FormMouseUp(_e);
 }

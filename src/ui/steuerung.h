@@ -233,6 +233,19 @@ public:
         it.                                                       */
     class QPainter* currentPainter = nullptr;
 
+    /*  Mouse drag state (7d). Populated by FormMouseDown when the
+        user presses inside a klammer column; consumed by
+        FormMouseMove to resize / move the klammer.                */
+    bool dragging = false;
+    int drag_klammer = 0;
+    int drag_j = 0;
+    enum DragStyle { DRAG_TOP, DRAG_MIDDLE, DRAG_BOTTOM };
+    DragStyle drag_style = DRAG_MIDDLE;
+
+    void FormMouseDown(class QMouseEvent* _e);
+    void FormMouseMove(class QMouseEvent* _e);
+    void FormMouseUp(class QMouseEvent* _e);
+
     void paintAll();
 
     void DrawGrid();
