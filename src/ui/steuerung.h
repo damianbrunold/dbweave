@@ -271,6 +271,11 @@ public:
     void NextTritt();
     void PrevTritt();
 
+    /*  Settings persistence (7h). QSettings group "Loom" matches
+        legacy Settings category.                                   */
+    void LoadSettings();
+    void SaveSettings() const;
+
     /*  Popup menu (7e). Built once by buildPopupMenu; shown from
         SteuerungCanvas::contextMenuEvent.                        */
     class QMenu* popupMenu = nullptr;

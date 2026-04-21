@@ -26,6 +26,7 @@
 #include <QLabel>
 #include <QMenuBar>
 #include <QScrollBar>
+#include <QSettings>
 #include <QStatusBar>
 #include <QToolBar>
 #include <QVBoxLayout>
@@ -60,6 +61,11 @@ TSTRGFRM::TSTRGFRM(TDBWFRM* _main, QWidget* _parent)
         schussfarben = &frm->schussfarben;
     }
 
+    /*  Load persisted loom settings before the menus are built
+        so the Loop / ReverseSchaft / Schafts checkmarks come up
+        in the right state.                                       */
+    LoadSettings();
+
     buildMenus();
     buildToolbar();
     buildCentralArea();
@@ -90,6 +96,7 @@ void TSTRGFRM::closeEvent(QCloseEvent* _e)
         WeaveStopClick();
         weaving = true;
     }
+    SaveSettings();
     QDialog::closeEvent(_e);
 }
 
@@ -152,6 +159,7 @@ void TSTRGFRM::buildMenus()
             intrf = dlg.interf();
             port = dlg.port();
             delay = dlg.delay();
+            SaveSettings();
             if (oldIntrf != intrf)
                 AllocInterface();
         }
@@ -162,6 +170,7 @@ void TSTRGFRM::buildMenus()
     connect(actLoop, &QAction::toggled, this, [this](bool _on) { loop = _on; });
     actReverseSchaft = optionsMenu->addAction(LANG_STR("Rev&erse shafts", "Schäfte &umgekehrt"));
     actReverseSchaft->setCheckable(true);
+    actReverseSchaft->setChecked(reverse);
     connect(actReverseSchaft, &QAction::toggled, this, [this](bool _on) { reverse = _on; });
     optionsMenu->addSeparator();
     QMenu* schaftsMenu = optionsMenu->addMenu(LANG_STR("Number of &shafts", "Anzahl &Schäfte"));
@@ -739,6 +748,47 @@ void TSTRGFRM::refresh()
     refreshGotoActions();
     if (canvas)
         canvas->update();
+}
+
+/*-----------------------------------------------------------------*/
+/*  Settings persistence. Stored under QSettings group "Loom" with
+    the same key names as legacy Settings category "Loom" so the
+    ported binary and the legacy binary share a registry section.  */
+void TSTRGFRM::LoadSettings()
+{
+    QSettings s;
+    s.beginGroup(QStringLiteral("Loom"));
+    intrf = LOOMINTERFACE(s.value(QStringLiteral("Interface"), int(intrf_arm_patronic)).toInt());
+    port = s.value(QStringLiteral("Port"), 1).toInt();
+    lpt = s.value(QStringLiteral("Lpt"), 1).toInt();
+    delay = s.value(QStringLiteral("Delay"), 3).toInt();
+    loop = s.value(QStringLiteral("Endless"), 1).toInt() != 0;
+    reverse = s.value(QStringLiteral("ShaftsReversed"), 0).toInt() != 0;
+    int n = s.value(QStringLiteral("NumberOfShafts"), 24).toInt();
+    /*  Accept only the eight legacy buckets; anything else -> 24.  */
+    const int valid[8] = { 4, 8, 12, 16, 20, 24, 28, 32 };
+    bool ok = false;
+    for (int v : valid)
+        if (v == n) {
+            ok = true;
+            break;
+        }
+    numberOfShafts = ok ? n : 24;
+    s.endGroup();
+}
+
+void TSTRGFRM::SaveSettings() const
+{
+    QSettings s;
+    s.beginGroup(QStringLiteral("Loom"));
+    s.setValue(QStringLiteral("Interface"), int(intrf));
+    s.setValue(QStringLiteral("Port"), port);
+    s.setValue(QStringLiteral("Lpt"), lpt);
+    s.setValue(QStringLiteral("Delay"), delay);
+    s.setValue(QStringLiteral("Endless"), loop ? 1 : 0);
+    s.setValue(QStringLiteral("ShaftsReversed"), reverse ? 1 : 0);
+    s.setValue(QStringLiteral("NumberOfShafts"), numberOfShafts);
+    s.endGroup();
 }
 
 /*-----------------------------------------------------------------*/
