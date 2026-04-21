@@ -89,6 +89,7 @@ add_library(dbweave_ui STATIC
     steuerung.cpp
     steuerung_draw.cpp
     steuerung_mouse.cpp
+    steuerung_kbd.cpp
     steuerungcanvas.cpp
 )
 

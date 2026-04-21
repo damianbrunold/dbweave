@@ -61,6 +61,7 @@ TSTRGFRM::TSTRGFRM(TDBWFRM* _main, QWidget* _parent)
     buildToolbar();
     buildCentralArea();
     buildStatusbar();
+    buildPopupMenu();
 
     pullStateFromMain();
     _ResetCurrentPos();
@@ -270,6 +271,43 @@ void TSTRGFRM::buildStatusbar()
     center->addWidget(scrollbar);
     root->addLayout(center, 1);
     root->addWidget(statusbar);
+}
+
+/*-----------------------------------------------------------------*/
+/*  Right-click popup menu (legacy TSTRGFRM::PopupMenu). Mirrors
+    the main menu; Qt QActions can be attached to multiple menus,
+    so we reuse the same actions here -- toggling one entry flips
+    both the main-menu and popup-menu view of its state.          */
+void TSTRGFRM::buildPopupMenu()
+{
+    popupMenu = new QMenu(this);
+
+    popupMenu->addAction(actStart);
+    popupMenu->addAction(actStop);
+    popupMenu->addAction(actReverse);
+    popupMenu->addSeparator();
+
+    popupMenu->addAction(actGotoLastPos);
+    QMenu* gotoSub = popupMenu->addMenu(LANG_STR("Go to &klammer", "Zu &Klammer"));
+    for (int i = 0; i < MAXKLAMMERN; i++)
+        gotoSub->addAction(actGotoKlammer[i]);
+    popupMenu->addSeparator();
+
+    QMenu* viewSub = popupMenu->addMenu(LANG_STR("&View", "&Ansicht"));
+    viewSub->addAction(actViewPatrone);
+    viewSub->addAction(actViewFarbeffekt);
+    viewSub->addAction(actViewGewebesimulation);
+    popupMenu->addSeparator();
+
+    popupMenu->addAction(actZoomIn);
+    popupMenu->addAction(actZoomNormal);
+    popupMenu->addAction(actZoomOut);
+}
+
+void TSTRGFRM::showPopup(const QPoint& _globalPos)
+{
+    if (popupMenu)
+        popupMenu->popup(_globalPos);
 }
 
 /*-----------------------------------------------------------------*/

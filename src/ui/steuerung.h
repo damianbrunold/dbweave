@@ -246,6 +246,17 @@ public:
     void FormMouseMove(class QMouseEvent* _e);
     void FormMouseUp(class QMouseEvent* _e);
 
+    /*  Keyboard (7e). Arrow keys / PgUp / PgDown / Ctrl-variants
+        navigate the current schuss / klammer depending on the
+        schussselected flag. Enter toggles the flag; digits set the
+        current klammer's repetitions.                             */
+    void FormKeyDown(class QKeyEvent* _e);
+
+    /*  Popup menu (7e). Built once by buildPopupMenu; shown from
+        SteuerungCanvas::contextMenuEvent.                        */
+    class QMenu* popupMenu = nullptr;
+    void showPopup(const QPoint& _globalPos);
+
     void paintAll();
 
     void DrawGrid();
@@ -272,6 +283,7 @@ private:
     void buildToolbar();
     void buildCentralArea();
     void buildStatusbar();
+    void buildPopupMenu();
 
     void pullStateFromMain();
 

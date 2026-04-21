@@ -38,6 +38,8 @@ protected:
     void mousePressEvent(QMouseEvent* _e) override;
     void mouseMoveEvent(QMouseEvent* _e) override;
     void mouseReleaseEvent(QMouseEvent* _e) override;
+    void keyPressEvent(QKeyEvent* _e) override;
+    void contextMenuEvent(QContextMenuEvent* _e) override;
 
 private:
     TSTRGFRM* frm;

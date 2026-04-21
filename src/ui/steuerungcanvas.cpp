@@ -13,6 +13,8 @@
 #include "steuerung.h"
 #include "legacy_colors.h"
 
+#include <QContextMenuEvent>
+#include <QKeyEvent>
 #include <QMouseEvent>
 #include <QPainter>
 
@@ -63,4 +65,19 @@ void SteuerungCanvas::mouseReleaseEvent(QMouseEvent* _e)
 {
     if (frm)
         frm->FormMouseUp(_e);
+}
+
+void SteuerungCanvas::keyPressEvent(QKeyEvent* _e)
+{
+    if (frm)
+        frm->FormKeyDown(_e);
+    if (!_e->isAccepted())
+        QWidget::keyPressEvent(_e);
+}
+
+void SteuerungCanvas::contextMenuEvent(QContextMenuEvent* _e)
+{
+    if (frm)
+        frm->showPopup(_e->globalPos());
+    _e->accept();
 }
