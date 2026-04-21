@@ -299,6 +299,11 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     QAction* actOpen = menuAct(fileMenu, "&Open...", "Ö&ffnen...", "sb_open", "Opens a pattern",
                                "Öffnet ein Muster");
     actOpen->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_O));
+    QAction* actOpenNewWin
+        = menuAct(fileMenu, "Open in new &window...", "In neuem &Fenster öffnen...", nullptr,
+                  "Opens a pattern in a separate DB-WEAVE window",
+                  "Öffnet ein Muster in einem eigenen DB-WEAVE-Fenster");
+    connect(actOpenNewWin, &QAction::triggered, this, [this] { FileOpenInNewWindow(); });
     QAction* actLoadParts = menuAct(fileMenu, "&Load parts...", "&Teile laden...", nullptr,
                                     "Loads only parts of a pattern into the current pattern",
                                     "Lädt Teile eines Musters in das aktuelle Muster");

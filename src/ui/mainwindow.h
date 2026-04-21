@@ -718,6 +718,7 @@ public:
 
     /*  --- File menu handlers ------------------------------------ */
     void FileOpen();
+    void FileOpenInNewWindow();
     void FileSave();
     void FileSaveAs();
     void LoadPartsClick();

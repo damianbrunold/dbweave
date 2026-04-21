@@ -40,6 +40,7 @@
 #include <QFileInfo>
 #include <QMenu>
 #include <QMessageBox>
+#include <QProcess>
 #include <QSettings>
 
 static QString fileFilter()
@@ -218,8 +219,8 @@ void TDBWFRM::FileNewTemplateClick()
 {
     if (!AskSave())
         return;
-    const QString dir = filename.isEmpty() ? lastDirFor("Template")
-                                           : QFileInfo((QString)filename).absolutePath();
+    const QString dir
+        = filename.isEmpty() ? lastDirFor("Template") : QFileInfo((QString)filename).absolutePath();
     const QString chosen = QFileDialog::getOpenFileName(
         this, LANG_STR("New from template", "Neu gemäss Vorlage"), dir, templateFilter());
     if (chosen.isEmpty())
@@ -250,8 +251,8 @@ void TDBWFRM::FileOpen()
 {
     if (!AskSave())
         return;
-    const QString dir = filename.isEmpty() ? lastDirFor("Pattern")
-                                           : QFileInfo((QString)filename).absolutePath();
+    const QString dir
+        = filename.isEmpty() ? lastDirFor("Pattern") : QFileInfo((QString)filename).absolutePath();
     const QString chosen = QFileDialog::getOpenFileName(
         this, LANG_STR("Open pattern", "Muster öffnen"), dir, fileFilter());
     if (chosen.isEmpty())
@@ -276,6 +277,30 @@ void TDBWFRM::FileOpen()
     AddToMRU(chosen);
     SetModified(false);
     refresh();
+}
+
+/*  Pick a pattern file and launch a separate DB-WEAVE process with
+    it. The current document is left untouched -- no AskSave prompt,
+    no state change in this window.                                 */
+void TDBWFRM::FileOpenInNewWindow()
+{
+    const QString dir
+        = filename.isEmpty() ? lastDirFor("Pattern") : QFileInfo((QString)filename).absolutePath();
+    const QString chosen = QFileDialog::getOpenFileName(
+        this, LANG_STR("Open pattern in new window", "Muster in neuem Fenster öffnen"), dir,
+        fileFilter());
+    if (chosen.isEmpty())
+        return;
+    rememberDirFor("Pattern", chosen);
+
+    const QString exe = QCoreApplication::applicationFilePath();
+    if (!QProcess::startDetached(exe, QStringList { chosen })) {
+        QMessageBox::warning(
+            this, QStringLiteral("DB-WEAVE"),
+            LANG_STR("Could not start a new DB-WEAVE instance for '%1'.",
+                     "Neue DB-WEAVE-Instanz für '%1' konnte nicht gestartet werden.")
+                .arg(chosen));
+    }
 }
 
 /*  FileRevertClick — reload the currently open file, discarding any
@@ -498,8 +523,8 @@ void TDBWFRM::LoadPartsClick()
         return;
     const LOADPARTS parts = dlg.getLoadParts();
 
-    const QString dir = filename.isEmpty() ? lastDirFor("Pattern")
-                                           : QFileInfo((QString)filename).absolutePath();
+    const QString dir
+        = filename.isEmpty() ? lastDirFor("Pattern") : QFileInfo((QString)filename).absolutePath();
     const QString chosen = QFileDialog::getOpenFileName(
         this, LANG_STR("Load parts from", "Teile laden aus"), dir, fileFilter());
     if (chosen.isEmpty())
