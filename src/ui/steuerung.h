@@ -35,9 +35,11 @@
 #define DBWEAVE_UI_STEUERUNG_H
 
 #include <QDialog>
+#include <cstdint>
+#include <memory>
 
 #include "dbw3_base.h"       /* Klammer, DARSTELLUNG */
-#include "loom.h"            /* LOOMINTERFACE */
+#include "loom.h"            /* LOOMINTERFACE, StWeaveController */
 
 class QAction;
 class QActionGroup;
@@ -252,6 +254,23 @@ public:
         current klammer's repetitions.                             */
     void FormKeyDown(class QKeyEvent* _e);
 
+    /*  Weaving loop (7f). */
+    std::unique_ptr<StWeaveController> controller;
+    bool stopit = true;
+    bool tempquit = false;
+    int maxweave = 0;
+
+    void AllocInterface();
+    int MaxSchaefte() const;
+    void WeaveStartClick();
+    void WeaveStopClick();
+    void WeaveTempQuit();
+    bool AtBegin() const;
+    std::uint32_t GetSchaftDaten(int _pos) const;
+    void Weben();
+    void NextTritt();
+    void PrevTritt();
+
     /*  Popup menu (7e). Built once by buildPopupMenu; shown from
         SteuerungCanvas::contextMenuEvent.                        */
     class QMenu* popupMenu = nullptr;
@@ -289,6 +308,7 @@ private:
 
 protected:
     void showEvent(QShowEvent* _e) override;
+    void closeEvent(class QCloseEvent* _e) override;
 };
 
 #endif

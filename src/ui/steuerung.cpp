@@ -13,11 +13,13 @@
 
 #include "datamodule.h"
 #include "language.h"
+#include "loomoptionsdialog.h"
 #include "mainwindow.h"
 #include "steuerungcanvas.h"
 
 #include <QAction>
 #include <QActionGroup>
+#include <QCloseEvent>
 #include <QHBoxLayout>
 #include <QKeySequence>
 #include <QLabel>
@@ -65,6 +67,7 @@ TSTRGFRM::TSTRGFRM(TDBWFRM* _main, QWidget* _parent)
 
     pullStateFromMain();
     _ResetCurrentPos();
+    AllocInterface();
 }
 
 /*-----------------------------------------------------------------*/
@@ -78,9 +81,22 @@ void TSTRGFRM::showEvent(QShowEvent* _e)
 }
 
 /*-----------------------------------------------------------------*/
+void TSTRGFRM::closeEvent(QCloseEvent* _e)
+{
+    /*  Port of legacy FormClose: abort an active weave before the
+        dialog goes away so the controller doesn't keep spinning.  */
+    if (!stopit) {
+        WeaveStopClick();
+        weaving = true;
+    }
+    QDialog::closeEvent(_e);
+}
+
+/*-----------------------------------------------------------------*/
 TSTRGFRM::~TSTRGFRM()
 {
-    /*  Stage 7f will stop / terminate the controller here. */
+    if (controller)
+        controller->Terminate();
 }
 
 /*-----------------------------------------------------------------*/
@@ -97,23 +113,48 @@ void TSTRGFRM::buildMenus()
         return a;
     };
 
-    /*  --- &File (legacy had WebenBeenden at top level) --------- */
+    /*  --- &File (legacy had WebenBeenden at top level, no shortcut;
+        Qt's QDialog routes Escape to reject() which closeEvent
+        turns into a clean weave-abort + close).                     */
     QMenu* fileMenu = menubar->addMenu(LANG_STR("&File", "&Datei"));
     actBeenden
         = fileMenu->addAction(LANG_STR("&End weaving", "Weben be&enden"), this, &QDialog::close);
-    actBeenden->setShortcut(QKeySequence(Qt::Key_Escape));
 
-    /*  --- &Weave (MenuWeave) ---------------------------------- */
+    /*  --- &Weave (MenuWeave). Legacy shares F5 between Start and
+        Stop, dynamically swapping the shortcut via WMSwitchShortcuts
+        because VCL fires shortcuts even on disabled items. Qt
+        honours the enabled flag for shortcuts, so both actions can
+        bind F5 and only the currently-enabled one fires.           */
     QMenu* weaveMenu = menubar->addMenu(LANG_STR("&Weave", "&Weben"));
-    actStart = disabledAct(weaveMenu, "&Start", "&Start", QKeySequence(Qt::Key_Space));
-    actStop = disabledAct(weaveMenu, "S&top", "S&top", QKeySequence(Qt::Key_Escape));
+    actStart = weaveMenu->addAction(LANG_STR("&Start", "&Start"));
+    actStart->setShortcut(QKeySequence(Qt::Key_F5));
+    connect(actStart, &QAction::triggered, this, [this] { WeaveStartClick(); });
+    actStop = weaveMenu->addAction(LANG_STR("S&top", "S&top"));
+    actStop->setShortcut(QKeySequence(Qt::Key_F5));
+    actStop->setEnabled(false);
+    connect(actStop, &QAction::triggered, this, [this] { WeaveStopClick(); });
     weaveMenu->addSeparator();
-    actReverse = disabledAct(weaveMenu, "Wea&ve backwards", "&Rückwärts weben");
+    actReverse = weaveMenu->addAction(LANG_STR("Wea&ve backwards", "&Rückwärts weben"));
     actReverse->setCheckable(true);
+    connect(actReverse, &QAction::toggled, this, [this](bool _on) { backwards = _on; });
 
     /*  --- &Options -------------------------------------------- */
     QMenu* optionsMenu = menubar->addMenu(LANG_STR("&Options", "&Optionen"));
-    actOptionsLoom = disabledAct(optionsMenu, "&Loom...", "&Webstuhl...");
+    actOptionsLoom = optionsMenu->addAction(LANG_STR("&Loom...", "&Webstuhl..."));
+    connect(actOptionsLoom, &QAction::triggered, this, [this] {
+        LoomOptionsDialog dlg(this);
+        dlg.setInterface(intrf);
+        dlg.setPort(port);
+        dlg.setDelay(delay);
+        if (dlg.exec() == QDialog::Accepted) {
+            LOOMINTERFACE oldIntrf = intrf;
+            intrf = dlg.interf();
+            port = dlg.port();
+            delay = dlg.delay();
+            if (oldIntrf != intrf)
+                AllocInterface();
+        }
+    });
     actLoop = optionsMenu->addAction(LANG_STR("L&oop", "&Endlos"));
     actLoop->setCheckable(true);
     actLoop->setChecked(loop);
@@ -128,6 +169,8 @@ void TSTRGFRM::buildMenus()
     for (int i = 0; i < 8; i++) {
         actSchafts[i] = schaftsMenu->addAction(QString::number(schaftCounts[i]));
         actSchafts[i]->setCheckable(true);
+        if (schaftCounts[i] == numberOfShafts)
+            actSchafts[i]->setChecked(true);
         schaftGroup->addAction(actSchafts[i]);
         const int n = schaftCounts[i];
         connect(actSchafts[i], &QAction::triggered, this, [this, n] { numberOfShafts = n; });
