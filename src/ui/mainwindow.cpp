@@ -1588,8 +1588,8 @@ void TDBWFRM::ToggleSchlagpatrone()
     /*  Persist the preference so the next session starts in the same
         mode. Matches legacy "Divers / PegplanMode".                  */
     Settings settings;
-    settings.SetCategory(AnsiString("Divers"));
-    settings.Save(AnsiString("PegplanMode"), pegplan ? 1 : 0);
+    settings.SetCategory(QString("Divers"));
+    settings.Save(QString("PegplanMode"), pegplan ? 1 : 0);
 }
 
 /*-----------------------------------------------------------------*/
@@ -1693,19 +1693,19 @@ void saveBaseStyle(DARSTELLUNG ezD, DARSTELLUNG aufD, DARSTELLUNG tfD, DARSTELLU
                    bool reedVisible)
 {
     Settings settings;
-    settings.SetCategory(AnsiString("Display"));
-    settings.Save(AnsiString("Threading"), int(ezD));
-    settings.Save(AnsiString("Tie-up"), int(aufD));
-    settings.Save(AnsiString("Treadling"), int(tfD));
-    settings.Save(AnsiString("Pegplan"), int(spD));
-    settings.SetCategory(AnsiString("View"));
-    settings.Save(AnsiString("ThreadingDown"), einzugunten ? 1 : 0);
-    settings.Save(AnsiString("RightToLeft"), righttoleft ? 1 : 0);
-    settings.Save(AnsiString("TopToBottom"), toptobottom ? 1 : 0);
-    settings.SetCategory(AnsiString("Settings"));
-    settings.Save(AnsiString("SinkingShed"), sinkingshed ? 1 : 0);
-    settings.SetCategory(AnsiString("Divers"));
-    settings.Save(AnsiString("ViewReedthreading"), reedVisible ? 1 : 0);
+    settings.SetCategory(QString("Display"));
+    settings.Save(QString("Threading"), int(ezD));
+    settings.Save(QString("Tie-up"), int(aufD));
+    settings.Save(QString("Treadling"), int(tfD));
+    settings.Save(QString("Pegplan"), int(spD));
+    settings.SetCategory(QString("View"));
+    settings.Save(QString("ThreadingDown"), einzugunten ? 1 : 0);
+    settings.Save(QString("RightToLeft"), righttoleft ? 1 : 0);
+    settings.Save(QString("TopToBottom"), toptobottom ? 1 : 0);
+    settings.SetCategory(QString("Settings"));
+    settings.Save(QString("SinkingShed"), sinkingshed ? 1 : 0);
+    settings.SetCategory(QString("Divers"));
+    settings.Save(QString("ViewReedthreading"), reedVisible ? 1 : 0);
 }
 } /* anonymous namespace */
 
@@ -1725,23 +1725,23 @@ bool TDBWFRM::HasNonTrivialContent()
 void TDBWFRM::ApplyBaseStyleFromSettings()
 {
     Settings settings;
-    settings.SetCategory(AnsiString("Display"));
-    einzug.darstellung = DARSTELLUNG(settings.Load(AnsiString("Threading"), int(STRICH)));
-    aufknuepfung.darstellung = DARSTELLUNG(settings.Load(AnsiString("Tie-up"), int(KREUZ)));
-    trittfolge.darstellung = DARSTELLUNG(settings.Load(AnsiString("Treadling"), int(PUNKT)));
-    schlagpatronendarstellung = DARSTELLUNG(settings.Load(AnsiString("Pegplan"), int(AUSGEFUELLT)));
-    darst_aushebung = DARSTELLUNG(settings.Load(AnsiString("LiftOut"), int(STEIGEND)));
-    darst_anbindung = DARSTELLUNG(settings.Load(AnsiString("Binding"), int(KREUZ)));
-    darst_abbindung = DARSTELLUNG(settings.Load(AnsiString("Unbinding"), int(KREIS)));
-    settings.SetCategory(AnsiString("View"));
-    einzugunten = (settings.Load(AnsiString("ThreadingDown"), 0) != 0);
-    righttoleft = (settings.Load(AnsiString("RightToLeft"), 0) != 0);
-    toptobottom = (settings.Load(AnsiString("TopToBottom"), 0) != 0);
-    settings.SetCategory(AnsiString("Settings"));
-    sinkingshed = (settings.Load(AnsiString("SinkingShed"), 0) != 0);
-    settings.SetCategory(AnsiString("Divers"));
+    settings.SetCategory(QString("Display"));
+    einzug.darstellung = DARSTELLUNG(settings.Load(QString("Threading"), int(STRICH)));
+    aufknuepfung.darstellung = DARSTELLUNG(settings.Load(QString("Tie-up"), int(KREUZ)));
+    trittfolge.darstellung = DARSTELLUNG(settings.Load(QString("Treadling"), int(PUNKT)));
+    schlagpatronendarstellung = DARSTELLUNG(settings.Load(QString("Pegplan"), int(AUSGEFUELLT)));
+    darst_aushebung = DARSTELLUNG(settings.Load(QString("LiftOut"), int(STEIGEND)));
+    darst_anbindung = DARSTELLUNG(settings.Load(QString("Binding"), int(KREUZ)));
+    darst_abbindung = DARSTELLUNG(settings.Load(QString("Unbinding"), int(KREIS)));
+    settings.SetCategory(QString("View"));
+    einzugunten = (settings.Load(QString("ThreadingDown"), 0) != 0);
+    righttoleft = (settings.Load(QString("RightToLeft"), 0) != 0);
+    toptobottom = (settings.Load(QString("TopToBottom"), 0) != 0);
+    settings.SetCategory(QString("Settings"));
+    sinkingshed = (settings.Load(QString("SinkingShed"), 0) != 0);
+    settings.SetCategory(QString("Divers"));
     if (ViewBlatteinzug)
-        ViewBlatteinzug->setChecked(settings.Load(AnsiString("ViewReedthreading"), 1) != 0);
+        ViewBlatteinzug->setChecked(settings.Load(QString("ViewReedthreading"), 1) != 0);
 }
 
 void TDBWFRM::OptSwissClick()

@@ -12,7 +12,6 @@
 #ifndef DBWEAVE_UI_RECALC_H
 #define DBWEAVE_UI_RECALC_H
 
-#include "vcl_compat.h"
 
 class TDBWFRM;
 class TData;

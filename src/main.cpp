@@ -125,8 +125,8 @@ int main(int argc, char* argv[])
         before TDBWFRM's ctor wires up menu text or print headers. */
     {
         Settings settings;
-        settings.SetCategory(AnsiString("Environment"));
-        int lang = settings.Load(AnsiString("Language"), -1);
+        settings.SetCategory(QString("Environment"));
+        int lang = settings.Load(QString("Language"), -1);
         if (lang < 0) {
             const QString tag = QLocale::system().name().toLower();
             lang = tag.startsWith(QStringLiteral("de")) ? 1 : 0;

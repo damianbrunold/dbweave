@@ -9,7 +9,6 @@
     (at your option) any later version.
 */
 
-#include "vcl_compat.h"
 #include "assert_compat.h"
 #include <algorithm> // std::min replaces Borland's min()
 #include <cstring>   // memset / memcpy

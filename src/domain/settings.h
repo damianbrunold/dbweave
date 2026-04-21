@@ -10,36 +10,41 @@
 */
 
 /*-----------------------------------------------------------------*/
+/*  Persistent application settings under QSettings. Domain-level
+    wrapper that bakes the legacy registry base path into every
+    key so ported DB-WEAVE and legacy DB-WEAVE Windows binaries
+    share the same HKCU\Software\Brunold Software\DB-WEAVE hive.
+    Categorised by a caller-settable string (Environment, LastDir,
+    Display, ...); keys under that category are the leaves.      */
+/*-----------------------------------------------------------------*/
 #ifndef DBWEAVE_DOMAIN_SETTINGS_H
 #define DBWEAVE_DOMAIN_SETTINGS_H
 /*-----------------------------------------------------------------*/
-#include "vcl_compat.h"      /* AnsiString -> QString */
-#include "registry_compat.h" /* TRegistry -> QSettings */
+#include <QString>
 /*-----------------------------------------------------------------*/
 class Settings
 {
 protected:
-    AnsiString category;
-    TRegistry* registry;
+    QString category;
 
 public:
     Settings();
     virtual ~Settings();
 
-    void SetCategory(const AnsiString& _category)
+    void SetCategory(const QString& _category)
     {
         category = _category;
     }
-    AnsiString Category() const
+    QString Category() const
     {
         return category;
     }
 
-    int Load(const AnsiString& _name, int _default = 0);
-    AnsiString Load(const AnsiString& _name, const AnsiString& _default = QString());
+    int Load(const QString& _name, int _default = 0);
+    QString Load(const QString& _name, const QString& _default = QString());
 
-    void Save(const AnsiString& _name, int _value);
-    void Save(const AnsiString& _name, const AnsiString& _value);
+    void Save(const QString& _name, int _value);
+    void Save(const QString& _name, const QString& _value);
 };
 /*-----------------------------------------------------------------*/
 #endif

@@ -19,7 +19,6 @@
 #ifndef DBWEAVE_UI_BLOCKMUSTER_H
 #define DBWEAVE_UI_BLOCKMUSTER_H
 
-#include "vcl_compat.h"
 
 class Muster
 {

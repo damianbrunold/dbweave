@@ -11,7 +11,7 @@
 
 /*  Pattern export — a simplified Qt port of legacy exportbitmap.cpp
     DoExportBitmap. The legacy routine is a 650-line render that
-    reproduces the full screen layout on an off-screen TBitmap with
+    reproduces the full screen layout on an off-screen bitmap with
     every view-option toggle honoured (Simulation, Farbeffekt,
     Hilfslinien, blatteinzug, colour strips, rapport markers). This
     port covers the four core grids (einzug, aufknuepfung,

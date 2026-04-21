@@ -195,10 +195,9 @@ void TDBWFRM::DrawToolRectangle(int _i, int _j, int _i1, int _j1, bool _filled)
 }
 
 /*-----------------------------------------------------------------*/
-/*  Ellipse: legacy renders the shape into an offscreen TBitmap and
-    samples pixel centres to decide which grid cells to set. The
-    QImage equivalent is identical in spirit — QPainter::drawArc
-    for outline, drawEllipse for filled. */
+/*  Ellipse: render into an offscreen QImage and sample pixel
+    centres to decide which grid cells to set. QPainter::drawArc
+    for outline, drawEllipse for filled.                        */
 void TDBWFRM::DrawToolEllipse(int _i, int _j, int _i1, int _j1, bool _filled)
 {
     if (_i > _i1)

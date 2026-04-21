@@ -22,7 +22,6 @@
 #ifndef DBWEAVE_UI_LANGUAGE_H
 #define DBWEAVE_UI_LANGUAGE_H
 
-#include "vcl_compat.h" /* AnsiString -> QString */
 
 enum LANGUAGES { EN /*englisch*/, GE /*deutsch*/ };
 
@@ -47,6 +46,6 @@ void SwitchLanguage(LANGUAGES _language);
 
 /*  LANG_STR(EN, GE) picks one of the two string literals based on the
     active language and wraps it in a QString. */
-#define LANG_STR(STR_EN, STR_GE) AnsiString(active_language == GE ? (STR_GE) : (STR_EN))
+#define LANG_STR(STR_EN, STR_GE) QString(active_language == GE ? (STR_GE) : (STR_EN))
 
 #endif

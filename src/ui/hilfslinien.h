@@ -17,7 +17,6 @@
 #ifndef DBWEAVE_UI_HILFSLINIEN_H
 #define DBWEAVE_UI_HILFSLINIEN_H
 
-#include "vcl_compat.h"
 
 enum HLTYP { HL_NONE = -1, HL_HORZ = 0, HL_VERT = 1 };
 enum HLFELD { HL_LEFT = 0, HL_TOP = 0, HL_RIGHT = 1, HL_BOTTOM = 1 };

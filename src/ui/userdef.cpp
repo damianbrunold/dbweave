@@ -28,11 +28,11 @@ void TDBWFRM::LoadUserdefMenu()
     Settings settings;
     bool menuvisible = false;
     for (int i = 0; i < MAXUSERDEF; i++) {
-        settings.SetCategory(AnsiString(QStringLiteral("Userdef%1").arg(i)));
-        userdef[i].description = settings.Load(AnsiString("Description"), AnsiString(""));
-        userdef[i].sizex = settings.Load(AnsiString("Sizex"), 0);
-        userdef[i].sizey = settings.Load(AnsiString("Sizey"), 0);
-        userdef[i].data = settings.Load(AnsiString("Data"), AnsiString(""));
+        settings.SetCategory(QString(QStringLiteral("Userdef%1").arg(i)));
+        userdef[i].description = settings.Load(QString("Description"), QString(""));
+        userdef[i].sizex = settings.Load(QString("Sizex"), 0);
+        userdef[i].sizey = settings.Load(QString("Sizey"), 0);
+        userdef[i].data = settings.Load(QString("Data"), QString(""));
         const bool visible = !userdef[i].data.isEmpty();
         if (visible)
             menuvisible = true;
@@ -125,7 +125,7 @@ void TDBWFRM::PasteUserdef(bool _transparent)
 /*  Helper: serialise a sub-rect of gewebe.feld into the legacy
     'k'-based alphabet. Extracted because both UserdefAddClick and
     UserdefAddSelClick use the same format. */
-static AnsiString encodeRect(TDBWFRM* _frm, int _i1, int _i2, int _j1, int _j2)
+static QString encodeRect(TDBWFRM* _frm, int _i1, int _i2, int _j1, int _j2)
 {
     QString out;
     out.reserve((_i2 - _i1 + 1) * (_j2 - _j1 + 1));
@@ -161,11 +161,11 @@ void TDBWFRM::UserdefAddClick()
         return;
 
     Settings settings;
-    settings.SetCategory(AnsiString(QStringLiteral("Userdef%1").arg(i)));
-    settings.Save(AnsiString("Description"), AnsiString(descr));
-    settings.Save(AnsiString("Sizex"), kette.count());
-    settings.Save(AnsiString("Sizey"), schuesse.count());
-    settings.Save(AnsiString("Data"), encodeRect(this, kette.a, kette.b, schuesse.a, schuesse.b));
+    settings.SetCategory(QString(QStringLiteral("Userdef%1").arg(i)));
+    settings.Save(QString("Description"), QString(descr));
+    settings.Save(QString("Sizex"), kette.count());
+    settings.Save(QString("Sizey"), schuesse.count());
+    settings.Save(QString("Data"), encodeRect(this, kette.a, kette.b, schuesse.a, schuesse.b));
     LoadUserdefMenu();
 }
 
@@ -195,11 +195,11 @@ void TDBWFRM::UserdefAddSelClick()
             const QString descr = getUserdefName(this, seed);
             if (!descr.isEmpty()) {
                 Settings settings;
-                settings.SetCategory(AnsiString(QStringLiteral("Userdef%1").arg(i)));
-                settings.Save(AnsiString("Description"), AnsiString(descr));
-                settings.Save(AnsiString("Sizex"), w);
-                settings.Save(AnsiString("Sizey"), h);
-                settings.Save(AnsiString("Data"),
+                settings.SetCategory(QString(QStringLiteral("Userdef%1").arg(i)));
+                settings.Save(QString("Description"), QString(descr));
+                settings.Save(QString("Sizex"), w);
+                settings.Save(QString("Sizey"), h);
+                settings.Save(QString("Data"),
                               encodeRect(this, selection.begin.i, selection.end.i,
                                          selection.begin.j, selection.end.j));
                 LoadUserdefMenu();
@@ -217,11 +217,11 @@ void TDBWFRM::UserdefRemoveClick()
         LANG_STR("Select pattern to delete", "Zu löschendes Muster wählen"));
     if (i >= 0 && i < MAXUSERDEF) {
         Settings settings;
-        settings.SetCategory(AnsiString(QStringLiteral("Userdef%1").arg(i)));
-        settings.Save(AnsiString("Description"), AnsiString(""));
-        settings.Save(AnsiString("Sizex"), 0);
-        settings.Save(AnsiString("Sizey"), 0);
-        settings.Save(AnsiString("Data"), AnsiString(""));
+        settings.SetCategory(QString(QStringLiteral("Userdef%1").arg(i)));
+        settings.Save(QString("Description"), QString(""));
+        settings.Save(QString("Sizex"), 0);
+        settings.Save(QString("Sizey"), 0);
+        settings.Save(QString("Data"), QString(""));
     }
     LoadUserdefMenu();
 }

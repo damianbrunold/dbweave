@@ -24,7 +24,6 @@
 #ifndef DBWEAVE_UI_DATAMODULE_H
 #define DBWEAVE_UI_DATAMODULE_H
 
-#include "vcl_compat.h"
 
 class FileProperties; // forward decl -- ported in a later slice
 class Palette;

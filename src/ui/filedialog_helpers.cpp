@@ -19,8 +19,8 @@
 QString lastDirFor(const char* _category)
 {
     Settings settings;
-    settings.SetCategory(AnsiString("LastDir"));
-    const AnsiString saved = settings.Load(AnsiString(_category), AnsiString());
+    settings.SetCategory(QString("LastDir"));
+    const QString saved = settings.Load(QString(_category), QString());
     const QString dir = (QString)saved;
     if (!dir.isEmpty() && QFileInfo(dir).isDir())
         return dir;
@@ -36,6 +36,6 @@ void rememberDirFor(const char* _category, const QString& _path)
     if (dir.isEmpty())
         return;
     Settings settings;
-    settings.SetCategory(AnsiString("LastDir"));
-    settings.Save(AnsiString(_category), AnsiString(dir));
+    settings.SetCategory(QString("LastDir"));
+    settings.Save(QString(_category), QString(dir));
 }

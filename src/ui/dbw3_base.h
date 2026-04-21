@@ -22,7 +22,6 @@
 #ifndef DBWEAVE_UI_DBW3_BASE_H
 #define DBWEAVE_UI_DBW3_BASE_H
 
-#include "vcl_compat.h"
 #include "enums.h"
 #include "felddef.h"
 #include <cstdlib> /* abs */

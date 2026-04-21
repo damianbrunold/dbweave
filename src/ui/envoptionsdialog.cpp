@@ -44,8 +44,8 @@ EnvOptionsDialog::EnvOptionsDialog(QWidget* _parent)
         Language is -1 / absent, derive from the OS locale (GE if
         the abbreviated language name starts with "de"). */
     Settings settings;
-    settings.SetCategory(AnsiString("Environment"));
-    int lang = settings.Load(AnsiString("Language"), -1);
+    settings.SetCategory(QString("Environment"));
+    int lang = settings.Load(QString("Language"), -1);
     if (lang == -1) {
         const QString tag = QLocale::system().name().toLower();
         lang = tag.startsWith(QStringLiteral("de")) ? 1 : 0;
@@ -67,8 +67,8 @@ void EnvOptionsDialog::accept()
     SwitchLanguage(language);
 
     Settings settings;
-    settings.SetCategory(AnsiString("Environment"));
-    settings.Save(AnsiString("Language"), cbLanguage->currentIndex());
+    settings.SetCategory(QString("Environment"));
+    settings.Save(QString("Language"), cbLanguage->currentIndex());
 
     QDialog::accept();
 }

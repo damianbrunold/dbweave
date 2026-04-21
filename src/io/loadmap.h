@@ -23,7 +23,6 @@
 #ifndef DBWEAVE_IO_LOADMAP_H
 #define DBWEAVE_IO_LOADMAP_H
 /*-----------------------------------------------------------------*/
-#include "vcl_compat.h"
 #include "assert_compat.h"
 #include "fileformat.h"
 #include <cstdlib>

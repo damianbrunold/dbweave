@@ -13,7 +13,6 @@
 #ifndef DBWEAVE_UI_RAPPORT_H
 #define DBWEAVE_UI_RAPPORT_H
 /*------------------------------------------------------------------*/
-#include "vcl_compat.h"
 #include "dbw3_base.h"
 /*------------------------------------------------------------------*/
 class TDBWFRM;

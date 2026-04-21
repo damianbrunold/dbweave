@@ -23,7 +23,6 @@
 #ifndef DBWEAVE_DOMAIN_FELDDEF_H
 #define DBWEAVE_DOMAIN_FELDDEF_H
 
-#include "vcl_compat.h"
 #include "enums.h"
 
 // Forward-Deklarationen

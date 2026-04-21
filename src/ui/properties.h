@@ -17,7 +17,6 @@
 #ifndef DBWEAVE_UI_PROPERTIES_H
 #define DBWEAVE_UI_PROPERTIES_H
 
-#include "vcl_compat.h"
 
 class FfWriter;
 class FfReader;

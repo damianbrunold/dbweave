@@ -10,7 +10,6 @@
 */
 
 /*-----------------------------------------------------------------*/
-#include "vcl_compat.h"
 #include "assert_compat.h"
 #include <cstdio>
 #include <cstring>

@@ -20,7 +20,6 @@
 #ifndef DBWEAVE_IO_FILEFORMAT_H
 #define DBWEAVE_IO_FILEFORMAT_H
 /*-----------------------------------------------------------------*/
-#include "vcl_compat.h" /* neutralises etc. */
 #include <cstdio>
 /*-----------------------------------------------------------------*/
 class FfBuffer

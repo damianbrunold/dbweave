@@ -570,7 +570,7 @@ void TDBWFRM::LoadPartsClick()
     /*  Swap the working filename in so Load() reads the picked
         file, then restore ours afterwards so the document stays
         tied to its original path.                              */
-    const AnsiString savefn = filename;
+    const QString savefn = filename;
     filename = chosen;
     if (file && file->IsOpen())
         file->Close();

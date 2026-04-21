@@ -13,7 +13,6 @@
 #ifndef DBWEAVE_DOMAIN_ZENTRALSYMM_H
 #define DBWEAVE_DOMAIN_ZENTRALSYMM_H
 
-#include "vcl_compat.h"
 /*-----------------------------------------------------------------*/
 class ZentralSymmChecker
 {

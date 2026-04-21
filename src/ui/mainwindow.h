@@ -30,7 +30,6 @@
 
 #include <vector>
 
-#include "vcl_compat.h"
 #include "dbw3_base.h"     /* FeldBase hierarchy */
 #include "hilfslinien.h"   /* Hilfslinien container */
 #include "loadoptions.h"   /* LOADSTAT / LOADPARTS */
@@ -235,7 +234,7 @@ public:
     /*  Currently-open file + its path. `file` is owned and persists
         for the document lifetime; Load() / Save() reopen it as
         needed.                                                    */
-    AnsiString filename;
+    QString filename;
     FfFile* file = nullptr;
 
     /*  Loom-control brace state. Legacy stores nine numbered

@@ -10,81 +10,54 @@
 */
 
 /*-----------------------------------------------------------------*/
-#include "vcl_compat.h"
-#include "assert_compat.h"
-/*-----------------------------------------------------------------*/
 #include "settings.h"
 #include "regbase.h"
+
+#include <QSettings>
+/*-----------------------------------------------------------------*/
+/*  Compose the full QSettings key for `_name` under the current
+    category. DBW_REGBASE baked in so ported and legacy binaries
+    share the same `Software\Brunold Software\DB-WEAVE\<category>`
+    subtree in the Windows registry. Backslashes come from the
+    legacy constant; QSettings uses forward slashes, so replace
+    once and trim the leading slash.                             */
+static QString fullKey(const QString& _category, const QString& _name)
+{
+    QString k = QStringLiteral(DBW_REGBASE) + _category + QStringLiteral("\\") + _name;
+    k.replace(QLatin1Char('\\'), QLatin1Char('/'));
+    while (k.startsWith(QLatin1Char('/')))
+        k.remove(0, 1);
+    return k;
+}
 /*-----------------------------------------------------------------*/
 Settings::Settings()
+    : category(QStringLiteral("General"))
 {
-    category = QStringLiteral("General");
-    try {
-        registry = new TRegistry;
-        registry->RootKey = HKEY_CURRENT_USER;
-    } catch (...) {
-        registry = NULL;
-    }
 }
 /*-----------------------------------------------------------------*/
-Settings::~Settings()
+Settings::~Settings() = default;
+/*-----------------------------------------------------------------*/
+int Settings::Load(const QString& _name, int _default /*=0*/)
 {
-    delete registry;
+    QSettings s;
+    return s.value(fullKey(category, _name), _default).toInt();
 }
 /*-----------------------------------------------------------------*/
-int Settings::Load(const AnsiString& _name, int _default /*=0*/)
+QString Settings::Load(const QString& _name, const QString& _default /*=""*/)
 {
-    dbw3_assert(registry);
-    int value = _default;
-    try {
-        AnsiString key = AnsiString(DBW_REGBASE) + category;
-        if (registry->OpenKey(key, false)) {
-            if (registry->ValueExists(_name))
-                value = registry->ReadInteger(_name);
-        }
-    } catch (...) {
-    }
-    registry->CloseKey();
-    return value;
+    QSettings s;
+    return s.value(fullKey(category, _name), _default).toString();
 }
 /*-----------------------------------------------------------------*/
-AnsiString Settings::Load(const AnsiString& _name, const AnsiString& _default /*=""*/)
+void Settings::Save(const QString& _name, int _value)
 {
-    dbw3_assert(registry);
-    AnsiString value = _default;
-    try {
-        AnsiString key = AnsiString(DBW_REGBASE) + category;
-        if (registry->OpenKey(key, false)) {
-            if (registry->ValueExists(_name))
-                value = registry->ReadString(_name);
-        }
-    } catch (...) {
-    }
-    registry->CloseKey();
-    return value;
+    QSettings s;
+    s.setValue(fullKey(category, _name), _value);
 }
 /*-----------------------------------------------------------------*/
-void Settings::Save(const AnsiString& _name, int _value)
+void Settings::Save(const QString& _name, const QString& _value)
 {
-    try {
-        AnsiString key = AnsiString(DBW_REGBASE) + category;
-        if (registry->OpenKey(key, true)) {
-            registry->WriteInteger(_name, _value);
-        }
-    } catch (...) {
-    }
-    registry->CloseKey();
-}
-/*-----------------------------------------------------------------*/
-void Settings::Save(const AnsiString& _name, const AnsiString& _value)
-{
-    try {
-        AnsiString key = AnsiString(DBW_REGBASE) + category;
-        if (registry->OpenKey(key, true)) {
-            registry->WriteString(_name, _value);
-        }
-    } catch (...) {
-    }
-    registry->CloseKey();
+    QSettings s;
+    s.setValue(fullKey(category, _name), _value);
 }
 /*-----------------------------------------------------------------*/

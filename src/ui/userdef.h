@@ -16,15 +16,15 @@
 #ifndef DBWEAVE_UI_USERDEF_H
 #define DBWEAVE_UI_USERDEF_H
 
-#include "vcl_compat.h"
+#include <QString>
 
 #define MAXUSERDEF 10
 
 struct UserdefPattern {
-    AnsiString description;
+    QString description;
     int sizex = 0;
     int sizey = 0;
-    AnsiString data;
+    QString data;
 };
 
 #endif

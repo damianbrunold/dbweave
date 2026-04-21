@@ -270,9 +270,9 @@ void TDBWFRM::ShowOptions(bool _global)
     const int vx2 = frm.upTritteVis->value();
     SetAusmasse(x1, y1, x2, y2, vx2, vy1);
     if (_global) {
-        settings.SetCategory(AnsiString("Size"));
-        settings.Save(AnsiString("ShaftsVisible"), hvisible);
-        settings.Save(AnsiString("TreadlesVisible"), wvisible);
+        settings.SetCategory(QString("Size"));
+        settings.Save(QString("ShaftsVisible"), hvisible);
+        settings.Save(QString("TreadlesVisible"), wvisible);
     }
 
     /*  Schenien */
@@ -281,18 +281,18 @@ void TDBWFRM::ShowOptions(bool _global)
     einzug.pos.strongline_y = aufknuepfung.pos.strongline_y = trittfolge.pos.strongline_y
         = gewebe.pos.strongline_y = frm.SchenienVert->value();
     if (_global) {
-        settings.SetCategory(AnsiString("Grid"));
-        settings.Save(AnsiString("Horizontal"), einzug.pos.strongline_x);
-        settings.Save(AnsiString("Vertical"), einzug.pos.strongline_y);
+        settings.SetCategory(QString("Grid"));
+        settings.Save(QString("Horizontal"), einzug.pos.strongline_x);
+        settings.Save(QString("Vertical"), einzug.pos.strongline_y);
     }
 
     /*  Einstellungen */
     trittfolge.einzeltritt = frm.Einzeltritt->isChecked();
     sinkingshed = frm.SinkingShed->isChecked();
     if (_global) {
-        settings.SetCategory(AnsiString("Settings"));
-        settings.Save(AnsiString("SingleTreadle"), trittfolge.einzeltritt ? 1 : 0);
-        settings.Save(AnsiString("SinkingShed"), sinkingshed ? 1 : 0);
+        settings.SetCategory(QString("Settings"));
+        settings.Save(QString("SingleTreadle"), trittfolge.einzeltritt ? 1 : 0);
+        settings.Save(QString("SinkingShed"), sinkingshed ? 1 : 0);
     }
 
     /*  Symbole */
@@ -304,14 +304,14 @@ void TDBWFRM::ShowOptions(bool _global)
     darst_anbindung = (DARSTELLUNG)frm.cbAnbindung->currentIndex();
     darst_abbindung = (DARSTELLUNG)frm.cbAbbindung->currentIndex();
     if (_global) {
-        settings.SetCategory(AnsiString("Display"));
-        settings.Save(AnsiString("Threading"), (int)einzug.darstellung);
-        settings.Save(AnsiString("Tie-up"), (int)aufknuepfung.darstellung);
-        settings.Save(AnsiString("Treadling"), (int)trittfolge.darstellung);
-        settings.Save(AnsiString("Pegplan"), (int)schlagpatronendarstellung);
-        settings.Save(AnsiString("LiftOut"), (int)darst_aushebung);
-        settings.Save(AnsiString("Binding"), (int)darst_anbindung);
-        settings.Save(AnsiString("Unbinding"), (int)darst_abbindung);
+        settings.SetCategory(QString("Display"));
+        settings.Save(QString("Threading"), (int)einzug.darstellung);
+        settings.Save(QString("Tie-up"), (int)aufknuepfung.darstellung);
+        settings.Save(QString("Treadling"), (int)trittfolge.darstellung);
+        settings.Save(QString("Pegplan"), (int)schlagpatronendarstellung);
+        settings.Save(QString("LiftOut"), (int)darst_aushebung);
+        settings.Save(QString("Binding"), (int)darst_anbindung);
+        settings.Save(QString("Unbinding"), (int)darst_abbindung);
     }
 
     /*  Ansicht */
@@ -327,13 +327,13 @@ void TDBWFRM::ShowOptions(bool _global)
     }
     aufknuepfung.pegplanstyle = frm.AltLiftplanstyle->isChecked();
     if (_global) {
-        settings.SetCategory(AnsiString("View"));
-        settings.Save(AnsiString("ThreadingDown"), einzugunten ? 1 : 0);
-        settings.Save(AnsiString("RightToLeft"), righttoleft ? 1 : 0);
-        settings.Save(AnsiString("TopToBottom"), toptobottom ? 1 : 0);
-        settings.Save(AnsiString("ColorWithRaster"), fewithraster ? 1 : 0);
-        settings.Save(AnsiString("AltColorpalette"), palette2 ? 1 : 0);
-        settings.Save(AnsiString("AltPegplan"), aufknuepfung.pegplanstyle ? 1 : 0);
+        settings.SetCategory(QString("View"));
+        settings.Save(QString("ThreadingDown"), einzugunten ? 1 : 0);
+        settings.Save(QString("RightToLeft"), righttoleft ? 1 : 0);
+        settings.Save(QString("TopToBottom"), toptobottom ? 1 : 0);
+        settings.Save(QString("ColorWithRaster"), fewithraster ? 1 : 0);
+        settings.Save(QString("AltColorpalette"), palette2 ? 1 : 0);
+        settings.Save(QString("AltPegplan"), aufknuepfung.pegplanstyle ? 1 : 0);
     }
 
     if (pattern_canvas)

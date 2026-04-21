@@ -13,7 +13,6 @@
 #ifndef DBWEAVE_DOMAIN_PALETTE_H
 #define DBWEAVE_DOMAIN_PALETTE_H
 /*-----------------------------------------------------------------*/
-#include "vcl_compat.h"
 #include "colors_compat.h" /* COLORREF */
 /*-----------------------------------------------------------------*/
 // Forward-Deklarationen

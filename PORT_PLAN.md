@@ -57,7 +57,7 @@ This document was originally a forward-looking phase plan (Phases 0–12). Most 
 | 9 | Settings / MRU / localization polish | ✅ done (Linux verified; Windows + macOS expected to work via Qt defaults) |
 | 10 | Cross-platform packaging + CI | ✅ Windows build + packaging working; macOS untested but expected to work; CI outstanding |
 | 11 | Loom / Steuerung (serial-port weaving mode) | ✅ done (see Stage 7 for the sub-breakdown) |
-| 12 | Compat-shim removal | ❌ not started — `src/compat/` still contains 6 headers (`vcl_compat.h`, `tbitmap_compat.h`, `registry_compat.h`, `colors_compat.h`, `assert_compat.h`, `shift_compat.h`); `AnsiString` still used in ~14 `src/` files, `__fastcall` in 2 |
+| 12 | Compat-shim removal | ✅ done — `vcl_compat.h` / `tbitmap_compat.h` / `registry_compat.h` deleted, `AnsiString` / `TRegistry` / `TBitmap` purged from `src/`; three small helpers (`colors_compat.h`, `shift_compat.h`, `assert_compat.h`) kept in place |
 
 ---
 
@@ -189,14 +189,23 @@ Sub-plan for a faithful port (each sub-stage builds + runs; sub-stages are sessi
 
 ### Stage 10 — Compat shim removal (Phase 12)
 
-Delete `src/compat/` module by module after everything ships:
-- [ ] `AnsiString` → `QString` directly across the tree.
-- [ ] `TStringList` wrapper → `QStringList` directly.
-- [ ] `TRegistry` wrapper → `QSettings` directly.
-- [ ] `TBitmap` wrapper → `QImage` directly.
-- [ ] Strip remaining `__fastcall` / `__published` macros.
-- [ ] Reformat to Qt style via `.clang-format`.
-- [ ] Archive `legacy/` to a separate branch once no `src/` file references it.
+- [x] `AnsiString` / `String` → `QString` everywhere in `src/` (~110 occurrences across 12 files).
+- [x] `TStringList` wrapper and `tstringlist_compat.h` were removed earlier (pre-Stage 10); confirmed no residual references.
+- [x] `TRegistry` inlined into `Settings` as a direct `QSettings` user; `registry_compat.h` deleted. The `fullKey` helper preserves the legacy `Software\Brunold Software\DB-WEAVE\<category>\<name>` path so Windows registry round-trips stay compatible.
+- [x] `TBitmap` wrapper and `tbitmap_compat.h` deleted; no `src/` file referenced it (only two legacy-description comments in `exportbitmap.cpp` / `tools.cpp`, now reworded).
+- [x] `__fastcall` / `__published` already gone (pre-Stage 10); final scan confirms zero residuals.
+- [x] `vcl_compat.h` deleted along with its 21 include sites across `src/domain` / `src/io` / `src/ui`.
+- [x] `tests/test_compat.cpp` trimmed to cover only the surviving helpers (`colors_compat.h`); the removed-shim tests (`ansistring_is_qstring`, `tbitmap_sizes_and_io`, `tregistry_round_trip`) are gone.
+- [x] Both default (with loom) and `-DDBWEAVE_NO_LOOM=ON` builds green; all 21 tests pass.
+
+Residual `src/compat/`: three header-only helpers kept because they earn their keep:
+- `colors_compat.h` — `TColor` ↔ `QColor` converter with VCL's BBGGRR byte order. Used by `rangecolors` and `palette` and a few renderers.
+- `shift_compat.h` — bit-flag stand-in for VCL `TShiftState`, bridges `Qt::KeyboardModifiers` into the cursor-handler virtuals. Replacing it with `Qt::KeyboardModifiers` would ripple through `cursor.h` / `cursorimpl.h` / `cursor.cpp` / `kbdhandling.cpp` for no real gain.
+- `assert_compat.h` — thin `dbw3_assert` / `dbw3_trace` macro pair wrapping `Q_ASSERT` / `qDebug()`.
+
+Skipped (out of scope for Stage 10):
+- `.clang-format` reformat — cosmetic, no behaviour change.
+- Archive `legacy/` — kept in-tree as reference.
 
 ---
 
