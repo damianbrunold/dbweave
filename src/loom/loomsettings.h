@@ -10,9 +10,8 @@
 */
 
 /*  Serial-port settings enums — verbatim port of legacy combase.h.
-    Lives in the loom module (built only when DBWEAVE_BUILD_LOOM is
-    ON) so the rest of the code doesn't pull Qt6SerialPort
-    headers. */
+    Lives in the loom module (skipped when DBWEAVE_NO_LOOM is ON)
+    so the rest of the code doesn't pull Qt6SerialPort headers. */
 
 #ifndef DBWEAVE_LOOM_LOOMSETTINGS_H
 #define DBWEAVE_LOOM_LOOMSETTINGS_H

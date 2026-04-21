@@ -2,22 +2,22 @@
 # Builds DB-WEAVE.app on macOS and wraps it into a .dmg via
 # macdeployqt + hdiutil. Runs unchanged on Apple Silicon and Intel.
 #
-# Usage:     packaging/macos/build_dmg.sh [--with-loom] [--sign IDENTITY]
+# Usage:     packaging/macos/build_dmg.sh [--no-loom] [--sign IDENTITY]
 # Output:    dist/DB-WEAVE-<version>-<arch>.dmg
 #
 # Prerequisites:
 #     brew install qt cmake ninja create-dmg      # create-dmg optional;
 #                                                 # script falls back to hdiutil.
 #     export PATH="$(brew --prefix qt)/bin:$PATH"
-#     # optional: Qt6SerialPort is shipped with the full brew install.
+#     # Qt6SerialPort is shipped with the full brew install.
 
 set -euo pipefail
 
-BUILD_LOOM=OFF
+NO_LOOM=OFF
 SIGN_IDENT=""
 for arg in "$@"; do
     case "$arg" in
-        --with-loom) BUILD_LOOM=ON ;;
+        --no-loom)   NO_LOOM=ON ;;
         --sign)      shift; SIGN_IDENT="${1:?--sign requires an identity}"; shift ;;
         --sign=*)    SIGN_IDENT="${arg#--sign=}" ;;
         -h|--help)
@@ -37,11 +37,11 @@ ARCH="$(uname -m)"
 mkdir -p "$BUILD_DIR" "$DIST_DIR"
 rm -rf "$STAGE_DIR"
 
-echo "==> configure (loom=$BUILD_LOOM)"
+echo "==> configure (no-loom=$NO_LOOM)"
 cmake -S "$SOURCE_DIR" -B "$BUILD_DIR" -G Ninja \
       -DCMAKE_BUILD_TYPE=Release \
       -DDBWEAVE_BUILD_TESTS=OFF \
-      -DDBWEAVE_BUILD_LOOM="$BUILD_LOOM"
+      -DDBWEAVE_NO_LOOM="$NO_LOOM"
 
 echo "==> build"
 cmake --build "$BUILD_DIR"

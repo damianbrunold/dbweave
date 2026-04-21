@@ -12,10 +12,10 @@
 /*  Serial-loom controllers — ports of the five real protocols from
     legacy steuerung.cpp. All communicate over a SerialPort wrapper
     and share the StWeaveController contract from ui/loom.h so
-    LoomDialog can drive any of them through a common interface.
+    TSTRGFRM can drive any of them through a common interface.
 
-    Built only when DBWEAVE_BUILD_LOOM is ON; the core executable
-    still runs with only the dummy controller.                   */
+    Skipped when DBWEAVE_NO_LOOM is ON; in that configuration
+    TSTRGFRM falls back to the built-in dummy controller.         */
 
 #ifndef DBWEAVE_LOOM_SERIAL_CONTROLLERS_H
 #define DBWEAVE_LOOM_SERIAL_CONTROLLERS_H

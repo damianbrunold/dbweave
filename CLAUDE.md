@@ -48,14 +48,14 @@ samples/     # .dbw sample files (used by file-I/O round-trip tests)
 ## Build / run (Qt 6)
 
 - Requires **Qt 6.5 LTS or newer**, CMake 3.21+, a C++17 compiler.
-- Linux dev-package names (Debian/Ubuntu): `qt6-base-dev`, `qt6-base-dev-tools`, `qt6-tools-dev`, `qt6-tools-dev-tools`, `libqt6serialport6-dev` (only if `-DDBWEAVE_BUILD_LOOM=ON`), plus `cmake` and `ninja-build`.
+- Linux dev-package names (Debian/Ubuntu): `qt6-base-dev`, `qt6-base-dev-tools`, `qt6-tools-dev`, `qt6-tools-dev-tools`, `libqt6serialport6-dev`, plus `cmake` and `ninja-build`. Drop `libqt6serialport6-dev` if you build with `-DDBWEAVE_NO_LOOM=ON`.
 - Build:
   ```
   cmake -S . -B build -G Ninja
   cmake --build build
   ctest --test-dir build --output-on-failure
   ```
-- CMake options: `-DDBWEAVE_BUILD_TESTS=ON/OFF` (default ON), `-DDBWEAVE_BUILD_LOOM=ON/OFF` (default OFF).
+- CMake options: `-DDBWEAVE_BUILD_TESTS=ON/OFF` (default ON), `-DDBWEAVE_NO_LOOM=ON/OFF` (default OFF; set ON to skip loom/serial-port support).
 - Running: `./build/src/dbweave`.
 
 ## Build / run (legacy)

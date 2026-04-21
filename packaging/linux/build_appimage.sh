@@ -3,13 +3,14 @@
 # linuxdeploy-plugin-qt. Requires both binaries on $PATH and
 # a Qt 6.5+ development environment.
 #
-# Usage:  packaging/linux/build_appimage.sh [--with-loom]
+# Usage:  packaging/linux/build_appimage.sh [--no-loom]
 # Output: dist/DB-WEAVE-<version>-x86_64.AppImage
 #
 # Prerequisites (Debian/Ubuntu):
 #     sudo apt install qt6-base-dev qt6-base-dev-tools qt6-tools-dev \
-#                      qt6-tools-dev-tools cmake ninja-build
-#     # with --with-loom additionally: libqt6serialport6-dev
+#                      qt6-tools-dev-tools libqt6serialport6-dev \
+#                      cmake ninja-build
+#     # with --no-loom libqt6serialport6-dev can be omitted.
 #     # Grab linuxdeploy + the Qt plugin:
 #     wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
 #     wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
@@ -18,10 +19,10 @@
 
 set -euo pipefail
 
-BUILD_LOOM=OFF
+NO_LOOM=OFF
 for arg in "$@"; do
     case "$arg" in
-        --with-loom) BUILD_LOOM=ON ;;
+        --no-loom) NO_LOOM=ON ;;
         -h|--help)
             sed -n '2,20p' "$0"
             exit 0
@@ -37,11 +38,11 @@ APPDIR="$BUILD_DIR/AppDir"
 
 mkdir -p "$BUILD_DIR" "$DIST_DIR"
 
-echo "==> configure (loom=$BUILD_LOOM)"
+echo "==> configure (no-loom=$NO_LOOM)"
 cmake -S "$SOURCE_DIR" -B "$BUILD_DIR" -G Ninja \
       -DCMAKE_BUILD_TYPE=Release \
       -DDBWEAVE_BUILD_TESTS=OFF \
-      -DDBWEAVE_BUILD_LOOM="$BUILD_LOOM"
+      -DDBWEAVE_NO_LOOM="$NO_LOOM"
 
 echo "==> build"
 cmake --build "$BUILD_DIR"

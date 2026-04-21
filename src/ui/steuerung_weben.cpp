@@ -65,7 +65,7 @@ void TSTRGFRM::AllocInterface()
     /*  In SLIPS mode the loom drives direction; hide the manual
         reverse toggle the same way legacy did.                    */
     if (actReverse)
-        actReverse->setVisible(intrf != intrf_slips && intrf != intrf_lips);
+        actReverse->setVisible(intrf != intrf_slips);
 }
 
 /*-----------------------------------------------------------------*/
@@ -100,8 +100,7 @@ bool TSTRGFRM::AtBegin() const
     family gets its own bit-order:
       - arm_patronic / arm_patronic_indirect:  MSB = shaft 1.
       - arm_designer:                          MSB = shaft (max-1).
-      - varpapuu_parallel:                     LSB = shaft 1.
-      - default (SLIPS / LIPS / AVL / Dummy):  MSB = shaft (max-1).
+      - default (SLIPS / AVL / Dummy):         MSB = shaft (max-1).
     `reverse` flips the ordering within each family.              */
 std::uint32_t TSTRGFRM::GetSchaftDaten(int /*_pos*/) const
 {
@@ -142,24 +141,6 @@ std::uint32_t TSTRGFRM::GetSchaftDaten(int /*_pos*/) const
                     for (int k = 0; k < mj; k++) {
                         if (aufknuepfung->feld.Get(i, k) > 0)
                             dataBits |= (1u << (reverse ? k : (mi - 1 - k)));
-                    }
-                }
-            }
-        }
-    } else if (intrf == intrf_varpapuu_parallel) {
-        const int mi = std::min(trittfolge->feld.SizeX(), MaxSchaefte());
-        const int mj = std::min(mi, aufknuepfung->feld.SizeY());
-        if (schlagpatrone) {
-            for (int i = 0; i < mi; i++) {
-                if (trittfolge->feld.Get(i, weave_position) > 0)
-                    dataBits |= (1u << (reverse ? (mi - 1 - i) : i));
-            }
-        } else {
-            for (int i = 0; i < trittfolge->feld.SizeX(); i++) {
-                if (trittfolge->feld.Get(i, weave_position) > 0) {
-                    for (int k = 0; k < mj; k++) {
-                        if (aufknuepfung->feld.Get(i, k) > 0)
-                            dataBits |= (1u << (reverse ? (mi - 1 - k) : k));
                     }
                 }
             }
@@ -255,8 +236,6 @@ void TSTRGFRM::WeaveStartClick()
     }
     INITDATA init;
     init.port = port;
-    init.lpt = lpt;
-    init.delay = delay;
     if (!controller->Initialize(init)) {
         QMessageBox::warning(this, LANG_STR("DB-WEAVE", "DB-WEAVE"),
                              LANG_STR("Could not talk to the loom.",
@@ -397,9 +376,11 @@ void TSTRGFRM::Weben()
             return;
         }
         if (weave_position == last_position) {
-            const bool loomPicksDirection
-                = (intrf == intrf_varpapuu_parallel || intrf == intrf_slips
-                   || intrf == intrf_lips);
+            /*  SLIPS is driven by the loom's own direction signal;
+                the controller returns WEAVE_SUCCESS_NEXT or
+                WEAVE_SUCCESS_PREV instead of relying on our
+                `backwards` flag.                                   */
+            const bool loomPicksDirection = (intrf == intrf_slips);
             if (loomPicksDirection) {
                 if (stat == WEAVE_SUCCESS_NEXT)
                     NextTritt();

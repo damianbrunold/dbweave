@@ -35,17 +35,15 @@ add_subdirectory(domain)
 # Phase 4: rendering primitives (no widget dependency yet).
 add_subdirectory(ui)
 
-# Phase 11 optional: serial-loom controllers. Requires Qt6SerialPort
-# and is only compiled in when -DDBWEAVE_BUILD_LOOM=ON. When enabled,
-# the ui lib also picks up the SerialPort dependency and a DBWEAVE_HAVE_LOOM
-# define so LoomDialog can fan out to the real serial controllers;
-# without it only the dummy is available.
-if(DBWEAVE_BUILD_LOOM)
+# Serial-loom controllers. On by default; pulls in Qt6SerialPort and
+# defines DBWEAVE_HAVE_LOOM so TSTRGFRM fans out to the real serial
+# controllers in src/loom/serialcontrollers.cpp. Disable with
+# -DDBWEAVE_NO_LOOM=ON on hosts without Qt6SerialPort; in that
+# configuration TSTRGFRM falls back to the built-in dummy controller
+# and the loom sub-library isn't compiled.
+if(NOT DBWEAVE_NO_LOOM)
     target_link_libraries(dbweave_ui PUBLIC Qt6::SerialPort)
     target_compile_definitions(dbweave_ui PUBLIC DBWEAVE_HAVE_LOOM=1)
-    # dbweave_ui's loomdialog.cpp #includes serialcontrollers.h from
-    # src/loom when the feature is on; the static lib resolves at
-    # link time.
     target_include_directories(dbweave_ui PUBLIC ${CMAKE_SOURCE_DIR}/src/loom)
     add_subdirectory(loom)
     target_link_libraries(dbweave_ui PUBLIC dbweave_loom)

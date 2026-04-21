@@ -15,11 +15,11 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC_SEARCH_PATHS "${CMAKE_SOURCE_DIR}/ui")
 
 option(DBWEAVE_BUILD_TESTS "Build unit tests" ON)
-option(DBWEAVE_BUILD_LOOM  "Build loom/serial-port support (requires Qt6SerialPort)" OFF)
+option(DBWEAVE_NO_LOOM     "Skip loom / serial-port support (no Qt6SerialPort dependency)" OFF)
 
 # Qt 6.5 LTS minimum.
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Gui Widgets PrintSupport Svg)
-if(DBWEAVE_BUILD_LOOM)
+if(NOT DBWEAVE_NO_LOOM)
     find_package(Qt6 6.5 REQUIRED COMPONENTS SerialPort)
 endif()
 if(DBWEAVE_BUILD_TESTS)

@@ -9,45 +9,40 @@
     (at your option) any later version.
 */
 
-/*  Loom-control abstraction (Phase 11). Simplified port of legacy
-    steuerung.h / comutil.h that keeps only the dummy-loom path:
-    every WeaveSchuss call reports success after a short wait.
-
-    Real serial controllers (ARM Patronic, ARM Designer, Slips,
-    Varpapuu Parallel, AVL CD-III) are deliberately not ported
-    here — they need QSerialPort plus protocol-specific byte
-    sequences that differ per loom model. The dummy controller is
-    enough to drive the simulator in LoomDialog; when real
-    hardware becomes relevant the serial subclasses drop in as
-    siblings of StDummyController.                               */
+/*  Loom-control abstraction. StWeaveController + StDummyController
+    live here unconditionally; the four real serial controllers
+    (ARM Patronic direct / indirect, ARM Designer, Generic SLIPS,
+    AVL CD-III) land as siblings in src/loom/serialcontrollers.cpp
+    when the loom module is compiled in. makeLoomController(...)
+    returns the concrete controller matching a LOOMINTERFACE.     */
 
 #ifndef DBWEAVE_UI_LOOM_H
 #define DBWEAVE_UI_LOOM_H
 
 #include <cstdint>
 
-/*  Which loom the user selected — kept as an enum for future
-    serial-controller expansion. Only intrf_dummy has a live
-    controller implementation in the port. */
+/*  Which loom the user selected. The two parallel-port interfaces
+    (Varpapuu Parallel at slot 4, generic LIPS at slot 6) were
+    listed in the legacy UI but never implemented by any controller
+    -- direct parallel-port I/O isn't available on NT+ without a
+    kernel driver, so the entries always fell through to the dummy.
+    The enum slots are reserved (skipped) to keep the integer
+    values stable with saved QSettings "Loom/Interface" keys.    */
 enum LOOMINTERFACE {
     intrf_dummy = 0,
-    intrf_arm_patronic,
-    intrf_arm_patronic_indirect,
-    intrf_arm_designer,
-    intrf_varpapuu_parallel,
-    intrf_slips,
-    intrf_lips,
-    intrf_avl_cd_iii
+    intrf_arm_patronic = 1,
+    intrf_arm_patronic_indirect = 2,
+    intrf_arm_designer = 3,
+    /* 4 -- was intrf_varpapuu_parallel, never implemented */
+    intrf_slips = 5,
+    /* 6 -- was intrf_lips, never implemented */
+    intrf_avl_cd_iii = 7
 };
 
 enum WEAVE_STATUS { WEAVE_REPEAT, WEAVE_SUCCESS_NEXT, WEAVE_SUCCESS_PREV };
 
 struct INITDATA {
     int port = 0;
-    int lpt = 0;
-    int delay = 0;
-    int port1 = 0;
-    int port2 = 0;
 };
 
 /*-----------------------------------------------------------------*/

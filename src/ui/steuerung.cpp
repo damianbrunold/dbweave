@@ -153,12 +153,10 @@ void TSTRGFRM::buildMenus()
         LoomOptionsDialog dlg(this);
         dlg.setInterface(intrf);
         dlg.setPort(port);
-        dlg.setDelay(delay);
         if (dlg.exec() == QDialog::Accepted) {
             LOOMINTERFACE oldIntrf = intrf;
             intrf = dlg.interf();
             port = dlg.port();
-            delay = dlg.delay();
             SaveSettings();
             if (oldIntrf != intrf)
                 AllocInterface();
@@ -759,9 +757,13 @@ void TSTRGFRM::LoadSettings()
     QSettings s;
     s.beginGroup(QStringLiteral("Loom"));
     intrf = LOOMINTERFACE(s.value(QStringLiteral("Interface"), int(intrf_arm_patronic)).toInt());
+    /*  Reject deprecated Varpapuu (4) / LIPS (6) slots silently; the
+        two parallel-port interfaces were never implemented.       */
+    if (intrf != intrf_dummy && intrf != intrf_arm_patronic
+        && intrf != intrf_arm_patronic_indirect && intrf != intrf_arm_designer
+        && intrf != intrf_slips && intrf != intrf_avl_cd_iii)
+        intrf = intrf_arm_patronic;
     port = s.value(QStringLiteral("Port"), 1).toInt();
-    lpt = s.value(QStringLiteral("Lpt"), 1).toInt();
-    delay = s.value(QStringLiteral("Delay"), 3).toInt();
     loop = s.value(QStringLiteral("Endless"), 1).toInt() != 0;
     reverse = s.value(QStringLiteral("ShaftsReversed"), 0).toInt() != 0;
     int n = s.value(QStringLiteral("NumberOfShafts"), 24).toInt();
@@ -783,8 +785,6 @@ void TSTRGFRM::SaveSettings() const
     s.beginGroup(QStringLiteral("Loom"));
     s.setValue(QStringLiteral("Interface"), int(intrf));
     s.setValue(QStringLiteral("Port"), port);
-    s.setValue(QStringLiteral("Lpt"), lpt);
-    s.setValue(QStringLiteral("Delay"), delay);
     s.setValue(QStringLiteral("Endless"), loop ? 1 : 0);
     s.setValue(QStringLiteral("ShaftsReversed"), reverse ? 1 : 0);
     s.setValue(QStringLiteral("NumberOfShafts"), numberOfShafts);

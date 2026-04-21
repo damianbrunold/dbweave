@@ -5,19 +5,19 @@
     Prerequisites:
         * Qt 6.5+ MSVC or MinGW installation on PATH (qmake, cmake,
           windeployqt all reachable from the VS Dev Prompt or a
-          qt-env shell).
+          qt-env shell). Qt6SerialPort is part of the default Qt
+          install.
         * CMake 3.21+ and Ninja (or MSBuild).
         * NSIS (makensis) on PATH.
-        * Optionally: Qt6SerialPort dev kit if you pass -WithLoom.
 
     Usage:
         # From a Qt x64 Developer Command Prompt or with Qt on PATH:
         powershell -File packaging\windows\build_installer.ps1
-        # or
-        powershell -File packaging\windows\build_installer.ps1 -WithLoom
+        # or, to skip the loom/serial-port module:
+        powershell -File packaging\windows\build_installer.ps1 -NoLoom
 #>
 param(
-    [switch]$WithLoom
+    [switch]$NoLoom
 )
 
 $ErrorActionPreference = 'Stop'
@@ -27,13 +27,13 @@ $BuildDir = Join-Path $Root 'build-windows'
 $StageDir = Join-Path $Root 'dist\windeployqt'
 $DistDir  = Join-Path $Root 'dist'
 
-$loom = if ($WithLoom) { 'ON' } else { 'OFF' }
+$noLoom = if ($NoLoom) { 'ON' } else { 'OFF' }
 
-Write-Host "==> configure (loom=$loom)"
+Write-Host "==> configure (no-loom=$noLoom)"
 cmake -S $Root -B $BuildDir -G Ninja `
     -DCMAKE_BUILD_TYPE=Release `
     -DDBWEAVE_BUILD_TESTS=OFF `
-    "-DDBWEAVE_BUILD_LOOM=$loom"
+    "-DDBWEAVE_NO_LOOM=$noLoom"
 
 Write-Host '==> build'
 cmake --build $BuildDir

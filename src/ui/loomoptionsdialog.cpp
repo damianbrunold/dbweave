@@ -18,7 +18,6 @@
 #include <QFormLayout>
 #include <QLabel>
 #include <QPushButton>
-#include <QSpinBox>
 #include <QVBoxLayout>
 
 /*-----------------------------------------------------------------*/
@@ -29,43 +28,39 @@ LoomOptionsDialog::LoomOptionsDialog(QWidget* _parent)
     setModal(true);
 
     cbInterface = new QComboBox(this);
-    /*  Indices match LOOMINTERFACE enum exactly (0 = dummy … 7 = AVL). */
-    cbInterface->addItem(LANG_STR("Dummy (simulation)", "Dummy (Simulation)"));
-    cbInterface->addItem(QStringLiteral("ARM Patronic direct"));
-    cbInterface->addItem(QStringLiteral("ARM Patronic indirect"));
-    cbInterface->addItem(QStringLiteral("ARM Designer electronic"));
-    cbInterface->addItem(QStringLiteral("Varpapuu parallel"));
-    cbInterface->addItem(QStringLiteral("Generic SLIPS"));
-    cbInterface->addItem(QStringLiteral("Generic LIPS"));
-    cbInterface->addItem(QStringLiteral("AVL Compu-Dobby III"));
+    /*  Each entry carries its LOOMINTERFACE value via userData; the
+        enum itself is sparse (slots 4 and 6 reserved for the two
+        parallel-port interfaces that were never implemented). */
+    cbInterface->addItem(LANG_STR("Dummy (simulation)", "Dummy (Simulation)"),
+                         int(intrf_dummy));
+    cbInterface->addItem(QStringLiteral("ARM Patronic direct"), int(intrf_arm_patronic));
+    cbInterface->addItem(QStringLiteral("ARM Patronic indirect"),
+                         int(intrf_arm_patronic_indirect));
+    cbInterface->addItem(QStringLiteral("ARM Designer electronic"), int(intrf_arm_designer));
+    cbInterface->addItem(QStringLiteral("Generic SLIPS"), int(intrf_slips));
+    cbInterface->addItem(QStringLiteral("AVL Compu-Dobby III"), int(intrf_avl_cd_iii));
 
     cbPort = new QComboBox(this);
     for (int i = 1; i <= 8; i++)
         cbPort->addItem(QStringLiteral("COM%1").arg(i));
 
-    spDelay = new QSpinBox(this);
-    spDelay->setRange(0, 10);
-    spDelay->setSuffix(LANG_STR(" (Varpapuu only)", " (nur Varpapuu)"));
-
     auto* form = new QFormLayout();
     form->addRow(LANG_STR("&Loom:", "&Webstuhl:"), cbInterface);
     form->addRow(LANG_STR("&Port:", "&Anschluss:"), cbPort);
-    form->addRow(LANG_STR("&Delay:", "&Verzögerung:"), spDelay);
 
 #ifndef DBWEAVE_HAVE_LOOM
     auto* warn = new QLabel(
-        LANG_STR("<i>Note: the executable was built without "
-                 "QtSerialPort support. Only the Dummy loom "
-                 "is live; the other entries won't open a "
-                 "serial port. Rebuild with "
-                 "<tt>-DDBWEAVE_BUILD_LOOM=ON</tt> to enable "
-                 "real loom drivers.</i>",
-                 "<i>Hinweis: Diese ausführbare Datei wurde ohne "
-                 "QtSerialPort-Unterstützung gebaut. Nur die Dummy-"
-                 "Steuerung ist aktiv; die übrigen Einträge öffnen "
-                 "keinen seriellen Anschluss. Mit "
-                 "<tt>-DDBWEAVE_BUILD_LOOM=ON</tt> neu bauen, um "
-                 "echte Websteuerungen zu aktivieren.</i>"),
+        LANG_STR("<i>Note: this build of DB-WEAVE was configured with "
+                 "<tt>-DDBWEAVE_NO_LOOM=ON</tt>, so only the Dummy "
+                 "loom is live; the other entries won't open a serial "
+                 "port. Rebuild without that option to enable real "
+                 "loom drivers.</i>",
+                 "<i>Hinweis: Diese DB-WEAVE-Version wurde mit "
+                 "<tt>-DDBWEAVE_NO_LOOM=ON</tt> gebaut; nur die "
+                 "Dummy-Steuerung ist aktiv, die übrigen Einträge "
+                 "öffnen keinen seriellen Anschluss. Ohne diese "
+                 "Option neu bauen, um echte Websteuerungen zu "
+                 "aktivieren.</i>"),
         this);
     warn->setWordWrap(true);
 #endif
@@ -75,7 +70,7 @@ LoomOptionsDialog::LoomOptionsDialog(QWidget* _parent)
     connect(btns, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(btns, &QDialogButtonBox::rejected, this, &QDialog::reject);
     connect(bInfo, &QPushButton::clicked, this, [this] {
-        LoomInfoDialog dlg(this, LOOMINTERFACE(cbInterface->currentIndex()));
+        LoomInfoDialog dlg(this, LOOMINTERFACE(cbInterface->currentData().toInt()));
         dlg.exec();
     });
 
@@ -94,38 +89,36 @@ LoomOptionsDialog::LoomOptionsDialog(QWidget* _parent)
 /*-----------------------------------------------------------------*/
 void LoomOptionsDialog::onInterfaceChanged(int _row)
 {
-    /*  Varpapuu parallel is the only interface that consumes the
-        delay spinbox — keep the UI scoped to it so the user knows
-        when the field is meaningful. */
-    spDelay->setEnabled(_row == int(intrf_varpapuu_parallel));
+    const int val = cbInterface->itemData(_row).toInt();
     /*  Dummy doesn't need a serial port. */
-    cbPort->setEnabled(_row != int(intrf_dummy));
+    cbPort->setEnabled(val != int(intrf_dummy));
 }
 
 /*-----------------------------------------------------------------*/
 LOOMINTERFACE LoomOptionsDialog::interf() const
 {
-    return LOOMINTERFACE(cbInterface->currentIndex());
+    return LOOMINTERFACE(cbInterface->currentData().toInt());
 }
 
 int LoomOptionsDialog::port() const
 {
     return cbPort->currentIndex() + 1;
 }
-int LoomOptionsDialog::delay() const
-{
-    return spDelay->value();
-}
 
 void LoomOptionsDialog::setInterface(LOOMINTERFACE _i)
 {
-    cbInterface->setCurrentIndex(int(_i));
+    const int v = int(_i);
+    for (int r = 0; r < cbInterface->count(); r++) {
+        if (cbInterface->itemData(r).toInt() == v) {
+            cbInterface->setCurrentIndex(r);
+            return;
+        }
+    }
+    /*  Unknown / deprecated interface value (e.g. a stale QSettings
+        entry pointing at Varpapuu or LIPS); fall back to dummy.    */
+    cbInterface->setCurrentIndex(0);
 }
 void LoomOptionsDialog::setPort(int _p)
 {
     cbPort->setCurrentIndex(_p - 1);
-}
-void LoomOptionsDialog::setDelay(int _d)
-{
-    spDelay->setValue(_d);
 }

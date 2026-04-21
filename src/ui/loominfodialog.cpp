@@ -112,28 +112,6 @@ static LoomInfo infoFor(LOOMINTERFACE _loom)
                 "Designer mit Selecontrol haben, nutzen Sie den ARM Patronic Direkt/"
                 "Indirekt Treiber.</p>")
         };
-    case intrf_varpapuu_parallel:
-        return {
-            QStringLiteral(
-                "<h2>Varpapuu Parallel</h2>"
-                "<p><b>Manufacturer</b><br/>Varpa-Set Oy, Pieksämäki, Finland</p>"
-                "<p><b>Information</b><br/>"
-                "Directly from the manufacturer (varpa-set@co.inet.fi)</p>"
-                "<p><b>Description</b><br/>"
-                "The Varpapuu controller mounts onto any normal (non-computerised) loom. "
-                "This driver targets the parallel-port variant. (An older version used "
-                "an ISA card.)</p>"),
-            QStringLiteral(
-                "<h2>Varpapuu Parallel</h2>"
-                "<p><b>Hersteller</b><br/>Varpa-Set Oy, Pieksämäki, Finnland</p>"
-                "<p><b>Informationen</b><br/>"
-                "Direkt beim Hersteller (varpa-set@co.inet.fi)</p>"
-                "<p><b>Beschreibung</b><br/>"
-                "Die Varpapuu-Steuerung lässt sich auf jeden normalen (nicht "
-                "computergesteuerten) Webstuhl montieren. Dieser Treiber ist für die "
-                "Druckerport-Variante. (Eine ältere Version arbeitete über eine "
-                "ISA-Karte.)</p>")
-        };
     case intrf_slips:
         return {
             QStringLiteral(
@@ -154,25 +132,6 @@ static LoomInfo infoFor(LOOMINTERFACE _loom)
                 "serielle Schnittstelle zu steuern. Entwickelt von Bob und Jacquie Kelly "
                 "(Citadel Enterprises) und Ravi Nielsen (Maple Hill Software). Z.B. "
                 "Schacht Spindle und Cyrefco bieten kompatible Webstühle an.</p>")
-        };
-    case intrf_lips:
-        return {
-            QStringLiteral(
-                "<h2>Generic LIPS</h2>"
-                "<p><b>Information</b><br/>Ask your loom manufacturer whether it supports "
-                "LIPS.</p>"
-                "<p><b>Description</b><br/>"
-                "Generic LIPS is the parallel-port equivalent of SLIPS. Same authors: "
-                "Bob and Jacquie Kelly (Citadel Enterprises) and Ravi Nielsen (Maple Hill "
-                "Software).</p>"),
-            QStringLiteral(
-                "<h2>Allgemeines LIPS</h2>"
-                "<p><b>Information</b><br/>Fragen Sie Ihren Webstuhlhersteller ob er "
-                "LIPS unterstützt.</p>"
-                "<p><b>Beschreibung</b><br/>"
-                "Allgemeines LIPS ist das Parallelport-Gegenstück zu SLIPS. Gleiche "
-                "Entwickler: Bob und Jacquie Kelly (Citadel Enterprises) und Ravi Nielsen "
-                "(Maple Hill Software).</p>")
         };
     case intrf_avl_cd_iii:
         return {

@@ -11,9 +11,9 @@
 
 /*  Qt port of legacy strgoptloom_form.cpp (TStrgOptLoomForm).
     Loom-type picker + serial-port picker. Built unconditionally
-    so the UI offers the dropdown even when DBWEAVE_BUILD_LOOM is
-    off; only the "Dummy" entry is live in that case and the other
-    selections won't build a controller.                          */
+    so the UI offers the dropdown even when DBWEAVE_NO_LOOM is
+    set; only the Dummy entry is live in that case and the other
+    selections won't build a real controller.                     */
 
 #ifndef DBWEAVE_UI_LOOMOPTIONS_DIALOG_H
 #define DBWEAVE_UI_LOOMOPTIONS_DIALOG_H
@@ -22,7 +22,6 @@
 #include "loom.h" /* LOOMINTERFACE */
 
 class QComboBox;
-class QSpinBox;
 
 class LoomOptionsDialog : public QDialog
 {
@@ -32,11 +31,9 @@ public:
 
     LOOMINTERFACE interf() const;
     int port() const; /*  1..8 matching legacy PORT enum */
-    int delay() const;
 
     void setInterface(LOOMINTERFACE _i);
     void setPort(int _p);
-    void setDelay(int _d);
 
 private slots:
     void onInterfaceChanged(int _row);
@@ -44,7 +41,6 @@ private slots:
 private:
     QComboBox* cbInterface = nullptr;
     QComboBox* cbPort = nullptr;
-    QSpinBox* spDelay = nullptr;
 };
 
 #endif

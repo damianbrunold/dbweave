@@ -36,6 +36,8 @@ This document was originally a forward-looking phase plan (Phases 0–12). Most 
 13. **Einzug/Trittfolge "fixiert" feature:** dropped as obsolete.
 14. **Three color pickers:** kept as three separate dialogs (`ChooseRGBDialog`, `ChooseHSVDialog`, `ChoosePaletteDialog`), matching legacy's three `farbauswahl*` forms.
 15. **Silent-print command line:** kept. `dbweave /p <file>` loads the file, prints it without any dialog, and exits. Used for batch printing from shortcuts.
+16. **Parallel-port loom interfaces dropped.** Legacy listed `intrf_varpapuu_parallel` and `intrf_lips` in the dropdown but `AllocInterface` fell through to the dummy controller -- the parallel-port I/O they needed isn't available on NT+ / Linux / macOS without a kernel driver, and the controller classes were never written. Port removes them from the UI and `LOOMINTERFACE` enum slots 4 and 6 are reserved so saved `Loom/Interface` settings stay numerically stable.
+17. **Loom is on by default.** `DBWEAVE_BUILD_LOOM=OFF` flipped to `DBWEAVE_NO_LOOM=OFF`; standard builds include serial-loom support. Pass `-DDBWEAVE_NO_LOOM=ON` on hosts that can't provide Qt6SerialPort.
 
 ---
 
@@ -54,7 +56,7 @@ This document was originally a forward-looking phase plan (Phases 0–12). Most 
 | 8 | Printing engine | ✅ engine done; satellite dialogs remaining |
 | 9 | Settings / MRU / localization polish | ⏳ partial; per-platform verification outstanding |
 | 10 | Cross-platform packaging + CI | ✅ Windows build + packaging working; macOS untested but expected to work; CI outstanding |
-| 11 | Loom / Steuerung (serial-port weaving mode) | ❌ not started (near-term, pre-release) |
+| 11 | Loom / Steuerung (serial-port weaving mode) | ✅ done (see Stage 7 for the sub-breakdown) |
 | 12 | Compat-shim removal | ❌ not started — `src/compat/` still contains 6 headers (`vcl_compat.h`, `tbitmap_compat.h`, `registry_compat.h`, `colors_compat.h`, `assert_compat.h`, `shift_compat.h`); `AnsiString` still used in ~14 `src/` files, `__fastcall` in 2 |
 
 ---
@@ -158,7 +160,11 @@ Sub-plan for a faithful port (each sub-stage builds + runs; sub-stages are sessi
   - `LoomInfoDialog` (`src/ui/loominfodialog.{h,cpp}`): port of legacy `strginfo_form`. Not a schuss-progress window (my earlier note was wrong) -- it's a read-only driver-info viewer showing manufacturer / information / description per `LOOMINTERFACE`. Legacy shipped the content as RTF blobs; the port uses HTML via `QTextBrowser`. Wired via a new `Info...` button on `LoomOptionsDialog`.
   - `strgoptloom_form` is already covered by `LoomOptionsDialog` (confirmed pre-existing).
 - [x] **7h — Settings persistence**: ported `LoadSettings` / `SaveSettings` as `TSTRGFRM::LoadSettings` / `SaveSettings`. Uses `QSettings` under group `Loom` with the exact key names legacy used (Interface / Port / Lpt / Delay / Endless / ShaftsReversed / NumberOfShafts) so the ported binary and the legacy binary share the same settings section. Load runs in the ctor before `buildMenus` so Loop / ReverseSchaft / Schafts checkmarks come up in the persisted state. Save runs in `closeEvent` and after Options > Loom changes the interface. Klammer / weave-position state is NOT persisted here -- klammern live in the .dbw file, and last_position is in-memory only, matching legacy.
-- [ ] **7i — Wrap-up**: remove the temporary top-level "Loom" menu; verify both the non-loom and loom CMake builds pass; update PORT_PLAN.
+- [x] **7i — Wrap-up**:
+  - Removed the temporary top-level "Loom" menu in 7a; `Extras > Weave` (Ctrl+W) is the only entry point now.
+  - **Excised the two parallel-port interfaces that were never implemented** (`intrf_varpapuu_parallel` at slot 4, `intrf_lips` at slot 6). Legacy listed them in the dropdown and info dialog, but `AllocInterface` always fell through to the dummy — direct x86 parallel-port I/O isn't available without a kernel driver on any modern OS. Enum slots 4 and 6 are reserved (skipped) so saved `Loom/Interface` settings stay numerically stable with the legacy binary; a stale value at 4 or 6 is silently rejected and falls back to ARM Patronic. `LoomOptionsDialog` dropdown now has six rows (Dummy / ARM Patronic direct / indirect / ARM Designer / Generic SLIPS / AVL Compu-Dobby III) with each entry carrying its `LOOMINTERFACE` value via `userData`. `LoomInfoDialog` and the Weben bit-order switch lose their Varpapuu / LIPS branches; the `lpt` / `port1` / `port2` fields drop out of `INITDATA`, and `TSTRGFRM::lpt` + the `Lpt` settings key go with them.
+  - **Flipped the build option**: `DBWEAVE_BUILD_LOOM=OFF` (opt-in) became `DBWEAVE_NO_LOOM=OFF` (opt-out). Default builds now include loom / serial-port support automatically; `-DDBWEAVE_NO_LOOM=ON` skips it for hosts that lack Qt6SerialPort. Packaging scripts (`build_appimage.sh`, `build_dmg.sh`, `build_installer.ps1`) and docs (`CLAUDE.md`, `packaging/README.md`) updated to match.
+  - Verified `build/` (default, with loom) and `build-noloom/` (with `-DDBWEAVE_NO_LOOM=ON`) both compile and pass all 21 tests.
 
 ### Stage 8 — Command-line + packaging + CI
 

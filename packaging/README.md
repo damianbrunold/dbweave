@@ -5,17 +5,18 @@ rules declared at the top of `CMakeLists.txt` (bundle target + desktop
 entry + icon + LICENSE/PDFs) and then wraps the installed tree into
 the native distributable.
 
-All scripts accept an optional `--with-loom` flag that enables the
-`DBWEAVE_BUILD_LOOM` CMake option for serial-loom support (needs
-Qt6SerialPort).
+By default the scripts build with loom / serial-port support (needs
+Qt6SerialPort). Pass `--no-loom` (or `-NoLoom` on Windows) to set the
+`DBWEAVE_NO_LOOM` CMake option and produce a build without the
+Qt6SerialPort dependency.
 
 Outputs land in `dist/` under the repository root.
 
 ## Linux — AppImage
 
 ```
-packaging/linux/build_appimage.sh            # default build
-packaging/linux/build_appimage.sh --with-loom
+packaging/linux/build_appimage.sh            # default, includes loom
+packaging/linux/build_appimage.sh --no-loom  # skip loom/serial
 ```
 
 Dependencies (Debian / Ubuntu):
@@ -23,9 +24,9 @@ Dependencies (Debian / Ubuntu):
 ```
 sudo apt install qt6-base-dev qt6-base-dev-tools \
                  qt6-tools-dev qt6-tools-dev-tools \
+                 libqt6serialport6-dev \
                  cmake ninja-build
-# for --with-loom:
-sudo apt install libqt6serialport6-dev
+# libqt6serialport6-dev can be omitted when building with --no-loom.
 ```
 
 Download `linuxdeploy` and its Qt plugin (continuous releases):
@@ -49,7 +50,7 @@ are on `PATH`):
 
 ```
 powershell -File packaging\windows\build_installer.ps1
-powershell -File packaging\windows\build_installer.ps1 -WithLoom
+powershell -File packaging\windows\build_installer.ps1 -NoLoom
 ```
 
 Prerequisites:
@@ -74,7 +75,7 @@ Apple-silicon Mac for an arm64 build, on Intel for x86_64.
 brew install qt cmake ninja        # create-dmg optional, for nicer layout
 export PATH="$(brew --prefix qt)/bin:$PATH"
 packaging/macos/build_dmg.sh
-packaging/macos/build_dmg.sh --with-loom
+packaging/macos/build_dmg.sh --no-loom
 packaging/macos/build_dmg.sh --sign "Developer ID Application: ..."
 ```
 

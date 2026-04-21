@@ -180,15 +180,11 @@ public:
     bool weaving = false;
     bool modified = false;
 
-    /*  Loom options. Populated by LoadSettings (7h); for now just
-        defaults so the LoomOptionsDialog has something to read.
-        port / lpt are plain ints here so the header stays
-        buildable without the loom-only loomsettings.h (which
-        defines the PORT / LPT enums). The LoomOptionsDialog maps
-        between enum and int at its edges.                       */
-    int port = 1; /* P_COM1 */
-    int lpt = 1;  /* LP_LPT1 */
-    int delay = 3;
+    /*  Loom options. Populated by LoadSettings. `port` is a plain
+        int (1..8 mapping to COM1..COM8) so this header stays
+        buildable without the loom-only loomsettings.h; the
+        LoomOptionsDialog maps between enum and int at its edges. */
+    int port = 1; /* 1 == COM1 */
     LOOMINTERFACE intrf = intrf_dummy;
     bool reverse = false;   /* ReverseSchaft -- schaft order flip */
     bool backwards = false; /* WeaveBackwards -- weave direction  */
