@@ -1,9 +1,9 @@
-/*  DB-WEAVE Qt 6 port - Phase 5 skeleton test.
+/*  DB-WEAVE - main-window skeleton test.
 
-    Verifies the foundation layer of the main-window reconstruction:
-      - TData and TDBWFRM can be constructed and wired to the legacy
-        global pointers (Data, DBWFRM);
-      - each Feld* type constructs with the legacy DEFAULT_* dimensions;
+    Verifies the foundation layer of the main window:
+      - TData and TDBWFRM can be constructed and wired to the global
+        pointers (Data, DBWFRM);
+      - each Feld* type constructs with the expected DEFAULT_* dimensions;
       - Clear() invokes without crashing and seeds the expected values
         (the blatteinzug "zero every 4th thread" pattern being the
         easiest to spot-check).

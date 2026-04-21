@@ -30,8 +30,7 @@
 
 /*-----------------------------------------------------------------*/
 /*  TDBWFRM::Load wraps an FhLoader instance so callers don't have
-    to know about the loader class. Matches the legacy call site:
-        bool ok = DBWFRM->Load(stat, LOADALL); */
+    to know about the loader class. */
 bool TDBWFRM::Load(LOADSTAT& _stat, LOADPARTS _loadparts)
 {
     try {
@@ -149,9 +148,8 @@ bool FhLoader::LoadSignatur(FfReader* _reader)
 /*-----------------------------------------------------------------*/
 void FhLoader::LoadVersion(FfReader* _reader)
 {
-    /*  Swallow the section. Real "version" is two fmt/ver fields;
-        we don't act on them. Used as a stand-in for "properties" /
-        "view" / "printsettings" which we also skip in this slice. */
+    /*  Swallow the section. "version" has two fmt/ver fields that we
+        parse for forward compatibility but don't act on. */
     char* fmt = 0;
     char* ver = 0;
     BEGIN_LOAD_MAP
@@ -234,7 +232,7 @@ void FhLoader::LoadDataFields(FfReader* _reader)
     SECTION_MAP("kettfarben", LoadDataKettfarben)
     SECTION_MAP("blatteinzug", LoadDataBlatteinzug)
     SECTION_MAP("fixeinzug", LoadDataFixeinzug)
-    DEFAULT_SECTION /* fixeinzug skipped */
+    DEFAULT_SECTION
         BEGIN_DEFAULT_MAP END_LOAD_MAP
 }
 /*-----------------------------------------------------------------*/

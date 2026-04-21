@@ -1,5 +1,5 @@
-# Phase 2: pure-domain logic. No UI dependencies; links against QtCore
-# (for QString/QSettings via the compat layer) but never QtWidgets.
+# Pure-domain logic. No UI dependencies; links against QtCore but never
+# QtWidgets.
 
 add_library(dbweave_domain STATIC
     colors.cpp

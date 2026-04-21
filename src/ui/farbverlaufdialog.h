@@ -14,12 +14,9 @@
     colour in RGB or HSV space, weighted by a slider, then write the
     resulting ramp into the palette starting at a chosen index.
 
-    The legacy form dispatches between three custom colour pickers
-    (ChooseRGBForm / ChooseHSVForm / ChoosePaletteForm) via a
-    popup menu. Those pickers live in Phase 6 (Palettes); until they
-    land we use QColorDialog for both RGB and HSV (its built-in
-    picker exposes both models) and a minimal palette-index prompt
-    for the palette option.                                       */
+    Uses QColorDialog for both RGB and HSV (its built-in picker
+    exposes both models) and a minimal palette-index prompt for the
+    palette option. */
 
 #ifndef DBWEAVE_UI_FARBVERLAUF_DIALOG_H
 #define DBWEAVE_UI_FARBVERLAUF_DIALOG_H

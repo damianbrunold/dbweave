@@ -1,7 +1,7 @@
-# Phase 2/3: file I/O. The "@dbw3:file" text-format reader/writer
-# (FfBuffer, FfToken*, FfFile, FfBase, FfReader, FfWriter) lives here
-# as a leaf module so that the domain layer can depend on it for its
-# Read/Write persistence hooks.
+# File I/O. The "@dbw3:file" text-format reader/writer (FfBuffer,
+# FfToken*, FfFile, FfBase, FfReader, FfWriter) lives here as a leaf
+# module so that the domain layer can depend on it for its Read/Write
+# persistence hooks.
 
 add_library(dbweave_io STATIC
     fileformat.cpp

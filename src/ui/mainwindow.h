@@ -237,10 +237,9 @@ public:
     QString filename;
     FfFile* file = nullptr;
 
-    /*  Loom-control brace state. Legacy stores nine numbered
-        brace entries (klammern[0..8]) plus a "current" / "last"
-        pair. The loader populates these; loom-control rendering
-        lands in Phase 11 so we only keep the array.              */
+    /*  Loom-control brace state: nine numbered brace entries
+        (klammern[0..8]) plus a "current" / "last" pair. Populated
+        by the loader. */
     Klammer klammern[9];
 
     /*  Loom-control runtime state from the legacy STRGFRM form
@@ -772,7 +771,7 @@ public:
     void FilePropsClick();
     void ViewInfosClick();
 
-    /*  Editing-assistant dialogs (Phase 7 batch 4). */
+    /*  Editing-assistant dialogs. */
     void EinzugAssistentClick();
     void EditFixeinzug();
     void UpdateEinzugFixiert();
@@ -789,7 +788,7 @@ public:
     void UserdefRemoveClick();
     int SelectUserdef(const QString& _title = QString());
 
-    /*  Import / export (Phase 7 batch 8). */
+    /*  Import / export. */
     void ImportWIFClick();
     void ImportBitmapClick();
     bool DateiImportieren(const QString& _filename);

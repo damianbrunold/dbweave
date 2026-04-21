@@ -9,12 +9,9 @@
     (at your option) any later version.
 */
 
-/*  Qt port of legacy/envoptions_form.cpp (TEnvironmentOptionsForm).
-    App-level preferences: UI language (English / German). Values
-    persist via Settings under the "Environment" category. The
-    legacy splashscreen toggle was dropped when the splashscreen
-    feature itself was dropped (see PORT_PLAN resolved decision #7).
-*/
+/*  Environment-options dialog. App-level preferences: UI language
+    (English / German). Values persist via Settings under the
+    "Environment" category. */
 
 #ifndef DBWEAVE_UI_ENVOPTIONSDIALOG_H
 #define DBWEAVE_UI_ENVOPTIONSDIALOG_H

@@ -9,18 +9,9 @@
     (at your option) any later version.
 */
 
-/*  Writer half of the round-trip. Scope matches the loader's scope:
-      signature
-      version
-      data/size
-      data/fields (einzug, aufknuepfung, trittfolge+isempty,
-                   kettfarben, schussfarben, blatteinzug)
-      data/palette
-      data/hilfslinien (count + binary list)
-
-    Matching-section loader skips anything it doesn't understand via
-    DEFAULT_SECTION, so legacy-written files still open cleanly even
-    when the port adds or drops a section.                           */
+/*  Writer half of the "@dbw3:file" round-trip. The loader tolerates
+    unknown sections via DEFAULT_SECTION, so files written by older
+    versions still open cleanly. */
 
 #include "mainwindow.h"
 #include "datamodule.h"
@@ -32,8 +23,8 @@
 
 #include <vector>
 
-/*  @dbw3:file format version tag -- matches legacy FILEFORMATVERSION
-    for 3.7+ files. "0001" is the older style; we always emit "0002". */
+/*  @dbw3:file format version tag. "0001" is the older 3.7- style;
+    we always emit "0002". */
 #define FILEFORMATVERSION "0002"
 #define DBWEAVE_PORT_VERSION "0.1.0 (Qt 6 port)"
 
@@ -94,15 +85,11 @@ bool TDBWFRM::Save()
         kettfarben.feld.Write("kettfarben", &writer);
         schussfarben.feld.Write("schussfarben", &writer);
         blatteinzug.feld.Write("blatteinzug", &writer);
-        /*  fixeinzug: MAXX1 shorts -- written even when the table
-            was never filled, so File > New state matches the legacy
-            default (all zeros, firstfree=1, fixsize=0).            */
+        /*  fixeinzug: MAXX1 shorts, always written so File > New
+            state is consistent (all zeros, firstfree=1, fixsize=0). */
         writer.BeginSection("fixeinzug");
         {
             const int bytes = int(sizeof(short)) * Data->MAXX1;
-            /*  If the user never opened the dialog we still allocate
-                a zeroed buffer on the fly so the file always has the
-                section.                                              */
             if (fixeinzug) {
                 writer.WriteFieldBinary("fixeinzug", fixeinzug, bytes);
             } else {
@@ -118,10 +105,6 @@ bool TDBWFRM::Save()
         if (Data->palette)
             Data->palette->Save(&writer, /*format37=*/true);
 
-        /*  Webstuhl: just the 9 klammer brace entries. The legacy
-            also wrote STRGFRM weave_position / last_position /
-            schussselected etc.; those belong to the loom-control
-            window which isn't ported yet and are skipped here.    */
         writer.BeginSection("webstuhl");
         for (int i = 0; i < 9; i++) {
             const QByteArray name = QStringLiteral("klammer%1").arg(i).toLatin1();
@@ -176,11 +159,10 @@ bool TDBWFRM::Save()
 
         writer.EndSection(); /* data */
 
-        /*  View state -- full round-trip matching legacy SaveView in
-            filesave.cpp. Covers the symbols (viewtype) per field, the
+        /*  View state: the symbols (viewtype) per field, the
             einzug/trittfolge rearrangement style radio group, pegplan
             state, orientation, fabric-view mode, and the page-setup
-            margins / header / footer.                              */
+            margins / header / footer. */
         auto styleIndex = [](QAction* const* acts, int n, int fallback) {
             for (int i = 0; i < n; i++)
                 if (acts[i] && acts[i]->isChecked())

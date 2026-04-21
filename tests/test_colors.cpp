@@ -1,4 +1,4 @@
-/*  DB-WEAVE Qt 6 port - domain/colors tests (Phase 2) */
+/*  DB-WEAVE - domain/colors tests */
 
 #include <QTest>
 #include <cmath>

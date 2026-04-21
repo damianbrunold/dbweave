@@ -1,6 +1,6 @@
-# Phase 4-5: rendering primitives + document-window skeleton. Links
-# against Qt6::Widgets because TDBWFRM inherits QMainWindow, but is
-# still consumed by headless tests via the static-lib boundary.
+# UI module: rendering primitives + document window. Links against
+# Qt6::Widgets, but is still consumed by headless tests via the
+# static-lib boundary.
 
 add_library(dbweave_ui STATIC
     icons.qrc

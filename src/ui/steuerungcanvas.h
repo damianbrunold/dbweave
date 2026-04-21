@@ -15,8 +15,7 @@
     the schlagpatrone + klammern + trittfolge render area.
 
     paintEvent / mouseEvents / keyEvents dispatch back into the
-    owning TSTRGFRM; the methods they call are fleshed out in
-    Stage 7b (layout), 7c (drawing), 7d (mouse), 7e (kbd).       */
+    owning TSTRGFRM. */
 
 #ifndef DBWEAVE_UI_STEUERUNG_CANVAS_H
 #define DBWEAVE_UI_STEUERUNG_CANVAS_H

@@ -1,7 +1,5 @@
-/*  DB-WEAVE Qt 6 port - residual compat-helper tests. After Stage 10
-    the only real compat code left is colors_compat.h's TColor <->
-    QColor converter; vcl_compat.h / tbitmap_compat.h /
-    registry_compat.h are gone.                                    */
+/*  DB-WEAVE - compat-helper tests. Exercises colors_compat.h's
+    TColor <-> QColor converter. */
 
 #include <QCoreApplication>
 #include <QTest>

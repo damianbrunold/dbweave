@@ -1,8 +1,3 @@
-# Each sub-module will become its own static library as code is ported.
-# During Phase 0, only the top-level executable with a placeholder main.cpp
-# exists. Sub-directories (domain, io, ui, print, loom, compat) are added
-# by later phases.
-
 qt_add_executable(dbweave
     main.cpp
 )
@@ -21,18 +16,14 @@ set_target_properties(dbweave PROPERTIES
     MACOSX_BUNDLE    ON
 )
 
-# Phase 1: VCL -> Qt compatibility shim.
 add_subdirectory(compat)
 
-# Phase 2 (early): file-format I/O primitives. felddef's Read/Write
-# methods depend on the FfReader/FfWriter defined here, so this module
-# must be built before any domain code that persists to .dbw files.
+# File-format I/O primitives. felddef's Read/Write methods depend on the
+# FfReader/FfWriter defined here, so this module must be built before any
+# domain code that persists to .dbw files.
 add_subdirectory(io)
 
-# Phase 2: pure-domain logic.
 add_subdirectory(domain)
-
-# Phase 4: rendering primitives (no widget dependency yet).
 add_subdirectory(ui)
 
 # Serial-loom controllers. On by default; pulls in Qt6SerialPort and

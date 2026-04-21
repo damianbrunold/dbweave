@@ -14,22 +14,7 @@
 
     Structurally this is a modal QDialog that hosts a QMenuBar,
     QToolBar, a SteuerungCanvas with a vertical QScrollBar beside
-    it, and a status-bar-style footer, matching the legacy form's
-    layout.
-
-    Port scope progression (see PORT_PLAN.md Stage 7):
-      7a (this slice): shell only -- menus, toolbar, status bar,
-          empty canvas, the Start / Stop / Reverse / Options /
-          View / Position / Goto klammer / Shafts action skeleton
-          (all disabled), and the LoomControlClick entry point.
-      7b: layout (CalcSizes, CalcTritte, UpdateScrollbar).
-      7c: drawing (DrawGrid, DrawData, DrawKlammern, ...).
-      7d: mouse (click + drag klammer).
-      7e: keyboard + popup menu.
-      7f: weaving loop (Weben / WeaveTempQuit / Start / Stop / ...)
-      7g: satellite dialogs.
-      7h: settings persistence.
-*/
+    it, and a status-bar-style footer. */
 
 #ifndef DBWEAVE_UI_STEUERUNG_H
 #define DBWEAVE_UI_STEUERUNG_H

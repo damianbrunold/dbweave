@@ -1,4 +1,4 @@
-# Qt-ish coding style for DB-WEAVE (Phase 12 sweep).
+# Qt-ish coding style for DB-WEAVE.
 #
 # clang-format has no built-in "Qt" preset, so we start from WebKit
 # (which is the closest sibling: braces attach on control

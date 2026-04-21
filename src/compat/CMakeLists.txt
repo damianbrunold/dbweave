@@ -1,13 +1,11 @@
-# Residual helper layer after Stage 10 shim removal. What remains:
-#   - colors_compat.h  TColor <-> QColor helpers (VCL BBGGRR byte
-#                      order; used by rangecolors + palette).
-#   - shift_compat.h   Bit-flag stand-in for VCL TShiftState; used by
-#                      cursor.{h,cpp} + kbdhandling.cpp to bridge
-#                      Qt::KeyboardModifiers into the cursor dispatch.
+# Small residual helper layer, header-only. What remains:
+#   - colors_compat.h  TColor <-> QColor helpers (BBGGRR byte order;
+#                      used by rangecolors + palette, matches the .dbw
+#                      on-disk encoding).
+#   - shift_compat.h   Bit-flag stand-in for the historical TShiftState;
+#                      bridges Qt::KeyboardModifiers into the cursor
+#                      dispatch in cursor.{h,cpp} + kbdhandling.cpp.
 #   - assert_compat.h  dbw3_assert wrapping Q_ASSERT / qDebug.
-# Header-only INTERFACE library. AnsiString / TStringList / TRegistry
-# / TBitmap / __fastcall / __published were dropped in Stage 10 once
-# every call site had been rewritten against direct Qt types.
 
 add_library(dbweave_compat INTERFACE)
 

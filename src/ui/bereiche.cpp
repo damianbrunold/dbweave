@@ -9,13 +9,13 @@
     (at your option) any later version.
 */
 
-/*  Phase 5 gap-fill: handler ports of legacy
-      - schlagpatrone.cpp (3 clickhandlers)
-      - einzugtrittfolge.cpp (2 clickhandlers)
-      - trittfolge.cpp (ClearTrittfolgeClick, TfSpiegelnClick)
-      - bereiche.cpp (RangePatternsClick, BereicheFillPattern)
+/*  Click-handler bundle:
+      - schlagpatrone (3 clickhandlers)
+      - einzugtrittfolge (2 clickhandlers)
+      - trittfolge (ClearTrittfolgeClick, TfSpiegelnClick)
+      - bereiche (RangePatternsClick, BereicheFillPattern)
     Plus the bereichmuster / bereichundo state the range-substitution
-    dialog needs.                                                 */
+    dialog needs. */
 
 #include "mainwindow.h"
 #include "datamodule.h"

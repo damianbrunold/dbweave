@@ -9,29 +9,7 @@
     (at your option) any later version.
 */
 
-/*  Minimal "@dbw3:file" loader -- the first slice of a legacy
-    FhLoader port. Handles:
-        - signature
-        - data/size        (MAXX1/MAXX2/MAXY1/MAXY2)
-        - data/fields      (einzug, aufknuepfung, trittfolge,
-                            schussfarben, kettfarben, blatteinzug;
-                            the legacy "isempty" subsection is
-                            parsed-and-discarded for forward compat)
-        - data/palette     (via Palette::Load)
-        - properties       (reads Author/Organization/Remarks into a
-                            FileProperties owned by TData)
-    Skips:
-        - version          (tolerated, not stored)
-        - data/webstuhl    (klammer brace state -- Phase 11 loom)
-        - data/blockmuster (not ported yet)
-        - data/bereichmuster
-        - data/hilfslinien
-        - data/fixeinzug
-        - view             (UI toggle persistence -- later)
-        - printsettings    (printer layout -- Phase 8)
-
-    Skipped sections are consumed (so the parser advances past them)
-    but their contents are discarded. */
+/*  "@dbw3:file" loader. */
 
 #ifndef DBWEAVE_UI_FILELOAD_H
 #define DBWEAVE_UI_FILELOAD_H

@@ -36,10 +36,10 @@ if(DBWEAVE_BUILD_TESTS)
 endif()
 
 # ---------------------------------------------------------------------------
-# Phase 10: install rules + per-platform bundle glue used by the packaging
-# scripts under packaging/. Running `cmake --install build --prefix <dir>`
-# lays out a relocatable tree that linuxdeploy / windeployqt / macdeployqt
-# can consume.
+# Install rules + per-platform bundle glue used by the packaging scripts
+# under packaging/. Running `cmake --install build --prefix <dir>` lays out
+# a relocatable tree that linuxdeploy / windeployqt / macdeployqt can
+# consume.
 # ---------------------------------------------------------------------------
 include(GNUInstallDirs)
 
