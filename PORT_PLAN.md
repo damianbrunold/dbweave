@@ -133,15 +133,32 @@ Action taken: deleted the dead `EinzugRearrangeImpl::Fixiert()` stub and its `Re
 
 ### Stage 7 — Loom / Steuerung (weaving mode)  [near-term, pre-release]
 
-Entire Phase 11. Biggest remaining slice. Recommended sub-order:
+Already in the tree (built under `DBWEAVE_BUILD_LOOM`):
+- `src/loom/serialport.{cpp,h}` — QSerialPort wrapper matching legacy `SerialPort` API.
+- `src/loom/serialcontrollers.{cpp,h}` — five real controllers ported (Patronic, Patronic indirect, Designer, SLIPS, AVL Compu-Dobby III) + `makeLoomController` factory.
+- `src/loom/loomsettings.h` — PORT / PARITY / BAUDRATE / PORTINIT enums.
+- `src/ui/loom.{cpp,h}` — `StWeaveController` base + `DummyController`.
+- `src/ui/loomoptionsdialog.{cpp,h}` — loom options (interface / port / delay / slips-bytes).
 
-- [ ] `comutil.cpp` protocol helpers (packet framing, acks) on top of the existing `serialport.cpp`.
-- [ ] `steuerung_pos.cpp` — pure position math (testable headless).
-- [ ] `steuerung.cpp` — non-UI state engine.
-- [ ] `steuerung_form.cpp` as a secondary window, with its six split units (`_draw`, `_kbd`, `_mouse`, `_popup`, `_pos`, `_weben`).
-- [ ] Satellite dialogs: `strgoptloom_form`, `strgpatronicindparms_form`, `strggoto_form`, `strginfo_form`.
-- [ ] Wire the existing `actWeave` menu entry (Ctrl+W); remove `setEnabled(false)`.
-- [ ] Gate behind the existing `DBWEAVE_BUILD_LOOM` CMake option.
+What exists today for the weaving UI (`src/ui/loomdialog.{cpp,h}`, ~550 lines): a bare-bones textual modal with a klammer spinbox editor, Start / Stop / Step / Reset buttons, and a QPlainTextEdit log. This is *not* a faithful port of `TSTRGFRM`.
+
+**Gap vs. legacy**: the real TSTRGFRM is a ~3600-line secondary window with a graphical weaving canvas: schlagpatrone / trittfolge rendered in patrone / farbeffekt / simulation modes, a vertical scrollbar, nine interactive vertical klammer bars next to the weave area that the user drags to size / move, an animated weave-position marker that scrolls as the loom advances, and a last-position marker for "Goto last". It has its own menu + toolbar + popup menu, keyboard shortcuts for navigation, and the weaving loop that drives the controller `WeaveSchuss` for each schuss.
+
+Sub-plan for a faithful port (each sub-stage builds + runs; sub-stages are session-sized):
+
+- [ ] **7a — Foundation**: rename the current `LoomDialog` to an old-style `LoomDialogLegacy` (or delete); create a new `SteuerungDialog : QMainWindow`-like secondary window with its own `SteuerungCanvas : QWidget`, vertical `QScrollBar`, `QMenuBar` / `QToolBar` / `QStatusBar`. No drawing yet -- just the shell, menu entries, status-bar placeholder. Wire Ctrl+W / Extras > Weave to open it; remove `setEnabled(false)`. Keep `LoomOptionsDialog` wiring.
+- [ ] **7b — Pos/layout**: port `steuerung_pos.cpp` + the layout half of `steuerung_form.cpp` (`CalcSizes`, `CalcTritte`, `UpdateScrollbar`). Exposes `gridsize`, `maxi`, `maxj`, `tr`, `x1`, scroll offsets via the new canvas.
+- [ ] **7c — Drawing**: port `steuerung_draw.cpp` (~576 lines). `DrawGrid` + `DrawData` + three gewebe render modes (normal / farbeffekt / simulation) + `DrawKlammern` + `DrawSelection` / `DrawPositionSelection` / `DrawLastPos`. Reuse `draw_cell.cpp` for cell painting.
+- [ ] **7d — Mouse**: port `steuerung_mouse.cpp` (~124 lines). Click-in-schlagpatrone sets weave position; click-in-klammer selects + drag behaviour (top/bottom/middle) to resize / move the klammer. Mark modified on drag.
+- [ ] **7e — Keyboard + popup**: port `steuerung_kbd.cpp` (~191 lines) and `steuerung_popup.cpp` (~124 lines). Arrow keys / PgUp / PgDown navigate schuss / klammer; popup menu mirrors the main menu.
+- [ ] **7f — Weaving loop**: port `steuerung_weben.cpp` (~345 lines). The `Weben` / `WeaveTempQuit` state machine that drives the controller across klammer ranges, repetitions, reverse, loop, backwards. Hook Start / Stop / Reverse toolbar buttons. Integrate the options dialog + the existing `StWeaveController`.
+- [ ] **7g — Satellite dialogs**:
+  - Port `strginfo_form` (360 lines) -- schuss-progress info window opened during weave.
+  - Port `strggoto_form` (52 lines) -- "Goto specific schuss" dialog.
+  - Port `strgpatronicindparms_form` (35 lines) -- Patronic-indirect starting-position + max-picks dialog, calling `SetSpecialData` on the controller.
+  - `strgoptloom_form` is already covered by `LoomOptionsDialog`.
+- [ ] **7h — Settings persistence**: port `LoadSettings` / `SaveSettings` (QSettings under "Steuerung/*"): interface, port, delay, reverse, schaftcount, zoom, current klammern, last position.
+- [ ] **7i — Wrap-up**: remove the temporary top-level "Loom" menu; verify both the non-loom and loom CMake builds pass; update PORT_PLAN.
 
 ### Stage 8 — Command-line + packaging + CI
 
