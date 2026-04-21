@@ -76,6 +76,34 @@ public:
         main window picks up the secondary window's final state. */
     void pushStateToMain();
 
+    /*  Layout / position helpers ported from legacy
+        steuerung_form.cpp + steuerung_pos.cpp.                    */
+    void CalcSizes();
+    void CalcTritte();
+    void UpdateScrollbar();
+    void AutoScroll();
+    void UpdateStatusbar();
+    void _ResetCurrentPos();
+    bool IsValidWeavePosition() const;
+    void ValidateWeavePosition();
+    void WeaveKlammerRight();
+    void WeaveKlammerLeft();
+    void WeaveRepetitionInc();
+    void WeaveRepetitionDec();
+    void GotoKlammer(int _klammer);
+    void GotoLastPosition();
+    void UpdateLastPosition();
+
+    /*  Called after state changes that may enable / disable
+        the nine Goto-klammer actions. Replaces the legacy
+        IdleHandler.                                              */
+    void refreshGotoActions();
+
+    /*  Full refresh: CalcSizes + canvas->update() +
+        UpdateStatusbar + refreshGotoActions. Used as the "touch
+        everything" entry point from handlers in later slices.   */
+    void refresh();
+
     bool Weaving() const
     {
         return weaving;
@@ -116,6 +144,16 @@ public:
     int rapporty = 0;
     bool fewithraster = false;
 
+    /*  Canvas layout. Populated by CalcSizes; consumed by the
+        drawing and mouse routines. Units: viewport pixels in the
+        canvas widget's local coordinates.                          */
+    int maxi = 0;             /* visible gewebe columns            */
+    int maxj = 0;             /* visible rows (schuesse)           */
+    int trittCols = 0;        /* visible trittfolge cols (legacy tr -- renamed to avoid collision with QObject::tr) */
+    int x1 = 0;               /* column where schlagpatrone starts */
+    int klammerwidth = 0;     /* MAXKLAMMERN * 11 px               */
+
+
     /*  View state. */
     bool schlagpatrone = false;
     DARSTELLUNG schlagpatronendarstellung = AUSGEFUELLT;
@@ -145,9 +183,11 @@ public:
     int lpt = 1;  /* LP_LPT1 */
     int delay = 3;
     LOOMINTERFACE intrf = intrf_dummy;
-    bool reverse = false;
+    bool reverse = false;   /* ReverseSchaft -- schaft order flip */
+    bool backwards = false; /* WeaveBackwards -- weave direction  */
     int numberOfShafts = 24;
     int slipsBytes = 4;
+    bool loop = true;
 
 public:
     /*  Widgets exposed to the canvas and sub-stages. */
@@ -190,6 +230,9 @@ private:
     void buildStatusbar();
 
     void pullStateFromMain();
+
+protected:
+    void showEvent(QShowEvent* _e) override;
 };
 
 #endif

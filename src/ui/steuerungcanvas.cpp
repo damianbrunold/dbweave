@@ -35,7 +35,10 @@ void SteuerungCanvas::paintEvent(QPaintEvent* /*_e*/)
 
 void SteuerungCanvas::resizeEvent(QResizeEvent* /*_e*/)
 {
-    /*  Stage 7b will recompute gridsize / maxi / maxj here. */
+    /*  Recompute cell size / visible counts / scrollbar range
+        whenever the canvas changes size.                        */
+    if (frm)
+        frm->CalcSizes();
 }
 
 void SteuerungCanvas::mousePressEvent(QMouseEvent* /*_e*/)
