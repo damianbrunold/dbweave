@@ -168,7 +168,7 @@ Sub-plan for a faithful port (each sub-stage builds + runs; sub-stages are sessi
 
 ### Stage 8 — Command-line + packaging + CI
 
-- [ ] Port legacy `/p <file>` silent-print mode via `QCommandLineParser` in `main.cpp`: load, print without dialog, exit (legacy `HandleCommandlinePrint` in `commandline.cpp`).
+- [x] Legacy `/p <file>` silent-print mode ported in `main.cpp`: detects `argv[1] == "/p"` before constructing the main window, loads the file, constructs a default-printer `QPrinter`, runs `PrPrinterPrint::Print()`, and exits without showing the UI. Exit codes: 0 success, 2 missing file, 3 load failure. Matches legacy `HandleCommandlinePrint` semantics.
 - [x] Linux build.
 - [x] Windows build + packaging.
 - [ ] macOS build + `macdeployqt` + (ad-hoc) signed `.dmg` — expected to work but not yet verified on a mac.

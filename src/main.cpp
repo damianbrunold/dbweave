@@ -24,7 +24,10 @@
 #include "language.h"
 #include "mainwindow.h"
 #include "loadoptions.h"
+#include "print.h"
 #include "settings.h"
+
+#include <QPrinter>
 
 int main(int argc, char* argv[])
 {
@@ -137,10 +140,42 @@ int main(int argc, char* argv[])
     Data = new TData();
     DBWFRM = new TDBWFRM();
 
-    /*  If the user passed a .dbw path on the command line, load it.
-        Otherwise start with an empty pattern -- File | Open is now
-        available from the menu. */
+    /*  Command-line:
+          dbweave                      -> empty pattern
+          dbweave <file.dbw>           -> open the file
+          dbweave /p <file.dbw>        -> silent-print mode (legacy
+                                          HandleCommandlinePrint): load
+                                          the file, send it to the
+                                          default printer without any
+                                          dialog, then exit.          */
     const QStringList args = QApplication::arguments();
+
+    if (args.size() >= 3 && args.at(1) == QStringLiteral("/p")) {
+        const QString path = args.at(2);
+        if (!QFileInfo::exists(path)) {
+            delete DBWFRM;
+            delete Data;
+            return 2;
+        }
+        DBWFRM->filename = path;
+        LOADSTAT stat = UNKNOWN_FAILURE;
+        if (!DBWFRM->Load(stat, LOADALL)) {
+            delete DBWFRM;
+            delete Data;
+            return 3;
+        }
+        /*  Default QPrinter -> system default printer, no dialog. */
+        QPrinter printer(QPrinter::HighResolution);
+        PrPrinterPrint job(DBWFRM, Data, &printer);
+        job.Print();
+
+        delete DBWFRM;
+        DBWFRM = nullptr;
+        delete Data;
+        Data = nullptr;
+        return 0;
+    }
+
     if (args.size() >= 2) {
         const QString path = args.at(1);
         if (QFileInfo::exists(path)) {
