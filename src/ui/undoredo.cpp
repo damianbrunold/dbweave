@@ -14,12 +14,6 @@
     one step around the ring and records the full field state there.
     Each item owns its own copies of all seven Feld* containers, so
     snapshotting is O(pattern size) in both time and space.
-
-    Port note vs. legacy: the legacy Undo() body reaches into five
-    TDBWFRM properties and calls four recalc methods. Those members
-    and methods now exist as stubs on TDBWFRM (see mainwindow.h/.cpp);
-    the call sites work, the bodies gradually fill in as later slices
-    port the editor operations that drive them.
 */
 
 /*-----------------------------------------------------------------*/

@@ -9,13 +9,10 @@
     (at your option) any later version.
 */
 
-/*  File menu handlers (Open / Save / Save As) plus the surrounding
-    QFileDialog + QMessageBox glue. The legacy unit filehandling.cpp
-    had VCL TOpenDialog / TSaveDialog drag-and-drop handling, recent-
-    files list (mru.cpp), and the "modified" prompt shown on close.
-    This port lands just Open / Save / Save As -- the MRU list and
-    the close-prompt are deferred along with the rest of the menu
-    chrome.                                                         */
+/*  File menu handlers (New / Open / Save / Save As / New from
+    template) plus the surrounding QFileDialog + QMessageBox glue,
+    the AskSave "modified" prompt used before destructive document
+    changes, and ResetDocument used by File > New.                  */
 
 #include "mainwindow.h"
 #include "patterncanvas.h"

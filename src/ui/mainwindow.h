@@ -426,7 +426,7 @@ public:
     void DrawRapport();
     bool IsInRapport(int _i, int _j);
 
-    /*  Drawing stubs (bodies land with the rendering slice). */
+    /*  Per-cell draw entry points (see draw.cpp). */
     void DrawHilfslinien();
     void DrawGewebe(int _i, int _j);
     void DrawGewebeRahmen(int _i, int _j);

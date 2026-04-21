@@ -14,9 +14,8 @@
       ChooseHSVDialog      — legacy farbauswahl_form (hue wheel + S/V patch)
       ChoosePaletteDialog  — legacy farbauswahl2_form (palette grid)
 
-    Each exposes SelectColor(COLORREF) / GetSelectedColor() so the
-    FarbverlaufDialog popup-menu entries can replace their
-    QColorDialog stubs with the real pickers.                      */
+    Each exposes SelectColor(COLORREF) / GetSelectedColor() and is
+    used by FarbverlaufDialog and SelColorDialog.                  */
 
 #ifndef DBWEAVE_UI_CHOOSECOLOR_DIALOG_H
 #define DBWEAVE_UI_CHOOSECOLOR_DIALOG_H

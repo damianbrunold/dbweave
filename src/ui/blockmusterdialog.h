@@ -16,10 +16,9 @@
     main pattern's aufknuepfung is replaced by the corresponding
     numbered pattern at block size (mx+1, my+1).
 
-    Keyboard cursor navigation from the legacy form is deferred in
-    favour of the mouse-driven click-to-toggle flow + the menu
-    actions (roll/mirror/invert/rotate/central-symmetry/undo/redo/
-    copy-from/preset-bindungen). The dialog preserves the legacy
+    Both keyboard cursor navigation (arrow keys + Space / Enter +
+    digit keys to switch sub-patterns) and the mouse-driven click-
+    to-toggle flow are wired. The dialog preserves the legacy
     BlockUndo ring semantics.                                      */
 
 #ifndef DBWEAVE_UI_BLOCKMUSTER_DIALOG_H

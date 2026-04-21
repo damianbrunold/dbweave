@@ -18,13 +18,9 @@
       data/palette
       data/hilfslinien (count + binary list)
 
-    The legacy also writes webstuhl / blockmuster / bereichmuster /
-    fixeinzug / view / printsettings / properties; those are skipped
-    here because the port does not yet carry their state. A save-
-    then-load round-trip is therefore non-destructive only for the
-    sections above; reading a legacy-written file still works
-    because our loader skips the unmapped sections via DEFAULT_SECTION.
-*/
+    Matching-section loader skips anything it doesn't understand via
+    DEFAULT_SECTION, so legacy-written files still open cleanly even
+    when the port adds or drops a section.                           */
 
 #include "mainwindow.h"
 #include "datamodule.h"

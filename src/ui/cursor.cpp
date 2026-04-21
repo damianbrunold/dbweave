@@ -665,10 +665,10 @@ void CrFeld::DrawCursor()
         y1 = y0 + fb.pos.height;
     }
 
-    /*  Legacy default cursor colour is clWhite. A farbeffekt-bright-
-        gewebe override that flips to black lives in the legacy; it
-        is deferred here -- simple white outline is adequate for the
-        basic editing UX and platform-independent in tests.        */
+    /*  Simple white outline. Legacy had a farbeffekt-bright-gewebe
+        override that flipped to black; the port keeps the single-
+        colour outline because it's good enough in practice and
+        platform-independent in pixel tests.                       */
     p->setPen(QPen(QColor(Qt::white)));
     p->drawLine(x0, y0, x1, y0);
     p->drawLine(x1, y0, x1, y1);

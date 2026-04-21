@@ -10,11 +10,7 @@
 */
 
 /*  Occupied-range bookkeeping for the kette (warp) and schuesse (weft)
-    axes. Ported verbatim from legacy/range.cpp. The TDBWFRM stub
-    bodies for CalcRangeKette / CalcRangeSchuesse / CalcRange /
-    UpdateRange that lived in mainwindow.cpp have been removed; the
-    real implementations here supersede them.
-*/
+    axes. Ported verbatim from legacy/range.cpp.                     */
 
 /*-----------------------------------------------------------------*/
 #include "assert_compat.h"

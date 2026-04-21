@@ -104,25 +104,44 @@ Port `legacy/einstellverh_form.*` and the `faktor_kette` / `faktor_schuss` state
 
 ### Stage 6 — Stale comment and genuine-stub cleanup  [release blocker]
 
-Walk the "stub"/"deferred" comments identified in the 2026-04-21 audit. Almost all are stale; handle in one housekeeping commit.
+Stale comments rewritten:
+- [x] `einzug.cpp` — note Fixiert is an obsolete-feature stub pending full excision (Stage 6b).
+- [x] `cursor.cpp` — simple white outline is intentional.
+- [x] `undoredo.cpp` — obsolete port note removed.
+- [x] `range.cpp` — "stub methods removed" wording dropped.
+- [x] `trittfolge.cpp` — notes that click handlers are wired (via bereiche.cpp and style QActions).
+- [x] `filehandling.cpp` / `filesave.cpp` — close-prompt / AskSave confirmed ported.
+- [x] `importwif.cpp` — AskSave gate added (prompt before replacing an unsaved document on WIF import) plus the comment rewritten.
+- [x] `choosecolordialog.h` / `farbverlaufdialog.cpp` — "QColorDialog stubs" wording dropped.
+- [x] `blockmusterdialog.h` / `fixeinzugdialog.h` — keyboard nav confirmed ported.
+- [x] `mainwindow.h` "Drawing stubs" — rewritten.
+- [x] `aboutdialog.h` — easter egg note removed; techinfo button confirmed wired.
+- [x] `setblatteinzug.cpp` — deferred-update note rewritten (refresh() → paintEvent now wired).
 
-Stale comments to remove / reword:
-- [ ] `einzug.cpp:16–20` — Fixiert is obsolete, not "stubbed pending recalc".
-- [ ] `cursor.cpp:670` — simple outline is intentional, drop "deferred" wording.
-- [ ] `undoredo.cpp:18–22` — port note is outdated; most referenced methods now have real bodies.
-- [ ] `range.cpp:13–15` — TDBWFRM stub methods were removed; rewrite.
-- [ ] `trittfolge.cpp:16–17` — Tf*Click handlers are wired (via style QActions + Rearrange); TfGeradeZ/S intentionally dropped.
-- [ ] `filehandling.cpp:17` / `filesave.cpp:23,199` — close-prompt is ported; reword.
-- [ ] `importwif.cpp:533` — AskSave gate is ported; reword.
-- [ ] `choosecolordialog.h:19` / `farbverlaufdialog.cpp:53` — the three real pickers are in use; drop "QColorDialog stubs" language.
-- [ ] `blockmusterdialog.h:19` / `fixeinzugdialog.h:16` — keyboard nav is ported; check for missing key combinations vs. legacy then drop the "deferred" wording.
-- [ ] `mainwindow.h:422` "Drawing stubs" — rendering is complete; drop or rewrite.
-- [ ] `aboutdialog.h:14` — easter egg is dropped by decision; remove the note.
+Genuine empty bodies:
+- [x] `TDBWFRM::SetCursor(int, int)` now forwards to `cursorhandler->SetCursor(kbd_field, i, j, true)` (matches legacy kbdhandling.cpp:36). Restores the expected behaviour on the undoredo restore path.
+- [x] `TDBWFRM::UpdateScrollbars()` now forwards to `pattern_canvas->syncScrollbarsFromFrm()`. Restores scrollbar sync after ExtendTritte / ExtendSchaefte.
 
-Genuine empty bodies to decide on (keep empty / delete / wire):
-- [ ] `TDBWFRM::SetCursor(int, int) {}` (mainwindow.cpp:1805) — the port uses `SetKeyboardPos` directly; likely deletable.
-- [ ] `TDBWFRM::UpdateScrollbars() {}` (mainwindow.cpp:1818) — likely absorbed by Qt's automatic scrollbars in `patterncanvas`; likely deletable.
-- [ ] `setblatteinzug.cpp:15` deferred `update()` — investigate: does the current code end up repainting correctly without the deferred call?
+### Stage 6b — Excise the obsolete fix-einzug feature  [release blocker]
+
+The "Fixiert" / fix-einzug feature was dropped from the product but its scaffolding is still in the port:
+- `EzFixiert` QAction (menu + einzug style group in undoredo / filesave snapshot)
+- Whole `fixeinzugdialog.{h,cpp}` (the dialog, UpdateEinzugFixiert, fixeinzug/fixsize/firstfree members)
+- `Fixiert()` empty stub in `einzug.cpp`
+- `fixeinzug` binary section in the .dbw file format (written and read)
+- `EzFixiert` red-mismatch rendering in `draw.cpp:DrawEinzug`
+- Menu entry "Fix-einzug..." and toolbar / keyboard shortcut
+- `InvalidEinzug` / "Fix-einzug" strings in `dbw3_strings.h`
+
+Plan:
+- [ ] Drop the QAction, menu entry, shortcut, and toolbar button.
+- [ ] Delete `fixeinzugdialog.{h,cpp}` from the tree and from `src/ui/CMakeLists.txt`.
+- [ ] Remove `fixeinzug` / `fixsize` / `firstfree` members + `UpdateEinzugFixiert` from TDBWFRM; strip the code paths that maintain them.
+- [ ] Remove the einzug-style slot from the undoredo snapshot (shift the style-index mapping or keep an inert slot for legacy-file compat).
+- [ ] Either keep reading the `fixeinzug` section in `fileload` (and silently discard) or stop reading it. Either way, stop writing it.
+- [ ] Remove the `EzFixiert == checked` red-mismatch branch in `draw.cpp:DrawEinzug`.
+- [ ] Remove the empty `Fixiert()` stub + its Rearrange() branch.
+- [ ] Round-trip tests still pass; add one asserting that a .dbw without the fixeinzug section loads cleanly and that a .dbw with it also loads cleanly (silent ignore).
 
 ### Stage 7 — Loom / Steuerung (weaving mode)  [near-term, pre-release]
 

@@ -9,12 +9,9 @@
     (at your option) any later version.
 */
 
-/*  Port note: legacy DoSetBlatteinzug paints directly onto the form's
-    Canvas with three Rectangle()s + a MoveTo/LineTo pair. Qt uses an
-    event-driven paintEvent so we drop the direct paint code and issue
-    a deferred update() in SetBlatteinzug. The visual output is the
-    same once the rendering slice lands and paintEvent is wired up.
-*/
+/*  Legacy DoSetBlatteinzug painted directly onto the form's Canvas.
+    Qt is event-driven so SetBlatteinzug mutates the field then
+    defers the repaint through refresh() -> paintEvent.            */
 
 /*-----------------------------------------------------------------*/
 #include "assert_compat.h"

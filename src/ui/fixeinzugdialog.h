@@ -10,11 +10,9 @@
 */
 
 /*  Qt port of legacy fixeinzug_form.cpp (TFixeinzugForm). "User-
-    defined threading" editor. The legacy form also implemented a
-    keyboard cursor overlay; this port keeps the equivalent mouse-
-    click + menu workflow (Grab / Delete / Revert / Close) which
-    cover the full edit loop. Keyboard cursor navigation is deferred
-    -- mouse editing is authoritative in the legacy UI as well.    */
+    defined threading" editor. Supports mouse click-to-edit, the
+    Grab / Delete / Revert / Close menu actions, and arrow-key /
+    Space keyboard navigation over the cursor overlay.            */
 
 #ifndef DBWEAVE_UI_FIXEINZUG_DIALOG_H
 #define DBWEAVE_UI_FIXEINZUG_DIALOG_H

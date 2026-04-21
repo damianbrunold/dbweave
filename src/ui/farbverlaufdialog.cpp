@@ -50,7 +50,8 @@ static QColor qcol(COLORREF _c)
 
 /*-----------------------------------------------------------------*/
 /*  Swatch is a plain QWidget filled with a solid colour via
-    autoFillBackground + palette. Click opens QColorDialog. */
+    autoFillBackground + palette. Click opens the colour-picker
+    popup menu (HSV / RGB / palette).                            */
 class Swatch : public QWidget
 {
 public:

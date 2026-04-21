@@ -9,21 +9,11 @@
     (at your option) any later version.
 */
 
-/*  Port scope for this slice:
-      * EinzugRearrangeImpl class: all eight rearrangement algorithms
-        (NormalZ, NormalS, GeradeZ, GeradeS, Chorig2, Chorig3, Belassen
-        plus Rearrange dispatcher) and every helper except Fixiert.
-      * Fixiert is stubbed because it drives the RcRecalcAll class from
-        recalc.cpp (not ported yet) and calls _ClearEinzug /
-        _ClearAufknuepfung / _ClearSchlagpatrone / _DrawEinzug /
-        _DrawAufknuepfung / _DrawSchlagpatrone on TDBWFRM (which are
-        stubs today).
-      * The legacy TDBWFRM:: methods at the top of einzug.cpp
-        (ClearEinzugClick, EzSpiegelnClick, RearrangeSchaefte,
-        UpdateEinzugFixiert, Ez*Click, EliminateEmptySchaft) are NOT
-        ported here -- they are menu-action event handlers tied to
-        TMenuItem that only land once menus are wired.
-*/
+/*  EinzugRearrangeImpl: the einzug rearrangement algorithms
+    (NormalZ, NormalS, GeradeZ, GeradeS, Chorig2, Chorig3, Belassen)
+    and the Rearrange dispatcher. Fixiert is a stub pending full
+    excision of the obsolete fix-einzug feature (tracked separately
+    in PORT_PLAN.md).                                               */
 
 /*-----------------------------------------------------------------*/
 #include "assert_compat.h"

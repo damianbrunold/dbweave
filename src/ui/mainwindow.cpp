@@ -1825,7 +1825,11 @@ void TDBWFRM::OptAmericanClick()
     }
     refresh();
 }
-void TDBWFRM::SetCursor(int, int) { }
+void TDBWFRM::SetCursor(int _i, int _j)
+{
+    if (cursorhandler)
+        cursorhandler->SetCursor(kbd_field, _i, _j, /*clearselection=*/true);
+}
 void TDBWFRM::SetAppTitle()
 {
     const QString untitled = LANG_STR("Untitled", "Unbenannt");
@@ -1838,7 +1842,11 @@ void TDBWFRM::SetAppTitle()
         shown += QStringLiteral("*");
     setWindowTitle(shown + QStringLiteral(" - DB-WEAVE"));
 }
-void TDBWFRM::UpdateScrollbars() { }
+void TDBWFRM::UpdateScrollbars()
+{
+    if (pattern_canvas)
+        pattern_canvas->syncScrollbarsFromFrm();
+}
 
 void TDBWFRM::RearrangeSchaefte()
 {

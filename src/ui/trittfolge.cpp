@@ -9,13 +9,15 @@
     (at your option) any later version.
 */
 
-/*  Port scope: the ten non-click helper methods from legacy/
-    trittfolge.cpp (IsEmptyTritt, GetFirstNonemptyTritt, RedrawTritt,
+/*  Non-click trittfolge helpers from legacy/trittfolge.cpp
+    (IsEmptyTritt, GetFirstNonemptyTritt, RedrawTritt,
     RedrawAufknuepfungTritt, MoveTritt, AufknuepfungsspalteEqual,
     MergeTritte, EliminateEmptyTritt, SwitchTritte, RearrangeTritte).
-    The seven Tf*Click / ClearTrittfolgeClick menu handlers are
-    deferred -- they call undo->Snapshot + SetModified + re-dispatch
-    to RearrangeTritte, which the menu-wiring slice will hook up.
+    The matching Tf*Click / ClearTrittfolgeClick menu handlers live
+    in bereiche.cpp; the six style toggles (MinimalZ / MinimalS /
+    Gesprungen / Belassen) reach RearrangeTritte through QAction
+    state. TfGeradeZ / TfGeradeS were intentionally dropped (see
+    filesave.cpp:196 -- the file-format slots stay null for compat).
 */
 
 /*-----------------------------------------------------------------*/

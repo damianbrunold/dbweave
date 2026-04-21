@@ -530,8 +530,10 @@ void TDBWFRM::ImportWIFClick()
         return;
     rememberDirFor("ImportWIF", fn);
 
-    /*  Legacy AskSave gate is not yet ported; the main window asks
-        before replacing an unsaved document when that slice lands. */
+    /*  Importing a WIF replaces the current document; prompt the
+        user to save any unsaved changes first.                     */
+    if (!AskSave())
+        return;
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
     DateiImportieren(fn);

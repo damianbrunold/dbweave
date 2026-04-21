@@ -10,9 +10,9 @@
 */
 
 /*  Qt port of legacy/about.cpp (TAboutBox). Modal About box with
-    verbatim legacy prose. The Tech Info side-dialog and the
-    Shift+Ctrl+Alt double-click easter egg are deferred until the
-    TTechinfoForm port lands. */
+    verbatim legacy prose plus a button that opens the Technical
+    Information dialog. The Shift+Ctrl+Alt double-click easter
+    egg from the C++Builder version is intentionally dropped.     */
 
 #ifndef DBWEAVE_UI_ABOUTDIALOG_H
 #define DBWEAVE_UI_ABOUTDIALOG_H
