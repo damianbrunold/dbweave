@@ -1,0 +1,195 @@
+/*  DB-WEAVE textile CAD/CAM software - http://www.brunoldsoftware.ch
+    Copyright (C) 1998  Damian Brunold
+    Copyright (C) 2009  Damian Brunold
+    Copyright (C) 2026  Damian Brunold (Qt 6 port)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+*/
+
+/*  Qt port of legacy steuerung_form.cpp (TSTRGFRM) -- the secondary
+    weaving window. Replaces the earlier bare-bones LoomDialog.
+
+    Structurally this is a modal QDialog that hosts a QMenuBar,
+    QToolBar, a SteuerungCanvas with a vertical QScrollBar beside
+    it, and a status-bar-style footer, matching the legacy form's
+    layout.
+
+    Port scope progression (see PORT_PLAN.md Stage 7):
+      7a (this slice): shell only -- menus, toolbar, status bar,
+          empty canvas, the Start / Stop / Reverse / Options /
+          View / Position / Goto klammer / Shafts action skeleton
+          (all disabled), and the LoomControlClick entry point.
+      7b: layout (CalcSizes, CalcTritte, UpdateScrollbar).
+      7c: drawing (DrawGrid, DrawData, DrawKlammern, ...).
+      7d: mouse (click + drag klammer).
+      7e: keyboard + popup menu.
+      7f: weaving loop (Weben / WeaveTempQuit / Start / Stop / ...)
+      7g: satellite dialogs.
+      7h: settings persistence.
+*/
+
+#ifndef DBWEAVE_UI_STEUERUNG_H
+#define DBWEAVE_UI_STEUERUNG_H
+
+#include <QDialog>
+
+#include "dbw3_base.h"       /* Klammer, DARSTELLUNG */
+#include "loom.h"            /* LOOMINTERFACE */
+
+class QAction;
+class QActionGroup;
+class QLabel;
+class QMenu;
+class QMenuBar;
+class QScrollBar;
+class QToolBar;
+class QStatusBar;
+
+class TDBWFRM;
+class TData;
+class FeldSchussfarben;
+class FeldKettfarben;
+class FeldEinzug;
+class FeldGewebe;
+class FeldAufknuepfung;
+class FeldTrittfolge;
+
+class SteuerungCanvas;
+
+/*  Named after the legacy class for continuity with the German
+    domain vocabulary (Steuerung = loom control).                */
+class TSTRGFRM : public QDialog
+{
+    Q_OBJECT
+
+public:
+    static constexpr int MAXKLAMMERN = 9;
+
+    explicit TSTRGFRM(TDBWFRM* _main, QWidget* _parent = nullptr);
+    ~TSTRGFRM() override;
+
+    /*  Copy klammer + weave-position state back to TDBWFRM. Called
+        explicitly by LoomControlClick after exec() returns so the
+        main window picks up the secondary window's final state. */
+    void pushStateToMain();
+
+    bool Weaving() const
+    {
+        return weaving;
+    }
+    void SetWeaving(bool _w = true)
+    {
+        weaving = _w;
+    }
+
+    bool Modified() const
+    {
+        return modified;
+    }
+    void SetModified()
+    {
+        modified = true;
+    }
+
+    /*  --- State mirrored from / into TDBWFRM ------------------ */
+    Klammer klammern[MAXKLAMMERN];
+
+    /*  Non-owning pointers into TDBWFRM's field containers. */
+    TDBWFRM* frm = nullptr;
+    TData* data = nullptr;
+    FeldSchussfarben* schussfarben = nullptr;
+    FeldKettfarben* kettfarben = nullptr;
+    FeldEinzug* einzug = nullptr;
+    FeldGewebe* gewebe = nullptr;
+    FeldAufknuepfung* aufknuepfung = nullptr;
+    FeldTrittfolge* trittfolge = nullptr;
+
+    /*  Geometry / zoom. */
+    int zoom[10] = { 5, 7, 9, 11, 13, 15, 17, 19, 21, 23 };
+    int currentzoom = 4;
+    int gridsize = 0;
+    int tritte = 0;
+    int rapportx = 0;
+    int rapporty = 0;
+    bool fewithraster = false;
+
+    /*  View state. */
+    bool schlagpatrone = false;
+    DARSTELLUNG schlagpatronendarstellung = AUSGEFUELLT;
+    QString filename;
+
+    /*  Weaving / position state. */
+    int current_klammer = 0;
+    int weave_position = 0;
+    int weave_klammer = 0;
+    int weave_repetition = 1;
+    int last_position = -1;
+    int last_klammer = -1;
+    int last_repetition = -1;
+    bool schussselected = true;
+    int scrolly = 0;
+    bool firstschuss = true;
+    bool weaving = false;
+    bool modified = false;
+
+    /*  Loom options. Populated by LoadSettings (7h); for now just
+        defaults so the LoomOptionsDialog has something to read.
+        port / lpt are plain ints here so the header stays
+        buildable without the loom-only loomsettings.h (which
+        defines the PORT / LPT enums). The LoomOptionsDialog maps
+        between enum and int at its edges.                       */
+    int port = 1; /* P_COM1 */
+    int lpt = 1;  /* LP_LPT1 */
+    int delay = 3;
+    LOOMINTERFACE intrf = intrf_dummy;
+    bool reverse = false;
+    int numberOfShafts = 24;
+    int slipsBytes = 4;
+
+public:
+    /*  Widgets exposed to the canvas and sub-stages. */
+    SteuerungCanvas* canvas = nullptr;
+    QScrollBar* scrollbar = nullptr;
+    QToolBar* toolbar = nullptr;
+    QStatusBar* statusbar = nullptr;
+    QMenuBar* menubar = nullptr;
+
+    /*  QAction skeleton -- populated by the ctor, wired per
+        sub-stage. All disabled in 7a.                          */
+    QAction* actStart = nullptr;
+    QAction* actStop = nullptr;
+    QAction* actReverse = nullptr;
+    QAction* actOptionsLoom = nullptr;
+    QAction* actLoop = nullptr;
+    QAction* actReverseSchaft = nullptr;
+    QAction* actViewPatrone = nullptr;
+    QAction* actViewFarbeffekt = nullptr;
+    QAction* actViewGewebesimulation = nullptr;
+    QAction* actZoomIn = nullptr;
+    QAction* actZoomNormal = nullptr;
+    QAction* actZoomOut = nullptr;
+    QAction* actSetCurrentPos = nullptr;
+    QAction* actGotoLastPos = nullptr;
+    QAction* actGotoKlammer[MAXKLAMMERN] = {};
+    QAction* actSbGoto[MAXKLAMMERN] = {};
+    QAction* actSchafts[8] = {}; /* 4 / 8 / 12 / 16 / 20 / 24 / 28 / 32 */
+    QAction* actBeenden = nullptr;
+
+    /*  Status-bar labels (filled by UpdateStatusbar in 7b+).   */
+    QLabel* labPosition = nullptr;
+    QLabel* labKlammer = nullptr;
+    QLabel* labRepetition = nullptr;
+
+private:
+    void buildMenus();
+    void buildToolbar();
+    void buildCentralArea();
+    void buildStatusbar();
+
+    void pullStateFromMain();
+};
+
+#endif

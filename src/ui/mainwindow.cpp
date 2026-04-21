@@ -1103,7 +1103,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     QAction* actWeave = menuAct(extrasMenu, "&Weave", "&Weben", nullptr,
                                 "Switches into the weaving mode", "Wechselt in den Weben-Modus");
     actWeave->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_W));
-    actWeave->setEnabled(false);
+    connect(actWeave, &QAction::triggered, this, [this] { LoomControlClick(); });
     QAction* actViewInfos = menuAct(extrasMenu, "&Information...", "&Informationen...", nullptr,
                                     "Displays information about the current pattern",
                                     "Zeigt Informationen über das aktuelle Muster an");
@@ -1279,13 +1279,6 @@ TDBWFRM::TDBWFRM(QWidget* parent)
                  QStringLiteral("Toggles the ranges toolbar"),
                  QStringLiteral("Bereiche-Leiste sichtbar/unsichtbar"));
     viewMenu->addAction(actViewRanges);
-
-    /*  Loom menu — Phase 11 dummy simulator (not part of the
-        legacy top-level menu but kept so the feature remains
-        reachable while a more complete port is pending).    */
-    QMenu* loomMenu = menuBar()->addMenu(QStringLiteral("&Loom"));
-    QAction* actLoomControl = loomMenu->addAction(QStringLiteral("&Loom control..."));
-    connect(actLoomControl, &QAction::triggered, this, [this] { LoomControlClick(); });
 
     /*  Drawing tools -- icon-only vertical toolbar inside a dockable
         panel on the right (matches the palette + ranges docks). The

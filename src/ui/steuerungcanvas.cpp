@@ -1,0 +1,54 @@
+/*  DB-WEAVE textile CAD/CAM software - http://www.brunoldsoftware.ch
+    Copyright (C) 1998  Damian Brunold
+    Copyright (C) 2009  Damian Brunold
+    Copyright (C) 2026  Damian Brunold (Qt 6 port)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+*/
+
+#include "steuerungcanvas.h"
+#include "steuerung.h"
+#include "legacy_colors.h"
+
+#include <QPainter>
+
+SteuerungCanvas::SteuerungCanvas(TSTRGFRM* _frm)
+    : QWidget(nullptr)
+    , frm(_frm)
+{
+    setAutoFillBackground(true);
+    QPalette pal = palette();
+    pal.setColor(QPalette::Window, legacyBtnFace());
+    setPalette(pal);
+    setFocusPolicy(Qt::StrongFocus);
+}
+
+void SteuerungCanvas::paintEvent(QPaintEvent* /*_e*/)
+{
+    /*  Stage 7a: empty canvas. Real render lands in 7c. */
+    QPainter p(this);
+    p.fillRect(rect(), legacyBtnFace());
+}
+
+void SteuerungCanvas::resizeEvent(QResizeEvent* /*_e*/)
+{
+    /*  Stage 7b will recompute gridsize / maxi / maxj here. */
+}
+
+void SteuerungCanvas::mousePressEvent(QMouseEvent* /*_e*/)
+{
+    /*  Stage 7d will dispatch click-in-schlagpatrone / click-in-klammer. */
+}
+
+void SteuerungCanvas::mouseMoveEvent(QMouseEvent* /*_e*/)
+{
+    /*  Stage 7d will handle klammer drag. */
+}
+
+void SteuerungCanvas::mouseReleaseEvent(QMouseEvent* /*_e*/)
+{
+    /*  Stage 7d will end klammer drag. */
+}

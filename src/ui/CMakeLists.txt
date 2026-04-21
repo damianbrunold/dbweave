@@ -85,8 +85,9 @@ add_library(dbweave_ui STATIC
     verhaeltnisdialog.cpp
     printrangedialog.cpp
     loom.cpp
-    loomdialog.cpp
     loomoptionsdialog.cpp
+    steuerung.cpp
+    steuerungcanvas.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)

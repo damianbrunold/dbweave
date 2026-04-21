@@ -857,9 +857,11 @@ public:
     void FilePrintpreviewClick();
     void FileSetPageClick();
 
-    /*  Loom control (Phase 11). Opens LoomDialog with the current
-        trittfolge / aufknuepfung / klammer state and lets the user
-        run a dummy loom simulation row-by-row. */
+    /*  Loom control (Extras > Weave, Ctrl+W). Opens TSTRGFRM --
+        the secondary weaving window ported from legacy TSTRGFRM
+        -- with the current trittfolge / aufknuepfung / klammer
+        state so the user can drive a loom via the selected
+        interface or step through the weave manually.              */
     void LoomControlClick();
 
     /*  Drawing tools (tools.cpp). */
