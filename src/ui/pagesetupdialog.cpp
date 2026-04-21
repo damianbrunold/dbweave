@@ -13,6 +13,7 @@
 #include "mainwindow.h"
 #include "datamodule.h"
 #include "print.h"
+#include "printrangedialog.h"
 #include "language.h"
 
 #include <QDialogButtonBox>
@@ -159,6 +160,68 @@ void TDBWFRM::FilePrintClick()
         job.Print(pd.fromPage(), pd.toPage());
     else
         job.Print();
+}
+
+/*-----------------------------------------------------------------*/
+/*  Port of legacy OptPrintSelectionClick. Opens a range picker for
+    warp / weft / shaft / treadle subsets, then prints through
+    PrPrinterPrint::PrintRange.                                      */
+void TDBWFRM::FilePrintRangeClick()
+{
+    /*  Default kette / schuesse: use the current editor selection
+        when valid, otherwise fall back to the legacy 1..20 sample. */
+    SZ defKette = (kette.b >= 0) ? kette : SZ(0, 19);
+    SZ defSchuesse = (schuesse.b >= 0) ? schuesse : SZ(0, 19);
+
+    /*  Schaefte / Tritte default: first..last non-empty shaft /
+        treadle when the corresponding View toggle is on, otherwise
+        (-1,-1) which disables the group. Mirrors legacy
+        CalcSchaefte / CalcTritte. */
+    auto calcShaftRange = [this] {
+        SZ r(-1, -1);
+        for (int j = 0; j < Data->MAXY1; j++)
+            if (!IsFreeSchaft(j)) {
+                r.a = j;
+                break;
+            }
+        for (int j = Data->MAXY1 - 1; j >= 0; j--)
+            if (!IsFreeSchaft(j)) {
+                r.b = j;
+                break;
+            }
+        return r;
+    };
+    auto calcTrittRange = [this] {
+        SZ r(-1, -1);
+        for (int i = 0; i < Data->MAXX2; i++)
+            if (!IsFreeTritt(i)) {
+                r.a = i;
+                break;
+            }
+        for (int i = Data->MAXX2 - 1; i >= 0; i--)
+            if (!IsFreeTritt(i)) {
+                r.b = i;
+                break;
+            }
+        return r;
+    };
+
+    SZ defSchaefte = (ViewEinzug && ViewEinzug->isChecked()) ? calcShaftRange() : SZ(-1, -1);
+    SZ defTritte
+        = (ViewTrittfolge && ViewTrittfolge->isChecked()) ? calcTrittRange() : SZ(-1, -1);
+
+    PrintRangeDialog dlg(this, defKette, gewebe.SizeX(), defSchuesse, gewebe.SizeY(), defSchaefte,
+                         einzug.SizeY(), defTritte, trittfolge.SizeX());
+    if (dlg.exec() != QDialog::Accepted)
+        return;
+
+    QPrinter printer(QPrinter::HighResolution);
+    QPrintDialog pd(&printer, this);
+    if (pd.exec() != QDialog::Accepted)
+        return;
+
+    PrPrinterPrint job(this, Data, &printer);
+    job.PrintRange(dlg.kette(), dlg.schuesse(), dlg.schaefte(), dlg.tritte());
 }
 
 /*-----------------------------------------------------------------*/

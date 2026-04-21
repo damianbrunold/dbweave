@@ -846,6 +846,7 @@ public:
 
     /*  File menu print-stack handlers. */
     void FilePrintClick();
+    void FilePrintRangeClick();
     void FilePrintpreviewClick();
     void FileSetPageClick();
 

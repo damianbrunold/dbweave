@@ -92,8 +92,8 @@ Port `legacy/einstellverh_form.*` and the `faktor_kette` / `faktor_schuss` state
 
 ### Stage 4 — Print satellite dialogs  [near-term]
 
-- [ ] **Print part…** (`actPrintRange`, Ctrl+L): port `legacy/printselection_form` — range pickers for kette/schuss/einzug/trittfolge/aufknuepfung subsets.
-- [ ] **Print preview**: wrap the existing print callback in `QPrintPreviewDialog`. Add a menu entry / toolbar button.
+- [x] **Print part…** (`actPrintRange`, Ctrl+L): ported `legacy/printselection_form` as `PrintRangeDialog` — four `QSpinBox` pairs (warp / weft / shaft / treadle). Shaft / treadle groups auto-disable when the matching View toggle is off. Wired through `PrPrinterPrint::PrintRange`.
+- [x] **Print preview** (`actPreview`) was already wired via `QPrintPreviewDialog` in `pagesetupdialog.cpp:FilePrintpreviewClick`; confirmed present.
 
 ### Stage 5 — Highlight mode (F12)  [near-term]
 

@@ -365,7 +365,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         = menuAct(fileMenu, "P&rint part...", "Teil dru&cken...", nullptr,
                   "Prints only a part of the pattern", "Druckt nur einen Teil des Musters");
     actPrintRange->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_L));
-    actPrintRange->setEnabled(false);
+    connect(actPrintRange, &QAction::triggered, this, [this] { FilePrintRangeClick(); });
     fileMenu->addSeparator();
     /*  MRU 1..6 in-line (legacy style -- not a submenu). */
     mruMenu = nullptr;
