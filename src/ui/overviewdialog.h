@@ -16,8 +16,10 @@
     pattern than the main editor viewport shows. Esc or F4 closes it;
     Ctrl+I / Ctrl+U adjust the zoom; Ctrl+G toggles the grid overlay.
 
-    The legacy form also had a Print button; that's deferred -- the
-    user can still print the full pattern from File > Print.
+    A Print toolbar button prints the overview thumbnail as a tiled
+    rectangle of range / simulation / farbeffekt colours on the
+    current printer, honoring the page margins and the header/footer
+    set in File > Page setup.
 */
 
 #ifndef DBWEAVE_UI_OVERVIEWDIALOG_H
@@ -46,8 +48,10 @@ private:
     QAction* actZoomIn;
     QAction* actZoomOut;
     QAction* actGrid;
+    QAction* actPrint;
 
     void updateZoomActions();
+    void doPrint();
 };
 
 #endif

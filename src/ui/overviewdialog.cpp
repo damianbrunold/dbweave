@@ -20,8 +20,14 @@
 #include "language.h"
 
 #include <QAction>
+#include <QApplication>
+#include <QFileInfo>
+#include <QGuiApplication>
 #include <QKeyEvent>
+#include <QPageLayout>
 #include <QPainter>
+#include <QPrintDialog>
+#include <QPrinter>
 #include <QToolBar>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -238,6 +244,8 @@ OverviewDialog::OverviewDialog(TDBWFRM* _frm, QWidget* _parent)
     actGrid->setCheckable(true);
     actGrid->setChecked(true);
     actGrid->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_G));
+    actPrint = toolbar->addAction(LANG_STR("&Print...", "&Drucken..."), this, [this] { doPrint(); });
+    actPrint->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_P));
     toolbar->addSeparator();
     QAction* actClose
         = toolbar->addAction(LANG_STR("&Close", "&Schliessen"), this, &QDialog::accept);
@@ -278,6 +286,118 @@ void OverviewDialog::showEvent(QShowEvent* _e)
         final maximised geometry rather than the 800x600 fallback. */
     if (!(windowState() & Qt::WindowMaximized))
         showMaximized();
+}
+
+/*  Port of legacy TOverviewForm::SBPrintClick. Tiles the
+    kette × schuesse gewebe onto the printer in the same colour mode
+    the editor is currently showing (GewebeNormal = range colours,
+    Farbeffekt / Simulation = warp/weft palette colour). The cell
+    size mirrors legacy CalcPrintDimensions: 2/10 mm per zoom unit,
+    so zoom 5 produces 1 mm cells.                                  */
+void OverviewDialog::doPrint()
+{
+    if (frm->kette.a < 0 || frm->schuesse.a < 0)
+        return;
+
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setDocName(QStringLiteral("DB-WEAVE - ") + QFileInfo(frm->filename).fileName());
+    QPrintDialog pd(&printer, this);
+    if (pd.exec() != QDialog::Accepted)
+        return;
+
+    QGuiApplication::setOverrideCursor(Qt::WaitCursor);
+    QPainter p(&printer);
+
+    const int dpix = int(printer.logicalDpiX());
+    const int dpiy = int(printer.logicalDpiY());
+
+    /*  mm → device pixels. Legacy formula: mm * 10 * dpi / 254.    */
+    auto mmToPxX = [dpix](int _mm) { return _mm * 10 * dpix / 254; };
+    auto mmToPxY = [dpiy](int _mm) { return _mm * 10 * dpiy / 254; };
+
+    const int mleft = mmToPxX(frm->borders.range.left);
+    const int mright = mmToPxX(frm->borders.range.right);
+    const int mtop = mmToPxY(frm->borders.range.top + frm->header.height);
+    const int mbottom = mmToPxY(frm->borders.range.bottom + frm->footer.height);
+
+    const int pageW = printer.pageLayout().paintRectPixels(printer.resolution()).width();
+    const int pageH = printer.pageLayout().paintRectPixels(printer.resolution()).height();
+    const int pwidth = pageW - mleft - mright;
+    const int pheight = pageH - mtop - mbottom;
+    if (pwidth < 1 || pheight < 1) {
+        p.end();
+        QGuiApplication::restoreOverrideCursor();
+        return;
+    }
+
+    /*  Cell size in printer pixels: legacy `2*zoom*dpi/254` gives
+        zoom/5 mm per cell, then the weft/warp ratio stretches the
+        larger-factor axis.                                         */
+    const int z = canvas->getZoom();
+    int gw = 2 * z * dpix / 254;
+    int gh = 2 * z * dpiy / 254;
+    if (gw < 1)
+        gw = 1;
+    if (gh < 1)
+        gh = 1;
+    const float fk = frm->faktor_kette;
+    const float fs = frm->faktor_schuss;
+    if (fk > 0.0f && fs > 0.0f) {
+        if (fk > fs)
+            gw = int(double(gw) * fk / fs);
+        else if (fs > fk)
+            gh = int(double(gh) * fs / fk);
+    }
+
+    const int mx = std::min(pwidth / gw, frm->kette.count());
+    const int my = std::min(pheight / gh, frm->schuesse.count());
+
+    const bool normalMode = frm->GewebeNormal && frm->GewebeNormal->isChecked();
+    const bool coloredMode = (frm->GewebeFarbeffekt && frm->GewebeFarbeffekt->isChecked())
+                             || (frm->GewebeSimulation && frm->GewebeSimulation->isChecked());
+    const bool grid = canvas->getGrid();
+
+    for (int i = frm->kette.a; i < frm->kette.a + mx; i++) {
+        for (int j = frm->schuesse.a; j < frm->schuesse.a + my; j++) {
+            const char s = frm->gewebe.feld.Get(i, j);
+            QColor cell;
+            bool draw = true;
+            if (normalMode) {
+                if (s > 0)
+                    cell = qColorFromTColor(GetRangeColor(s));
+                else
+                    draw = false;
+            } else if (coloredMode) {
+                bool warpUp = (s > 0);
+                if (frm->sinkingshed)
+                    warpUp = !warpUp;
+                const int cIdx = warpUp ? int(frm->kettfarben.feld.Get(i))
+                                        : int(frm->schussfarben.feld.Get(j));
+                cell = Data->palette ? qColorFromTColor(Data->palette->GetColor(cIdx))
+                                     : QColor(Qt::white);
+            } else {
+                draw = false;
+            }
+
+            int x;
+            if (frm->righttoleft)
+                x = pwidth - (i - frm->kette.a + 1) * gw;
+            else
+                x = (i - frm->kette.a) * gw;
+            const int y = (my + 1) * gh - (j - frm->schuesse.a + 1) * gh;
+
+            if (draw)
+                p.fillRect(mleft + x, mtop + y, gw, gh, cell);
+            if (grid && gw > 2 && gh > 2) {
+                p.setPen(Qt::black);
+                p.drawRect(mleft + x, mtop + y, gw, gh);
+            }
+        }
+    }
+
+    p.end();
+    QGuiApplication::restoreOverrideCursor();
+    QApplication::beep();
 }
 
 void OverviewDialog::updateZoomActions()

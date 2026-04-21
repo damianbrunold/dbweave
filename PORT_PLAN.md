@@ -88,7 +88,7 @@ Port `legacy/einstellverh_form.*` and the `faktor_kette` / `faktor_schuss` state
 
 ### Stage 3 — Overview print  [near-term]
 
-- [ ] Port the overview dialog's Print button (legacy `overview_form.cpp:199 SBPrintClick`): renders a thumbnail fabric preview directly to `QPrinter`. Similar shape to the main print path; share the print-dialog setup.
+- [x] Port the overview dialog's Print button (legacy `overview_form.cpp:199 SBPrintClick`): renders a thumbnail fabric preview directly to `QPrinter`. Ported as `OverviewDialog::doPrint` — honours GewebeNormal / Farbeffekt / Simulation colour modes, the weft/warp ratio, the grid overlay toggle, and page margins/header/footer from File > Page setup. Ctrl+P toolbar shortcut.
 
 ### Stage 4 — Print satellite dialogs  [near-term]
 
