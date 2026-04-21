@@ -214,6 +214,8 @@ bool TDBWFRM::Save()
         writer.WriteFieldInt("viewhlines", (ViewHlines && ViewHlines->isChecked()) ? 1 : 0);
         writer.WriteFieldInt("righttoleft", righttoleft ? 1 : 0);
         writer.WriteFieldInt("toptobottom", toptobottom ? 1 : 0);
+        writer.WriteFieldDouble("faktor_kette", faktor_kette);
+        writer.WriteFieldDouble("faktor_schuss", faktor_schuss);
         writer.EndSection();
 
         writer.BeginSection("einzug");

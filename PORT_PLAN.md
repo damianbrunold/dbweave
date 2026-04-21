@@ -77,14 +77,14 @@ Menu entries currently `setEnabled(false)`:
 
 Port `legacy/einstellverh_form.*` and the `faktor_kette` / `faktor_schuss` state.
 
-- [ ] Add `double faktor_kette = 1.0, faktor_schuss = 1.0` members to TDBWFRM; reset to 1.0 in `FileNew`.
-- [ ] Load/save the two fields in `fileload.cpp` / `filesave.cpp` (unknown-field tolerant — safe to write always). **Do this first** so existing .dbw files with non-unit ratios round-trip.
-- [ ] Layout in `patterncanvas.cpp:recomputeLayout`: branch on `faktor_schuss` vs `faktor_kette` and stretch the opposite axis (legacy `CalcGrid` formula in `dbw3_form.cpp:412–427`). Feld*.gw/gh assignments already respect two locals.
-- [ ] Mirror the same max/min ratio math in `printinit.cpp:57–88` and the bitmap/PDF export sizing path. Overview dialog (`overviewdialog.cpp`) inherits from canvas layout.
-- [ ] Audit `draw.cpp` / `hilfslinien.cpp` for hard-coded `gw == gh` assumptions; port the legacy `faktor_*==1.0` fast path if hot.
-- [ ] Port the dialog as `.ui` + QDialog subclass, two `QDoubleSpinBox` (0.01..10.0, default 1.0). Wire to the existing `actVerhaeltnis` menu entry; remove its `setEnabled(false)`.
-- [ ] Round-trip test with a sample using non-unit ratios.
-- [ ] Verify mouse-hit-test and selection rubber-band still work with non-square cells (spot check — Feld reads should auto-handle it).
+- [x] `faktor_kette` / `faktor_schuss` members already on TDBWFRM (float, default 1.0); reset to 1.0 in `ResetDocument` (FileNew / NewFromTemplate).
+- [x] Load (already present) + save in `general` section of `fileload.cpp` / `filesave.cpp`.
+- [x] Layout in `patterncanvas.cpp:recomputeLayout`: branch on `faktor_schuss` vs `faktor_kette` and stretch the opposite axis (legacy `CalcGrid` formula). Feld*.gw/gh already respect the two locals.
+- [x] Print sizing in `printinit.cpp` (already present) and export sizing in `exportbitmap.cpp` (PNG/JPEG/SVG/PDF) via new `applyRatio` helper. Overview dialog inherits from the canvas layout.
+- [x] `DrawGewebeSimulation` already has the `faktor_*==1.0` fast path ported from legacy `draw.cpp:501`.
+- [x] Dialog ported as `VerhaeltnisDialog` (two `QDoubleSpinBox`, 0.01..10.0, default 1.0). Wired to `actVerhaeltnis`; `setEnabled(false)` removed.
+- [x] Round-trip test in `tests/test_fileload.cpp::ratio_round_trips_non_unit_values`.
+- [x] Mouse hit-test / selection use per-Feld `gw`/`gh` so non-square cells work unchanged.
 
 ### Stage 3 — Overview print  [near-term]
 

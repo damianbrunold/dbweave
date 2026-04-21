@@ -28,6 +28,25 @@
 #include "palette.h"
 #include "rangecolors.h"
 
+/*-----------------------------------------------------------------*/
+/*  Apply weft/warp ratio to a square base cell-size so exported
+    patterns honour faktor_kette / faktor_schuss the same way the
+    screen layout does. Mirrors the formula in
+    patterncanvas.cpp:recomputeLayout.                             */
+static void applyRatio(const TDBWFRM* _frm, int _base, int& _gw, int& _gh)
+{
+    _gw = _base;
+    _gh = _base;
+    const float fk = _frm->faktor_kette;
+    const float fs = _frm->faktor_schuss;
+    if (fk <= 0.0f || fs <= 0.0f)
+        return;
+    if (fs > fk)
+        _gh = int(double(_base) * fs / fk);
+    else if (fk > fs)
+        _gw = int(double(_base) * fk / fs);
+}
+
 #include <QFile>
 #include <QFileInfo>
 #include <QImage>
@@ -391,8 +410,8 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
     of the editor, which was rarely what users wanted.             */
 static bool doExportRaster(TDBWFRM* _frm, const QString& _filename, const char* _format)
 {
-    const int gw = 16;
-    const int gh = 16;
+    int gw, gh;
+    applyRatio(_frm, 16, gw, gh);
     int W = 0, H = 0, shafts = 0, treadles = 0;
     _frm->patternPixelSize(W, H, gw, gh, shafts, treadles);
 
@@ -434,8 +453,8 @@ void TDBWFRM::DoExportJpeg(const QString& _filename)
 /*-----------------------------------------------------------------*/
 void TDBWFRM::DoExportSvg(const QString& _filename)
 {
-    const int gw = 16;
-    const int gh = 16;
+    int gw, gh;
+    applyRatio(this, 16, gw, gh);
     int W = 0, H = 0, shafts = 0, treadles = 0;
     patternPixelSize(W, H, gw, gh, shafts, treadles);
 
@@ -458,8 +477,8 @@ void TDBWFRM::DoExportSvg(const QString& _filename)
 /*-----------------------------------------------------------------*/
 void TDBWFRM::DoExportPdf(const QString& _filename)
 {
-    const int gw = 16;
-    const int gh = 16;
+    int gw, gh;
+    applyRatio(this, 16, gw, gh);
     int Wpx = 0, Hpx = 0, shafts = 0, treadles = 0;
     patternPixelSize(Wpx, Hpx, gw, gh, shafts, treadles);
 
@@ -480,7 +499,11 @@ void TDBWFRM::DoExportPdf(const QString& _filename)
     constexpr double MM_PER_CELL = 2.5;
     const QRect page = p.viewport();
     const double dev_per_mm = pdf.resolution() / 25.4;
-    const double dev_per_logical_px = (MM_PER_CELL / gw) * dev_per_mm;
+    /*  Scale so the smaller-factor cell axis equals MM_PER_CELL; a
+        non-unit weft/warp ratio stretches the other axis naturally
+        (gw != gh in Wpx/Hpx already).                               */
+    const int base = std::min(gw, gh);
+    const double dev_per_logical_px = (MM_PER_CELL / base) * dev_per_mm;
     double w = Wpx * dev_per_logical_px;
     double h = Hpx * dev_per_logical_px;
     if (w > page.width() || h > page.height()) {

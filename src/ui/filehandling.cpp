@@ -111,6 +111,10 @@ void TDBWFRM::ResetDocument()
     scroll_x1 = scroll_x2 = scroll_y1 = scroll_y2 = 0;
     currentzoom = 4;
 
+    /*  Weft/warp ratio back to square cells. */
+    faktor_kette = 1.0f;
+    faktor_schuss = 1.0f;
+
     /*  Ranges + rapport + selection. Legacy sentinel for "no range"
         is a = b = -1.                                              */
     kette = SZ(-1, -1);

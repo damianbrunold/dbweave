@@ -147,8 +147,23 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
         zi = 0;
     if (zi > 9)
         zi = 9;
-    const int GW = _gw > 0 ? _gw : ZOOM_TABLE[zi];
-    const int GH = _gh > 0 ? _gh : ZOOM_TABLE[zi];
+    /*  Weft/warp ratio: the larger of faktor_kette / faktor_schuss
+        keeps its axis at ZOOM_TABLE[zi]; the smaller-factor axis is
+        stretched by the ratio. Formula matches legacy dbw3_form.cpp
+        CalcGrid (lines 412-427). Result is non-square cells whenever
+        the two factors differ.                                       */
+    int gw_def = ZOOM_TABLE[zi];
+    int gh_def = ZOOM_TABLE[zi];
+    const float fk = frm->faktor_kette;
+    const float fs = frm->faktor_schuss;
+    if (fk > 0.0f && fs > 0.0f) {
+        if (fs > fk)
+            gh_def = int(double(ZOOM_TABLE[zi]) * fs / fk);
+        else if (fk > fs)
+            gw_def = int(double(ZOOM_TABLE[zi]) * fk / fs);
+    }
+    const int GW = _gw > 0 ? _gw : gw_def;
+    const int GH = _gh > 0 ? _gh : gh_def;
 
     constexpr int MARGIN = 10;
     constexpr int SB_SIZE = 16; /* thickness of a scrollbar channel */

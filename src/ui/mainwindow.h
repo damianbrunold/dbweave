@@ -478,6 +478,7 @@ public:
         it via the cursor-direction dialog. */
     void EditCursordirectionClick();
     void CursorGotoClick();
+    void VerhaeltnisClick();
 
     /*  Full einzug / trittfolge / aufknuepfung recompute from the
         current gewebe content. Used by bereiche, importbmp,

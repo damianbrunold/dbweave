@@ -165,6 +165,34 @@ private slots:
         QCOMPARE(h->pos, 7);
     }
 
+    void ratio_round_trips_non_unit_values()
+    {
+        QTemporaryDir tmp;
+        QVERIFY(tmp.isValid());
+        const QString out = tmp.filePath("ratio.dbw");
+
+        DBWFRM->filename = samplePath("satin.dbw");
+        LOADSTAT stat;
+        QVERIFY(DBWFRM->Load(stat, LOADALL));
+
+        /*  Set non-unit weft/warp ratio and save. */
+        DBWFRM->faktor_kette = 1.5f;
+        DBWFRM->faktor_schuss = 0.8f;
+        DBWFRM->filename = out;
+        QVERIFY(DBWFRM->Save());
+
+        /*  Fresh TDBWFRM, reload. */
+        delete DBWFRM;
+        delete Data;
+        Data = new TData();
+        DBWFRM = new TDBWFRM();
+        DBWFRM->filename = out;
+        QVERIFY(DBWFRM->Load(stat, LOADALL));
+
+        QCOMPARE(DBWFRM->faktor_kette, 1.5f);
+        QCOMPARE(DBWFRM->faktor_schuss, 0.8f);
+    }
+
     void save_without_filename_returns_false()
     {
         DBWFRM->filename = QString();

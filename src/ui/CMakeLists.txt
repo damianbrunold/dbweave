@@ -81,6 +81,7 @@ add_library(dbweave_ui STATIC
     printdraw.cpp
     printprint.cpp
     pagesetupdialog.cpp
+    verhaeltnisdialog.cpp
     loom.cpp
     loomdialog.cpp
     loomoptionsdialog.cpp

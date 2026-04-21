@@ -985,3 +985,26 @@ void TDBWFRM::CursorGotoClick()
         refresh();
     }
 }
+
+/*-----------------------------------------------------------------*/
+#include "patterncanvas.h"
+#include "verhaeltnisdialog.h"
+
+void TDBWFRM::VerhaeltnisClick()
+{
+    VerhaeltnisDialog dlg(this, faktor_kette, faktor_schuss);
+    if (dlg.exec() != QDialog::Accepted)
+        return;
+    const double fk = dlg.faktorKette();
+    const double fs = dlg.faktorSchuss();
+    /*  Out-of-range values are already prevented by the spinbox;
+        still, legacy accepted only strictly-positive factors <= 10. */
+    if (fk <= 0.0 || fk > 10.0 || fs <= 0.0 || fs > 10.0)
+        return;
+    faktor_kette = float(fk);
+    faktor_schuss = float(fs);
+    if (pattern_canvas)
+        pattern_canvas->recomputeLayout();
+    refresh();
+    SetModified();
+}

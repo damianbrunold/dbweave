@@ -1093,7 +1093,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     QAction* actVerhaeltnis
         = menuAct(extrasMenu, "&Weft/warp-ratio...", "Schuss/&Kett-Verhältnis...", nullptr,
                   "Sets the weft/warp-ratio", "Setzt das Schuss/Kett-Verhältnis");
-    actVerhaeltnis->setEnabled(false);
+    connect(actVerhaeltnis, &QAction::triggered, this, [this] { VerhaeltnisClick(); });
     registerLang(ViewSchlagpatrone, QStringLiteral("&Pegplan"), QStringLiteral("&Schlagpatrone"),
                  QStringLiteral("Toggles pegplan mode"),
                  QStringLiteral("Wechselt zwischen Schlagpatrone und Aufknüpfung/Trittfolge"));
