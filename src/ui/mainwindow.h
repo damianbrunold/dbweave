@@ -195,6 +195,12 @@ public:
         outline. A value of zero from cursorFlashTime() means "no
         blink" -- we leave the cursor permanently visible. */
     bool cursorVisible = true;
+
+    /*  Highlight (F12) toggle: when on, DrawHighlight overlays a
+        translucent red rectangle on every cell that depends on the
+        current kbd cursor position, across einzug / aufknuepfung /
+        trittfolge / gewebe. Port of legacy highlight.cpp.          */
+    bool highlight = false;
     class QTimer* cursorTimer = nullptr;
 
     /*  Active QPainter during a paintEvent. nullptr outside paint,
@@ -525,6 +531,7 @@ public:
 
     void ClearSelection();
     void DrawSelection();
+    void DrawHighlight();
     void ResizeSelection(int _i, int _j, FELD _feld, bool _square);
 
     /*  Apply `_range` (1..9) to every cell inside the current

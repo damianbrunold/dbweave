@@ -32,6 +32,7 @@ add_library(dbweave_ui STATIC
     filesave.cpp
     filehandling.cpp
     hilfslinien.cpp
+    highlight.cpp
     mousehandling.cpp
     kbdhandling.cpp
     selection.cpp

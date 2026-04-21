@@ -97,9 +97,10 @@ Port `legacy/einstellverh_form.*` and the `faktor_kette` / `faktor_schuss` state
 
 ### Stage 5 — Highlight mode (F12)  [near-term]
 
-- [ ] Port `legacy/highlight.cpp` as an overlay pass in `draw.cpp` (second painter pass with alpha tint).
-- [ ] Add `highlightMode` flag + mouse source-cell tracking in `mousehandling.cpp`.
-- [ ] Wire the existing `actHighlight` QAction (F12); remove `setEnabled(false)`.
+- [x] Ported `legacy/highlight.cpp` as `src/ui/highlight.cpp::TDBWFRM::DrawHighlight`. Second painter pass lays a translucent red rectangle on every dependent cell; called from `PatternCanvas::paintEvent` between the selection and cursor passes.
+- [x] Source cell is the current **keyboard** cursor position (matches legacy) -- no separate mouse tracking needed. `highlight` flag on TDBWFRM toggles the overlay.
+- [x] `actHighlight` QAction is now checkable; F12 / toolbar click flips `highlight` and calls `refresh()`.
+- Note: legacy UX was press-and-hold on the toolbar button; port uses a checkable toggle so the user can move the kbd cursor around and see dependencies live. Cleaner for Qt.
 
 ### Stage 6 — Stale comment and genuine-stub cleanup  [release blocker]
 

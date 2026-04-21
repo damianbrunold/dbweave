@@ -1212,7 +1212,11 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         = new QAction(legacyIcon("sb_highlight"), QStringLiteral("Highlight"), this);
     actHighlight->setShortcut(QKeySequence(Qt::Key_F12));
     actHighlight->setToolTip(QStringLiteral("Highlight (F12) -- Highlights the dependent parts"));
-    actHighlight->setEnabled(false);
+    actHighlight->setCheckable(true);
+    connect(actHighlight, &QAction::toggled, this, [this](bool _on) {
+        highlight = _on;
+        refresh();
+    });
     mainBar->addAction(actHighlight);
 
     /*  Range picker: nine checkable range buttons + three special

@@ -939,6 +939,11 @@ void PatternCanvas::paintEvent(QPaintEvent* /*_e*/)
         }
     }
 
+    /*  Highlight overlay (F12): translucent red on every cell
+        dependent on the current kbd cursor position. Drawn before
+        the cursor so the cursor outline stays visible on top.    */
+    frm->DrawHighlight();
+
     /*  Cursor outline sits on top of everything so it's visible
         no matter which view mode is active. Skipped during the
         "off" phase of the blink cycle. */
