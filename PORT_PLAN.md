@@ -122,26 +122,14 @@ Genuine empty bodies:
 - [x] `TDBWFRM::SetCursor(int, int)` now forwards to `cursorhandler->SetCursor(kbd_field, i, j, true)` (matches legacy kbdhandling.cpp:36). Restores the expected behaviour on the undoredo restore path.
 - [x] `TDBWFRM::UpdateScrollbars()` now forwards to `pattern_canvas->syncScrollbarsFromFrm()`. Restores scrollbar sync after ExtendTritte / ExtendSchaefte.
 
-### Stage 6b — Excise the obsolete fix-einzug feature  [release blocker]
+### Stage 6b — Clarify the Fixiert / Benutzerdefiniert distinction
 
-The "Fixiert" / fix-einzug feature was dropped from the product but its scaffolding is still in the port:
-- `EzFixiert` QAction (menu + einzug style group in undoredo / filesave snapshot)
-- Whole `fixeinzugdialog.{h,cpp}` (the dialog, UpdateEinzugFixiert, fixeinzug/fixsize/firstfree members)
-- `Fixiert()` empty stub in `einzug.cpp`
-- `fixeinzug` binary section in the .dbw file format (written and read)
-- `EzFixiert` red-mismatch rendering in `draw.cpp:DrawEinzug`
-- Menu entry "Fix-einzug..." and toolbar / keyboard shortcut
-- `InvalidEinzug` / "Fix-einzug" strings in `dbw3_strings.h`
+Initial reading mistook the two features for one. They are separate and both correct as-is:
 
-Plan:
-- [ ] Drop the QAction, menu entry, shortcut, and toolbar button.
-- [ ] Delete `fixeinzugdialog.{h,cpp}` from the tree and from `src/ui/CMakeLists.txt`.
-- [ ] Remove `fixeinzug` / `fixsize` / `firstfree` members + `UpdateEinzugFixiert` from TDBWFRM; strip the code paths that maintain them.
-- [ ] Remove the einzug-style slot from the undoredo snapshot (shift the style-index mapping or keep an inert slot for legacy-file compat).
-- [ ] Either keep reading the `fixeinzug` section in `fileload` (and silently discard) or stop reading it. Either way, stop writing it.
-- [ ] Remove the `EzFixiert == checked` red-mismatch branch in `draw.cpp:DrawEinzug`.
-- [ ] Remove the empty `Fixiert()` stub + its Rearrange() branch.
-- [ ] Round-trip tests still pass; add one asserting that a .dbw without the fixeinzug section loads cleanly and that a .dbw with it also loads cleanly (silent ignore).
+- **`EzFixiert`** (label: "User defined…" / "Benutzerdefiniert") — the still-valid fix-einzug template workflow driven by FixeinzugDialog. `RcRecalcAll::RecalcEinzugFixiert` at `recalc.cpp:203` is fully ported, and `TDBWFRM::RecalcAll` dispatches through it whenever `EzFixiert` is checked, so the normal editing path handles benutzerdefiniert correctly. Keep the dialog, the `fixeinzug`/`fixsize`/`firstfree` state, the file-format section, the undoredo slot, the red-mismatch rendering in `draw.cpp`, and the menu entry.
+- **`EzBelassen`** (legacy label: "Fixed" / "Fi&xiert") — obsolete. Already collapsed into `NormalZ` in `EinzugRearrangeImpl::Rearrange`; file-format style-index slot preserved for interop with older DB-WEAVE versions.
+
+Action taken: deleted the dead `EinzugRearrangeImpl::Fixiert()` stub and its `Rearrange()` branch — `RcRecalcAll::Recalc` already guards the dispatcher with `!EzFixiert`, so the branch was unreachable. Header comments in `einzug.cpp` / `einzugimpl.h` rewritten to document both items.
 
 ### Stage 7 — Loom / Steuerung (weaving mode)  [near-term, pre-release]
 

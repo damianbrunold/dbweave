@@ -11,9 +11,18 @@
 
 /*  EinzugRearrangeImpl: the einzug rearrangement algorithms
     (NormalZ, NormalS, GeradeZ, GeradeS, Chorig2, Chorig3, Belassen)
-    and the Rearrange dispatcher. Fixiert is a stub pending full
-    excision of the obsolete fix-einzug feature (tracked separately
-    in PORT_PLAN.md).                                               */
+    and the Rearrange dispatcher.
+
+    The two similarly-named items can confuse a reader:
+      * EzBelassen -- legacy "Fi&xiert" menu entry. Obsolete as a
+        standalone style and collapsed into NormalZ in Rearrange()
+        below; its style-index slot is kept in the .dbw file
+        format for interop with older DB-WEAVE versions.
+      * EzFixiert  -- labelled "User defined" / "Benutzerdefiniert",
+        the still-valid fix-einzug template workflow. Driven by
+        FixeinzugDialog; the recalc path runs through recalc.cpp's
+        RcRecalcAll::RecalcEinzugFixiert (which also skips this
+        Rearrange dispatcher), so no Fixiert branch lives here.   */
 
 /*-----------------------------------------------------------------*/
 #include "assert_compat.h"
@@ -284,27 +293,21 @@ void EinzugRearrangeImpl::Chorig3()
     }
 }
 /*-----------------------------------------------------------------*/
-void EinzugRearrangeImpl::Fixiert()
-{
-    /*  STUB: the real body drives RcRecalcAll (recalc.cpp, not
-        ported) to recompute the einzug from a fixed template, then
-        redraws einzug / aufknuepfung / schlagpatrone. Full port lands
-        with the recalc slice. */
-}
-/*-----------------------------------------------------------------*/
-/*-----------------------------------------------------------------*/
+/*  Rearrange: dispatcher for the einzug-style QActions. Called
+    from RcRecalcAll::Recalc, which guards this path behind
+    !EzFixiert->isChecked() -- benutzerdefiniert flows through
+    RecalcEinzugFixiert in recalc.cpp instead, so there is no
+    Fixiert branch here. */
 void EinzugRearrangeImpl::Rearrange()
 {
-    if (frm->EzFixiert && frm->EzFixiert->isChecked())
-        Fixiert();
-    else if ((frm->EzMinimalZ && frm->EzMinimalZ->isChecked())
-             || (frm->EzBelassen && frm->EzBelassen->isChecked()))
+    if ((frm->EzMinimalZ && frm->EzMinimalZ->isChecked())
+        || (frm->EzBelassen && frm->EzBelassen->isChecked()))
         /*  EzBelassen collapses into NormalZ: its old body was a
             no-op and NormalZ's body is a practical no-op after a
             fresh RecalcEinzug, so the two produced the same visible
             result in every realistic case. Keeping EzBelassen as
-            internal state (for file round-trips) but routing it here
-            removes the user-visible duplicate style.            */
+            internal state (for file round-trips) but routing it
+            here removes the user-visible duplicate style.       */
         NormalZ();
     else if (frm->EzMinimalS && frm->EzMinimalS->isChecked())
         NormalS();

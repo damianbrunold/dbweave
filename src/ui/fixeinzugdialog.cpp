@@ -17,6 +17,7 @@
 #include "cursor.h"
 #include "einzug.h"
 #include "language.h"
+#include "recalc.h"
 
 #include <QAction>
 #include <QDialogButtonBox>
@@ -461,8 +462,13 @@ void TDBWFRM::EditFixeinzug()
         cursorhandler->DisableCursor();
     FixeinzugDialog dlg(this, this);
     if (dlg.exec() == QDialog::Accepted) {
-        if (einzughandler)
-            einzughandler->Fixiert();
+        /*  Rebuild the einzug from the just-saved fixeinzug template.
+            Bypass TDBWFRM::RecalcAll so the OptionsLockGewebe guard
+            doesn't block an explicit user confirmation of the dialog
+            (legacy EditFixeinzug called einzughandler->Fixiert()
+            which went straight through RcRecalcAll).               */
+        RcRecalcAll reclc(this, Data, ViewSchlagpatrone && ViewSchlagpatrone->isChecked());
+        reclc.Recalc();
         CalcRapport();
         UpdateStatusBar();
     }
