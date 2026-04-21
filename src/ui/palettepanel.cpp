@@ -19,6 +19,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPen>
+#include <QResizeEvent>
 
 #include <algorithm>
 
@@ -30,20 +31,62 @@ PalettePanel::PalettePanel(TDBWFRM* _frm, QWidget* _parent)
     setAutoFillBackground(true);
 }
 
-QSize PalettePanel::sizeHint() const
+int PalettePanel::entryCount() const
 {
-    return QSize(16 * 14, 16 * 14);
-}
-QSize PalettePanel::minimumSizeHint() const
-{
-    return QSize(16 * 8, 16 * 8);
+    return MAX_PAL_ENTRY;
 }
 
-int PalettePanel::drawSize() const
+int PalettePanel::columnsFor(int _h) const
 {
-    const int w = width() / GRIDSIZE;
-    const int h = height() / GRIDSIZE;
-    return std::max(1, std::min(w, h));
+    const int n = entryCount();
+    if (_h < CELL)
+        return n; /* degenerate -- one row */
+    const int rowsFit = std::max(1, _h / CELL);
+    return (n + rowsFit - 1) / rowsFit;
+}
+
+int PalettePanel::columns() const
+{
+    return columnsFor(height());
+}
+
+int PalettePanel::rows() const
+{
+    const int cols = std::max(1, columns());
+    return (entryCount() + cols - 1) / cols;
+}
+
+QSize PalettePanel::sizeHint() const
+{
+    /*  Prefer a single narrow column at the natural dock height --
+        the parent dock will clamp the actual height and the column
+        count adapts on resize.                                      */
+    return QSize(CELL, entryCount() * CELL);
+}
+
+QSize PalettePanel::minimumSizeHint() const
+{
+    return QSize(CELL, CELL * 8);
+}
+
+void PalettePanel::resizeEvent(QResizeEvent* _e)
+{
+    QWidget::resizeEvent(_e);
+    update();
+}
+
+bool PalettePanel::cellAt(const QPoint& _pos, int& _idx) const
+{
+    const int cols = columns();
+    const int r = _pos.y() / CELL;
+    const int c = _pos.x() / CELL;
+    if (c < 0 || r < 0 || c >= cols)
+        return false;
+    const int i = c * rows() + r;
+    if (i < 0 || i >= entryCount())
+        return false;
+    _idx = i;
+    return true;
 }
 
 void PalettePanel::paintEvent(QPaintEvent* /*_e*/)
@@ -52,31 +95,39 @@ void PalettePanel::paintEvent(QPaintEvent* /*_e*/)
         return;
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing, false);
-    const int d = drawSize();
 
     p.fillRect(rect(), palette().color(QPalette::Button));
+
+    const int cols = columns();
+    const int nrows = rows();
+    const int n = entryCount();
+
     p.setPen(QPen(Qt::black));
-
-    for (int i = 0; i < GRIDSIZE; i++) {
-        for (int j = 0; j < GRIDSIZE; j++) {
-            const int idx = i * GRIDSIZE + j;
-            if (idx >= MAX_PAL_ENTRY)
-                return;
-            p.setBrush(qColorFromTColor(Data->palette->GetColor(idx)));
-            p.drawRect(i * d, j * d, d, d);
-        }
+    for (int i = 0; i < n; i++) {
+        const int c = i / nrows;
+        const int r = i % nrows;
+        const int x = c * CELL;
+        const int y = r * CELL;
+        p.setBrush(qColorFromTColor(Data->palette->GetColor(i)));
+        p.drawRect(x, y, CELL - 1, CELL - 1);
     }
 
-    /*  White cursor outline around the currently-active palette
-        slot. */
+    /*  Highlight the currently-active palette slot with a thick
+        contrast outline (black + inner white) so it reads clearly
+        against both dark and light swatches.                      */
     const int sel = Data->color;
-    if (sel < MAX_PAL_ENTRY) {
-        const int x = (sel / GRIDSIZE) * d;
-        const int y = (sel % GRIDSIZE) * d;
-        p.setPen(QPen(Qt::white));
+    if (sel >= 0 && sel < n) {
+        const int c = sel / nrows;
+        const int r = sel % nrows;
+        const int x = c * CELL;
+        const int y = r * CELL;
         p.setBrush(Qt::NoBrush);
-        p.drawRect(x, y, d, d);
+        p.setPen(QPen(Qt::black, 3));
+        p.drawRect(x + 1, y + 1, CELL - 3, CELL - 3);
+        p.setPen(QPen(Qt::white, 1));
+        p.drawRect(x + 2, y + 2, CELL - 5, CELL - 5);
     }
+    (void)cols;
 }
 
 void PalettePanel::mousePressEvent(QMouseEvent* _e)
@@ -85,15 +136,8 @@ void PalettePanel::mousePressEvent(QMouseEvent* _e)
         _e->ignore();
         return;
     }
-    const int d = drawSize();
-    if (d <= 0)
-        return;
-    const int i = _e->pos().x() / d;
-    const int j = _e->pos().y() / d;
-    if (i < 0 || j < 0 || i >= GRIDSIZE || j >= GRIDSIZE)
-        return;
-    const int idx = i * GRIDSIZE + j;
-    if (idx >= MAX_PAL_ENTRY)
+    int idx = 0;
+    if (!cellAt(_e->pos(), idx))
         return;
     Data->color = (unsigned char)idx;
     update();
@@ -104,39 +148,43 @@ void PalettePanel::mousePressEvent(QMouseEvent* _e)
 
 void PalettePanel::keyPressEvent(QKeyEvent* _e)
 {
-    int x = Data->color / GRIDSIZE;
-    int y = Data->color % GRIDSIZE;
+    const int n = entryCount();
+    const int nrows = rows();
+    const int cols = std::max(1, columns());
+    int sel = Data->color;
+    int c = sel / nrows;
+    int r = sel % nrows;
     switch (_e->key()) {
-    case Qt::Key_Left:
-        if (x > 0)
-            --x;
-        break;
-    case Qt::Key_Right:
-        if (x < GRIDSIZE - 1)
-            ++x;
-        break;
     case Qt::Key_Up:
-        if (y > 0)
-            --y;
-        else if (x > 0) {
-            y = GRIDSIZE - 1;
-            --x;
+        if (r > 0)
+            --r;
+        else if (c > 0) {
+            --c;
+            r = nrows - 1;
         }
         break;
     case Qt::Key_Down:
-        if (y < GRIDSIZE - 1)
-            ++y;
-        else if (x < GRIDSIZE - 1) {
-            y = 0;
-            ++x;
+        if (r < nrows - 1)
+            ++r;
+        else if (c < cols - 1) {
+            ++c;
+            r = 0;
         }
+        break;
+    case Qt::Key_Left:
+        if (c > 0)
+            --c;
+        break;
+    case Qt::Key_Right:
+        if (c < cols - 1)
+            ++c;
         break;
     default:
         _e->ignore();
         return;
     }
-    const int idx = x * GRIDSIZE + y;
-    if (idx < MAX_PAL_ENTRY && idx != Data->color) {
+    const int idx = c * nrows + r;
+    if (idx >= 0 && idx < n && idx != Data->color) {
         Data->color = (unsigned char)idx;
         update();
         if (frm)

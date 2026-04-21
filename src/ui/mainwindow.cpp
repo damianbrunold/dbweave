@@ -37,11 +37,18 @@
 #include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
+#include <QPainter>
+#include <QPixmap>
 #include <QStatusBar>
 #include <QStyle>
 #include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
+
+#include "rangecolors.h"
+#include "colors_compat.h"
+#include "draw_cell.h"
+#include "dbw3_base.h"
 
 namespace
 {
@@ -58,6 +65,64 @@ QIcon legacyIcon(const char* name)
     icon.addFile(s24, QSize(24, 24));
     return icon;
 }
+
+/*  Build a solid-colour swatch icon with a thin black border, used
+    for the range-picker dock (one entry per range colour). */
+QIcon swatchIcon(const QColor& _c)
+{
+    QPixmap pm(16, 16);
+    pm.fill(Qt::transparent);
+    QPainter p(&pm);
+    p.fillRect(1, 1, 14, 14, _c);
+    p.setPen(Qt::black);
+    p.drawRect(1, 1, 13, 13);
+    return QIcon(pm);
+}
+
+/*  Build a range-picker icon that mirrors exactly what
+    DrawGewebeNormal paints for the given special range. The caller
+    passes:
+      _d  -- the active darst_* (STEIGEND / KREUZ / KREIS / ... or
+             AUSGEFUELLT)
+      _bg -- background-fill when _d != AUSGEFUELLT (green for
+             anbindung, yellow for abbindung, transparent for
+             aushebung)
+      _fill -- colour used when _d == AUSGEFUELLT, i.e. the plain
+             GetRangeColor(range) the "Patrone" view falls back to.
+*/
+QIcon rangeSymbolIcon(DARSTELLUNG _d, const QColor& _bg, const QColor& _fill)
+{
+    constexpr int SZ = 18;
+    QPixmap pm(SZ, SZ);
+    pm.fill(Qt::transparent);
+    QPainter p(&pm);
+    if (_d == AUSGEFUELLT) {
+        /*  Filled-cell fallback: paint the AUSGEFUELLT range
+            colour with a 1-pixel margin, matching DrawGewebeNormal
+            (AUSGEFUELLT, GetRangeColor(range)).                  */
+        p.fillRect(QRect(1, 1, SZ - 2, SZ - 2), _fill);
+    } else {
+        if (_bg.alpha() > 0)
+            p.fillRect(QRect(1, 1, SZ - 2, SZ - 2), _bg);
+        PaintCell(p, _d, 0, 0, SZ - 1, SZ - 1, QColor(Qt::black), /*_dontclear=*/true);
+    }
+    return QIcon(pm);
+}
+}
+
+void TDBWFRM::updateRangeDockIcons()
+{
+    if (rangeAushebungAction)
+        rangeAushebungAction->setIcon(rangeSymbolIcon(darst_aushebung, QColor(Qt::transparent),
+                                                      qColorFromTColor(GetRangeColor(AUSHEBUNG))));
+    if (rangeAnbindungAction)
+        rangeAnbindungAction->setIcon(rangeSymbolIcon(darst_anbindung,
+                                                      qColorFromTColor(col_anbindung),
+                                                      qColorFromTColor(GetRangeColor(ANBINDUNG))));
+    if (rangeAbbindungAction)
+        rangeAbbindungAction->setIcon(rangeSymbolIcon(darst_abbindung,
+                                                      qColorFromTColor(col_abbindung),
+                                                      qColorFromTColor(GetRangeColor(ABBINDUNG))));
 }
 
 TDBWFRM* DBWFRM = nullptr;
@@ -167,9 +232,13 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     paletteDock = new QDockWidget(this);
     paletteDock->setObjectName(QStringLiteral("paletteDock"));
     registerLangWidget(paletteDock, QStringLiteral("Palette"), QStringLiteral("Palette"));
+    paletteDock->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable
+                             | QDockWidget::DockWidgetFloatable);
     palettePanel = new PalettePanel(this, paletteDock);
     paletteDock->setWidget(palettePanel);
     addDockWidget(Qt::RightDockWidgetArea, paletteDock);
+    /*  Default hidden -- the View > Palette menu entry toggles it. */
+    paletteDock->hide();
     ViewFarbpalette = paletteDock->toggleViewAction();
     ViewFarbpalette->setText(QStringLiteral("&Palette"));
 
@@ -578,12 +647,10 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     QAction* actZoomOut = menuAct(viewMenu, "Zoo&m out", "Ver&kleinern", "sb_zoomout", "Zoom out",
                                   "Verkleinert die Ansicht");
     actZoomOut->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_U));
+    /*  Toolbar toggles -- appended below once the corresponding
+        docks have been constructed. The toggleViewAction() of each
+        QDockWidget is a checkable QAction tied to its visibility. */
     viewMenu->addSeparator();
-    QAction* actToolPalette = menuAct(viewMenu, "Too&lpalette", "&Werkzeugpalette", nullptr,
-                                      "Toggles the toolpalette (drawing mode)",
-                                      "Werkzeugpalette sichtbar/unsichtbar (Zeichnenmodus)");
-    actToolPalette->setShortcut(QKeySequence(Qt::Key_F10));
-    actToolPalette->setEnabled(false);
     QAction* actRedraw = menuAct(viewMenu, "Redraw", "Neuzeichnen", nullptr, "Redraws everything",
                                  "Zeichnet alles neu");
     actRedraw->setShortcut(QKeySequence(Qt::Key_F5));
@@ -1124,15 +1191,30 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     actHighlight->setEnabled(false);
     mainBar->addAction(actHighlight);
 
-    /*  Range picker: nine checkable buttons driving currentrange.
-        Lives on its own toolbar so it can be hidden independently. */
-    QToolBar* rangeBar = addToolBar(QString());
-    rangeBar->setObjectName(QStringLiteral("rangeToolBar"));
-    registerLangWidget(rangeBar, QStringLiteral("Ranges"), QStringLiteral("Bereiche"));
+    /*  Range picker: nine checkable range buttons + three special
+        (L/B/U) buttons, hosted in a vertical QToolBar inside a
+        dockable panel on the right. Icon-only: a colour swatch per
+        numbered range, a bold letter per special range. Toggled via
+        the View menu.                                             */
+    QDockWidget* rangeDock = new QDockWidget(this);
+    rangeDock->setObjectName(QStringLiteral("rangeDock"));
+    registerLangWidget(rangeDock, QStringLiteral("Ranges"), QStringLiteral("Bereiche"));
+    rangeDock->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable
+                           | QDockWidget::DockWidgetFloatable);
+    QToolBar* rangeBar = new QToolBar(rangeDock);
+    rangeBar->setOrientation(Qt::Vertical);
+    rangeBar->setIconSize(QSize(16, 16));
+    rangeBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    rangeBar->setMovable(false);
+    rangeBar->setFloatable(false);
+    rangeDock->setWidget(rangeBar);
+    addDockWidget(Qt::RightDockWidgetArea, rangeDock);
+    rangeDock->hide();
     rangeGroup = new QActionGroup(this);
     rangeGroup->setExclusive(true);
     for (int r = 1; r <= 9; r++) {
-        QAction* a = new QAction(QString::number(r), this);
+        QAction* a = new QAction(this);
+        a->setIcon(swatchIcon(qColorFromTColor(GetRangeColor(r))));
         a->setCheckable(true);
         a->setToolTip(QStringLiteral("Range %1").arg(r));
         rangeGroup->addAction(a);
@@ -1148,8 +1230,8 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     if (currentrange >= 1 && currentrange <= 9)
         rangeActions[currentrange - 1]->setChecked(true);
     rangeBar->addSeparator();
-    auto addSpecial = [&](const QString& label, int r, const QString& tip) {
-        QAction* a = new QAction(label, this);
+    auto addSpecial = [&](int r, const QString& tip) {
+        QAction* a = new QAction(this);
         a->setCheckable(true);
         a->setToolTip(tip);
         rangeGroup->addAction(a);
@@ -1158,10 +1240,17 @@ TDBWFRM::TDBWFRM(QWidget* parent)
             currentrange = r;
             refresh();
         });
+        return a;
     };
-    addSpecial(QStringLiteral("L"), AUSHEBUNG, QStringLiteral("Lift out (Aushebung)"));
-    addSpecial(QStringLiteral("B"), ANBINDUNG, QStringLiteral("Binding (Anbindung)"));
-    addSpecial(QStringLiteral("U"), ABBINDUNG, QStringLiteral("Unbinding (Abbindung)"));
+    rangeAushebungAction = addSpecial(AUSHEBUNG, QStringLiteral("Lift out (Aushebung)"));
+    rangeAnbindungAction = addSpecial(ANBINDUNG, QStringLiteral("Binding (Anbindung)"));
+    rangeAbbindungAction = addSpecial(ABBINDUNG, QStringLiteral("Unbinding (Abbindung)"));
+    updateRangeDockIcons();
+    QAction* actViewRanges = rangeDock->toggleViewAction();
+    registerLang(actViewRanges, QStringLiteral("&Ranges"), QStringLiteral("&Bereiche"),
+                 QStringLiteral("Toggles the ranges toolbar"),
+                 QStringLiteral("Bereiche-Leiste sichtbar/unsichtbar"));
+    viewMenu->addAction(actViewRanges);
 
     /*  Loom menu — Phase 11 dummy simulator (not part of the
         legacy top-level menu but kept so the feature remains
@@ -1170,25 +1259,54 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     QAction* actLoomControl = loomMenu->addAction(QStringLiteral("&Loom control..."));
     connect(actLoomControl, &QAction::triggered, this, [this] { LoomControlClick(); });
 
-    /*  Drawing-tools menu (no legacy counterpart -- the old UI
-        uses a floating tool palette). Kept here for now.       */
-    QMenu* toolsMenu = menuBar()->addMenu(QStringLiteral("&Tools"));
+    /*  Drawing tools -- icon-only vertical toolbar inside a dockable
+        panel on the right (matches the palette + ranges docks). The
+        legacy UI used a floating tool palette; the previous port put
+        the same tools on a top-level menu, which is now gone.
+        Toggle from the View menu. Tools are radio-checkable so the
+        active tool is visually highlighted.                        */
+    QDockWidget* toolsDock = new QDockWidget(this);
+    toolsDock->setObjectName(QStringLiteral("toolsDock"));
+    registerLangWidget(toolsDock, QStringLiteral("Tools"), QStringLiteral("Werkzeuge"));
+    toolsDock->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable
+                           | QDockWidget::DockWidgetFloatable);
+    QToolBar* toolsBar = new QToolBar(toolsDock);
+    toolsBar->setOrientation(Qt::Vertical);
+    toolsBar->setIconSize(QSize(16, 16));
+    toolsBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    toolsBar->setMovable(false);
+    toolsBar->setFloatable(false);
+    toolsDock->setWidget(toolsBar);
+    addDockWidget(Qt::RightDockWidgetArea, toolsDock);
+    toolsDock->hide();
     auto* toolGroup = new QActionGroup(this);
     toolGroup->setExclusive(true);
-    auto addTool = [&](const QString& label, const char* icon, TOOL _t) {
-        QAction* a = toolsMenu->addAction(legacyIcon(icon), label);
+    auto addTool = [&](const QString& tip, const char* icon, TOOL _t) {
+        QAction* a = new QAction(this);
+        a->setIcon(legacyIcon(icon));
+        a->setToolTip(tip);
         a->setCheckable(true);
         toolGroup->addAction(a);
+        toolsBar->addAction(a);
         if (_t == TOOL_POINT)
             a->setChecked(true);
         connect(a, &QAction::triggered, this, [this, _t] { tool = _t; });
     };
-    addTool(QStringLiteral("&Point"), "tool_cursor", TOOL_POINT);
-    addTool(QStringLiteral("&Line"), "tool_line", TOOL_LINE);
-    addTool(QStringLiteral("&Rectangle"), "tool_rectangle", TOOL_RECTANGLE);
-    addTool(QStringLiteral("&Filled rectangle"), "tool_filledrectangle", TOOL_FILLEDRECTANGLE);
-    addTool(QStringLiteral("&Ellipse"), "tool_ellipse", TOOL_ELLIPSE);
-    addTool(QStringLiteral("Fille&d ellipse"), "tool_filledellipse", TOOL_FILLEDELLIPSE);
+    addTool(QStringLiteral("Point"), "tool_cursor", TOOL_POINT);
+    addTool(QStringLiteral("Line"), "tool_line", TOOL_LINE);
+    addTool(QStringLiteral("Rectangle"), "tool_rectangle", TOOL_RECTANGLE);
+    addTool(QStringLiteral("Filled rectangle"), "tool_filledrectangle", TOOL_FILLEDRECTANGLE);
+    addTool(QStringLiteral("Ellipse"), "tool_ellipse", TOOL_ELLIPSE);
+    addTool(QStringLiteral("Filled ellipse"), "tool_filledellipse", TOOL_FILLEDELLIPSE);
+    QAction* actViewTools = toolsDock->toggleViewAction();
+    registerLang(actViewTools, QStringLiteral("&Tools"), QStringLiteral("&Werkzeuge"),
+                 QStringLiteral("Toggles the tools toolbar"),
+                 QStringLiteral("Werkzeugleiste sichtbar/unsichtbar"));
+    viewMenu->addAction(actViewTools);
+    /*  Palette toggle lives on the &Color menu already but is handy
+        in View too, alongside the other toolbar toggles.          */
+    if (ViewFarbpalette)
+        viewMenu->addAction(ViewFarbpalette);
 
     /*  Status-bar panels (right-aligned permanent widgets). */
     sbField = new QLabel(this);
@@ -1286,6 +1404,17 @@ void TDBWFRM::refresh()
         pattern_canvas->syncScrollbarsFromFrm();
         pattern_canvas->update();
     }
+    /*  Palette contents / alt-palette toggle can change via the
+        Options dialog, the Define Colors dialog, or a file load;
+        those paths all end in refresh(), so repainting the dock
+        here keeps its swatches and selection in sync. */
+    if (palettePanel)
+        palettePanel->update();
+    /*  The three special-range dock icons mirror darst_aushebung /
+        _anbindung / _abbindung, which the xoptions dialog can
+        change. Regenerate the icons here so the dock preview
+        always matches how the gewebe paints the same cell.      */
+    updateRangeDockIcons();
     /*  Rebuild the status-bar labels so the cursor position, range,
         selection size and zoom stay current on every refresh.     */
     UpdateStatusBar();
@@ -1580,6 +1709,9 @@ void TDBWFRM::ApplyBaseStyleFromSettings()
     aufknuepfung.darstellung = DARSTELLUNG(settings.Load(AnsiString("Tie-up"), int(KREUZ)));
     trittfolge.darstellung = DARSTELLUNG(settings.Load(AnsiString("Treadling"), int(PUNKT)));
     schlagpatronendarstellung = DARSTELLUNG(settings.Load(AnsiString("Pegplan"), int(AUSGEFUELLT)));
+    darst_aushebung = DARSTELLUNG(settings.Load(AnsiString("LiftOut"), int(STEIGEND)));
+    darst_anbindung = DARSTELLUNG(settings.Load(AnsiString("Binding"), int(KREUZ)));
+    darst_abbindung = DARSTELLUNG(settings.Load(AnsiString("Unbinding"), int(KREIS)));
     settings.SetCategory(AnsiString("View"));
     einzugunten = (settings.Load(AnsiString("ThreadingDown"), 0) != 0);
     righttoleft = (settings.Load(AnsiString("RightToLeft"), 0) != 0);

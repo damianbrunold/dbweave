@@ -110,6 +110,50 @@ void TDBWFRM::DrawGewebe(int _i, int _j)
         p->fillRect(QRect(x + 1, y + 1, xx - x - 1, yy - y - 1), bkground);
         return;
     }
+
+    /*  Special ranges AUSHEBUNG / ANBINDUNG / ABBINDUNG. Legacy
+        DrawGewebeNormal paints these with the user-selected
+        darst_aushebung / _anbindung / _abbindung glyph. When the
+        glyph is non-AUSGEFUELLT (e.g. the shipped default: STEIGEND
+        / KREUZ / KREIS), ANBINDUNG / ABBINDUNG get their dedicated
+        col_anbindung (green) / col_abbindung (yellow) fill first
+        and the symbol is then overlaid in the foreground colour.
+        AUSHEBUNG renders as a plain symbol on the btnFace margin.  */
+    if (range == AUSHEBUNG) {
+        if (darst_aushebung != AUSGEFUELLT) {
+            PaintCell(*p, darst_aushebung, x, y, xx, yy, QColor(Qt::black),
+                      /*dontclear=*/false, -1, bkground);
+        } else {
+            PaintCell(*p, AUSGEFUELLT, x, y, xx, yy, qColorFromTColor(GetRangeColor(range)),
+                      /*dontclear=*/false, -1, bkground);
+        }
+        return;
+    }
+    if (range == ANBINDUNG) {
+        if (darst_anbindung != AUSGEFUELLT) {
+            p->fillRect(QRect(x + 1, y + 1, xx - x - 1, yy - y - 1),
+                        qColorFromTColor(col_anbindung));
+            PaintCell(*p, darst_anbindung, x, y, xx, yy, QColor(Qt::black),
+                      /*dontclear=*/true, -1, bkground);
+        } else {
+            PaintCell(*p, AUSGEFUELLT, x, y, xx, yy, qColorFromTColor(GetRangeColor(range)),
+                      /*dontclear=*/false, -1, bkground);
+        }
+        return;
+    }
+    if (range == ABBINDUNG) {
+        if (darst_abbindung != AUSGEFUELLT) {
+            p->fillRect(QRect(x + 1, y + 1, xx - x - 1, yy - y - 1),
+                        qColorFromTColor(col_abbindung));
+            PaintCell(*p, darst_abbindung, x, y, xx, yy, QColor(Qt::black),
+                      /*dontclear=*/true, -1, bkground);
+        } else {
+            PaintCell(*p, AUSGEFUELLT, x, y, xx, yy, qColorFromTColor(GetRangeColor(range)),
+                      /*dontclear=*/false, -1, bkground);
+        }
+        return;
+    }
+
     PaintCell(*p, AUSGEFUELLT, x, y, xx, yy, qColorFromTColor(GetRangeColor(range)),
               /*dontclear=*/false, -1, bkground);
 }

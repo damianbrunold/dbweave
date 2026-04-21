@@ -9,10 +9,12 @@
     (at your option) any later version.
 */
 
-/*  16x16 swatch grid rendering Data->palette. Click a swatch to
-    set Data->color; the current choice gets a white outline. Port
-    of legacy farbpalette_form.cpp; lives inside a QDockWidget
-    docked on the right of TDBWFRM. */
+/*  Palette swatch picker. Lays out Data->palette entries as a vertical
+    column of swatches by default; when the available height isn't
+    enough, the cells wrap into additional columns (2, 3, ...). The
+    currently-selected palette index gets a thick highlight outline.
+    Lives inside a QDockWidget on the right of TDBWFRM; toggled from
+    the View > Palette menu entry.                                  */
 
 #ifndef DBWEAVE_UI_PALETTEPANEL_H
 #define DBWEAVE_UI_PALETTEPANEL_H
@@ -30,18 +32,24 @@ public:
 
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;
+    bool hasHeightForWidth() const override { return false; }
 
 protected:
     void paintEvent(QPaintEvent* _e) override;
     void mousePressEvent(QMouseEvent* _e) override;
     void keyPressEvent(QKeyEvent* _e) override;
+    void resizeEvent(QResizeEvent* _e) override;
 
 private:
     TDBWFRM* frm;
 
-    static constexpr int GRIDSIZE = 16; /* 16x16 grid (256 slots) */
+    static constexpr int CELL = 18;  /* fixed swatch edge in px */
 
-    int drawSize() const; /* cell edge in px, from current widget size */
+    int entryCount() const;       /* clamped to MAX_PAL_ENTRY */
+    int columnsFor(int _h) const; /* cols needed to fit N cells in height h */
+    int columns() const;          /* current column count from current height */
+    int rows() const;             /* rows in the current layout */
+    bool cellAt(const QPoint& _pos, int& _idx) const;
 };
 
 #endif

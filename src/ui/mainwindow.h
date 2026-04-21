@@ -154,9 +154,14 @@ public:
     /*  Symbol styles for the three special ranges (AUSHEBUNG,
         ANBINDUNG, ABBINDUNG). Legacy DrawGewebeNormal branches on
         each of these when painting the corresponding range cells. */
-    DARSTELLUNG darst_aushebung = AUSGEFUELLT;
-    DARSTELLUNG darst_anbindung = AUSGEFUELLT;
-    DARSTELLUNG darst_abbindung = AUSGEFUELLT;
+    /*  Legacy DB-WEAVE shipped these special-range appearances with
+        symbolic glyphs (not filled cells): aushebung -> diagonal
+        bottom-left-to-top-right line, anbindung -> cross on green,
+        abbindung -> circle on yellow. Keeping that as the out-of-
+        the-box default; the xoptions dialog can still override.    */
+    DARSTELLUNG darst_aushebung = STEIGEND;
+    DARSTELLUNG darst_anbindung = KREUZ;
+    DARSTELLUNG darst_abbindung = KREIS;
     DARSTELLUNG schlagpatronendarstellung = AUSGEFUELLT;
 
     /*  GewebeFarbeffekt / GewebeSimulation state:
@@ -393,6 +398,13 @@ public:
         currentrange so digit-key changes stay in sync. */
     class QActionGroup* rangeGroup = nullptr;
     QAction* rangeActions[9] = {};
+    /*  The three special-range entries (Aushebung / Anbindung /
+        Abbindung) get their dock icons regenerated on every
+        refresh() so the preview tracks the live darst_* settings. */
+    QAction* rangeAushebungAction = nullptr;
+    QAction* rangeAnbindungAction = nullptr;
+    QAction* rangeAbbindungAction = nullptr;
+    void updateRangeDockIcons();
 
     class QLabel* sbField = nullptr;
     class QLabel* sbSelect = nullptr;

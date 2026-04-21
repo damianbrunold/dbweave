@@ -26,7 +26,13 @@ TColor rangecolortable[13] = { (TColor)RGB(0, 0, 0),       /* range 1 */
                                (TColor)RGB(255, 123, 0),   /* range 7 */
                                (TColor)RGB(255, 210, 0),   /* range 8 */
                                (TColor)RGB(0, 87, 0),      /* range 9 */
-                               (TColor)RGB(128, 128, 128), /* AUSHEBUNG (10) */
+                               /*  Legacy gave AUSHEBUNG and ANBINDUNG the same 128
+                                   grey in AUSGEFUELLT mode, which left the two
+                                   indistinguishable in the Patrone view. Use a
+                                   darker shade for AUSHEBUNG so the three
+                                   special ranges are visually distinct even
+                                   when every darst_* is set to AUSGEFUELLT.   */
+                               (TColor)RGB(96, 96, 96),    /* AUSHEBUNG (10) */
                                (TColor)RGB(128, 128, 128), /* ANBINDUNG (11) */
                                (TColor)RGB(255, 255, 255), /* ABBINDUNG (12) */
                                (TColor)RGB(255, 255, 255) };
