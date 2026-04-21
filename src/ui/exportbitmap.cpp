@@ -28,6 +28,7 @@
 #include "palette.h"
 #include "rangecolors.h"
 
+#include <QFile>
 #include <QFileInfo>
 #include <QImage>
 #include <QMessageBox>
@@ -49,6 +50,63 @@ static QColor paletteColor(int _idx)
 {
     const COLORREF c = Data->palette->GetColor(_idx);
     return QColor(GetRValue(c), GetGValue(c), GetBValue(c));
+}
+
+/*  Decide which paper size the PDF exporter should use. Tiered:
+      1. $PAPERSIZE environment variable ("a4", "letter", ...).
+         Set explicitly by the user or the session, highest trust.
+      2. /etc/papersize on Unix -- the libpaper system default.
+      3. QLocale's country: Letter-using territories (US, CA, MX,
+         and the handful of Latin-American / Asian countries that
+         share that standard) get Letter; everywhere else gets A4.
+    Locale measurement system is deliberately NOT consulted -- a
+    German user running a system with LANG=en_US.UTF-8 still wants
+    A4, not Letter.                                              */
+static QPageSize::PageSizeId preferredPageSize()
+{
+    auto fromName = [](const QString& _s) -> QPageSize::PageSizeId {
+        const QString n = _s.trimmed().toLower();
+        if (n == QLatin1String("a4"))
+            return QPageSize::A4;
+        if (n == QLatin1String("letter") || n == QLatin1String("us-letter"))
+            return QPageSize::Letter;
+        if (n == QLatin1String("legal"))
+            return QPageSize::Legal;
+        if (n == QLatin1String("a3"))
+            return QPageSize::A3;
+        if (n == QLatin1String("a5"))
+            return QPageSize::A5;
+        return QPageSize::PageSizeId(-1);
+    };
+    const QByteArray env = qgetenv("PAPERSIZE");
+    if (!env.isEmpty()) {
+        const auto id = fromName(QString::fromLocal8Bit(env));
+        if (int(id) >= 0)
+            return id;
+    }
+    QFile papersize(QStringLiteral("/etc/papersize"));
+    if (papersize.exists() && papersize.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        const QString line = QString::fromLocal8Bit(papersize.readLine()).trimmed();
+        papersize.close();
+        const auto id = fromName(line);
+        if (int(id) >= 0)
+            return id;
+    }
+    /*  Letter-using countries (ISO 3166 codes). Everywhere else
+        gets A4. List taken from the de-facto "US Letter zone"
+        observed by print vendors. */
+    switch (QLocale().territory()) {
+    case QLocale::UnitedStates:
+    case QLocale::Canada:
+    case QLocale::Mexico:
+    case QLocale::Colombia:
+    case QLocale::Venezuela:
+    case QLocale::Chile:
+    case QLocale::Philippines:
+        return QPageSize::Letter;
+    default:
+        return QPageSize::A4;
+    }
 }
 
 /*-----------------------------------------------------------------*/
@@ -408,16 +466,7 @@ void TDBWFRM::DoExportPdf(const QString& _filename)
     QPdfWriter pdf(_filename);
     pdf.setCreator(QStringLiteral("DB-WEAVE"));
     pdf.setTitle(QFileInfo(filename).fileName());
-    /*  Paper size follows the user's locale: imperial measurement
-        systems (US, Liberia, Myanmar) get US Letter, everyone else
-        gets ISO A4. Picking QPageSize explicitly avoids relying on
-        the platform default, which is driver/printer-dependent.   */
-    const QLocale::MeasurementSystem ms = QLocale().measurementSystem();
-    const QPageSize::PageSizeId pageId
-        = (ms == QLocale::ImperialUSSystem || ms == QLocale::ImperialUKSystem)
-              ? QPageSize::Letter
-              : QPageSize::A4;
-    pdf.setPageSize(QPageSize(pageId));
+    pdf.setPageSize(QPageSize(preferredPageSize()));
     pdf.setPageMargins(QMarginsF(10, 10, 10, 10), QPageLayout::Millimeter);
 
     QPainter p(&pdf);
