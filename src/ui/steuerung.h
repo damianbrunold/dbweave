@@ -152,6 +152,11 @@ public:
     int trittCols = 0;        /* visible trittfolge cols (legacy tr -- renamed to avoid collision with QObject::tr) */
     int x1 = 0;               /* column where schlagpatrone starts */
     int klammerwidth = 0;     /* MAXKLAMMERN * 11 px               */
+    int top = 0;              /* canvas-local drawable top         */
+    int bottom = 0;           /* canvas-local drawable bottom-y    */
+    int left = 0;              /* canvas-local drawable left        */
+    int right = 0;             /* canvas-local drawable right       */
+    int dx = 0;                /* visual gap between gewebe / SP    */
 
 
     /*  View state. */
@@ -222,6 +227,32 @@ public:
     QLabel* labPosition = nullptr;
     QLabel* labKlammer = nullptr;
     QLabel* labRepetition = nullptr;
+
+    /*  Drawing (7c). currentPainter is set by the canvas for the
+        duration of paintEvent; the Draw* methods paint through
+        it.                                                       */
+    class QPainter* currentPainter = nullptr;
+
+    void paintAll();
+
+    void DrawGrid();
+    void DrawData();
+    void DrawKlammern();
+    void DrawKlammer(int _i);
+    void DrawSelection();
+    void DrawLastPos();
+
+private:
+    void _DrawKlammer(int _i);
+    void _DrawPositionSelected();
+    void _DrawKlammerSelected();
+    void _DrawLastPos();
+    void DrawGewebe(int _i, int _j);
+    void DrawGewebeNormal(int _i, int _j, int _x, int _y, int _xx, int _yy);
+    void DrawGewebeFarbeffekt(int _i, int _j, int _x, int _y, int _xx, int _yy);
+    void DrawGewebeSimulation(int _i, int _j, int _x, int _y, int _xx, int _yy);
+
+public:
 
 private:
     void buildMenus();

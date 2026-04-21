@@ -87,6 +87,7 @@ add_library(dbweave_ui STATIC
     loom.cpp
     loomoptionsdialog.cpp
     steuerung.cpp
+    steuerung_draw.cpp
     steuerungcanvas.cpp
 )
 

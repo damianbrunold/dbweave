@@ -28,9 +28,13 @@ SteuerungCanvas::SteuerungCanvas(TSTRGFRM* _frm)
 
 void SteuerungCanvas::paintEvent(QPaintEvent* /*_e*/)
 {
-    /*  Stage 7a: empty canvas. Real render lands in 7c. */
     QPainter p(this);
     p.fillRect(rect(), legacyBtnFace());
+    if (!frm)
+        return;
+    frm->currentPainter = &p;
+    frm->paintAll();
+    frm->currentPainter = nullptr;
 }
 
 void SteuerungCanvas::resizeEvent(QResizeEvent* /*_e*/)

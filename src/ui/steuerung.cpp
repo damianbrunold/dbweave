@@ -361,7 +361,10 @@ void TSTRGFRM::CalcSizes()
         outside canvas->width().                                   */
     const int w = canvas ? canvas->width() : 0;
     const int h = canvas ? canvas->height() : 0;
-    const int dx = gridsize;
+    left = 0;
+    top = 0;
+    right = w;
+    dx = gridsize;
     klammerwidth = MAXKLAMMERN * 11;
 
     maxi = (w - dx - klammerwidth) / gridsize;
@@ -379,6 +382,11 @@ void TSTRGFRM::CalcSizes()
     x1 = maxi - trittCols - 1;
     if (x1 < 0)
         x1 = 0;
+
+    /*  Legacy eats the leftover vertical space so the rendered grid
+        fits exactly; in canvas-local coords the drawable bottom is
+        top + maxj*gridsize.                                       */
+    bottom = top + maxj * gridsize;
 
     UpdateScrollbar();
 }
