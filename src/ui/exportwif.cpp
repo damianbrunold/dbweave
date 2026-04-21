@@ -350,7 +350,12 @@ static QString askExportFile(QWidget* _parent, const QString& _title, const QStr
     const QStringList files = dlg.selectedFiles();
     if (files.isEmpty())
         return QString();
-    const QString path = files.first();
+    QString path = files.first();
+    /*  setDefaultSuffix already handles this for QFileDialog's own
+        widget, but some platform-native backends ignore it -- so
+        append manually when the returned name has no suffix.     */
+    if (QFileInfo(path).suffix().isEmpty())
+        path += QLatin1Char('.') + _suffix;
     rememberDirFor("Export", path);
     return path;
 }

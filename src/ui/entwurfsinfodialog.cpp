@@ -517,11 +517,13 @@ void EntwurfsinfoDialog::onExport()
         : QFileInfo(frm->filename).completeBaseName() + QStringLiteral(".rtf");
     suggested = QDir(lastDirFor("ExportInfo")).filePath(baseName);
 
-    const QString fn = QFileDialog::getSaveFileName(
+    QString fn = QFileDialog::getSaveFileName(
         this, LANG_STR("Save pattern info as", "Musterinformationen speichern unter"),
         suggested, LANG_STR("Word-Format (*.rtf)", "Word-Format (*.rtf)"));
     if (fn.isEmpty())
         return;
+    if (QFileInfo(fn).suffix().isEmpty())
+        fn += QStringLiteral(".rtf");
     rememberDirFor("ExportInfo", fn);
 
     const int prev = categories->currentRow();

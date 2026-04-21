@@ -307,10 +307,16 @@ void TDBWFRM::FileRevertClick()
 void TDBWFRM::FileSaveAs()
 {
     const QString dir = filename.isEmpty() ? lastDirFor("Pattern") : (QString)filename;
-    const QString chosen = QFileDialog::getSaveFileName(
+    QString chosen = QFileDialog::getSaveFileName(
         this, LANG_STR("Save pattern as", "Muster speichern unter"), dir, fileFilter());
     if (chosen.isEmpty())
         return;
+    /*  Append the .dbw suffix if the user typed a bare name. The
+        native "Save As" dialog on some platforms does not auto-
+        append from the filter on its own; do it ourselves so the
+        loader has something to recognise on the next Open.       */
+    if (QFileInfo(chosen).suffix().isEmpty())
+        chosen += QStringLiteral(".dbw");
     rememberDirFor("Pattern", chosen);
 
     if (file && file->IsOpen())
