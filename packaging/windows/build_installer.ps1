@@ -30,9 +30,12 @@ $DistDir  = Join-Path $Root 'dist'
 $noLoom = if ($NoLoom) { 'ON' } else { 'OFF' }
 
 Write-Host "==> configure (no-loom=$noLoom)"
+# PowerShell treats bare OFF/ON as identifiers in some contexts and
+# can drop or mangle unquoted -D...=OFF arguments; pass every CMake
+# -D as a quoted string so cmake sees them verbatim.
 cmake -S $Root -B $BuildDir -G Ninja `
-    -DCMAKE_BUILD_TYPE=Release `
-    -DDBWEAVE_BUILD_TESTS=OFF `
+    '-DCMAKE_BUILD_TYPE=Release' `
+    '-DDBWEAVE_BUILD_TESTS=OFF' `
     "-DDBWEAVE_NO_LOOM=$noLoom"
 
 Write-Host '==> build'
