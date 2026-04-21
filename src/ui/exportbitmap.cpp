@@ -34,6 +34,7 @@
 #include <QPageLayout>
 #include <QPageSize>
 #include <QPainter>
+#include <QLocale>
 #include <QPdfWriter>
 #include <QSvgGenerator>
 
@@ -407,7 +408,16 @@ void TDBWFRM::DoExportPdf(const QString& _filename)
     QPdfWriter pdf(_filename);
     pdf.setCreator(QStringLiteral("DB-WEAVE"));
     pdf.setTitle(QFileInfo(filename).fileName());
-    pdf.setPageSize(QPageSize(QPageSize::A4));
+    /*  Paper size follows the user's locale: imperial measurement
+        systems (US, Liberia, Myanmar) get US Letter, everyone else
+        gets ISO A4. Picking QPageSize explicitly avoids relying on
+        the platform default, which is driver/printer-dependent.   */
+    const QLocale::MeasurementSystem ms = QLocale().measurementSystem();
+    const QPageSize::PageSizeId pageId
+        = (ms == QLocale::ImperialUSSystem || ms == QLocale::ImperialUKSystem)
+              ? QPageSize::Letter
+              : QPageSize::A4;
+    pdf.setPageSize(QPageSize(pageId));
     pdf.setPageMargins(QMarginsF(10, 10, 10, 10), QPageLayout::Millimeter);
 
     QPainter p(&pdf);
