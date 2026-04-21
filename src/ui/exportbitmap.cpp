@@ -421,16 +421,25 @@ void TDBWFRM::DoExportPdf(const QString& _filename)
     pdf.setPageMargins(QMarginsF(10, 10, 10, 10), QPageLayout::Millimeter);
 
     QPainter p(&pdf);
-    /*  Scale the pattern to fit the printable page while preserving
-        aspect ratio. QPdfWriter reports its logical geometry in device
-        units (the pdf resolution), so viewport/window get the fit. */
+    /*  Lay the pattern out at a fixed physical cell size (matches
+        the print path's 2.0-2.5 mm per cell) instead of stretching
+        to fill the whole page -- a small pattern shouldn't blow up
+        to cover an A4 sheet. If the pattern at that natural size is
+        larger than the paintable area, fall back to a proportional
+        shrink-fit; otherwise place it at the top-left of the
+        margin rect so the rest of the page stays blank.           */
+    constexpr double MM_PER_CELL = 2.5;
     const QRect page = p.viewport();
-    const double sx = double(page.width()) / Wpx;
-    const double sy = double(page.height()) / Hpx;
-    const double s = qMin(sx, sy);
-    const int w = int(Wpx * s);
-    const int h = int(Hpx * s);
-    p.setViewport(page.x() + (page.width() - w) / 2, page.y() + (page.height() - h) / 2, w, h);
+    const double dev_per_mm = pdf.resolution() / 25.4;
+    const double dev_per_logical_px = (MM_PER_CELL / gw) * dev_per_mm;
+    double w = Wpx * dev_per_logical_px;
+    double h = Hpx * dev_per_logical_px;
+    if (w > page.width() || h > page.height()) {
+        const double s = qMin(page.width() / w, page.height() / h);
+        w *= s;
+        h *= s;
+    }
+    p.setViewport(page.x(), page.y(), int(w), int(h));
     p.setWindow(0, 0, Wpx, Hpx);
 
     p.fillRect(QRect(0, 0, Wpx, Hpx), QColor(Qt::white));
