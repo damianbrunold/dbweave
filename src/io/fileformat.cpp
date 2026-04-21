@@ -49,19 +49,25 @@ void FfBuffer::Add(int _ch)
         Reallocate();
 
     if (length < maxlength) {
-        buffer[length++] = (char)_ch;
+        buffer[length++] = static_cast<char>(_ch);
         buffer[length] = 0;
     }
 }
 /*-----------------------------------------------------------------*/
 void FfBuffer::Reallocate()
 {
+    /*  Allocate first, update state only after success. If new throws,
+        the object is left untouched and subsequent Add() calls become
+        no-ops (length >= maxlength). Previously maxlength was bumped
+        before the allocation, so a failure left the buffer pointer
+        valid but with a bogus capacity, corrupting subsequent writes. */
     try {
-        char* newbuff = new char[maxlength + increment + 1];
-        maxlength += increment;
+        const int newmax = maxlength + increment;
+        char* newbuff = new char[newmax + 1];
         memcpy(newbuff, buffer, length + 1);
         delete[] buffer;
         buffer = newbuff;
+        maxlength = newmax;
     } catch (...) {
     }
 }
@@ -79,34 +85,38 @@ FfTokenBase::~FfTokenBase()
 /*-----------------------------------------------------------------*/
 void FfTokenBase::SetData(FfBuffer& buffer)
 {
+    /*  On allocation failure leave the token in a well-defined empty
+        state (data=nullptr, length=0). Callers check for that instead
+        of propagating OOM up through the token-factory paths. */
+    delete[] static_cast<char*>(data);
+    data = nullptr;
+    length = 0;
     try {
-        delete[] static_cast<char*>(data);
-        length = buffer.length;
-        data = new char[length + 1];
-        memcpy(data, buffer.buffer, length + 1);
+        const int n = buffer.length;
+        data = new char[n + 1];
+        length = n;
+        memcpy(data, buffer.buffer, n + 1);
     } catch (...) {
-        data = 0;
+        data = nullptr;
         length = 0;
     }
 }
 /*-----------------------------------------------------------------*/
 bool IsTokenEqual(FfToken* _token, const char* _id)
 {
-    FfTokenBase* base = (FfTokenBase*)_token;
-    return strcmp((char*)base->data, _id) == 0;
+    FfTokenBase* base = static_cast<FfTokenBase*>(_token);
+    return strcmp(static_cast<const char*>(base->data), _id) == 0;
 }
 /*-----------------------------------------------------------------*/
 FfFile::FfFile()
 {
     openflags = 0;
-    filename = 0;
     hfile = nullptr;
 }
 /*-----------------------------------------------------------------*/
 FfFile::~FfFile()
 {
     Close();
-    delete[] filename;
 }
 /*-----------------------------------------------------------------*/
 bool FfFile::Open(const char* _filename, int _of)
@@ -130,13 +140,13 @@ bool FfFile::Open(const char* _filename, int _of)
             mode = "wb";
     }
 
+    /*  OOM from copying the filename into std::string is reported as
+        Open()-failure rather than propagated — Open() is called from
+        many UI code paths that treat "could not open" uniformly. */
     try {
-        char* temp = new char[strlen(_filename) + 1];
-        strcpy(temp, _filename);
         Close();
-        delete[] filename;
-        filename = temp;
-        hfile = std::fopen(filename, mode);
+        filename = _filename ? _filename : "";
+        hfile = std::fopen(filename.c_str(), mode);
     } catch (...) {
         return false;
     }
@@ -171,11 +181,11 @@ FfFile& FfFile::operator=(const FfFile& _file)
     if (this == &_file)
         return *this;
 
+    /*  operator= cannot signal failure; on OOM copying the filename the
+        lhs is left untouched. The FfBase::Assign caller verifies via
+        IsOpen() whether the copy actually took effect. */
     try {
-        char* t = new char[strlen(_file.filename) + 1];
-        strcpy(t, _file.filename);
-        delete[] filename;
-        filename = t;
+        filename = _file.filename;
         openflags = _file.openflags;
         hfile = _file.hfile;
     } catch (...) {
@@ -186,20 +196,20 @@ FfFile& FfFile::operator=(const FfFile& _file)
 /*-----------------------------------------------------------------*/
 int FfFile::Read(void* _buffer, int _length)
 {
-    return (int)std::fread(_buffer, 1, (size_t)_length, hfile);
+    return static_cast<int>(std::fread(_buffer, 1, static_cast<size_t>(_length), hfile));
 }
 /*-----------------------------------------------------------------*/
 int FfFile::Read()
 {
     unsigned char b;
     if (std::fread(&b, 1, 1, hfile) == 1)
-        return (int)b;
+        return static_cast<int>(b);
     return 0;
 }
 /*-----------------------------------------------------------------*/
 int FfFile::Write(const void* _buffer, int _length)
 {
-    return (int)std::fwrite(_buffer, 1, (size_t)_length, hfile);
+    return static_cast<int>(std::fwrite(_buffer, 1, static_cast<size_t>(_length), hfile));
 }
 /*-----------------------------------------------------------------*/
 void FfFile::SeekBegin()
@@ -338,7 +348,7 @@ FfToken* FfReader::GetToken()
                 buffer.Add(ch);
             else {
                 token = new FfTokenSection;
-                ((FfTokenSection*)token)->SetData(buffer);
+                static_cast<FfTokenSection*>(token)->SetData(buffer);
                 state = EXIT;
             }
             break;
@@ -348,7 +358,7 @@ FfToken* FfReader::GetToken()
                 buffer.Add(ch);
             else {
                 token = new FfTokenField;
-                ((FfTokenField*)token)->SetData(buffer);
+                static_cast<FfTokenField*>(token)->SetData(buffer);
                 state = EXIT;
             }
             break;
@@ -360,7 +370,7 @@ FfToken* FfReader::GetToken()
                 state = VALUEX;
             } else {
                 token = new FfTokenValue;
-                ((FfTokenValue*)token)->SetData(buffer);
+                static_cast<FfTokenValue*>(token)->SetData(buffer);
                 state = EXIT;
             }
             break;
@@ -382,10 +392,15 @@ FfToken* FfReader::GetToken()
             break;
 
         case SIGNATURE: {
-            char buff[15];
-            file.Read(buff, (int)strlen(FF_SIGNATURE + 2));
-            if (ch == FF_SIGNATURE[1]
-                && memcmp(buff, FF_SIGNATURE + 2, strlen(FF_SIGNATURE + 2)) == 0)
+            /*  First byte of the signature was already consumed ('@'),
+                second byte is in `ch`, the remainder must match
+                byte-for-byte. Buffer is sized from the compile-time
+                tail length so the Read() cannot overflow. */
+            static constexpr char SIG_TAIL[] = "bw3:file\r\n";
+            static constexpr size_t SIG_TAIL_LEN = sizeof(SIG_TAIL) - 1; /* excl. NUL */
+            char buff[SIG_TAIL_LEN];
+            file.Read(buff, static_cast<int>(SIG_TAIL_LEN));
+            if (ch == FF_SIGNATURE[1] && memcmp(buff, SIG_TAIL, SIG_TAIL_LEN) == 0)
                 token = new FfTokenSignature;
             state = EXIT;
             break;
@@ -417,7 +432,7 @@ void FfWriter::WriteSignature()
 {
     dbw3_assert(file.IsWriteable());
     file.SeekBegin(); // Die Signatur kommt immer zu Beginn des Files!
-    unsigned int written = file.Write(FF_SIGNATURE, (int)strlen(FF_SIGNATURE));
+    unsigned int written = file.Write(FF_SIGNATURE, static_cast<int>(strlen(FF_SIGNATURE)));
     dbw3_assert(written == strlen(FF_SIGNATURE));
     (void)written;
 }
@@ -440,11 +455,11 @@ void FfWriter::BeginSection(const char* _section, const char* _description /*=0*
     Indentation();
     if (_description != 0) {
         file.Write(";\r\n;\r\n; ", 8);
-        file.Write(_description, (int)strlen(_description));
+        file.Write(_description, static_cast<int>(strlen(_description)));
         file.Write("\r\n;\r\n", 5);
     }
     file.Write("\\", 1);
-    file.Write(_section, (int)strlen(_section));
+    file.Write(_section, static_cast<int>(strlen(_section)));
     file.Write("{\r\n", 3);
     indent += INDENT;
 }
@@ -463,11 +478,11 @@ void FfWriter::WriteField(const char* _field, const char* _data)
     dbw3_assert(_field);
     dbw3_assert(_data);
     Indentation();
-    file.Write(_field, (int)strlen(_field));
+    file.Write(_field, static_cast<int>(strlen(_field)));
     file.Write("==", 2);
     if (breakfields) {
         const int chunklength = 70;
-        int length = (int)strlen(_data);
+        int length = static_cast<int>(strlen(_data));
         bool first = true;
         while (length >= 0) {
             if (length <= chunklength) {
@@ -482,7 +497,7 @@ void FfWriter::WriteField(const char* _field, const char* _data)
             }
         }
     } else {
-        file.Write(_data, (int)strlen(_data));
+        file.Write(_data, static_cast<int>(strlen(_data)));
         file.Write("\r\n", 2);
     }
 }
@@ -509,6 +524,9 @@ void FfWriter::WriteFieldBinary(const char* _field, void* _data, int _length)
 {
     dbw3_assert(_data);
     dbw3_assert(_length >= 0);
+    /*  On OOM the binary field is silently omitted from the output
+        file — the document as a whole still writes, but this section
+        will be missing. Callers do not expect WriteField* to throw. */
     try {
         // Daten in Hexdump verwandeln!
         char* hexdump = new char[2 * _length + 2];
@@ -517,9 +535,9 @@ void FfWriter::WriteFieldBinary(const char* _field, void* _data, int _length)
 #endif
         hexdump[0] = 0;
         char* d = hexdump;
-        char* s = (char*)_data;
+        const unsigned char* s = static_cast<const unsigned char*>(_data);
         for (int i = 0; i < _length; i++) {
-            ByteToHex(d, (unsigned char)*s);
+            ByteToHex(d, *s);
             s++;
             d += 2;
             *d = 0;
@@ -659,7 +677,7 @@ static void HexToByte(char* _byte, const char* _hex)
         break;
     }
 
-    *_byte = (char)byte;
+    *_byte = static_cast<char>(byte);
 }
 /*-----------------------------------------------------------------*/
 void FieldHexToBinary(void* _dest, const void* _source, int _length)
@@ -671,8 +689,8 @@ void FieldHexToBinary(void* _dest, const void* _source, int _length)
     try {
         // Daten von Hexdump zurueckverwandeln!
         // Buffer sind schon richtig dimensioniert uebergeben worden...
-        char* d = (char*)_dest;
-        char* s = (char*)_source;
+        char* d = static_cast<char*>(_dest);
+        const char* s = static_cast<const char*>(_source);
         for (int i = 0; i < _length / 2; i++) {
             HexToByte(d, s);
             s += 2;

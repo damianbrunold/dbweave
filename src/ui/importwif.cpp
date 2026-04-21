@@ -33,6 +33,24 @@
 namespace
 {
 
+/*  Hard upper bound on any count read from a WIF file before it is
+    used as a QVector size. A malicious or corrupt file can declare
+    arbitrary counts (threads, treadles, palette indices); without a
+    cap, resize() would allocate gigabytes and DoS the process. The
+    importer clamps to Data->MAXX1/MAXY* when actually copying into the
+    document anyway, so this ceiling only needs to be large enough to
+    accommodate plausible WIF patterns. */
+static constexpr int WIF_MAX_COUNT = 100000;
+
+static inline int wifClamp(int _v)
+{
+    if (_v < 0)
+        return 0;
+    if (_v > WIF_MAX_COUNT)
+        return WIF_MAX_COUNT;
+    return _v;
+}
+
 struct WifWeaving {
     int shafts = 0;
     int treadles = 0;
@@ -271,7 +289,7 @@ static QString readColorTable(QTextStream& _s, QVector<WifColor>& _colors)
         if (t.startsWith('['))
             return t.toLower();
         const int idx = WifReader::fieldName(line).toInt() - 1;
-        if (idx < 0)
+        if (idx < 0 || idx >= WIF_MAX_COUNT)
             continue;
         if (idx >= _colors.size())
             _colors.resize(idx + 1);
@@ -315,7 +333,7 @@ static QString readIndexedInt(QTextStream& _s, QVector<int>& _out)
         if (t.startsWith('['))
             return t.toLower();
         const int n = WifReader::fieldName(line).toInt() - 1;
-        if (n < 0)
+        if (n < 0 || n >= WIF_MAX_COUNT)
             continue;
         if (n >= _out.size())
             _out.resize(n + 1, -1);
@@ -369,12 +387,19 @@ void WifReader::secondPass()
 
 void WifReader::thirdPass()
 {
-    threading.resize(warp.threads);
-    treadling.resize(weft.threads);
-    tieup.resize(weaving.treadles);
-    warpColors.fill(-1, warp.threads);
-    weftColors.fill(-1, weft.threads);
-    blatteinzug.fill(-1, warp.threads);
+    /*  Clamp untrusted counts from the WIF header before using them as
+        allocation sizes. copyData() clamps again to Data->MAXX1/etc.,
+        so any value beyond WIF_MAX_COUNT is pattern data we could not
+        faithfully import anyway. */
+    const int nWarp = wifClamp(warp.threads);
+    const int nWeft = wifClamp(weft.threads);
+    const int nTreadles = wifClamp(weaving.treadles);
+    threading.resize(nWarp);
+    treadling.resize(nWeft);
+    tieup.resize(nTreadles);
+    warpColors.fill(-1, nWarp);
+    weftColors.fill(-1, nWeft);
+    blatteinzug.fill(-1, nWarp);
 
     QFile f(filename);
     if (!f.open(QIODevice::ReadOnly | QIODevice::Text))

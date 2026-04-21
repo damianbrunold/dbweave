@@ -21,6 +21,7 @@
 #define DBWEAVE_IO_FILEFORMAT_H
 /*-----------------------------------------------------------------*/
 #include <cstdio>
+#include <string>
 /*-----------------------------------------------------------------*/
 class FfBuffer
 {
@@ -116,7 +117,7 @@ enum FfOpenFlag { FfOpenRead = 1, FfOpenWrite = 2, FfOpenOverwrite = 4 };
 class FfFile
 {
 private:
-    char* filename;
+    std::string filename;
     std::FILE* hfile;
     int openflags;
 
