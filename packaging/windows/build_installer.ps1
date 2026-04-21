@@ -27,16 +27,20 @@ $BuildDir = Join-Path $Root 'build-windows'
 $StageDir = Join-Path $Root 'dist\windeployqt'
 $DistDir  = Join-Path $Root 'dist'
 
-$noLoom = if ($NoLoom) { 'ON' } else { 'OFF' }
+# Note: PowerShell variables are case-insensitive, so the local
+# variable name must not collide with the $NoLoom switch parameter
+# declared above -- assigning a plain 'OFF' string back into the
+# switch would trigger a SwitchParameter conversion failure. Use a
+# distinct name.
+$NoLoomArg = if ($NoLoom.IsPresent) { 'ON' } else { 'OFF' }
 
-Write-Host "==> configure (no-loom=$noLoom)"
-# PowerShell treats bare OFF/ON as identifiers in some contexts and
-# can drop or mangle unquoted -D...=OFF arguments; pass every CMake
-# -D as a quoted string so cmake sees them verbatim.
+Write-Host "==> configure (no-loom=$NoLoomArg)"
+# Pass every CMake -D as a quoted string so PowerShell doesn't try
+# to interpret the bare ON / OFF tails.
 cmake -S $Root -B $BuildDir -G Ninja `
     '-DCMAKE_BUILD_TYPE=Release' `
     '-DDBWEAVE_BUILD_TESTS=OFF' `
-    "-DDBWEAVE_NO_LOOM=$noLoom"
+    "-DDBWEAVE_NO_LOOM=$NoLoomArg"
 
 Write-Host '==> build'
 cmake --build $BuildDir
