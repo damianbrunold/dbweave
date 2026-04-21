@@ -906,6 +906,14 @@ public:
     void UpdateMRUMenu();
     void OpenFromMRU(int _index);
 
+    /*  Persist the main-window geometry + dock layout via QSettings
+        (group "MainWindow"). LoadWindowState returns true when any
+        of the two blobs was read -- caller can fall back to a
+        hard-coded initial size when both are absent. SaveWindowState
+        runs from closeEvent after the AskSave prompt succeeds.    */
+    bool LoadWindowState();
+    void SaveWindowState() const;
+
     /*  --- Input routing ----------------------------------------
         Physical-to-logical hit-test: map (X, Y) pixel inside the
         canvas to a FELD and viewport-local cell coordinates (_i,

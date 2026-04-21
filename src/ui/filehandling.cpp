@@ -414,10 +414,45 @@ bool TDBWFRM::AskSave()
 
 void TDBWFRM::closeEvent(QCloseEvent* _event)
 {
-    if (AskSave())
+    if (AskSave()) {
+        SaveWindowState();
         _event->accept();
-    else
+    } else {
         _event->ignore();
+    }
+}
+
+/*-----------------------------------------------------------------*/
+/*  Window geometry / dock layout persistence. QSettings under the
+    "MainWindow" group captures:
+      - geometry  Qt opaque blob (position + size + maximized
+                  state + multi-screen offset).
+      - state     Qt opaque blob (toolbar / QDockWidget layout for
+                  palette / ranges / tools).
+    Both keys are absent on a first-time run; LoadWindowState
+    falls through to the caller-supplied default size.           */
+bool TDBWFRM::LoadWindowState()
+{
+    QSettings settings;
+    settings.beginGroup(QStringLiteral("MainWindow"));
+    const QByteArray geom = settings.value(QStringLiteral("geometry")).toByteArray();
+    const QByteArray state = settings.value(QStringLiteral("state")).toByteArray();
+    settings.endGroup();
+    bool any = false;
+    if (!geom.isEmpty() && restoreGeometry(geom))
+        any = true;
+    if (!state.isEmpty() && restoreState(state))
+        any = true;
+    return any;
+}
+
+void TDBWFRM::SaveWindowState() const
+{
+    QSettings settings;
+    settings.beginGroup(QStringLiteral("MainWindow"));
+    settings.setValue(QStringLiteral("geometry"), saveGeometry());
+    settings.setValue(QStringLiteral("state"), saveState());
+    settings.endGroup();
 }
 
 /*-----------------------------------------------------------------*/

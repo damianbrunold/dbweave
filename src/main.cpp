@@ -188,7 +188,10 @@ int main(int argc, char* argv[])
             }
         }
     }
-    DBWFRM->resize(1024, 768);
+    /*  Restore saved geometry + dock layout when available; fall
+        back to a sensible default on first run.                   */
+    if (!DBWFRM->LoadWindowState())
+        DBWFRM->resize(1024, 768);
     DBWFRM->SetAppTitle();
 
     DBWFRM->show();
