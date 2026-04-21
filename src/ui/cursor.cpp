@@ -25,9 +25,12 @@
 
 /*-----------------------------------------------------------------*/
 #include "assert_compat.h"
+#include "colors_compat.h"
 #include "cursor.h"
 #include "cursorimpl.h"
+#include "datamodule.h"
 #include "mainwindow.h"
+#include "palette.h"
 #include "datamodule.h"
 #include <QAction>
 #include <QPainter>
@@ -665,11 +668,52 @@ void CrFeld::DrawCursor()
         y1 = y0 + fb.pos.height;
     }
 
-    /*  Simple white outline. Legacy had a farbeffekt-bright-gewebe
-        override that flipped to black; the port keeps the single-
-        colour outline because it's good enough in practice and
-        platform-independent in pixel tests.                       */
-    p->setPen(QPen(QColor(Qt::white)));
+    /*  Cursor colour:
+          - default: white (visible on the pattern cell range-colours
+            and on the btnFace background).
+          - flips to black when the cell underneath is a bright
+            warp/weft colour, so a white outline doesn't vanish on
+            pale palettes.
+        Covers the three cases legacy handled plus the kettfarben /
+        schussfarben strips (legacy stayed white there, but the same
+        brightness check applies and helps readability).           */
+    QColor cursorColor(Qt::white);
+    auto brightnessOf = [](const QColor& _c) {
+        return (_c.red() + _c.green() + _c.blue()) / 3;
+    };
+    auto darkenOn = [&](const QColor& _c) {
+        if (brightnessOf(_c) >= 128)
+            cursorColor = QColor(Qt::black);
+    };
+    const bool hasPalette = (Data && Data->palette);
+    if (feld == GEWEBE && hasPalette
+        && ((frm->GewebeFarbeffekt && frm->GewebeFarbeffekt->isChecked())
+            || (frm->GewebeSimulation && frm->GewebeSimulation->isChecked()))) {
+        const int ii = frm->scroll_x1 + fb.kbd.i;
+        const int jj = frm->scroll_y2 + fb.kbd.j;
+        if (ii >= frm->kette.a && ii <= frm->kette.b && jj >= frm->schuesse.a
+            && jj <= frm->schuesse.b) {
+            /*  Gewebe cell > 0 means warp-up (kettfaden visible);
+                otherwise weft (schussfaden) shows. sinkingshed
+                flips the sense.                                   */
+            bool warpUp = (frm->gewebe.feld.Get(ii, jj) > 0);
+            if (frm->sinkingshed)
+                warpUp = !warpUp;
+            const int idx = warpUp ? int(frm->kettfarben.feld.Get(ii))
+                                   : int(frm->schussfarben.feld.Get(jj));
+            darkenOn(qColorFromTColor(Data->palette->GetColor(idx)));
+        }
+    } else if (feld == KETTFARBEN && hasPalette) {
+        const int ii = frm->scroll_x1 + fb.kbd.i;
+        if (ii >= 0 && ii < Data->MAXX1)
+            darkenOn(qColorFromTColor(Data->palette->GetColor(frm->kettfarben.feld.Get(ii))));
+    } else if (feld == SCHUSSFARBEN && hasPalette) {
+        const int jj = frm->scroll_y2 + fb.kbd.j;
+        if (jj >= 0 && jj < Data->MAXY2)
+            darkenOn(qColorFromTColor(Data->palette->GetColor(frm->schussfarben.feld.Get(jj))));
+    }
+
+    p->setPen(QPen(cursorColor));
     p->drawLine(x0, y0, x1, y0);
     p->drawLine(x1, y0, x1, y1);
     p->drawLine(x1, y1, x0, y1);
