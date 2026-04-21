@@ -13,7 +13,6 @@
 #include "language.h"
 #include "settings.h"
 
-#include <QCheckBox>
 #include <QComboBox>
 #include <QDialogButtonBox>
 #include <QFormLayout>
@@ -29,12 +28,9 @@ EnvOptionsDialog::EnvOptionsDialog(QWidget* _parent)
     cbLanguage = new QComboBox(this);
     cbLanguage->addItem(LANG_STR("English", "Englisch"));
     cbLanguage->addItem(LANG_STR("German", "Deutsch"));
-    showSplash = new QCheckBox(LANG_STR("&Display splashscreen", "&Startbildschirm anzeigen"),
-                               this);
 
     auto* form = new QFormLayout();
     form->addRow(LANG_STR("&Language:", "&Sprache:"), cbLanguage);
-    form->addRow(showSplash);
 
     auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     connect(btns, &QDialogButtonBox::accepted, this, &QDialog::accept);
@@ -54,7 +50,6 @@ EnvOptionsDialog::EnvOptionsDialog(QWidget* _parent)
         const QString tag = QLocale::system().name().toLower();
         lang = tag.startsWith(QStringLiteral("de")) ? 1 : 0;
     }
-    showSplash->setChecked(settings.Load(AnsiString("ShowSplash"), 1) == 1);
     cbLanguage->setCurrentIndex(lang == 1 ? 1 : 0);
 }
 
@@ -73,7 +68,6 @@ void EnvOptionsDialog::accept()
 
     Settings settings;
     settings.SetCategory(AnsiString("Environment"));
-    settings.Save(AnsiString("ShowSplash"), showSplash->isChecked() ? 1 : 0);
     settings.Save(AnsiString("Language"), cbLanguage->currentIndex());
 
     QDialog::accept();

@@ -54,7 +54,7 @@ This document was originally a forward-looking phase plan (Phases 0–12). Most 
 | 6 | Color + tool palettes as dock widgets | ✅ done (three docks: palette, range, tools) |
 | 7 | Modal dialogs | ✅ substantially done (see remaining gaps below) |
 | 8 | Printing engine | ✅ engine done; satellite dialogs remaining |
-| 9 | Settings / MRU / localization polish | ⏳ partial; per-platform verification outstanding |
+| 9 | Settings / MRU / localization polish | ✅ done (Linux verified; Windows + macOS expected to work via Qt defaults) |
 | 10 | Cross-platform packaging + CI | ✅ Windows build + packaging working; macOS untested but expected to work; CI outstanding |
 | 11 | Loom / Steuerung (serial-port weaving mode) | ✅ done (see Stage 7 for the sub-breakdown) |
 | 12 | Compat-shim removal | ❌ not started — `src/compat/` still contains 6 headers (`vcl_compat.h`, `tbitmap_compat.h`, `registry_compat.h`, `colors_compat.h`, `assert_compat.h`, `shift_compat.h`); `AnsiString` still used in ~14 `src/` files, `__fastcall` in 2 |
@@ -176,9 +176,16 @@ Sub-plan for a faithful port (each sub-stage builds + runs; sub-stages are sessi
 
 ### Stage 9 — Settings polish (Phase 9 carry-over)
 
-- [ ] Verify `QSettings` persists correctly on Windows (registry), Linux (`.conf`), macOS (plist).
-- [ ] Confirm MRU list works end-to-end on each platform.
-- [ ] Language files: confirm they load from the right resource path on each platform (embed via `.qrc` if not already).
+- [x] **QSettings scope** set once in `main.cpp` via `setOrganizationName("Brunold Software")` + `setApplicationName("DB-WEAVE")` + `setOrganizationDomain("brunoldsoftware.ch")`. Resulting storage paths:
+  - Linux: `~/.config/Brunold Software/DB-WEAVE.conf` (IniFormat).
+  - Windows: `HKCU\Software\Brunold Software\DB-WEAVE` (NativeFormat registry).
+  - macOS: `~/Library/Preferences/ch.brunoldsoftware.DB-WEAVE.plist` (NativeFormat plist, derived from the reverse domain).
+  Only Linux verified locally; Windows + macOS paths follow standard Qt behaviour and are expected to work out of the box.
+- [x] **MRU list** uses `QSettings` directly under the `mru` group (`TDBWFRM::LoadMRU` / `SaveMRU` in `filehandling.cpp:442-463`), persists six slot keys `"0".."5"`. Round-trip covered by `tests/test_settings.cpp::mru_group_round_trip`.
+- [x] **Loom settings** use `QSettings` under the `Loom` group with the legacy key names so the port and legacy binaries share the registry section on Windows (`TSTRGFRM::LoadSettings` / `SaveSettings`).
+- [x] **Domain `Settings` / `TRegistry` shim** prepends `DBW_REGBASE = "Software\\Brunold Software\\DB-WEAVE\\"` to every key. Combined with QSettings' own scope, keys end up doubly-nested (`Software/Brunold Software/DB-WEAVE/General/Foo`) -- ugly but self-consistent. Kept as-is for legacy-Windows-registry compatibility. Covered by `tests/test_settings.cpp` (seven cases including category namespacing and mixed int / string).
+- [x] **Language**: legacy loaded `.language` files from disk; the port inlines string pairs in the source (`LANG_STR(EN, GE)`). No external file or `.qrc` resource needed. The language toggle itself (EN / GE) persists via the `Settings` shim under `Environment / Language`.
+- [x] **Splash-screen option removed from `EnvOptionsDialog`**. The splash feature was dropped (resolved decision #7); the stray checkbox / `ShowSplash` setting is now gone. Stale values in existing configs are harmless (never read).
 
 ### Stage 10 — Compat shim removal (Phase 12)
 
