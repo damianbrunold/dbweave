@@ -1,557 +1,204 @@
 # DB-WEAVE → Qt 6 port plan
 
-Target: cross-platform (Windows/Linux/macOS) native C++/Qt 6 build producing single-file distributable binaries. Existing `@dbw3:file` file format must remain load-compatible. Loom/serial-port feature is optional and deferred to the last phase.
+Target: cross-platform (Windows/Linux/macOS) native C++/Qt 6 build producing single-file distributable binaries. Existing `@dbw3:file` file format must remain load-compatible.
 
-Work will be executed primarily by Claude Code in session-sized chunks. Each phase below has a clear deliverable and verification step so a session can stop at any phase boundary without leaving the tree broken.
+This document was originally a forward-looking phase plan (Phases 0–12). Most of that work has landed; what remains is captured in the **Remaining work** section at the bottom. The phase history is preserved below as context for commit-message prefixes (`port(phase-N): ...`) and for anyone reviewing the port chronologically.
 
 ---
 
 ## Ground rules for the port
 
-- **Don't rewrite, port.** Preserve existing algorithms, variable names, German domain terminology, and file structure. Translate VCL calls to Qt calls; do not refactor logic at the same time. Refactors come later, after the port compiles and round-trips files.
+- **Don't rewrite, port.** Preserve existing algorithms, variable names, German domain terminology, and file structure. Translate VCL calls to Qt calls; do not refactor logic at the same time.
 - **One module at a time.** Each commit should build and (where applicable) pass its tests.
-- **Keep the legacy tree intact** in a `legacy/` subdirectory for reference, so we can diff behaviors side by side. New code lives in `src/`, tests in `tests/`, UI files in `ui/`.
-- **No new features during the port.** If something is broken in the legacy code, reproduce the bug, not the fix.
-- **German identifiers stay German.** `einzug`, `trittfolge`, `aufknuepfung`, etc. — preserve them in class and file names.
+- **Keep the legacy tree intact** in `legacy/` for diffing; new code lives in `src/`, tests in `tests/`, UI files in `ui/`.
+- **No new features during the port.** Legacy bugs → reproduce, not fix.
+- **German identifiers stay German** (`einzug`, `trittfolge`, `aufknuepfung`, …).
 
 ---
 
-## Phase 0 — Repository reshape and tooling (0.5 day)
+## Resolved decisions (from Phase 0, 2026-04-17)
 
-Goal: make the tree ready for a Qt/CMake project without losing the old code.
+1. **Minimum Qt version:** Qt 6.5 LTS.
+2. **Build system:** CMake (≥ 3.21).
+3. **Test framework:** Qt Test.
+4. **Localization:** keep in-house `language.*` string table.
+5. **Code style:** legacy style (tabs, brace-on-same-line) via `.clang-format`; Qt-style reformat post-port.
+6. **Branching:** port on `master`, legacy code under `legacy/`.
 
-Steps:
-1. Move all legacy source files into `legacy/` (git mv). Keep `samples/`, docs (`dbw_manual.pdf`, `dbw_handbuch.pdf`), `LICENSE`, `README.txt` at the root.
-2. Create top-level directory layout:
-   ```
-   src/            # new Qt sources
-     domain/       # pure domain logic (no Qt UI, only QtCore)
-     io/           # file format, import/export
-     ui/           # QMainWindow, custom widgets, dialogs
-     print/        # QPrinter-based output
-     loom/         # QSerialPort loom driver (optional, Phase 11)
-     compat/       # VCL→Qt shim headers (short-lived)
-   ui/             # .ui files from Qt Designer
-   tests/          # Qt Test / Catch2 unit tests
-   samples/        # existing sample files, unchanged
-   cmake/          # helper modules
-   ```
-3. Create top-level `CMakeLists.txt` requiring Qt 6.5+ modules: `Core`, `Gui`, `Widgets`, `PrintSupport`, `SerialPort` (optional via `option()`), `Test`.
-4. Add `.gitignore` for CMake build dirs, Qt Creator project files, `build/`, `*.user`.
-5. Add `.clang-format` matching existing style (tabs + brace-on-same-line) so the port remains visually similar.
-6. Verify: `cmake -S . -B build && cmake --build build` runs successfully and produces an empty `dbweave` binary that opens a blank `QMainWindow` titled "DB-WEAVE".
+## Resolved decisions (added during implementation)
 
-Deliverable: empty Qt app that builds on Linux.
+7. **Splash screen:** not ported — intentionally dropped.
+8. **Redraw-all menu (F5):** not ported — every edit triggers a full recalc/redraw, so a manual redraw is unnecessary.
+9. **Printer setup menu entry:** dropped for now; Qt's print dialog covers the need via the main Print action.
+10. **Help integration:** F1 → `https://www.brunoldsoftware.ch/<help-subpage>` (per-language pages, subpage TBD); "Brunold Software Online" menu → same site root. Both via `QDesktopServices::openUrl`.
+11. **About-dialog easter egg:** dropped.
+12. **TfGeradeZ / TfGeradeS trittfolge styles:** intentionally dropped (see `filesave.cpp:196` — file format keeps the slots null for compatibility).
+13. **Einzug/Trittfolge "fixiert" feature:** dropped as obsolete.
+14. **Three color pickers:** kept as three separate dialogs (`ChooseRGBDialog`, `ChooseHSVDialog`, `ChoosePaletteDialog`), matching legacy's three `farbauswahl*` forms.
+15. **Silent-print command line:** kept. `dbweave /p <file>` loads the file, prints it without any dialog, and exits. Used for batch printing from shortcuts.
 
 ---
 
-## Phase 1 — VCL compatibility shim (1 day)
+## Phase history (summary)
 
-Goal: a tiny header set that lets legacy `.cpp` files compile under Qt without rewriting every line. This is a **translation scaffold**, not a permanent abstraction — it gets deleted module-by-module as code is modernized.
-
-Files to create under `src/compat/`:
-- `vcl_compat.h` — maps the following:
-  - `AnsiString` → `QString` (typedef); provide free-function wrappers for `c_str()`, `Length()`, `SubString()`, `Pos()`, `+` concatenation.
-  - `__fastcall`, `__published` → empty macros.
-  - `True`/`False` → `true`/`false`.
-  - `NULL` stays.
-  - `TColor` (VCL 0x00BBGGRR) → helper `qColorFromTColor(TColor)` / `tColorFromQColor(QColor)` in `colors_compat.h`.
-- `tstringlist_compat.h` — `TStringList` thin wrapper around `QStringList` with `Add`, `Count`, `Strings[]`, `LoadFromFile`, `SaveToFile`.
-- `tcanvas_compat.h` — **do not emulate `TCanvas`.** Instead, each draw routine will be ported to take a `QPainter&` directly. The shim intentionally stops here to force the real port of drawing code.
-- `tbitmap_compat.h` — `TBitmap` → `QImage` wrapper used only by import/export.
-- `registry_compat.h` — tiny wrapper around `QSettings` exposing `ReadString/WriteString/ReadInteger/WriteInteger` mirroring the legacy `TRegistry` calls.
-
-Verify: a smoke test that constructs a shim `TStringList`, adds strings, saves/loads to a temp file.
-
-Deliverable: shim headers + unit tests.
+| Phase | Scope | Status |
+|---|---|---|
+| 0 | Repo reshape + CMake + empty Qt app | ✅ done (commit `aa6f237`) |
+| 1 | VCL compatibility shim (`src/compat/`) | ✅ done |
+| 2 | Pure domain core (`src/domain/`: colors, fileformat, felddef, zentralsymm, palette, settings, rangecolors) | ✅ done |
+| 3 | File I/O round-trip | ✅ done (merged with Phase 5) |
+| 4 | Rendering primitives (`draw_cell`, golden-pixel tests) | ✅ done |
+| 5 | Main document window (TDBWFRM + every editor op, canvas, menus, MRU, …) | ✅ done |
+| 6 | Color + tool palettes as dock widgets | ✅ done (three docks: palette, range, tools) |
+| 7 | Modal dialogs | ✅ substantially done (see remaining gaps below) |
+| 8 | Printing engine | ✅ engine done; satellite dialogs remaining |
+| 9 | Settings / MRU / localization polish | ⏳ partial; per-platform verification outstanding |
+| 10 | Cross-platform packaging + CI | ✅ Windows build + packaging working; macOS untested but expected to work; CI outstanding |
+| 11 | Loom / Steuerung (serial-port weaving mode) | ❌ not started (near-term, pre-release) |
+| 12 | Compat-shim removal | ❌ not started — `src/compat/` still contains 6 headers (`vcl_compat.h`, `tbitmap_compat.h`, `registry_compat.h`, `colors_compat.h`, `assert_compat.h`, `shift_compat.h`); `AnsiString` still used in ~14 `src/` files, `__fastcall` in 2 |
 
 ---
 
-## Phase 2 — Domain core port (1–2 weeks)
+## Remaining work
 
-Goal: every pure-domain unit compiles against Qt only (no VCL, no UI) and has basic unit tests.
+Ordered approximately by user-visible value and by release-gating status. Items marked **[release blocker]** are needed for the first non-loom release; **[near-term]** for the following release.
 
-Order (strictly bottom-up by dependency, to minimize forward references):
+### Stage 1 — Dead-menu wire-ups and trivial glue  [release blocker]
 
-1. `utilities` — generic helpers.
-2. `colors`, `rangecolors`, `palette` — color model.
-3. `felddef` — field definition (core data structure).
-4. `cursor` (+ `cursorimpl.h`) — editing cursor.
-5. `einzug` (+ `einzugimpl.h`) — threading.
-6. `trittfolge` — treadling.
-7. `aufknuepfung` — tie-up.
-8. `rapport` (+ `rapportimpl.h`), `rapportieren` — repeats.
-9. `blockmuster`, `blockmuster_muster` — block patterns.
-10. `zentralsymm` — central symmetry.
-11. `hilfslinien` — guide lines.
-12. `schlagpatrone`, `steigung` — cartridge/gradient.
-13. `bereiche`, `range` — ranges/regions (note: `range.cpp` is editor-level, may defer to Phase 5).
-14. `undoredo` — keep interface identical; replace VCL containers with `QList`/`std::vector`.
-15. `settings` — swap `TRegistry` for `QSettings`.
-16. `language`, `lang_main`, `dbw3_strings.h` — keep the in-house string table; it's already portable.
+Menu entries currently `setEnabled(false)`:
 
-For each unit:
-- Copy `legacy/<unit>.cpp,.h` → `src/domain/<unit>.cpp,.h`.
-- Strip `#include <vcl\vcl.h>`, `#pragma hdrstop`, `__fastcall`, `__published`.
-- Replace VCL types with shim or Qt equivalents.
-- Write a minimal Qt Test exercising one happy path and one edge case.
-- Commit per unit.
+- [x] **Cursor locked within rapport** (Ctrl+Q) — toggle wired to `cursorhandler->SetCursorLocked`; enabled-state follows `RappViewRapport` (auto-unchecks when repeat visibility is turned off, matching legacy `dbw3_form.cpp:865`).
+- [x] **Help topics** (F1) → `QDesktopServices::openUrl` to `https://www.brunoldsoftware.ch/help` (EN) / `/hilfe` (GE). Subpage path is provisional and should be confirmed once the website adds the help section.
+- [x] **Brunold Software Online** → `QDesktopServices::openUrl` to `https://www.brunoldsoftware.ch/`.
+- [x] Removed **Redraw** menu entry and F5 shortcut.
+- [x] Removed **Printer setup** menu entry.
 
-Verify at end of phase: `tests/` runs green; `src/domain/` links as a static library with no Qt Widgets/Gui dependency (Core only, plus Gui for `QColor`).
+### Stage 2 — Weft/warp ratio (Schuss/Kett-Verhältnis)  [release blocker]
 
-Deliverable: `dbweave-domain` static library + tests.
+Port `legacy/einstellverh_form.*` and the `faktor_kette` / `faktor_schuss` state.
 
----
+- [ ] Add `double faktor_kette = 1.0, faktor_schuss = 1.0` members to TDBWFRM; reset to 1.0 in `FileNew`.
+- [ ] Load/save the two fields in `fileload.cpp` / `filesave.cpp` (unknown-field tolerant — safe to write always). **Do this first** so existing .dbw files with non-unit ratios round-trip.
+- [ ] Layout in `patterncanvas.cpp:recomputeLayout`: branch on `faktor_schuss` vs `faktor_kette` and stretch the opposite axis (legacy `CalcGrid` formula in `dbw3_form.cpp:412–427`). Feld*.gw/gh assignments already respect two locals.
+- [ ] Mirror the same max/min ratio math in `printinit.cpp:57–88` and the bitmap/PDF export sizing path. Overview dialog (`overviewdialog.cpp`) inherits from canvas layout.
+- [ ] Audit `draw.cpp` / `hilfslinien.cpp` for hard-coded `gw == gh` assumptions; port the legacy `faktor_*==1.0` fast path if hot.
+- [ ] Port the dialog as `.ui` + QDialog subclass, two `QDoubleSpinBox` (0.01..10.0, default 1.0). Wire to the existing `actVerhaeltnis` menu entry; remove its `setEnabled(false)`.
+- [ ] Round-trip test with a sample using non-unit ratios.
+- [ ] Verify mouse-hit-test and selection rubber-band still work with non-square cells (spot check — Feld reads should auto-handle it).
 
-## Phase 3 — File I/O round-trip (3–5 days)
+### Stage 3 — Overview print  [near-term]
 
-Goal: load and save every sample file in `samples/` byte-identically (or semantically equivalent if whitespace differs).
+- [ ] Port the overview dialog's Print button (legacy `overview_form.cpp:199 SBPrintClick`): renders a thumbnail fabric preview directly to `QPrinter`. Similar shape to the main print path; share the print-dialog setup.
 
-Steps:
-1. Port `fileformat.cpp/.h` → `src/io/fileformat.*`. The `@dbw3:file` format is a simple indented text format; `FfBuffer` becomes a thin `QByteArray` wrapper.
-2. Port `fileload.cpp`, `filesave.cpp`, `filehandling.cpp`.
-3. Port `loadmap.h`, `loadoptions.h`.
-4. Port `mru.cpp` against `QSettings`.
-5. Defer `import.cpp`, `importbmp.cpp`, `export.cpp`, `exportbitmap.cpp` until Phase 8 (they touch UI/dialog code).
-6. Write a round-trip test: for every file in `samples/`, load → save to temp → re-load → assert domain equality. Use domain-level equality operators (add them as needed).
+### Stage 4 — Print satellite dialogs  [near-term]
 
-Verify: all sample files round-trip cleanly.
+- [ ] **Print part…** (`actPrintRange`, Ctrl+L): port `legacy/printselection_form` — range pickers for kette/schuss/einzug/trittfolge/aufknuepfung subsets.
+- [ ] **Print preview**: wrap the existing print callback in `QPrintPreviewDialog`. Add a menu entry / toolbar button.
 
-Deliverable: `dbweave-io` static library + round-trip tests.
+### Stage 5 — Highlight mode (F12)  [near-term]
 
----
+- [ ] Port `legacy/highlight.cpp` as an overlay pass in `draw.cpp` (second painter pass with alpha tint).
+- [ ] Add `highlightMode` flag + mouse source-cell tracking in `mousehandling.cpp`.
+- [ ] Wire the existing `actHighlight` QAction (F12); remove `setEnabled(false)`.
 
-## Phase 4 — Rendering core (1 week)
+### Stage 6 — Stale comment and genuine-stub cleanup  [release blocker]
 
-Goal: render a weaving pattern (loaded via Phase 3) into a `QPainter` on an off-screen `QImage`, save as PNG, visually compare to a reference image.
+Walk the "stub"/"deferred" comments identified in the 2026-04-21 audit. Almost all are stale; handle in one housekeeping commit.
 
-Steps:
-1. Port `draw.cpp` → `src/ui/draw.cpp`. The legacy code takes a `TCanvas*`; the new signature is `void draw(QPainter& p, const Entwurf& e, const DrawOptions& opts)`. Do not preserve the `TDBWFRM::` method form — make these free functions on a pattern object. This is the one deliberate structural change during the port; everything else stays member-shaped.
-2. Port color translation (`TColor` → `QColor`) in the rendering path.
-3. Port `highlight.cpp`, `hilfslinien.cpp` (rendering side).
-4. Do **not** port `redraw.cpp`, `invalidate.cpp` yet — those are tied to the live widget and come in Phase 5.
-5. Write a golden-image test: render a sample file to PNG and compare to a checked-in reference (pixel-exact or with small tolerance).
+Stale comments to remove / reword:
+- [ ] `einzug.cpp:16–20` — Fixiert is obsolete, not "stubbed pending recalc".
+- [ ] `cursor.cpp:670` — simple outline is intentional, drop "deferred" wording.
+- [ ] `undoredo.cpp:18–22` — port note is outdated; most referenced methods now have real bodies.
+- [ ] `range.cpp:13–15` — TDBWFRM stub methods were removed; rewrite.
+- [ ] `trittfolge.cpp:16–17` — Tf*Click handlers are wired (via style QActions + Rearrange); TfGeradeZ/S intentionally dropped.
+- [ ] `filehandling.cpp:17` / `filesave.cpp:23,199` — close-prompt is ported; reword.
+- [ ] `importwif.cpp:533` — AskSave gate is ported; reword.
+- [ ] `choosecolordialog.h:19` / `farbverlaufdialog.cpp:53` — the three real pickers are in use; drop "QColorDialog stubs" language.
+- [ ] `blockmusterdialog.h:19` / `fixeinzugdialog.h:16` — keyboard nav is ported; check for missing key combinations vs. legacy then drop the "deferred" wording.
+- [ ] `mainwindow.h:422` "Drawing stubs" — rendering is complete; drop or rewrite.
+- [ ] `aboutdialog.h:14` — easter egg is dropped by decision; remove the note.
 
-Verify: golden-image tests pass on Linux.
+Genuine empty bodies to decide on (keep empty / delete / wire):
+- [ ] `TDBWFRM::SetCursor(int, int) {}` (mainwindow.cpp:1805) — the port uses `SetKeyboardPos` directly; likely deletable.
+- [ ] `TDBWFRM::UpdateScrollbars() {}` (mainwindow.cpp:1818) — likely absorbed by Qt's automatic scrollbars in `patterncanvas`; likely deletable.
+- [ ] `setblatteinzug.cpp:15` deferred `update()` — investigate: does the current code end up repainting correctly without the deferred call?
 
-Deliverable: headless rendering + golden-image CI job.
+### Stage 7 — Loom / Steuerung (weaving mode)  [near-term, pre-release]
 
----
+Entire Phase 11. Biggest remaining slice. Recommended sub-order:
 
-## Phase 5 — Main document window (2–3 weeks — the biggest phase)
+- [ ] `comutil.cpp` protocol helpers (packet framing, acks) on top of the existing `serialport.cpp`.
+- [ ] `steuerung_pos.cpp` — pure position math (testable headless).
+- [ ] `steuerung.cpp` — non-UI state engine.
+- [ ] `steuerung_form.cpp` as a secondary window, with its six split units (`_draw`, `_kbd`, `_mouse`, `_popup`, `_pos`, `_weben`).
+- [ ] Satellite dialogs: `strgoptloom_form`, `strgpatronicindparms_form`, `strggoto_form`, `strginfo_form`.
+- [ ] Wire the existing `actWeave` menu entry (Ctrl+W); remove `setEnabled(false)`.
+- [ ] Gate behind the existing `DBWEAVE_BUILD_LOOM` CMake option.
 
-Goal: a working interactive document window that can open a file, display it, scroll, zoom, select, and save.
+### Stage 8 — Command-line + packaging + CI
 
-Steps (order matters — each step leaves a usable app):
+- [ ] Port legacy `/p <file>` silent-print mode via `QCommandLineParser` in `main.cpp`: load, print without dialog, exit (legacy `HandleCommandlinePrint` in `commandline.cpp`).
+- [x] Linux build.
+- [x] Windows build + packaging.
+- [ ] macOS build + `macdeployqt` + (ad-hoc) signed `.dmg` — expected to work but not yet verified on a mac.
+- [ ] GitHub Actions workflow building all three platforms on push to `master`.
 
-1. Create `PatternCanvas : QWidget` with `paintEvent` calling the Phase 4 `draw()` function. Hook up scroll bars via `QScrollArea` (or manual `QAbstractScrollArea`).
-2. Create `MainWindow : QMainWindow` hosting the canvas. Menu bar and toolbars stubbed.
-3. Wire File → Open / Save / Save As / Recent Files to Phase 3 I/O.
-4. Port `zoom.cpp`, `scrolling.cpp`, `kbdscroll.cpp` — adapt to Qt scroll events.
-5. Port `redraw.cpp`, `invalidate.cpp` — collapse into `update()` / `update(QRect)` calls. This is a simplification; VCL's manual invalidation is unnecessary with Qt.
-6. Port `mousehandling.cpp`, `kbdhandling.cpp` — translate `TMouseEvent`/`TKeyEvent` to `QMouseEvent`/`QKeyEvent`.
-7. Port `selection.cpp`, `range.cpp` — editing selection + rubber-band.
-8. Port `undoredo.cpp` wiring (the logic was already ported in Phase 2; now hook menu actions).
-9. Port `tools.cpp` — drawing tools (line, rectangle, ellipse, constrained).
-10. Port editing ops: `move`, `insert`, `insertbindung`, `delete`, `clear`, `recalc`, `idle`.
-11. Port state operations: `setaufknuepfung`, `setblatteinzug`, `setcolors`, `seteinzug`, `setfarbe`, `setgewebe`, `settrittfolge`.
-12. Port `toolbar.cpp`, `statusbar.cpp`, `popupmenu.cpp` as Qt equivalents (`QToolBar`, `QStatusBar`, context menus).
-13. Port `init.cpp` (startup) — becomes `MainWindow` constructor + app bootstrap in `main.cpp`.
+### Stage 9 — Settings polish (Phase 9 carry-over)
 
-Verify at end of phase: user can open any sample file, see it rendered correctly, make an edit, undo/redo, save. This is the minimum viable port.
+- [ ] Verify `QSettings` persists correctly on Windows (registry), Linux (`.conf`), macOS (plist).
+- [ ] Confirm MRU list works end-to-end on each platform.
+- [ ] Language files: confirm they load from the right resource path on each platform (embed via `.qrc` if not already).
 
-Deliverable: working editor (no dialogs yet — they use the existing `QInputDialog`/`QColorDialog` stand-ins or are stubbed with TODOs).
+### Stage 10 — Compat shim removal (Phase 12)
 
----
-
-## Phase 6 — Color palette and tool palette (3–5 days)
-
-These are floating "palette" windows used constantly during editing, so port them before the rest of the dialogs.
-
-Steps:
-1. `FarbPalette` (`farbpalette_form`) → `PalettePanel` as a `QDockWidget` in the main window.
-2. `ToolpaletteForm` (`toolpalette_form`) → `ToolPanel` as a `QDockWidget`.
-3. Port `colors.cpp` UI wiring and the three color-picker forms (`farbauswahl_form`, `farbauswahl1_form`, `farbauswahl2_form`). Consider replacing the HSV picker with `QColorDialog` — decision point: keep custom picker for fidelity, or adopt Qt's for speed? Default: keep custom picker.
-
-Deliverable: palette/tool panels dockable in main window.
+Delete `src/compat/` module by module after everything ships:
+- [ ] `AnsiString` → `QString` directly across the tree.
+- [ ] `TStringList` wrapper → `QStringList` directly.
+- [ ] `TRegistry` wrapper → `QSettings` directly.
+- [ ] `TBitmap` wrapper → `QImage` directly.
+- [ ] Strip remaining `__fastcall` / `__published` macros.
+- [ ] Reformat to Qt style via `.clang-format`.
+- [ ] Archive `legacy/` to a separate branch once no `src/` file references it.
 
 ---
 
-## Phase 7 — Dialogs batch port (2 weeks)
+## Effort summary (remaining)
 
-Goal: every modal dialog working via `.ui` files.
-
-Group dialogs and port in batches of ~5 per sitting. For each dialog:
-- Copy legacy `.dfm` into a text file for reference (it's human-readable).
-- Recreate the layout in Qt Designer → `ui/<name>.ui`.
-- Port the `_form.cpp` logic into a `QDialog` subclass using `Ui::<Name>` generated class.
-- Wire signals via `connect(...)`.
-
-Recommended batches:
-1. **Info dialogs**: `about`, `splash_form`, `techinfo_form`, `entwurfsinfo_form`, `strginfo_form`.
-2. **Navigation/goto**: `cursordir_form`, `cursordirection_form`, `cursorgoto_form`, `strggoto_form`, `overview_form`.
-3. **Properties/options**: `properties_form`, `envoptions_form`, `xoptions_form`, `einstellverh_form`, `entervv_form`.
-4. **Editing assistants**: `blockmuster_form`, `einzugassistent_form`, `fixeinzug_form`, `rapport_form`, `farbverlauf_form`.
-5. **Color selection**: `selcolor_form` (plus the three color-picker forms already done in Phase 6).
-6. **User-defined patterns**: `userdef_entername_form`, `userdefselect_form`, `userdef.cpp`.
-7. **Loom control shell**: `strgoptloom_form`, `strgpatronicindparms_form` (UI only; serial I/O comes in Phase 11).
-8. **Import/export**: `importbmp_form`, `loadparts_form`; also port `import.cpp`, `importbmp.cpp`, `export.cpp`, `exportbitmap.cpp`.
-
-Verify: each dialog opens, accepts input, applies its effect identically to the legacy version. Manual QA against the legacy binary isn't possible (no build env), so cross-check against the PDF manual and the `.dfm` source for expected behavior.
-
-Deliverable: feature-complete UI minus printing and loom.
-
----
-
-## Phase 8 — Printing (1–1.5 weeks)
-
-Steps:
-1. Port `print.*`, `print_base.h`, `printinit.cpp`, `printdraw.cpp`, `printextent.cpp`, `printprint.cpp` against `QPrinter` + `QPainter`. The legacy code is structurally compatible: it draws to a canvas; `QPainter` works on both screen and printer.
-2. Port `pagesetup_form` → use `QPageSetupDialog` if possible, else custom.
-3. Port `printpreview_form` → `QPrintPreviewDialog`.
-4. Port `printselection_form`, `printcancel_form`.
-5. Verify print output matches the legacy binary via PDF comparison (print to PDF on both platforms, diff pages).
-
-Deliverable: print + preview + page setup.
-
----
-
-## Phase 9 — Settings, MRU, localization polish (2–3 days)
-
-- Verify `QSettings`-backed settings persist across sessions on all three platforms (Windows registry, Linux `.conf`, macOS plist).
-- Verify MRU list works.
-- Port the language files: keep `language.*` as-is internally; ensure files load from the right resource path on each platform (embed via Qt Resources `.qrc`).
-
-Deliverable: settings persist, language switching works.
-
----
-
-## Phase 10 — Cross-platform packaging (1 week)
-
-Steps:
-1. Linux: build an AppImage via `linuxdeploy` + `linuxdeploy-plugin-qt`. Test on Ubuntu LTS + Debian stable.
-2. Windows: cross-build with MSVC or MinGW, package with `windeployqt` + `NSIS` (reuse the existing `legacy/dbw.nsi` script, adjusted file names).
-3. macOS: build on a mac (or GitHub Actions macOS runner), package with `macdeployqt` and create a signed `.dmg` if a developer cert is available; otherwise ad-hoc signing.
-4. Add a GitHub Actions workflow building all three on every push to `master`.
-
-Deliverable: three signed (or ad-hoc signed) installers per release.
-
----
-
-## Phase 11 — Loom/serial port (optional, 1 week)
-
-Only start once everything else ships.
-
-Steps:
-1. Port `comutil`, `combase.h`, `loominterface.h` against `QSerialPort`. The `SerialPort` class is small (open/close/send/receive/purge) — a 1:1 map.
-2. Port `steuerung_form.*` as a `QMainWindow`-like secondary window, with its six split units (`steuerung_draw`, `_kbd`, `_mouse`, `_popup`, `_pos`, `_weben`).
-3. Gate the feature behind the Qt6 `SerialPort` optional CMake dependency. If the user builds without it, the loom menu is hidden.
-
-Deliverable: loom-control feature restored.
-
----
-
-## Phase 12 — Cleanup and shim removal (1 week)
-
-Delete the `src/compat/` shims module by module and replace the remaining references with idiomatic Qt:
-- `AnsiString` → `QString` directly everywhere.
-- Custom `TStringList` wrapper → `QStringList` directly.
-- Remove any straggling `__fastcall`/`__published` macros.
-
-After this, the `legacy/` folder can be moved out of the primary repo (archived on a branch or separate repo).
-
----
-
-## Effort summary
-
-| Phase | Rough effort |
+| Stage | Rough effort |
 |---|---|
-| 0 Bootstrap | 0.5 d |
-| 1 Compat shim | 1 d |
-| 2 Domain core | 1–2 w |
-| 3 File I/O | 3–5 d |
-| 4 Rendering core | 1 w |
-| 5 Main window | 2–3 w |
-| 6 Palettes | 3–5 d |
-| 7 Dialogs | 2 w |
-| 8 Printing | 1–1.5 w |
+| 1 Dead-menu wire-ups | 0.5 d |
+| 2 Weft/warp ratio | 1–2 d |
+| 3 Overview print | 0.5–1 d |
+| 4 Print satellite dialogs | 2–3 d |
+| 5 Highlight mode | 2–3 d |
+| 6 Stub/comment cleanup | 1 d |
+| 7 Loom / Steuerung | 2–3 w |
+| 8 Command-line + packaging + CI | 1–1.5 w |
 | 9 Settings polish | 2–3 d |
-| 10 Packaging | 1 w |
-| 11 Loom (optional) | 1 w |
-| 12 Cleanup | 1 w |
-| **Total** | **≈ 3–5 months** of Claude-driven work with your review |
+| 10 Shim removal | 1 w |
+| **Total** | **≈ 6–9 weeks** |
+
+Stages 1–6 alone get to a shippable non-loom release in ≈ 1–2 weeks; Stage 7 gates the pre-release feature-complete milestone.
 
 ---
 
 ## Per-session workflow for Claude Code
 
 Each session should:
-1. Read this plan, identify the current phase and next unstarted step.
-2. Work through one or two steps — a step = one module ported + its test written + build green.
-3. Update the checklist at the bottom of this file (add it as checkboxes once Phase 0 starts).
-4. Commit with a message pinning the phase: `port(phase-2): migrate einzug.cpp to Qt`.
+1. Pick the next unchecked item from a Stage above.
+2. Work through it — port + test + build green — without spilling into adjacent items.
+3. Tick the checkbox and commit with a message pinning the stage: `port(stage-2): add Schuss/Kett-Verhältnis dialog and wiring`.
 
 Stop criteria per session:
 - Build stays green.
-- New tests pass.
-- No cross-module half-ports (finish the unit you started).
-
----
-
-## Resolved decisions
-
-Settled at the start of Phase 0 on 2026-04-17:
-
-1. **Minimum Qt version:** Qt 6.5 LTS.
-2. **Build system:** CMake (≥ 3.21).
-3. **Test framework:** Qt Test.
-4. **Localization:** keep in-house `language.*` string table; revisit in Phase 12.
-5. **Code style:** legacy style (tabs, brace-on-same-line) via `.clang-format`; Qt-style reformat in Phase 12.
-6. **Branching:** port on `master`, with legacy code relocated under `legacy/`.
-
----
-
-## Progress checklist
-
-### Phase 0 — Repository reshape and tooling
-- [x] All 316 legacy source/resource files moved to `legacy/`.
-- [x] New directory tree created: `src/{domain,io,ui,print,loom,compat}`, `ui/`, `tests/`, `cmake/`.
-- [x] Top-level `CMakeLists.txt` with Qt 6.5 LTS requirement and `DBWEAVE_BUILD_TESTS` / `DBWEAVE_BUILD_LOOM` options.
-- [x] `src/CMakeLists.txt` building a placeholder `dbweave` executable.
-- [x] `src/main.cpp` opens an empty `QMainWindow` titled "DB-WEAVE".
-- [x] `tests/CMakeLists.txt` + `tests/test_smoke.cpp` (Qt Test).
-- [x] `.gitignore` and `.clang-format` in place.
-- [x] `CLAUDE.md` updated to document the new layout and Qt build commands.
-- [x] **Build verification** — configure + compile + link + ctest all green on Debian 13 / Qt 6.8.2 / CMake 3.31 / Ninja.
-- [x] First commit (`aa6f237`).
-
-### Phase 1 — VCL compatibility shim
-- [x] `src/compat/CMakeLists.txt` (INTERFACE library `dbweave_compat`).
-- [x] `src/compat/vcl_compat.h` — `AnsiString`/`String` → `QString`, `__fastcall`/`__published`/`True`/`False` macros.
-- [x] `src/compat/colors_compat.h` — `TColor` ↔ `QColor` with VCL's BBGGRR byte order preserved.
-- [x] `src/compat/tstringlist_compat.h` — `TStringList` wrapper over `QStringList` with `Add`/`Count`/`Clear`/`[]`/`Strings[]`/`LoadFromFile`/`SaveToFile`.
-- [x] `src/compat/tbitmap_compat.h` — `TBitmap` wrapper over `QImage` (sizes + file I/O; pixel drawing deliberately not shimmed).
-- [x] `src/compat/registry_compat.h` — `TRegistry` wrapper over `QSettings` with `OpenKey`/`CloseKey`/`ValueExists`/`ReadInteger`/`WriteInteger`/`ReadString`/`WriteString`.
-- [x] `src/compat/assert_compat.h` — `dbw3_assert` → `Q_ASSERT`; `dbw3_trace` → `qDebug()`.
-- [x] `tests/test_compat.cpp` — five test cases across all shims, all green.
-
-### Phase 2 — Domain core port
-
-Revised ordering as of commit bringing in `fileformat`: `utilities.cpp`
-is actually a batch of `TDBWFRM::` main-window editor handlers (despite
-the name) and has been moved to Phase 5. `fileformat` moved up from
-Phase 3 because `felddef`'s `Read`/`Write` methods depend on its
-`FfReader`/`FfWriter` classes.
-
-- [x] `colors` (RGB ↔ HSV).
-- [x] `fileformat` (`@dbw3:file` text reader/writer; `FfFile` replaced Win32 `HANDLE` with `std::FILE*`; `FieldHexToBinary` lifted out of legacy `fileload.cpp`).
-- [x] `loadmap.h` (FIELD_MAP / SECTION_MAP DSL macros used by every `Read()`).
-- [x] `felddef` (Feld{Vector,Grid}{Char,Short,Bool} containers, file round-trip via fileformat).
-- [x] `zentralsymm` (pure-algo central-symmetry searcher).
-- [x] `palette` (236-colour palette with forward-compatible format-3.7 save and legacy-format read; `COLORREF`/`BYTE`/`RGB`/`GetRValue`/`GetGValue`/`GetBValue` added to `compat/colors_compat.h`; `LOGPALETTE` kept byte-exact).
-- [x] `settings` (over the `TRegistry` shim → `QSettings`).
-- [ ] **Remainder moved to Phase 5.** Triage showed every remaining `legacy/*.cpp` file on the Phase 2 list either (a) contains `TDBWFRM::` or `TBlockmusterForm::` method bodies (`utilities`, `bereiche`, `blockmuster_muster`, `clear`, `init`), or (b) references global singletons `DBWFRM`/`Data` from within its core logic (`cursor`, `einzug`, `trittfolge`, `aufknuepfung`, `rapport`, `rapportieren`, `blockmuster`, `hilfslinien`, `schlagpatrone`, `steigung`, `undoredo`, `language`, `lang_main`). Porting these without the main window requires a dependency-injection refactor that the ground rules disallow during the port. They will be ported in Phase 5 alongside `TDBWFRM`.
-- [ ] `dbw3_base.h` foundation types (`PT`, `SZ`, `RANGE`, `RAPPORT`, `FeldBase*`) — the type definitions are pure but the virtual `Clear()`/`ScrollX()`/`ScrollY()` bodies in `bereiche.cpp`/`clear.cpp`/`init.cpp` depend on `Data->` and `DBWFRM->`. Moved to Phase 5.
-- [ ] `rangecolors` — depends on `dbw3_base.h` constants plus `TCanvas` for `GetDeviceCaps`. Moved to Phase 4 (rendering) where the Qt `QScreen` replacement naturally belongs.
-- [ ] `dbw3_strings.h` — pure string-table header; port early in Phase 5 when `language`/`lang_main` lands.
-
-### Phase 3 — File I/O round-trip
-
-With `fileformat` already ported in Phase 2, this phase becomes smaller:
-
-- [ ] `fileload`, `filesave`, `filehandling`.
-- [ ] `loadmap.h`, `loadoptions.h`.
-- [ ] `mru`.
-- [ ] Round-trip test against every file in `samples/`.
-
-### Phase 4 — Rendering core
-
-Triage on first try showed that `draw.cpp` (580 lines) and every other
-Phase-4 candidate is a pile of `TDBWFRM::` methods that reach into the
-main window's instance state (scroll offsets, `righttoleft`,
-`toptobottom`, `Canvas`, etc.). The only truly standalone rendering
-primitives are `PaintCell` / `ClearCell`, which appear as free `inline`
-functions in `legacy/dbw3_form.h`. They are the leaves every higher-
-level Draw* method dispatches to.
-
-- [x] `PaintCell` / `ClearCell` ported as free functions in
-  `src/ui/draw_cell.{h,cpp}`. Signature change (the one deliberate
-  structural change of Phase 4): takes `QPainter&` + `QColor` instead
-  of `TCanvas*` + `TColor`, and the `NUMBER` darstellung accepts the
-  font height as an explicit parameter instead of reading
-  `DBWFRM->currentzoom`. Anti-aliasing is disabled for deterministic
-  output.
-- [x] `DARSTELLUNG` enum moved from `dbw3_base.h` into
-  `src/domain/enums.h` (it is a pure-value enum used both by the
-  domain Feld* types and by the renderer).
-- [x] Golden-pixel tests in `tests/test_draw_cell.cpp` cover
-  `ClearCell` + all nine geometric darstellung variants +
-  `NUMBER` fallback-to-filled-rect (font-rendered path not tested
-  because font rasterisation is not portable enough for exact
-  pixel checks).
-- [ ] Everything else in `draw`, `highlight`, `hilfslinien` remains
-  tangled with `TDBWFRM::` state and moves to Phase 5, where it
-  will be ported against the reconstructed `MainWindow` member
-  variables. A full-pattern golden-image test that renders a loaded
-  `samples/*.dbw` file end-to-end will be written once the
-  document-model types (FeldGewebe etc.) are available from
-  Phase 5.
-
-### Phase 5 — Main document window
-
-This phase has grown to subsume every legacy unit that touches either
-the `TDBWFRM` instance state or the `Data` / `DBWFRM` globals (see
-Phase-2/Phase-3/Phase-4 triage). The port lands the foundation layer
-first so every subsequent slice has a place to plug in.
-
-Landed:
-- [x] `src/ui/dbw3_base.h` — `PT`, `SZ`, `RAPPORT`, `RANGE`, `GRIDPOS`,
-  `GRIDSIZE`, `INPUTPOS`, `Klammer`, `HlineBar` value types plus the
-  full `FeldBase` / `FeldBase2` / `FeldBase3` class hierarchy
-  declarations (`FeldBlatteinzug`, `FeldKettfarben`, `FeldSchussfarben`,
-  `FeldEinzug`, `FeldAufknuepfung`, `FeldTrittfolge`, `FeldGewebe`).
-- [x] `src/ui/datamodule.{h,cpp}` — minimal `TData` with MAXX/Y
-  dimensions, `Palette*`, default colour indices. The VCL dialog grab-
-  bag (`TPrinterSetupDialog` et al.) is not mirrored — replaced by
-  on-demand QDialog calls when those dialogs land in Phase 7.
-- [x] `src/ui/mainwindow.{h,cpp}` — Phase-5 skeleton `class TDBWFRM :
-  public QMainWindow` with the four scroll-offset members. Members and
-  methods are added here as the units that need them are ported.
-- [x] `src/ui/init.cpp` — `FeldBase*` constructors (dimensions +
-  darstellung defaults) and `ScrollX`/`ScrollY` bodies reading
-  `DBWFRM->scroll_{x1,x2,y1,y2}`.
-- [x] `src/ui/clear.cpp` — `FeldBase::Clear` bodies reading `Data->`
-  config (MAXX1, defcolorh, defcolorv).
-- [x] `src/main.cpp` — updated to construct `Data` and `DBWFRM`
-  globals, show the window, and tear both down cleanly on exit.
-- [x] `tests/test_mainwindow_skeleton.cpp` — 8 cases covering TData
-  defaults, TDBWFRM scroll offsets, Feld* construction/Clear
-  semantics (including the blatteinzug "every 4th thread" default
-  pattern), and ScrollX/ScrollY reading mainwindow offsets.
-
-To port (in dependency order):
-- [x] `language`, `dbw3_strings.h` — in-house string table, UTF-8
-  transcoded. `lang_main.cpp` is deferred until a menu exists to
-  receive the captions.
-- [x] `undoredo` — circular-ring undo/redo of the seven input Feld*
-  containers plus kbd position and einzug/trittfolge style toggles.
-  TDBWFRM expanded with the seven owned Feld* members, fifteen
-  QAction toggles (einzug/trittfolge styles + ViewSchlagpatrone),
-  and stub RecalcGewebe / CalcRangeKette / CalcRangeSchuesse /
-  CalcRapport / SetModified / SetCursor / SetAppTitle methods to
-  satisfy the undo restore path.
-- [ ] `bereiche` (Range1..9 click handlers), `utilities` (fill-twill /
-  swap-side / lancierung), `clear.cpp` TDBWFRM:: methods, `init.cpp`
-  TDBWFRM:: methods.
-- [x] `cursor` (+ `cursorimpl.h`) — state-management half ported
-  fully (position tracking, move/set, shared coord, field-list
-  traversal, locked-mode rapport snap). Rendering primitives
-  (DrawCursor / DeleteCursor / ToggleCursor / DisableCursor /
-  EnableCursor) and editor-op dispatch (CrFeld::Toggle / ::Set) are
-  stubbed pending the rendering slice and the SetGewebe/SetEinzug/...
-  editor ops respectively. `src/compat/shift_compat.h` added as a
-  TShiftState stand-in. TDBWFRM grew `righttoleft`, `toptobottom`,
-  `kette`, `schuesse`, `rapport`, `currentrange` plus
-  `ClearSelection`/`ResizeSelection` method stubs.
-- [x] `einzug` (+ `einzugimpl.h`) — `EinzugRearrangeImpl` class
-  ported: the eight threading-rearrangement algorithms (NormalZ,
-  NormalS, GeradeZ, GeradeS, Chorig2, Chorig3, Belassen, Rearrange
-  dispatcher) plus every helper (CalcRange, CalcRapportRange,
-  EinzugEqual, SchaefteEqual, MergeSchaefte, SplitSchaft, MoveSchaft,
-  SwitchSchaefte, IsEmptySchaft, IsTotalEmptySchaft,
-  GetFirstNonemptySchaft, EliminateEmptySchaft, three RedrawX
-  routines). Fixiert is stubbed pending the recalc.cpp / RcRecalcAll
-  port. TDBWFRM grew `bool* freieschaefte` / `bool* freietritte`
-  (matching legacy raw-array shape), `ViewEinzug` / `ViewTrittfolge`
-  QActions, and 15 new Draw / Recalc / Clear method stubs.
-- [ ] `einzugtrittfolge`.
-- [x] `trittfolge` — ten non-click helper methods ported as TDBWFRM::
-  members (IsEmptyTritt, GetFirstNonemptyTritt, RedrawTritt,
-  RedrawAufknuepfungTritt, MoveTritt, AufknuepfungsspalteEqual,
-  MergeTritte, EliminateEmptyTritt, SwitchTritte, RearrangeTritte).
-  The seven Tf*Click / ClearTrittfolgeClick menu handlers are
-  deferred until menus are wired.
-- [x] `aufknuepfung` — `MinimizeAufknuepfung` helper ported; the nine
-  Aux*Click menu handlers (ClearAufknuepfungClick, AufInvertClick,
-  AufZentralsymmClick, four AufRoll*Click, AufSteigung{Inc,Dec}Click)
-  are deferred -- they drive ZentralSymmChecker, selection state,
-  and dialog flows that belong in later slices.
-- [x] `rapportieren` — six utility methods ported (RapportSchuss,
-  RapportKette, CopyKettfaden, CopySchussfaden, ClearKettfaden,
-  ClearSchussfaden). The three Rapp*Click handlers are deferred
-  until the TRapportForm dialog ports in Phase 7.
-- [x] `rapport` (+ `rapportimpl.h`) — algorithm half fully ported
-  (IsInRapport, CalcRapport via CalcKettrapport/CalcSchussrapport,
-  EinzugEqual, TrittfolgeEqual). Rendering half (ClearRapport,
-  DrawRapport, DrawDifferences) stubbed pending the rendering slice.
-  TDBWFRM delegates the five rapport forwarders to `rapporthandler`
-  and grew `RappViewRapport`, `GewebeFarbeffekt`, `GewebeSimulation`
-  QAction toggles plus `UpdateStatusBar` / `DrawHilfslinien` /
-  `DrawGewebe` / `DrawGewebeRahmen` / `CalcRange` method stubs.
-- [ ] `trittfolge`, `aufknuepfung`,
-  `rapportieren`, `schlagpatrone`, `steigung`.
-- [ ] `blockmuster`, `blockmuster_muster`, `hilfslinien`.
-- [ ] State-apply ops: `setaufknuepfung`, `setblatteinzug`,
-  `setcolors`, `seteinzug`, `setfarbe`, `setgewebe`, `settrittfolge`.
-- [ ] Editing ops: `move`, `insert`, `insertbindung`, `delete`,
-  `recalc`, `idle`.
-- [ ] Rendering: rest of `draw`, `redraw`, `invalidate`, `highlight`,
-  `hilfslinien` (render side).
-- [ ] Viewport: `zoom`, `scrolling`, `kbdscroll`.
-- [ ] Input: `mousehandling`, `kbdhandling`, `selection`, `range`,
-  `tools`.
-- [ ] UI chrome: `toolbar`, `statusbar`, `popupmenu`.
-- [ ] File I/O: `fileload`, `filesave`, `filehandling`, `mru`,
-  `loadoptions`, `commandline`, `debugchecks`.
-- [ ] Misc: `properties`, `osversion`, `exportbitmap`, `export`,
-  `import`, `importbmp`, `userdef`.
-- [ ] `PatternCanvas : QWidget` for the document-area render target
-  (introduced once enough rendering exists to exercise it).
-- [ ] File → Open / Save / Save As / Recent Files menu wiring.
-
-### Phase 6 — Palettes
-- [ ] `FarbPalette` → `PalettePanel` (`QDockWidget`)
-- [ ] `ToolpaletteForm` → `ToolPanel` (`QDockWidget`)
-- [ ] Color-picker forms (`farbauswahl`, `farbauswahl1`, `farbauswahl2`)
-
-### Phase 7 — Dialogs
-- [ ] Batch 1: info dialogs
-- [ ] Batch 2: navigation/goto
-- [ ] Batch 3: properties/options
-- [ ] Batch 4: editing assistants
-- [ ] Batch 5: color selection
-- [ ] Batch 6: user-defined patterns
-- [ ] Batch 7: loom-control shell (UI only)
-- [ ] Batch 8: import/export
-
-### Phase 8 — Printing
-- [ ] `print`, `print_base.h`, `printinit`, `printdraw`, `printextent`, `printprint`
-- [ ] `pagesetup_form`, `printpreview_form`, `printselection_form`, `printcancel_form`
-
-### Phase 9 — Settings, MRU, localization polish
-- [ ] `QSettings` per-platform verification
-- [ ] Language files resource-embedded
-
-### Phase 10 — Packaging
-- [ ] Linux: AppImage
-- [ ] Windows: `windeployqt` + NSIS
-- [ ] macOS: `macdeployqt` + `.dmg`
-- [ ] GitHub Actions workflow
-
-### Phase 11 — Loom / serial port (optional)
-- [ ] `comutil`, `combase.h`, `loominterface.h` → `QSerialPort`
-- [ ] `steuerung_form` and its split units
-
-### Phase 12 — Shim removal
-- [ ] Delete `src/compat/` module by module
-- [ ] Switch clang-format to Qt style
-- [ ] Archive `legacy/`
+- New tests pass (if the slice warrants one).
+- No cross-module half-ports — finish the unit you started.
 
 ---
 
 ## Host prerequisites (one-time)
 
-The current dev host (Debian 13) has Qt 6.8 runtime libraries but is missing CMake and the Qt 6 dev packages. To verify the Phase 0 build, install:
+Debian/Ubuntu dev dependencies:
 
 ```
 sudo apt install cmake ninja-build \
@@ -559,4 +206,4 @@ sudo apt install cmake ninja-build \
     qt6-tools-dev qt6-tools-dev-tools
 ```
 
-For Phase 11 add: `libqt6serialport6-dev`.
+For Stage 7 (loom) add: `libqt6serialport6-dev`.

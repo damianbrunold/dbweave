@@ -31,6 +31,7 @@
 
 #include <QActionGroup>
 #include <QApplication>
+#include <QDesktopServices>
 #include <QFileInfo>
 #include <QIcon>
 #include <QKeySequence>
@@ -44,6 +45,7 @@
 #include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
+#include <QUrl>
 
 #include "rangecolors.h"
 #include "colors_compat.h"
@@ -364,9 +366,6 @@ TDBWFRM::TDBWFRM(QWidget* parent)
                   "Prints only a part of the pattern", "Druckt nur einen Teil des Musters");
     actPrintRange->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_L));
     actPrintRange->setEnabled(false);
-    QAction* actPrintSetup = menuAct(fileMenu, "Printer set&up...", "D&ruckereinstellung...",
-                                     nullptr, "Configures the printer", "Konfiguriert den Drucker");
-    actPrintSetup->setEnabled(false);
     fileMenu->addSeparator();
     /*  MRU 1..6 in-line (legacy style -- not a submenu). */
     mruMenu = nullptr;
@@ -656,10 +655,6 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         docks have been constructed. The toggleViewAction() of each
         QDockWidget is a checkable QAction tied to its visibility. */
     viewMenu->addSeparator();
-    QAction* actRedraw = menuAct(viewMenu, "Redraw", "Neuzeichnen", nullptr, "Redraws everything",
-                                 "Zeichnet alles neu");
-    actRedraw->setShortcut(QKeySequence(Qt::Key_F5));
-    actRedraw->setEnabled(false);
     QAction* actOverview
         = menuAct(viewMenu, "Overv&iew", "Übe&rsicht", nullptr, "Enters an overview-mode",
                   "Schaltet in einen Übersichtsmodus um");
@@ -938,6 +933,16 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     connect(actRappReduce, &QAction::triggered, this, [this] { RappReduzierenClick(); });
     connect(actRappOverride, &QAction::triggered, this, [this] { RappOverrideClick(); });
     connect(RappViewRapport, &QAction::triggered, this, relayout);
+    /*  CursorLocked is only meaningful while the repeat is visible;
+        mirror legacy's dbw3_form.cpp:865 which auto-unchecks it when
+        the repeat is hidden.                                         */
+    connect(RappViewRapport, &QAction::toggled, this, [this](bool on) {
+        if (!CursorLocked)
+            return;
+        if (!on && CursorLocked->isChecked())
+            CursorLocked->setChecked(false);
+        CursorLocked->setEnabled(on);
+    });
     connect(Inverserepeat, &QAction::triggered, this, [this] { refresh(); });
 
     /*  ---------- &Color (MenuFarbe) ------------------------- */
@@ -1063,12 +1068,19 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         refresh();
     });
     QMenu* cursorMenu = addSubmenu(extrasMenu, "&Cursor", "&Cursor");
-    QAction* actCursorLocked = menuAct(cursorMenu, "&Contained", "&In Rapport", nullptr,
-                                       "Restricts the cursor position within the repeat",
-                                       "Beschränkt die Cursorposition auf den Rapport");
-    actCursorLocked->setCheckable(true);
-    actCursorLocked->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Q));
-    actCursorLocked->setEnabled(false);
+    CursorLocked = menuAct(cursorMenu, "&Contained", "&In Rapport", nullptr,
+                           "Restricts the cursor position within the repeat",
+                           "Beschränkt die Cursorposition auf den Rapport");
+    CursorLocked->setCheckable(true);
+    CursorLocked->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Q));
+    /*  Legacy gate: only meaningful when the repeat is visible, so the
+        toggle follows RappViewRapport's checked state.                */
+    CursorLocked->setEnabled(RappViewRapport && RappViewRapport->isChecked());
+    connect(CursorLocked, &QAction::toggled, this, [this](bool on) {
+        if (cursorhandler)
+            cursorhandler->SetCursorLocked(on);
+        refresh();
+    });
     QAction* actCursorDir = menuAct(cursorMenu, "&Movement...", "&Bewegung...", nullptr,
                                     "Configures the automatic cursor movement",
                                     "Konfiguriert die automatische Cursorbewegung");
@@ -1131,12 +1143,19 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     QMenu* helpMenu = addMenu(menuBar(), "&?", "&?");
     QAction* actHilfe = menuAct(helpMenu, "&Help topics", "&Hilfethemen");
     actHilfe->setShortcut(QKeySequence(Qt::Key_F1));
-    actHilfe->setEnabled(false);
+    connect(actHilfe, &QAction::triggered, this, [] {
+        const QString url = (active_language == GE)
+            ? QStringLiteral("https://www.brunoldsoftware.ch/hilfe")
+            : QStringLiteral("https://www.brunoldsoftware.ch/help");
+        QDesktopServices::openUrl(QUrl(url));
+    });
     QAction* actBsoftOnline
         = menuAct(helpMenu, "&Brunold Software Online", "&Brunold Software Online", nullptr,
                   "Brings you to the website of Brunold Software",
                   "Bringt Sie auf die Website von Brunold Software");
-    actBsoftOnline->setEnabled(false);
+    connect(actBsoftOnline, &QAction::triggered, this, [] {
+        QDesktopServices::openUrl(QUrl(QStringLiteral("https://www.brunoldsoftware.ch/")));
+    });
     helpMenu->addSeparator();
     QAction* actTechInfo
         = menuAct(helpMenu, "&Technical information...", "&Technische Informationen...", nullptr,

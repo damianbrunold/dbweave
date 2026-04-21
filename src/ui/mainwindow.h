@@ -119,6 +119,7 @@ public:
     QAction* TfBelassen = nullptr;
 
     QAction* OptionsLockGewebe = nullptr;
+    QAction* CursorLocked = nullptr;
 
     QAction* ViewSchlagpatrone = nullptr;
     QAction* ViewEinzug = nullptr;
