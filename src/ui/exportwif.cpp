@@ -21,6 +21,7 @@
 #include "palette.h"
 #include "properties.h"
 #include "language.h"
+#include "filedialog_helpers.h"
 
 #include <QFile>
 #include <QFileDialog>
@@ -332,9 +333,10 @@ void TDBWFRM::DateiExportieren(const QString& _filename)
 }
 
 /*-----------------------------------------------------------------*/
-/*  Opens a Save-As dialog preset to the platform's Documents folder,
-    with one name filter and a matching default suffix. Returns the
-    chosen path or an empty string on cancel. */
+/*  Opens a Save-As dialog preset to the last export directory (or
+    the platform's Documents folder on first use), with one name
+    filter and a matching default suffix. Returns the chosen path
+    or an empty string on cancel.                                 */
 static QString askExportFile(QWidget* _parent, const QString& _title, const QString& _filter,
                              const QString& _suffix)
 {
@@ -342,13 +344,15 @@ static QString askExportFile(QWidget* _parent, const QString& _title, const QStr
     dlg.setAcceptMode(QFileDialog::AcceptSave);
     dlg.setNameFilter(_filter);
     dlg.setDefaultSuffix(_suffix);
-    const QString docs = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
-    if (!docs.isEmpty())
-        dlg.setDirectory(docs);
+    dlg.setDirectory(lastDirFor("Export"));
     if (dlg.exec() != QDialog::Accepted)
         return QString();
     const QStringList files = dlg.selectedFiles();
-    return files.isEmpty() ? QString() : files.first();
+    if (files.isEmpty())
+        return QString();
+    const QString path = files.first();
+    rememberDirFor("Export", path);
+    return path;
 }
 
 void TDBWFRM::DateiExportPngClick()

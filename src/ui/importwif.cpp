@@ -21,6 +21,7 @@
 #include "palette.h"
 #include "properties.h"
 #include "language.h"
+#include "filedialog_helpers.h"
 
 #include <QApplication>
 #include <QFile>
@@ -523,10 +524,11 @@ bool TDBWFRM::DateiImportieren(const QString& _filename)
 void TDBWFRM::ImportWIFClick()
 {
     const QString fn = QFileDialog::getOpenFileName(
-        this, LANG_STR("Import WIF file", "WIF-Datei importieren"), QString(),
+        this, LANG_STR("Import WIF file", "WIF-Datei importieren"), lastDirFor("ImportWIF"),
         LANG_STR("WIF files (*.wif);;All files (*)", "WIF-Dateien (*.wif);;Alle Dateien (*)"));
     if (fn.isEmpty())
         return;
+    rememberDirFor("ImportWIF", fn);
 
     /*  Legacy AskSave gate is not yet ported; the main window asks
         before replacing an unsaved document when that slice lands. */

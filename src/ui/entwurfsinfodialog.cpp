@@ -15,11 +15,13 @@
 #include "datamodule.h"
 #include "palette.h"
 #include "language.h"
+#include "filedialog_helpers.h"
 
 #include <QApplication>
 #include <QColor>
 #include <QCursor>
 #include <QDesktopServices>
+#include <QDir>
 #include <QDialogButtonBox>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -510,18 +512,17 @@ void EntwurfsinfoDialog::onPrint()
 void EntwurfsinfoDialog::onExport()
 {
     QString suggested;
-    if (!frm->filename.isEmpty()) {
-        QFileInfo fi(frm->filename);
-        suggested = fi.completeBaseName() + QStringLiteral(".rtf");
-    } else {
-        suggested = QStringLiteral("unnamed.rtf");
-    }
+    const QString baseName = frm->filename.isEmpty()
+        ? QStringLiteral("unnamed.rtf")
+        : QFileInfo(frm->filename).completeBaseName() + QStringLiteral(".rtf");
+    suggested = QDir(lastDirFor("ExportInfo")).filePath(baseName);
 
     const QString fn = QFileDialog::getSaveFileName(
         this, LANG_STR("Save pattern info as", "Musterinformationen speichern unter"),
         suggested, LANG_STR("Word-Format (*.rtf)", "Word-Format (*.rtf)"));
     if (fn.isEmpty())
         return;
+    rememberDirFor("ExportInfo", fn);
 
     const int prev = categories->currentRow();
     QApplication::setOverrideCursor(Qt::WaitCursor);

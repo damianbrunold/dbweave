@@ -17,6 +17,7 @@
 #include "rangecolors.h"
 #include "colors_compat.h"
 #include "language.h"
+#include "filedialog_helpers.h"
 
 #include <QApplication>
 #include <QCursor>
@@ -219,11 +220,12 @@ void TDBWFRM::ImportBitmapClick()
     if (GewebeLocked())
         return;
     const QString fn = QFileDialog::getOpenFileName(
-        this, LANG_STR("Import picture", "Bild importieren"), QString(),
+        this, LANG_STR("Import picture", "Bild importieren"), lastDirFor("ImportBitmap"),
         LANG_STR("Images (*.bmp *.png *.jpg *.jpeg *.gif);;All files (*)",
                  "Bilder (*.bmp *.png *.jpg *.jpeg *.gif);;Alle Dateien (*)"));
     if (fn.isEmpty())
         return;
+    rememberDirFor("ImportBitmap", fn);
 
     ImportBmpDialog dlg(fn, this);
     if (dlg.exec() != QDialog::Accepted)

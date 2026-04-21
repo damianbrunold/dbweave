@@ -28,6 +28,7 @@
 #include "properties.h"
 #include "blockmuster.h"
 #include "language.h"
+#include "filedialog_helpers.h"
 #include <QCoreApplication>
 #include <QDir>
 
@@ -217,12 +218,13 @@ void TDBWFRM::FileNewTemplateClick()
 {
     if (!AskSave())
         return;
-    const QString dir
-        = filename.isEmpty() ? QString() : QFileInfo((QString)filename).absolutePath();
+    const QString dir = filename.isEmpty() ? lastDirFor("Template")
+                                           : QFileInfo((QString)filename).absolutePath();
     const QString chosen = QFileDialog::getOpenFileName(
         this, LANG_STR("New from template", "Neu gemäss Vorlage"), dir, templateFilter());
     if (chosen.isEmpty())
         return;
+    rememberDirFor("Template", chosen);
     if (file && file->IsOpen())
         file->Close();
     filename = chosen;
@@ -248,12 +250,13 @@ void TDBWFRM::FileOpen()
 {
     if (!AskSave())
         return;
-    const QString dir
-        = filename.isEmpty() ? QString() : QFileInfo((QString)filename).absolutePath();
+    const QString dir = filename.isEmpty() ? lastDirFor("Pattern")
+                                           : QFileInfo((QString)filename).absolutePath();
     const QString chosen = QFileDialog::getOpenFileName(
         this, LANG_STR("Open pattern", "Muster öffnen"), dir, fileFilter());
     if (chosen.isEmpty())
         return;
+    rememberDirFor("Pattern", chosen);
 
     /*  Close any file the loader from a previous Load left open. */
     if (file && file->IsOpen())
@@ -303,11 +306,12 @@ void TDBWFRM::FileRevertClick()
 
 void TDBWFRM::FileSaveAs()
 {
-    const QString dir = filename.isEmpty() ? QString() : (QString)filename;
+    const QString dir = filename.isEmpty() ? lastDirFor("Pattern") : (QString)filename;
     const QString chosen = QFileDialog::getSaveFileName(
         this, LANG_STR("Save pattern as", "Muster speichern unter"), dir, fileFilter());
     if (chosen.isEmpty())
         return;
+    rememberDirFor("Pattern", chosen);
 
     if (file && file->IsOpen())
         file->Close();
@@ -488,12 +492,13 @@ void TDBWFRM::LoadPartsClick()
         return;
     const LOADPARTS parts = dlg.getLoadParts();
 
-    const QString dir
-        = filename.isEmpty() ? QString() : QFileInfo((QString)filename).absolutePath();
+    const QString dir = filename.isEmpty() ? lastDirFor("Pattern")
+                                           : QFileInfo((QString)filename).absolutePath();
     const QString chosen = QFileDialog::getOpenFileName(
         this, LANG_STR("Load parts from", "Teile laden aus"), dir, fileFilter());
     if (chosen.isEmpty())
         return;
+    rememberDirFor("Pattern", chosen);
 
     /*  Swap the working filename in so Load() reads the picked
         file, then restore ours afterwards so the document stays

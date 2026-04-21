@@ -19,6 +19,7 @@ add_library(dbweave_ui STATIC
     rapportieren.cpp
     range.cpp
     helpers.cpp
+    filedialog_helpers.cpp
     setblatteinzug.cpp
     setfarbe.cpp
     seteinzug.cpp
