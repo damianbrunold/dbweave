@@ -37,6 +37,8 @@
 #include <QPdfWriter>
 #include <QSvgGenerator>
 
+#include <algorithm>
+
 static QColor qcolorFromTColor(TColor _c)
 {
     return QColor(_c & 0xFF, (_c >> 8) & 0xFF, (_c >> 16) & 0xFF);
@@ -146,9 +148,8 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
             p.drawLine(x0 + i * gw, y0, x0 + i * gw, y0 + shafts * gh);
         for (int j = 0; j <= shafts; j++)
             p.drawLine(x0, y0 + j * gh, x0 + treadles * gw, y0 + j * gh);
-        const DARSTELLUNG darst = (ViewSchlagpatrone && ViewSchlagpatrone->isChecked())
-                                      ? AUSGEFUELLT
-                                      : aufknuepfung.darstellung;
+        const bool pegplan = ViewSchlagpatrone && ViewSchlagpatrone->isChecked();
+        const DARSTELLUNG darst = pegplan ? AUSGEFUELLT : aufknuepfung.darstellung;
         for (int j = 0; j < shafts; j++)
             for (int i = 0; i < treadles; i++) {
                 const char s = aufknuepfung.feld.Get(i, j);
@@ -156,10 +157,23 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
                     continue;
                 const int x = x0 + i * gw;
                 const int y = toptobottom ? y0 + j * gh : y0 + (shafts - j - 1) * gh;
-                QColor col = QColor(Qt::black);
-                if (s >= 1 && s <= 9)
-                    col = qcolorFromTColor(GetRangeColor(s));
-                paintExportCell(darst, x, y, gw, gh, col);
+                /*  Special ranges are drawn with their per-range
+                    glyph (darst_aushebung / _anbindung / _abbindung)
+                    and, unlike the gewebe, no coloured background --
+                    matches legacy DrawAufknuepfung, which calls
+                    PaintCell with _col=black for these cells.       */
+                if (!pegplan && s == AUSHEBUNG) {
+                    paintExportCell(darst_aushebung, x, y, gw, gh, QColor(Qt::black));
+                } else if (!pegplan && s == ANBINDUNG) {
+                    paintExportCell(darst_anbindung, x, y, gw, gh, QColor(Qt::black));
+                } else if (!pegplan && s == ABBINDUNG) {
+                    paintExportCell(darst_abbindung, x, y, gw, gh, QColor(Qt::black));
+                } else {
+                    QColor col = QColor(Qt::black);
+                    if (s >= 1 && s <= 9)
+                        col = qcolorFromTColor(GetRangeColor(s));
+                    paintExportCell(darst, x, y, gw, gh, col);
+                }
             }
         p.setPen(Qt::black);
         p.setBrush(Qt::NoBrush);
@@ -175,7 +189,8 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
             p.drawLine(x0 + i * gw, y0, x0 + i * gw, y0 + dy * gh);
         for (int j = 0; j <= dy; j++)
             p.drawLine(x0, y0 + j * gh, x0 + treadles * gw, y0 + j * gh);
-        const DARSTELLUNG darst = trittfolge.darstellung;
+        const bool pegplan = ViewSchlagpatrone && ViewSchlagpatrone->isChecked();
+        const DARSTELLUNG darst = pegplan ? schlagpatronendarstellung : trittfolge.darstellung;
         for (int j = 0; j < dy; j++)
             for (int i = 0; i < treadles; i++) {
                 const char s = trittfolge.feld.Get(i, schuesse.a + j);
@@ -183,17 +198,36 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
                     continue;
                 const int x = x0 + i * gw;
                 const int y = y0 + (dy - j - 1) * gh;
-                QColor col = QColor(Qt::black);
-                if (s >= 1 && s <= 9)
-                    col = qcolorFromTColor(GetRangeColor(s));
-                paintExportCell(darst, x, y, gw, gh, col);
+                /*  Special ranges in pegplan view use the dedicated
+                    glyphs (darst_aushebung / _anbindung / _abbindung)
+                    in plain black -- same rule as the aufknuepfung
+                    block above.                                     */
+                if (pegplan && s == AUSHEBUNG) {
+                    paintExportCell(darst_aushebung, x, y, gw, gh, QColor(Qt::black));
+                } else if (pegplan && s == ANBINDUNG) {
+                    paintExportCell(darst_anbindung, x, y, gw, gh, QColor(Qt::black));
+                } else if (pegplan && s == ABBINDUNG) {
+                    paintExportCell(darst_abbindung, x, y, gw, gh, QColor(Qt::black));
+                } else {
+                    QColor col = QColor(Qt::black);
+                    if (s >= 1 && s <= 9)
+                        col = qcolorFromTColor(GetRangeColor(s));
+                    paintExportCell(darst, x, y, gw, gh, col);
+                }
             }
         p.setPen(Qt::black);
         p.setBrush(Qt::NoBrush);
         p.drawRect(x0, y0, treadles * gw, dy * gh);
     }
 
-    /*  Gewebe (bottom-left). */
+    /*  Gewebe (bottom-left). Supports the same four view modes the
+        editor uses:
+          Unsichtbar  -> grid only, no cell content
+          Patrone     -> range-coloured filled cells (the default)
+          Farbeffekt  -> warp / weft palette colour, full cell
+          Gewebe      -> simulated thread-over-thread render
+        The simulation path mirrors DrawGewebeSimulation but with
+        export-sized (fixed gw/gh=16) geometry.                     */
     {
         const int x0 = 0;
         const int y0 = (shafts + sdy) * gh;
@@ -202,28 +236,87 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
             p.drawLine(x0 + i * gw, y0, x0 + i * gw, y0 + dy * gh);
         for (int j = 0; j <= dy; j++)
             p.drawLine(x0, y0 + j * gh, x0 + dx * gw, y0 + j * gh);
+        const bool none = GewebeNone && GewebeNone->isChecked();
         const bool farbeffekt = GewebeFarbeffekt && GewebeFarbeffekt->isChecked();
-        for (int i = 0; i < dx; i++) {
-            for (int j = 0; j < dy; j++) {
-                const char s = gewebe.feld.Get(i + kette.a, j + schuesse.a);
-                const int x = x0 + i * gw;
-                const int y = y0 + (dy - j - 1) * gh;
-                if (farbeffekt) {
-                    bool hebung = s > 0;
-                    if (sinkingshed)
-                        hebung = !hebung;
-                    const QColor col = hebung ? paletteColor(kettfarben.feld.Get(i + kette.a))
-                                              : paletteColor(schussfarben.feld.Get(j + schuesse.a));
-                    p.fillRect(x, y, gw, gh, col);
-                } else if (s > 0) {
-                    QColor col = QColor(Qt::black);
-                    if (s >= 1 && s <= 9)
-                        col = qcolorFromTColor(GetRangeColor(s));
-                    /*  Fill the cell footprint exactly; the right /
-                        bottom neighbour's own fill covers the shared
-                        grid line. See paintExportCell above for why
-                        +1 would break PDF output.                   */
-                    p.fillRect(x, y, gw, gh, col);
+        const bool simulation = GewebeSimulation && GewebeSimulation->isChecked();
+        if (!none) {
+            const int dw = std::max(1, gw / 5);
+            const int dh = std::max(1, gh / 5);
+            for (int i = 0; i < dx; i++) {
+                for (int j = 0; j < dy; j++) {
+                    const char s = gewebe.feld.Get(i + kette.a, j + schuesse.a);
+                    const int x = x0 + i * gw;
+                    const int y = y0 + (dy - j - 1) * gh;
+                    if (farbeffekt) {
+                        bool hebung = s > 0;
+                        if (sinkingshed)
+                            hebung = !hebung;
+                        const QColor col = hebung
+                            ? paletteColor(kettfarben.feld.Get(i + kette.a))
+                            : paletteColor(schussfarben.feld.Get(j + schuesse.a));
+                        p.fillRect(x, y, gw, gh, col);
+                    } else if (simulation) {
+                        const QColor kc = paletteColor(kettfarben.feld.Get(i + kette.a));
+                        const QColor sc = paletteColor(schussfarben.feld.Get(j + schuesse.a));
+                        bool hebung = s > 0 && s != ABBINDUNG;
+                        if (sinkingshed)
+                            hebung = !hebung;
+                        if (hebung) {
+                            /*  Warp on top: vertical warp strip in
+                                kettfarben, weft stubs peeking out left
+                                and right, shadow line on the right.   */
+                            p.fillRect(x + dw, y, gw - 2 * dw, gh, kc);
+                            p.fillRect(x, y + dh, dw, gh - 2 * dh, sc);
+                            p.fillRect(x + gw - dw, y + dh, dw, gh - 2 * dh, sc);
+                            p.setPen(QColor(Qt::black));
+                            p.drawLine(x + gw - dw, y + dh, x + gw - dw, y + gh - dh);
+                        } else {
+                            /*  Weft on top: horizontal weft strip in
+                                schussfarben, warp stubs top and bottom,
+                                shadow line along the bottom.           */
+                            p.fillRect(x, y + dh, gw, gh - 2 * dh, sc);
+                            p.fillRect(x + dw, y, gw - 2 * dw, dh, kc);
+                            p.fillRect(x + dw, y + gh - dh, gw - 2 * dw, dh, kc);
+                            p.setPen(QColor(Qt::black));
+                            p.drawLine(x + dw, y + gh - dh, x + gw - dw, y + gh - dh);
+                        }
+                        p.setBrush(Qt::NoBrush);
+                    } else if (s == AUSHEBUNG) {
+                        /*  Mirrors DrawGewebeNormal's AUSHEBUNG
+                            branch: symbol glyph on btnFace background
+                            when darst_aushebung != AUSGEFUELLT,
+                            otherwise the GetRangeColor fallback.    */
+                        if (darst_aushebung != AUSGEFUELLT) {
+                            PaintCell(p, darst_aushebung, x, y, x + gw, y + gh,
+                                      QColor(Qt::black), /*_dontclear=*/true);
+                        } else {
+                            p.fillRect(x, y, gw, gh, qcolorFromTColor(GetRangeColor(s)));
+                        }
+                    } else if (s == ANBINDUNG) {
+                        if (darst_anbindung != AUSGEFUELLT) {
+                            p.fillRect(x, y, gw, gh, qcolorFromTColor(col_anbindung));
+                            PaintCell(p, darst_anbindung, x, y, x + gw, y + gh,
+                                      QColor(Qt::black), /*_dontclear=*/true);
+                        } else {
+                            p.fillRect(x, y, gw, gh, qcolorFromTColor(GetRangeColor(s)));
+                        }
+                    } else if (s == ABBINDUNG) {
+                        if (darst_abbindung != AUSGEFUELLT) {
+                            p.fillRect(x, y, gw, gh, qcolorFromTColor(col_abbindung));
+                            PaintCell(p, darst_abbindung, x, y, x + gw, y + gh,
+                                      QColor(Qt::black), /*_dontclear=*/true);
+                        } else {
+                            p.fillRect(x, y, gw, gh, qcolorFromTColor(GetRangeColor(s)));
+                        }
+                    } else if (s > 0) {
+                        /*  Ranges 1..9: solid range colour, full cell. */
+                        const QColor col = qcolorFromTColor(GetRangeColor(s));
+                        /*  Fill the cell footprint exactly; the right
+                            / bottom neighbour's own fill covers the
+                            shared grid line. See paintExportCell above
+                            for why +1 would break PDF output.        */
+                        p.fillRect(x, y, gw, gh, col);
+                    }
                 }
             }
         }
@@ -243,6 +336,17 @@ static bool doExportRaster(TDBWFRM* _frm, const QString& _filename, const char* 
     const int gh = 16;
     int W = 0, H = 0, shafts = 0, treadles = 0;
     _frm->patternPixelSize(W, H, gw, gh, shafts, treadles);
+
+    /*  Guard against a degenerate export when the pattern has no
+        defined kette / schuesse range and every view is switched
+        off: without this, QImage(0, 0, ...) returns a null image,
+        img.save() writes a 0-byte file and the user sees "could
+        not be opened" on the next try. Fall back to a minimum
+        32x32 canvas so the save still produces a valid PNG/JPEG. */
+    if (W < 2 || H < 2) {
+        W = std::max(W, 32);
+        H = std::max(H, 32);
+    }
 
     QImage img(W, H, QImage::Format_RGB32);
     img.fill(QColor(Qt::white));
