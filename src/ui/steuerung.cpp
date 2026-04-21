@@ -16,6 +16,7 @@
 #include "loomoptionsdialog.h"
 #include "mainwindow.h"
 #include "steuerungcanvas.h"
+#include "strggotodialog.h"
 
 #include <QAction>
 #include <QActionGroup>
@@ -217,8 +218,24 @@ void TSTRGFRM::buildMenus()
 
     /*  --- &Position ------------------------------------------- */
     QMenu* posMenu = menubar->addMenu(LANG_STR("&Position", "&Position"));
-    actSetCurrentPos = disabledAct(posMenu, "&Set current position", "&Aktuelle Position setzen",
-                                   QKeySequence(Qt::CTRL | Qt::Key_S));
+    actSetCurrentPos = posMenu->addAction(LANG_STR("&Set current position",
+                                                   "&Aktuelle Position setzen"));
+    actSetCurrentPos->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
+    connect(actSetCurrentPos, &QAction::triggered, this, [this] {
+        StrgGotoDialog dlg(this);
+        if (dlg.exec() == QDialog::Accepted) {
+            weave_position = dlg.schuss();
+            weave_klammer = dlg.klammer();
+            current_klammer = weave_klammer;
+            weave_repetition = dlg.repetition();
+            ValidateWeavePosition();
+            schussselected = true;
+            AutoScroll();
+            UpdateStatusbar();
+            if (canvas)
+                canvas->update();
+        }
+    });
     actGotoLastPos = posMenu->addAction(LANG_STR("&Go to last position", "Zur &letzten Position"));
     actGotoLastPos->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_L));
     connect(actGotoLastPos, &QAction::triggered, this, [this] { GotoLastPosition(); });

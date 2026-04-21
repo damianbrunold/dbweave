@@ -92,6 +92,9 @@ add_library(dbweave_ui STATIC
     steuerung_kbd.cpp
     steuerung_weben.cpp
     steuerungcanvas.cpp
+    strggotodialog.cpp
+    patronicindparmsdialog.cpp
+    loominfodialog.cpp
 )
 
 target_link_libraries(dbweave_ui PUBLIC dbweave_io)

@@ -17,6 +17,7 @@
 
 #include "datamodule.h"
 #include "language.h"
+#include "patronicindparmsdialog.h"
 #include "steuerungcanvas.h"
 
 #include <QAction>
@@ -267,6 +268,46 @@ void TSTRGFRM::WeaveStartClick()
     tempquit = false;
     weaving = true;
     firstschuss = true;
+    maxweave = 0;
+
+    /*  Patronic-indirect: prompt for starting position + picks
+        to upload. Matches legacy steuerung_weben.cpp:77-98.       */
+    if (intrf == intrf_arm_patronic_indirect) {
+        PatronicIndParmsDialog dlg(this, rapporty < 220 ? rapporty : 220);
+        if (dlg.exec() != QDialog::Accepted) {
+            try {
+                if (controller)
+                    controller->Terminate();
+            } catch (...) {
+            }
+            stopit = true;
+            return;
+        }
+        int pos = dlg.startingPosition();
+        int mx = dlg.maxPicks();
+        if (pos + mx > 220) {
+            const QString msg
+                = LANG_STR("The loom only stores up to 220 picks from position %1 onward. "
+                           "Limit to %2 picks?",
+                           "Der Webstuhl speichert ab Position %1 nur bis zu 220 Schüsse. "
+                           "Auf %2 Schüsse begrenzen?")
+                      .arg(pos)
+                      .arg(220 - pos - 1);
+            if (QMessageBox::question(this, LANG_STR("DB-WEAVE", "DB-WEAVE"), msg)
+                != QMessageBox::Yes) {
+                try {
+                    if (controller)
+                        controller->Terminate();
+                } catch (...) {
+                }
+                stopit = true;
+                return;
+            }
+            mx = 220 - pos - 1;
+        }
+        controller->SetSpecialData(pos);
+        maxweave = mx;
+    }
 
     if (actStart)
         actStart->setEnabled(false);

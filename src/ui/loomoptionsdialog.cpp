@@ -11,11 +11,13 @@
 
 #include "loomoptionsdialog.h"
 #include "language.h"
+#include "loominfodialog.h"
 
 #include <QComboBox>
 #include <QDialogButtonBox>
 #include <QFormLayout>
 #include <QLabel>
+#include <QPushButton>
 #include <QSpinBox>
 #include <QVBoxLayout>
 
@@ -69,8 +71,13 @@ LoomOptionsDialog::LoomOptionsDialog(QWidget* _parent)
 #endif
 
     auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+    QPushButton* bInfo = btns->addButton(LANG_STR("&Info", "&Info"), QDialogButtonBox::ActionRole);
     connect(btns, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(btns, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    connect(bInfo, &QPushButton::clicked, this, [this] {
+        LoomInfoDialog dlg(this, LOOMINTERFACE(cbInterface->currentIndex()));
+        dlg.exec();
+    });
 
     auto* root = new QVBoxLayout(this);
     root->addLayout(form);
