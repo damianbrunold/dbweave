@@ -29,6 +29,7 @@
 #include "cursor.h"
 #include "hilfslinien.h"
 #include "enums.h"
+#include "datamodule.h"
 
 static bool HitCheck(const GRIDPOS& _grid, int _x, int _y, int _scrollx, int _scrolly, int& _i,
                      int& _j, int _gw, int _gh, bool _righttoleft = false,
@@ -144,6 +145,18 @@ void TDBWFRM::handleCanvasMousePress(int _x, int _y, bool _shift, bool _ctrl)
         selection, no tool drag. Beep for feedback, like SetGewebe.  */
     if (f == GEWEBE && GewebeLocked())
         return;
+
+    /*  Shift/Ctrl click on a colour bar picks the cell's colour into
+        Data->color rather than painting -- legacy mousehandling.cpp
+        line 109 ff. */
+    if ((_shift || _ctrl) && (f == KETTFARBEN || f == SCHUSSFARBEN)) {
+        if (f == KETTFARBEN)
+            Data->color = (unsigned char)kettfarben.feld.Get(i + scroll_x1);
+        else
+            Data->color = (unsigned char)schussfarben.feld.Get(j + scroll_y2);
+        refresh();
+        return;
+    }
 
     mousedown = true;
     md_feld = f;

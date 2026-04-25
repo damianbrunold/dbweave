@@ -338,26 +338,47 @@ static double weightT(double _x, double _m)
     return (2 * d - 8 * m) * _x * _x * _x + (8 * m - d) * _x * _x;
 }
 
+/*  Normalise the weighting slider to [0,1]. The legacy formula was
+    Position/(Max+Min), which never quite reaches 1 and motivated
+    weightT's overshoot for high m. */
+static double sliderM(int _value, int _min, int _max)
+{
+    if (_max <= _min)
+        return 0.5;
+    return double(_value - _min) / double(_max - _min);
+}
+
+static int clamp255(int _v)
+{
+    if (_v < 0)
+        return 0;
+    if (_v > 255)
+        return 255;
+    return _v;
+}
+
 void FarbverlaufDialog::farbverlaufRGB(int _abstufungen)
 {
-    const double m = double(slWeight->value()) / (slWeight->minimum() + slWeight->maximum());
+    const double m = sliderM(slWeight->value(), slWeight->minimum(), slWeight->maximum());
     count = 0;
     for (int i = 0; i < _abstufungen; i++) {
         const double x = double(i + 1) / (_abstufungen + 1);
         const double t = weightT(x, m);
-        const int r
-            = GetRValue(startcolor) + int((GetRValue(endcolor) - GetRValue(startcolor)) * t);
-        const int g
-            = GetGValue(startcolor) + int((GetGValue(endcolor) - GetGValue(startcolor)) * t);
-        const int b
-            = GetBValue(startcolor) + int((GetBValue(endcolor) - GetBValue(startcolor)) * t);
+        /*  weightT can overshoot [0,1] for extreme m values; clamp the
+            resulting channels so RGB() doesn't wrap a 287 into 31. */
+        const int r = clamp255(GetRValue(startcolor)
+                               + int((GetRValue(endcolor) - GetRValue(startcolor)) * t));
+        const int g = clamp255(GetGValue(startcolor)
+                               + int((GetGValue(endcolor) - GetGValue(startcolor)) * t));
+        const int b = clamp255(GetBValue(startcolor)
+                               + int((GetBValue(endcolor) - GetBValue(startcolor)) * t));
         table[count++] = RGB(r, g, b);
     }
 }
 
 void FarbverlaufDialog::farbverlaufHSV(int _abstufungen)
 {
-    const double m = double(slWeight->value()) / (slWeight->minimum() + slWeight->maximum());
+    const double m = sliderM(slWeight->value(), slWeight->minimum(), slWeight->maximum());
     const QColor cs = qcol(startcolor);
     const QColor ce = qcol(endcolor);
     float h1, s1, v1, h2, s2, v2;
