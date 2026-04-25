@@ -145,35 +145,22 @@ protected:
         const QColor gridClr = legacyBtnShadow();
 
         const bool normalMode = frm->GewebeNormal && frm->GewebeNormal->isChecked();
-        const bool coloredMode = (frm->GewebeFarbeffekt && frm->GewebeFarbeffekt->isChecked())
-                                 || (frm->GewebeSimulation && frm->GewebeSimulation->isChecked());
+        const bool farbeffektMode = frm->GewebeFarbeffekt && frm->GewebeFarbeffekt->isChecked();
+        const bool simulationMode = frm->GewebeSimulation && frm->GewebeSimulation->isChecked();
 
-        if (!normalMode && !coloredMode)
+        if (!normalMode && !farbeffektMode && !simulationMode)
             return;
+
+        /*  Simulation rendering needs cells big enough to hold a
+            warp strip + weft stubs; below that we fall back to the
+            flat warp/weft Farbeffekt look.                        */
+        const int dw = std::max(1, std::min(gw / 5, gw / 2 - 1));
+        const int dh = std::max(1, std::min(gh / 5, gh / 2 - 1));
+        const bool simDetailed = simulationMode && gw >= 5 && gh >= 5;
 
         for (int i = frm->kette.a; i < frm->kette.a + mx; i++) {
             for (int j = frm->schuesse.a; j < frm->schuesse.a + my; j++) {
                 const char s = frm->gewebe.feld.Get(i, j);
-                QColor cell;
-                bool draw = true;
-                if (normalMode) {
-                    if (s > 0) {
-                        cell = qColorFromTColor(GetRangeColor(s));
-                    } else {
-                        draw = false;
-                    }
-                } else {
-                    /*  Farbeffekt / Simulation: warp colour when the
-                        warp is "up" (gewebe > 0, xor sinkingshed),
-                        otherwise the weft colour.                 */
-                    bool warpUp = (s > 0);
-                    if (frm->sinkingshed)
-                        warpUp = !warpUp;
-                    const int cIdx = warpUp ? int(frm->kettfarben.feld.Get(i))
-                                            : int(frm->schussfarben.feld.Get(j));
-                    cell = Data->palette ? qColorFromTColor(Data->palette->GetColor(cIdx))
-                                         : QColor(Qt::white);
-                }
 
                 int x;
                 if (frm->righttoleft)
@@ -182,19 +169,74 @@ protected:
                     x = (i - frm->kette.a) * gw;
                 const int y = H - (j - frm->schuesse.a + 1) * gh;
 
-                if (gw > 1 || gh > 1) {
-                    if (draw) {
-                        p.fillRect(x, y, gw, gh, cell);
+                if (normalMode) {
+                    /*  Patrone view: filled cells get their range
+                        colour, empty cells just bkground. The grid is
+                        controlled by the toolbar Raster toggle (legacy
+                        behaviour).                                     */
+                    if (s > 0) {
+                        const QColor cell = qColorFromTColor(GetRangeColor(s));
+                        if (gw > 1 || gh > 1) {
+                            p.fillRect(x, y, gw, gh, cell);
+                        } else {
+                            p.setPen(cell);
+                            p.drawPoint(x, y);
+                            continue;
+                        }
                     }
-                    /*  Thin shadow grid when the cells are large
-                        enough to hold visible borders.            */
                     if (grid && gw > 2 && gh > 2) {
                         p.setPen(gridClr);
                         p.drawRect(x, y, gw, gh);
                     }
-                } else if (draw) {
-                    p.setPen(cell);
+                    continue;
+                }
+
+                /*  Farbeffekt / Simulation share the warp-up vs
+                    weft-up decision. */
+                bool warpUp = (s > 0);
+                if (frm->sinkingshed)
+                    warpUp = !warpUp;
+                const QColor kc = Data->palette ? qColorFromTColor(Data->palette->GetColor(
+                                                      int(frm->kettfarben.feld.Get(i))))
+                                                : QColor(Qt::white);
+                const QColor sc = Data->palette ? qColorFromTColor(Data->palette->GetColor(
+                                                      int(frm->schussfarben.feld.Get(j))))
+                                                : QColor(Qt::white);
+
+                if (gw <= 1 && gh <= 1) {
+                    p.setPen(warpUp ? kc : sc);
                     p.drawPoint(x, y);
+                    continue;
+                }
+
+                if (simDetailed) {
+                    /*  Mirrors TDBWFRM::DrawGewebeSimulation: paint a
+                        thread strip in the dominant fibre's colour and
+                        leave small "stubs" of the cross fibre showing
+                        at the cell edges.                             */
+                    p.fillRect(x, y, gw, gh, legacyBtnFace());
+                    if (warpUp) {
+                        p.fillRect(x + dw, y, gw - 2 * dw, gh, kc);
+                        p.fillRect(x, y + dh, dw, gh - 2 * dh, sc);
+                        p.fillRect(x + gw - dw, y + dh, dw, gh - 2 * dh, sc);
+                        p.setPen(QColor(Qt::black));
+                        p.drawLine(x + gw - dw, y + dh, x + gw - dw, y + gh - dh);
+                    } else {
+                        p.fillRect(x, y + dh, gw, gh - 2 * dh, sc);
+                        p.fillRect(x + dw, y, gw - 2 * dw, dh, kc);
+                        p.fillRect(x + dw, y + gh - dh, gw - 2 * dw, dh, kc);
+                        p.setPen(QColor(Qt::black));
+                        p.drawLine(x + dw, y + gh - dh, x + gw - dw, y + gh - dh);
+                    }
+                } else {
+                    p.fillRect(x, y, gw, gh, warpUp ? kc : sc);
+                }
+                /*  Simulation cells never carry a grid (matches main
+                    canvas); Farbeffekt cells only when the Raster
+                    toggle (seeded from fewithraster) is on.         */
+                if (farbeffektMode && grid && gw > 2 && gh > 2) {
+                    p.setPen(gridClr);
+                    p.drawRect(x, y, gw, gh);
                 }
             }
         }
@@ -244,7 +286,8 @@ OverviewDialog::OverviewDialog(TDBWFRM* _frm, QWidget* _parent)
     actGrid->setCheckable(true);
     actGrid->setChecked(true);
     actGrid->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_G));
-    actPrint = toolbar->addAction(LANG_STR("&Print...", "&Drucken..."), this, [this] { doPrint(); });
+    actPrint
+        = toolbar->addAction(LANG_STR("&Print...", "&Drucken..."), this, [this] { doPrint(); });
     actPrint->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_P));
     toolbar->addSeparator();
     QAction* actClose
@@ -271,6 +314,31 @@ void OverviewDialog::keyPressEvent(QKeyEvent* _e)
     if (_e->key() == Qt::Key_Escape || _e->key() == Qt::Key_F4) {
         accept();
         return;
+    }
+    /*  Mirror the main editor's Ctrl+1/2/3 view-mode shortcuts so the
+        user can switch between Patrone / Farbeffekt / Simulation
+        without leaving the overview. Triggering the QAction also
+        updates the main canvas via the existing connection.          */
+    if (_e->modifiers() == Qt::ControlModifier) {
+        QAction* target = nullptr;
+        switch (_e->key()) {
+        case Qt::Key_1:
+            target = frm->GewebeNormal;
+            break;
+        case Qt::Key_2:
+            target = frm->GewebeFarbeffekt;
+            break;
+        case Qt::Key_3:
+            target = frm->GewebeSimulation;
+            break;
+        default:
+            break;
+        }
+        if (target) {
+            target->trigger();
+            canvas->update();
+            return;
+        }
     }
     QDialog::keyPressEvent(_e);
 }

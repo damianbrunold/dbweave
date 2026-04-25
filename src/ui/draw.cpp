@@ -194,8 +194,10 @@ void TDBWFRM::DrawGewebeFarbeffekt(int _i, int _j, int _x, int _y, int _xx, int 
 
     p->fillRect(QRect(_x, _y, _xx - _x, _yy - _y), col);
 
-    if (fewithraster)
-        DrawGewebeRahmen(_i, _j);
+    /*  Grid (rahmen) for Farbeffekt cells is decided in the
+        canvas-level post-pass according to fewithraster, so the
+        flag affects only Farbeffekt-rendered cells and leaves
+        Simulation / repeat / empty cells alone.                  */
 }
 /*-----------------------------------------------------------------*/
 void TDBWFRM::DrawGewebeSimulation(int _i, int _j, int _x, int _y, int _xx, int _yy)

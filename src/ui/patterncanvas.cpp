@@ -778,7 +778,42 @@ void PatternCanvas::paintEvent(QPaintEvent* /*_e*/)
         paintField(frm->trittfolge, &TDBWFRM::DrawTrittfolge, &TDBWFRM::DrawTrittfolgeRahmen,
                    onlyGewebe);
 
-    paintField(frm->gewebe, &TDBWFRM::DrawGewebe, &TDBWFRM::DrawGewebeRahmen, gewebeNone);
+    /*  Gewebe rahmen is special-cased: cells rendered by
+        DrawGewebeSimulation never get a grid overlay; cells rendered
+        by DrawGewebeFarbeffekt only get one when fewithraster is
+        set. Empty / rapport-red / Normal cells always get the grid.
+        When GewebeNone is active, the rahmen-only blank pass already
+        handles every cell uniformly, so paintField is enough there. */
+    const bool farbeffekt = frm->GewebeFarbeffekt && frm->GewebeFarbeffekt->isChecked();
+    const bool simulation = frm->GewebeSimulation && frm->GewebeSimulation->isChecked();
+    if (gewebeNone || (!farbeffekt && !simulation)) {
+        paintField(frm->gewebe, &TDBWFRM::DrawGewebe, &TDBWFRM::DrawGewebeRahmen, gewebeNone);
+    } else {
+        paintField(frm->gewebe, &TDBWFRM::DrawGewebe, nullptr, /*blankContent=*/false);
+        const bool show_rapport = frm->RappViewRapport && frm->RappViewRapport->isChecked();
+        const bool inv = frm->Inverserepeat && frm->Inverserepeat->isChecked();
+        const FeldBase& fb = frm->gewebe;
+        const int cols = fb.gw > 0 ? fb.pos.width / fb.gw : 0;
+        const int rows = fb.gh > 0 ? fb.pos.height / fb.gh : 0;
+        for (int i = 0; i < cols; i++) {
+            for (int j = 0; j < rows; j++) {
+                const int gi = frm->scroll_x1 + i;
+                const int gj = frm->scroll_y2 + j;
+                const bool empty = frm->IsEmptyEinzug(gi) || frm->IsEmptyTrittfolge(gj);
+                const bool rapportCell
+                    = !empty && show_rapport && (frm->IsInRapport(gi, gj) != inv);
+                /*  A cell renders as Farbeffekt/Simulation only when
+                    none of the earlier branches in DrawGewebe took it. */
+                const bool fxCell = !empty && !rapportCell && farbeffekt;
+                const bool simCell = !empty && !rapportCell && simulation;
+                if (simCell)
+                    continue;
+                if (fxCell && !frm->fewithraster)
+                    continue;
+                frm->DrawGewebeRahmen(i, j);
+            }
+        }
+    }
 
     /*  Outer frames. DrawXRahmen only paints top/left borders per
         cell, so the last column / row is unframed. Match legacy's
