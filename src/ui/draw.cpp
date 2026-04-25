@@ -73,14 +73,18 @@ void TDBWFRM::DrawGewebe(int _i, int _j)
         return;
     }
 
-    /*  Rapport highlight takes precedence over view mode: inside
-        the rapport rectangle, positive-range cells paint red on a
-        btnFace background so the repeat boundary is visible.
-        Matches the legacy ordering: IsInRapport + RappViewRapport
-        + not GewebeNone -> DrawGewebeRapport.                    */
+    /*  Rapport highlight takes precedence over view mode: positive-
+        range cells paint red on a btnFace background so the repeat
+        boundary is visible. Matches the legacy ordering:
+        IsInRapport + RappViewRapport + not GewebeNone ->
+        DrawGewebeRapport. Inverserepeat flips which side gets the
+        red treatment: when checked, cells *outside* the rapport
+        rectangle get the red look, and cells inside fall through
+        to the configured Patrone/Farbeffekt/Simulation view.    */
     const bool none_checked = GewebeNone && GewebeNone->isChecked();
     const bool show_rapport = RappViewRapport && RappViewRapport->isChecked();
-    if (!none_checked && show_rapport && IsInRapport(scroll_x1 + _i, scroll_y2 + _j)) {
+    const bool inv = Inverserepeat && Inverserepeat->isChecked();
+    if (!none_checked && show_rapport && IsInRapport(scroll_x1 + _i, scroll_y2 + _j) != inv) {
         DrawGewebeRapport(_i, _j, x, y, xx, yy);
         return;
     }
