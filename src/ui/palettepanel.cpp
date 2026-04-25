@@ -72,6 +72,14 @@ QSize PalettePanel::minimumSizeHint() const
 void PalettePanel::resizeEvent(QResizeEvent* _e)
 {
     QWidget::resizeEvent(_e);
+    /*  columnsFor() sizes the column count from the current height, but
+        the dock width was previously left unconstrained -- so a tall,
+        narrow dock would compute 4 columns and clip the rightmost one.
+        Force the minimum width to match what the layout actually needs
+        so the dock widens to fit every column.                       */
+    const int needed = std::max(1, columnsFor(_e->size().height())) * CELL;
+    if (minimumWidth() != needed)
+        setMinimumWidth(needed);
     update();
 }
 
@@ -112,9 +120,10 @@ void PalettePanel::paintEvent(QPaintEvent* /*_e*/)
         p.drawRect(x, y, CELL - 1, CELL - 1);
     }
 
-    /*  Highlight the currently-active palette slot with a thick
-        contrast outline (black + inner white) so it reads clearly
-        against both dark and light swatches.                      */
+    /*  Highlight the currently-active palette slot. Sandwich a thick
+        white band between two black outlines so the marker stays
+        legible on both dark and light swatches and on any background
+        the swatch grid lands on.                                    */
     const int sel = Data->color;
     if (sel >= 0 && sel < n) {
         const int c = sel / nrows;
@@ -122,10 +131,12 @@ void PalettePanel::paintEvent(QPaintEvent* /*_e*/)
         const int x = c * CELL;
         const int y = r * CELL;
         p.setBrush(Qt::NoBrush);
-        p.setPen(QPen(Qt::black, 3));
-        p.drawRect(x + 1, y + 1, CELL - 3, CELL - 3);
-        p.setPen(QPen(Qt::white, 1));
+        p.setPen(QPen(Qt::black, 1));
+        p.drawRect(x, y, CELL - 1, CELL - 1);
+        p.setPen(QPen(Qt::white, 2));
         p.drawRect(x + 2, y + 2, CELL - 5, CELL - 5);
+        p.setPen(QPen(Qt::black, 1));
+        p.drawRect(x + 4, y + 4, CELL - 9, CELL - 9);
     }
     (void)cols;
 }
