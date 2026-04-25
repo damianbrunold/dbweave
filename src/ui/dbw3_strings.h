@@ -67,8 +67,6 @@
 #define NOVALIDFILE \
     LANG_STR("No valid DB-WEAVE file", "Keine gültige DB-WEAVE Datei").toLocal8Bit().constData()
 #define RECALCRAPPORT LANG_STR("Re&calc repeat", "Rapport neubere&chnen").toLocal8Bit().constData()
-#define SETRAPPORTTOSELECTION \
-    LANG_STR("&Set size to selection", "Rapport auf &Selektion setzen").toLocal8Bit().constData()
 #define COULD_NOT_EXPORT                                                                       \
     LANG_STR("The pattern could not be exported", "Das Muster konnte nicht exportiert werden") \
         .toLocal8Bit()                                                                         \

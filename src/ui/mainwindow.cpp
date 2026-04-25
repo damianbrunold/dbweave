@@ -923,15 +923,12 @@ TDBWFRM::TDBWFRM(QWidget* parent)
         = menuAct(repeatMenu, "Re&duce", "Re&duzieren", nullptr,
                   "Reduces the pattern to 1x1 repeat", "Reduziert das Muster auf einen Rapport");
     actRappReduce->setShortcut(QKeySequence(Qt::Key_F7));
-    QAction* actRappOverride
-        = menuAct(repeatMenu, "&Set size to selection", "&Grösse auf Selektion setzen");
     registerLang(Inverserepeat, QStringLiteral("&Invert repeat colors"),
                  QStringLiteral("Rapportfarben &umgekehrt"));
     Inverserepeat->setIcon(legacyIcon("mn_inverserepeat"));
     repeatMenu->addAction(Inverserepeat);
     connect(actRappExtend, &QAction::triggered, this, [this] { RappRapportierenClick(); });
     connect(actRappReduce, &QAction::triggered, this, [this] { RappReduzierenClick(); });
-    connect(actRappOverride, &QAction::triggered, this, [this] { RappOverrideClick(); });
     connect(RappViewRapport, &QAction::triggered, this, relayout);
     /*  CursorLocked is only meaningful while the repeat is visible;
         mirror legacy's dbw3_form.cpp:865 which auto-unchecks it when
@@ -1145,8 +1142,8 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     actHilfe->setShortcut(QKeySequence(Qt::Key_F1));
     connect(actHilfe, &QAction::triggered, this, [] {
         const QString url = (active_language == GE)
-            ? QStringLiteral("https://www.brunoldsoftware.ch/hilfe")
-            : QStringLiteral("https://www.brunoldsoftware.ch/help");
+                                ? QStringLiteral("https://www.brunoldsoftware.ch/hilfe")
+                                : QStringLiteral("https://www.brunoldsoftware.ch/help");
         QDesktopServices::openUrl(QUrl(url));
     });
     QAction* actBsoftOnline

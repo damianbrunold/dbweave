@@ -68,25 +68,6 @@ private slots:
         QCOMPARE(DBWFRM->rapport.kr.b, -1);
     }
 
-    void calc_rapport_respects_overridden_flag()
-    {
-        DBWFRM->kette = SZ(0, 3);
-        DBWFRM->schuesse = SZ(0, 0);
-        DBWFRM->rapport.kr = SZ(100, 200);
-        DBWFRM->rapport.sr = SZ(300, 400);
-        DBWFRM->rapport.overridden = true;
-
-        for (int i = 0; i < 4; i++)
-            DBWFRM->einzug.feld.Set(i, (short)(i + 1));
-        DBWFRM->CalcRapport();
-
-        /*  Nothing moved because overridden=true short-circuits. */
-        QCOMPARE(DBWFRM->rapport.kr.a, 100);
-        QCOMPARE(DBWFRM->rapport.kr.b, 200);
-
-        DBWFRM->rapport.overridden = false;
-    }
-
     void calc_rapport_finds_full_weft_repeat()
     {
         /*  schuesse = [0, 5]. trittfolge column-major: pattern

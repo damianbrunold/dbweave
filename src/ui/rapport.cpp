@@ -198,10 +198,6 @@ g_again:
 /*-----------------------------------------------------------------*/
 void RpRapportImpl::CalcRapport()
 {
-    if (frm->rapport.overridden) {
-        return;
-    }
-
     QCursor old = frm->cursor();
     frm->setCursor(Qt::WaitCursor);
 

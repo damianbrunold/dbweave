@@ -470,12 +470,11 @@ public:
 
     /*  Rapport (extend pattern) menu handlers. Rapportieren opens
         a modal dialog to pick horizontal / vertical repeat counts;
-        Reduzieren collapses the pattern to a single rapport;
-        Override flips the manual-rapport lock using the current
-        selection as the rapport rectangle.                       */
+        Reduzieren collapses the pattern to a single rapport. The
+        rapport rectangle is always derived from the pattern; there
+        is no manual-override mode.                               */
     void RappRapportierenClick();
     void RappReduzierenClick();
-    void RappOverrideClick();
 
     /*  Edit menu: ask the cursor handler what direction it's
         auto-advancing in after Set/Toggle, let the user change

@@ -226,33 +226,3 @@ void TDBWFRM::RappReduzierenClick()
     if (undo)
         undo->Snapshot();
 }
-/*-----------------------------------------------------------------*/
-void TDBWFRM::RappOverrideClick()
-{
-    if (!rapport.overridden) {
-        if (selection.Valid() && selection.feld == GEWEBE) {
-            RANGE save = selection;
-            selection.Normalize();
-            if (RappViewRapport && RappViewRapport->isChecked())
-                ClearRapport();
-            rapport.overridden = true;
-            RAPPORT old = rapport;
-            rapport.kr.a = selection.begin.i;
-            rapport.kr.b = selection.end.i;
-            rapport.sr.a = selection.begin.j;
-            rapport.sr.b = selection.end.j;
-            if (RappViewRapport && RappViewRapport->isChecked()) {
-                DrawRapport();
-                if (rapporthandler)
-                    rapporthandler->DrawDifferences(old, rapport);
-            }
-            ClearSelection();
-            (void)save;
-        }
-    } else {
-        rapport.overridden = false;
-        UpdateRapport();
-    }
-    UpdateStatusBar();
-    refresh();
-}

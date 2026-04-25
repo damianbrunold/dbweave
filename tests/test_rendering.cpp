@@ -418,10 +418,6 @@ private slots:
             colour.                                                 */
         DBWFRM->rapport.kr = SZ(1, 4);
         DBWFRM->rapport.sr = SZ(1, 4);
-        DBWFRM->rapport.overridden = true; /* stop CalcRapport from
-                                              re-computing on the
-                                              Simulation etc. tests
-                                              running before us. */
         DBWFRM->gewebe.feld.Set(2, 2, (char)1);
         DBWFRM->gewebe.feld.Set(6, 6, (char)1);
         DBWFRM->GewebeNormal->setChecked(true);
@@ -437,15 +433,12 @@ private slots:
         /*  Cell (6, 6): x=60..70, y = H - 7*10 = 10..20. Interior (65, 15).
             Outside the rapport -> ordinary range-1 colour (black). */
         QCOMPARE(img.pixelColor(65, 15), QColor(Qt::black));
-
-        DBWFRM->rapport.overridden = false;
     }
 
     void rapport_highlight_hidden_when_action_unchecked()
     {
         DBWFRM->rapport.kr = SZ(1, 4);
         DBWFRM->rapport.sr = SZ(1, 4);
-        DBWFRM->rapport.overridden = true;
         DBWFRM->gewebe.feld.Set(2, 2, (char)1);
         DBWFRM->GewebeNormal->setChecked(true);
         DBWFRM->RappViewRapport->setChecked(false); /* rapport off */
@@ -455,8 +448,6 @@ private slots:
         /*  Same interior pixel -- should paint in range-1 colour
             (black), not red, because rapport view is off. */
         QCOMPARE(img.pixelColor(25, 55), QColor(Qt::black));
-
-        DBWFRM->rapport.overridden = false;
     }
 
     /*  ---- Cursor rendering ------------------------------------- */

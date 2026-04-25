@@ -147,9 +147,7 @@ void TDBWFRM::UpdateStatusBar()
         const int sw = (rapport.sr.b != -1) ? (rapport.sr.b - rapport.sr.a + 1) : 0;
         if (!rap.isEmpty())
             rap += QStringLiteral("  ");
-        rap += rapport.overridden ? QStringLiteral("Rapport* %1x%2")
-                                  : QStringLiteral("Rapport %1x%2");
-        rap = rap.arg(kw).arg(sw);
+        rap += QStringLiteral("Rapport %1x%2").arg(kw).arg(sw);
     }
     sbRapport->setText(rap);
 

@@ -153,13 +153,8 @@ inline bool operator!=(const SZ& _s1, const SZ& _s2)
 /*-----------------------------------------------------------------*/
 // RAPPORT verwaltet den Rapport einer Patrone.
 struct RAPPORT {
-    bool overridden;
     SZ kr; // Kettrapport
     SZ sr; // Schussrapport
-    RAPPORT()
-    {
-        overridden = false;
-    }
 };
 /*-----------------------------------------------------------------*/
 // RANGE wird verwendet, um eine Selektion zu verwalten.
