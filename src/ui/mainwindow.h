@@ -176,8 +176,8 @@ public:
     bool sinkingshed = false;
     bool fewithraster = false;
     /*  true -> einzug renders below the gewebe (legacy
-        EinzugUnten option). recomputeLayout currently ignores
-        this flag; kept for option-dialog round-trip.          */
+        EinzugUnten option). PatternCanvas::recomputeLayout swaps
+        the left-column stacking order accordingly.              */
     bool einzugunten = false;
     /*  true -> use the alternative standard colour palette.  */
     bool palette2 = false;

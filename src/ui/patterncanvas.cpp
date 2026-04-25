@@ -211,21 +211,30 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
     frm->aufknuepfung.pos.width = af_w;
     frm->aufknuepfung.pos.height = af_h;
 
-    /*  Port of legacy dbw3_form.cpp:RecalcDimensions (einzugunten
-        = false / threading-on-top mode). Left column top-to-bottom:
-          kettfarben   (GH)   -- hidden when ViewFarbe is off
-          einzug       af_h   -- hidden when ViewEinzug is off
-          blatteinzug  GH     -- hidden when ViewBlatteinzug is off
-          gewebe       rest
-        Right column: aufknuepfung top, trittfolge below (aligned
-        with gewebe). schussfarben sits on the RIGHT side of
-        trittfolge (between trittfolge and the right scrollbar). */
+    /*  Port of legacy dbw3_form.cpp:RecalcDimensions. Two layout
+        modes selected by frm->einzugunten:
+
+        einzugunten = false (default, "threading on top"):
+          left column top-to-bottom = kettfarben, einzug,
+              blatteinzug, gewebe;
+          right column = aufknuepfung above (with einzug),
+              trittfolge below (with gewebe).
+
+        einzugunten = true ("threading below pattern"):
+          left column top-to-bottom = gewebe, blatteinzug, einzug,
+              kettfarben;
+          right column = trittfolge above (with gewebe),
+              aufknuepfung below (with einzug).
+
+        schussfarben sits on the RIGHT side of trittfolge (between
+        trittfolge and the right scrollbar) in either mode.       */
 
     const bool showFarbe = !frm->ViewFarbe || frm->ViewFarbe->isChecked();
     const bool showEinzug = !frm->ViewEinzug || frm->ViewEinzug->isChecked();
     const bool showBlatteinzug = !frm->ViewBlatteinzug || frm->ViewBlatteinzug->isChecked();
     const bool showTrittfolge = !frm->ViewTrittfolge || frm->ViewTrittfolge->isChecked();
     const bool showHlines = frm->ViewHlines && frm->ViewHlines->isChecked();
+    const bool einzugunten = frm->einzugunten;
     const int BAR = GW; /* hilfslinien bar thickness, zoom-scaled */
 
     const int schussfarbenW = showFarbe ? GW : 0;
@@ -250,10 +259,18 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
     const int colX = MARGIN;
 
     /*  Vertical dividers between stacked strips. Legacy inserts a
-        `divider` pixel gap between each pair of visible strips
-        (farbe/einzug/blatteinzug/gewebe).                       */
+        `divider` pixel gap between each pair of visible strips.
+        Meaning of each div depends on einzugunten:
+          !einzugunten: fh_div between kettfarben↔einzug,
+                        e_div  between einzug↔blatteinzug,
+                        b_div  between blatteinzug↔gewebe.
+          einzugunten:  g_div  between gewebe↔blatteinzug,
+                        b_div  between blatteinzug↔einzug,
+                        fh_div between einzug↔kettfarben.
+        Total reserved space is the same in either mode.          */
     const int fh_div = showFarbe ? divider : 0;
-    const int e_div = showEinzug ? divider : 0;
+    const int e_div = (showEinzug && !einzugunten) ? divider : 0;
+    const int g_div = (showEinzug && einzugunten) ? divider : 0;
     const int b_div = showBlatteinzug ? divider : 0;
 
     /*  Legacy places the two horizontal hilfslinien bars at the top
@@ -263,46 +280,63 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
         scrollbar (that width is reserved via rightW above).        */
     const int hlh_div = showHlines ? BAR + divider : 0;
 
+    /*  Strip heights are independent of einzugunten. Positions are
+        not -- compute heights first, then place each strip according
+        to the mode. */
+    const int kettfarbenH = showFarbe ? GH : 0;
+    const int einzugH = showEinzug ? af_h : 0;
+    const int blatteinzugH = showBlatteinzug ? GH : 0;
+    const int stripsBesideGewebeH
+        = kettfarbenH + fh_div + einzugH + e_div + blatteinzugH + b_div + g_div;
+    /*  hlh_div is added to the top column; the gewebe bottom must
+        stay above the horizontal scrollbar channel, so we subtract
+        hlh_div from the available height. Without this the gewebe
+        slid down under the scrollbar when ViewHlines was active
+        with large cells.                                            */
+    const int tf_area_h = usableH - 2 * MARGIN - stripsBesideGewebeH - hlh_div;
+    /*  Cap the vertical extent at Data->MAXY2 so the schussfarben
+        / gewebe row loops don't read past the backing
+        schussfarben.feld.                                            */
+    const int tf_rows = std::max(0, std::min(tf_area_h / GH, Data ? Data->MAXY2 : 0));
+    const int gewebeH = tf_rows * GH;
+
     frm->kettfarben.gw = GW;
     frm->kettfarben.gh = GH;
     frm->kettfarben.pos.x0 = colX;
-    frm->kettfarben.pos.y0 = MARGIN + hlh_div;
     frm->kettfarben.pos.width = showFarbe ? colW : 0;
-    frm->kettfarben.pos.height = showFarbe ? GH : 0;
+    frm->kettfarben.pos.height = kettfarbenH;
 
     frm->einzug.gw = GW;
     frm->einzug.gh = GH;
     frm->einzug.pos.x0 = colX;
-    frm->einzug.pos.y0 = frm->kettfarben.pos.y0 + frm->kettfarben.pos.height + fh_div;
     frm->einzug.pos.width = showEinzug ? colW : 0;
-    frm->einzug.pos.height = showEinzug ? af_h : 0;
+    frm->einzug.pos.height = einzugH;
 
     frm->blatteinzug.gw = GW;
     frm->blatteinzug.gh = GH;
     frm->blatteinzug.pos.x0 = colX;
-    frm->blatteinzug.pos.y0 = frm->einzug.pos.y0 + frm->einzug.pos.height + e_div;
     frm->blatteinzug.pos.width = showBlatteinzug ? colW : 0;
-    frm->blatteinzug.pos.height = showBlatteinzug ? GH : 0;
-
-    const int stripsAboveGewebeH = frm->kettfarben.pos.height + fh_div + frm->einzug.pos.height
-                                   + e_div + frm->blatteinzug.pos.height + b_div;
-    /*  hlh_div is added to kettfarben.y0 (pushing the whole left
-        column down); the gewebe bottom must stay above the
-        horizontal scrollbar channel, so we subtract hlh_div from the
-        available height. Without this the gewebe slid down under the
-        scrollbar when ViewHlines was active with large cells.       */
-    const int tf_area_h = usableH - 2 * MARGIN - stripsAboveGewebeH - hlh_div;
-    /*  Likewise cap the vertical extent at Data->MAXY2 so the
-        schussfarben / gewebe row loops don't read past the backing
-        schussfarben.feld.                                        */
-    const int tf_rows = std::max(0, std::min(tf_area_h / GH, Data ? Data->MAXY2 : 0));
+    frm->blatteinzug.pos.height = blatteinzugH;
 
     frm->gewebe.gw = GW;
     frm->gewebe.gh = GH;
     frm->gewebe.pos.x0 = colX;
-    frm->gewebe.pos.y0 = frm->blatteinzug.pos.y0 + frm->blatteinzug.pos.height + b_div;
     frm->gewebe.pos.width = colW;
-    frm->gewebe.pos.height = tf_rows * GH;
+    frm->gewebe.pos.height = gewebeH;
+
+    if (!einzugunten) {
+        /*  Top-to-bottom: kettfarben, einzug, blatteinzug, gewebe. */
+        frm->kettfarben.pos.y0 = MARGIN + hlh_div;
+        frm->einzug.pos.y0 = frm->kettfarben.pos.y0 + kettfarbenH + fh_div;
+        frm->blatteinzug.pos.y0 = frm->einzug.pos.y0 + einzugH + e_div;
+        frm->gewebe.pos.y0 = frm->blatteinzug.pos.y0 + blatteinzugH + b_div;
+    } else {
+        /*  Top-to-bottom: gewebe, blatteinzug, einzug, kettfarben. */
+        frm->gewebe.pos.y0 = MARGIN + hlh_div;
+        frm->blatteinzug.pos.y0 = frm->gewebe.pos.y0 + gewebeH + g_div;
+        frm->einzug.pos.y0 = frm->blatteinzug.pos.y0 + blatteinzugH + b_div;
+        frm->kettfarben.pos.y0 = frm->einzug.pos.y0 + einzugH + fh_div;
+    }
 
     /*  Right column: aufknuepfung above (aligned vertically with
         einzug), trittfolge below (aligned with gewebe),
@@ -475,21 +509,34 @@ bool PatternCanvas::hoverHDivider(int _x, int _y) const
 bool PatternCanvas::hoverVDivider(int _x, int _y) const
 {
     /*  The vertical (einzug / gewebe sizing) divider lives in the
-        narrow pixel gap immediately above gewebe. When blatteinzug
-        is visible that gap is between blatteinzug.bottom and
-        gewebe.top; otherwise it's the gap between einzug.bottom
-        (or kettfarben.bottom when einzug is hidden) and
-        gewebe.top. Hit-testing only this narrow band keeps clicks
-        on the strips themselves from being swallowed by the drag
-        handle.                                                   */
-    const int bottom = frm->gewebe.pos.y0;
-    int top = bottom;
-    if (frm->blatteinzug.pos.height > 0)
-        top = frm->blatteinzug.pos.y0 + frm->blatteinzug.pos.height;
-    else if (frm->einzug.pos.height > 0)
-        top = frm->einzug.pos.y0 + frm->einzug.pos.height;
-    else if (frm->kettfarben.pos.height > 0)
-        top = frm->kettfarben.pos.y0 + frm->kettfarben.pos.height;
+        narrow pixel gap that separates gewebe from the adjacent
+        strip stack. In default mode that gap is above gewebe
+        (between blatteinzug/einzug/kettfarben.bottom and
+        gewebe.top). In einzugunten mode gewebe is on top, so the
+        gap is below gewebe (between gewebe.bottom and the
+        blatteinzug/einzug/kettfarben.top below it). Hit-testing
+        only this narrow band keeps clicks on the strips
+        themselves from being swallowed by the drag handle.       */
+    int top, bottom;
+    if (!frm->einzugunten) {
+        bottom = frm->gewebe.pos.y0;
+        top = bottom;
+        if (frm->blatteinzug.pos.height > 0)
+            top = frm->blatteinzug.pos.y0 + frm->blatteinzug.pos.height;
+        else if (frm->einzug.pos.height > 0)
+            top = frm->einzug.pos.y0 + frm->einzug.pos.height;
+        else if (frm->kettfarben.pos.height > 0)
+            top = frm->kettfarben.pos.y0 + frm->kettfarben.pos.height;
+    } else {
+        top = frm->gewebe.pos.y0 + frm->gewebe.pos.height;
+        bottom = top;
+        if (frm->blatteinzug.pos.height > 0)
+            bottom = frm->blatteinzug.pos.y0;
+        else if (frm->einzug.pos.height > 0)
+            bottom = frm->einzug.pos.y0;
+        else if (frm->kettfarben.pos.height > 0)
+            bottom = frm->kettfarben.pos.y0;
+    }
     if (top >= bottom)
         return false;
     if (_y < top - 1 || _y > bottom + 1)
