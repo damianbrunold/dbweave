@@ -53,6 +53,22 @@ static QString templateFilter()
 }
 
 /*-----------------------------------------------------------------*/
+/*  Wipe the undo history and seed it with one snapshot of the
+    current document state. Called by the full-document load paths
+    so the freshly-loaded contents become the only undoable point --
+    without this, undo could walk back into the previously-loaded
+    document or to an empty state from before any load.            */
+void TDBWFRM::ResetUndoToCurrentState()
+{
+    if (!undo)
+        return;
+    delete undo;
+    undo = new UrUndo(this);
+    undo->Snapshot();
+    undo->MarkClean();
+}
+
+/*-----------------------------------------------------------------*/
 /*  Port of legacy DateiNeu: reset every bit of document state back
     to the values a freshly-constructed TDBWFRM would have. Does NOT
     prompt the user or clear the filename -- callers handle those so
@@ -245,6 +261,7 @@ void TDBWFRM::FileNewTemplateClick()
         without a backing file.                                     */
     filename.clear();
     SetModified(true);
+    ResetUndoToCurrentState();
     SetAppTitle();
 }
 
@@ -277,6 +294,7 @@ void TDBWFRM::FileOpen()
     }
     AddToMRU(chosen);
     SetModified(false);
+    ResetUndoToCurrentState();
     refresh();
 }
 
@@ -327,6 +345,7 @@ void TDBWFRM::FileRevertClick()
         return;
     }
     SetModified(false);
+    ResetUndoToCurrentState();
     refresh();
 }
 
@@ -366,6 +385,10 @@ void TDBWFRM::FileSave()
     }
     AddToMRU((QString)filename);
     SetModified(false);
+    /*  The just-saved state matches what's now on disk -- mark it as
+        the new clean point so undoing back to it clears modified.   */
+    if (undo)
+        undo->MarkClean();
     SetAppTitle();
 }
 
@@ -546,6 +569,7 @@ void TDBWFRM::OpenFromMRU(int _index)
     }
     AddToMRU(path);
     SetModified(false);
+    ResetUndoToCurrentState();
     refresh();
 }
 

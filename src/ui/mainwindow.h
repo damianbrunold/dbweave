@@ -758,6 +758,11 @@ public:
         loading the caller clears the filename so Save prompts for a
         fresh target.                                              */
     void ResetDocument();
+    /*  Discard any history in the undo stack and seed it with a
+        snapshot of the current document state. Called after a fresh
+        full-document load so the user cannot undo past the just-
+        loaded contents.                                            */
+    void ResetUndoToCurrentState();
 
     /*  Options / Environment dialogs (app settings). */
     void OptEnvironmentClick();

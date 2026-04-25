@@ -283,12 +283,16 @@ void UrUndo::Snapshot()
         } else {
             current = current->Next();
         }
+        if (current == cleanItem)
+            cleanItem = nullptr;
         current->Clean();
     }
 
     if (current && current->IsEmpty()) {
         current->SetData(mainfrm);
         if (current->Next() != first) {
+            if (current->Next() == cleanItem)
+                cleanItem = nullptr;
             current->Next()->Clean();
         }
     }
@@ -315,6 +319,7 @@ void UrUndo::Clear()
 {
     dbw3_assert(current != 0);
     dbw3_assert(first != 0);
+    cleanItem = nullptr;
     current = first;
     do {
         current->Clean();
@@ -354,5 +359,15 @@ bool UrUndo::CanUndo()
 bool UrUndo::CanRedo()
 {
     return (current->Next() != first && !current->Next()->IsEmpty());
+}
+/*-----------------------------------------------------------------*/
+void UrUndo::MarkClean()
+{
+    cleanItem = current;
+}
+/*-----------------------------------------------------------------*/
+bool UrUndo::IsAtCleanState() const
+{
+    return cleanItem != nullptr && current == cleanItem;
 }
 /*-----------------------------------------------------------------*/

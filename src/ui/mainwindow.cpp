@@ -551,13 +551,25 @@ TDBWFRM::TDBWFRM(QWidget* parent)
                                    "Wechselt auf die andere Seite des Musters");
     actSwapSide->setShortcut(QKeySequence(Qt::Key_F11));
 
-    connect(actUndo, &QAction::triggered, this, [this] {
-        if (undo && undo->Undo())
+    /*  After stepping the undo/redo history, sync the modified flag
+        from the clean-state marker so undoing all the way back to a
+        just-loaded / just-saved snapshot drops the asterisk in the
+        title bar (and re-enables it when stepping away again).     */
+    auto syncModifiedFromUndo = [this] {
+        if (undo)
+            SetModified(!undo->IsAtCleanState());
+    };
+    connect(actUndo, &QAction::triggered, this, [this, syncModifiedFromUndo] {
+        if (undo && undo->Undo()) {
+            syncModifiedFromUndo();
             refresh();
+        }
     });
-    connect(actRedo, &QAction::triggered, this, [this] {
-        if (undo && undo->Redo())
+    connect(actRedo, &QAction::triggered, this, [this, syncModifiedFromUndo] {
+        if (undo && undo->Redo()) {
+            syncModifiedFromUndo();
             refresh();
+        }
     });
     connect(actCut, &QAction::triggered, this, [this] { CutSelection(); });
     connect(actCopy, &QAction::triggered, this, [this] { CopySelection(); });

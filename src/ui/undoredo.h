@@ -100,9 +100,20 @@ public:
 
     void Snapshot();
 
+    /*  Mark the current undo position as the document's "clean"
+        state -- usually the just-loaded or just-saved snapshot. The
+        Edit > Undo/Redo handlers can later call IsAtCleanState() to
+        decide whether the document is logically modified after the
+        user steps the history. The marker is invalidated if the
+        underlying slot is reused by a later Snapshot or by Clear(). */
+    void MarkClean();
+    bool IsAtCleanState() const;
+
 protected:
     void Init(int _maxundo);
     void Cleanup();
+
+    UrUndoItem* cleanItem = nullptr;
 };
 /*-----------------------------------------------------------------*/
 #endif
