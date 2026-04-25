@@ -36,9 +36,12 @@ VerhaeltnisDialog::VerhaeltnisDialog(QWidget* _parent, double _faktor_kette, dou
     sbKette = makeSpin(_faktor_kette);
     sbSchuss = makeSpin(_faktor_schuss);
 
+    /*  Use the QString overload of addRow so the label auto-buddies to
+        its widget; explicit QLabel rows would render the "&" mnemonic
+        literally. */
     auto* form = new QFormLayout;
-    form->addRow(new QLabel(LANG_STR("&Warp factor:", "Faktor &Kette:"), this), sbKette);
-    form->addRow(new QLabel(LANG_STR("W&eft factor:", "Faktor &Schuss:"), this), sbSchuss);
+    form->addRow(LANG_STR("&Warp factor:", "Faktor &Kette:"), sbKette);
+    form->addRow(LANG_STR("W&eft factor:", "Faktor &Schuss:"), sbSchuss);
 
     auto* btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
 
