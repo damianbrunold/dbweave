@@ -900,7 +900,11 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     addKoeperItem(kettkoepMenu, "&9  Twill 5/3", "&9  Köper 5/3", 5, 3);
 
     /*  ---------- &Additional (MenuWeitere) ------------------ */
-    QMenu* additionalMenu = addMenu(menuBar(), "&Additional", "&Weitere");
+    /*  Legacy layout: "Weitere" is a submenu of "Einfügen" holding the
+        named user-pattern slots. "Verwaltung" sits at the Einfügen level
+        so the user can reach it to create the first pattern even while
+        Weitere is hidden (it hides itself when no slots have data). */
+    QMenu* additionalMenu = addSubmenu(insertMenu, "&Additional", "&Weitere");
     MenuWeitere = additionalMenu;
     for (int i = 0; i < MAXUSERDEF; i++) {
         UserdefAct[i] = additionalMenu->addAction(QString());
@@ -910,8 +914,7 @@ TDBWFRM::TDBWFRM(QWidget* parent)
             InsertUserdef(i, transp);
         });
     }
-    additionalMenu->addSeparator();
-    QMenu* udCfg = addSubmenu(additionalMenu, "A&dministration", "&Verwaltung");
+    QMenu* udCfg = addSubmenu(insertMenu, "A&dministration", "&Verwaltung");
     QAction* actUdAdd = menuAct(udCfg, "&Add current pattern...", "&Muster hinzufügen...");
     QAction* actUdAddSel = menuAct(udCfg, "Add &selection...", "&Selektion hinzufügen...");
     QAction* actUdDel = menuAct(udCfg, "&Remove...", "&Löschen...");

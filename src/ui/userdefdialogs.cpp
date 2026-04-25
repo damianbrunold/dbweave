@@ -35,8 +35,9 @@ UserdefEnterNameDialog::UserdefEnterNameDialog(const QString& _default, QWidget*
     connect(btns, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
     auto* root = new QVBoxLayout(this);
-    root->addWidget(
-        new QLabel(LANG_STR("&Enter the pattern name:", "&Mustername eingeben:"), this));
+    auto* label = new QLabel(LANG_STR("&Enter the pattern name:", "&Mustername eingeben:"), this);
+    label->setBuddy(edName);
+    root->addWidget(label);
     root->addWidget(edName);
     root->addWidget(btns);
 

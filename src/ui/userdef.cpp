@@ -154,7 +154,7 @@ void TDBWFRM::UserdefAddClick()
     if (i < 0 || i >= MAXUSERDEF)
         return;
 
-    const QString fallback = QStringLiteral("Pattern %1").arg(i + 1);
+    const QString fallback = LANG_STR("Pattern %1", "Muster %1").arg(i + 1);
     const QString seed = userdef[i].description.isEmpty() ? fallback : userdef[i].description;
     const QString descr = getUserdefName(this, seed);
     if (descr.isEmpty())
@@ -189,7 +189,7 @@ void TDBWFRM::UserdefAddSelClick()
 
         const int i = SelectUserdef(LANG_STR("Select pattern slot", "Musterplatz wählen"));
         if (i >= 0 && i < MAXUSERDEF) {
-            const QString fallback = QStringLiteral("Pattern %1").arg(i + 1);
+            const QString fallback = LANG_STR("Pattern %1", "Muster %1").arg(i + 1);
             const QString seed
                 = userdef[i].description.isEmpty() ? fallback : userdef[i].description;
             const QString descr = getUserdefName(this, seed);
