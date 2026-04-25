@@ -166,6 +166,7 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
     const int tdx = treadles != 0 ? 1 : 0;
     const int dx = kette.count();
     const int dy = schuesse.count();
+    const bool einzugunten = this->einzugunten;
 
     p.setRenderHint(QPainter::Antialiasing, false);
     /*  PaintCell() mutates the painter's brush as a side effect;
@@ -173,6 +174,15 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
         quadrant's outline rect solid-colour. Keep the brush empty
         so the quadrant borders are strokes, not fills. */
     p.setBrush(Qt::NoBrush);
+
+    /*  Block Y origins. Standard layout puts einzug / aufknuepfung
+        at the top and gewebe / trittfolge below them; einzugunten
+        ("threading below pattern") swaps the two pairs. Total height
+        is unchanged either way -- only y0 of each block shifts.    */
+    const int einzug_y0 = einzugunten ? (dy + sdy) * gh : 0;
+    const int gewebe_y0 = einzugunten ? 0 : (shafts + sdy) * gh;
+    const int auf_y0 = einzug_y0;
+    const int tritt_y0 = gewebe_y0;
 
     /*  Draw one cell in either filled or symbol mode, matching the
         print path's "filled means filled" look: AUSGEFUELLT covers
@@ -195,10 +205,10 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
         }
     };
 
-    /*  Einzug (top-left). */
+    /*  Einzug (top-left in standard layout, bottom-left in einzugunten). */
     if (shafts != 0) {
         const int x0 = 0;
-        const int y0 = 0;
+        const int y0 = einzug_y0;
         p.setPen(QColor(105, 105, 105));
         for (int i = 0; i <= dx; i++)
             p.drawLine(x0 + i * gw, y0, x0 + i * gw, y0 + shafts * gh);
@@ -217,10 +227,10 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
         p.drawRect(x0, y0, dx * gw, shafts * gh);
     }
 
-    /*  Aufknuepfung (top-right). */
+    /*  Aufknuepfung (top-right in standard layout, bottom-right in einzugunten). */
     if (treadles != 0 && shafts != 0) {
         const int x0 = (dx + tdx) * gw;
-        const int y0 = 0;
+        const int y0 = auf_y0;
         p.setPen(QColor(105, 105, 105));
         for (int i = 0; i <= treadles; i++)
             p.drawLine(x0 + i * gw, y0, x0 + i * gw, y0 + shafts * gh);
@@ -258,10 +268,10 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
         p.drawRect(x0, y0, treadles * gw, shafts * gh);
     }
 
-    /*  Trittfolge (bottom-right). */
+    /*  Trittfolge (bottom-right in standard layout, top-right in einzugunten). */
     if (treadles != 0) {
         const int x0 = (dx + tdx) * gw;
-        const int y0 = (shafts + sdy) * gh;
+        const int y0 = tritt_y0;
         p.setPen(QColor(105, 105, 105));
         for (int i = 0; i <= treadles; i++)
             p.drawLine(x0 + i * gw, y0, x0 + i * gw, y0 + dy * gh);
@@ -298,8 +308,8 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
         p.drawRect(x0, y0, treadles * gw, dy * gh);
     }
 
-    /*  Gewebe (bottom-left). Supports the same four view modes the
-        editor uses:
+    /*  Gewebe (bottom-left in standard layout, top-left in einzugunten).
+        Supports the same four view modes the editor uses:
           Unsichtbar  -> grid only, no cell content
           Patrone     -> range-coloured filled cells (the default)
           Farbeffekt  -> warp / weft palette colour, full cell
@@ -308,7 +318,7 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
         export-sized (fixed gw/gh=16) geometry.                     */
     {
         const int x0 = 0;
-        const int y0 = (shafts + sdy) * gh;
+        const int y0 = gewebe_y0;
         p.setPen(QColor(105, 105, 105));
         for (int i = 0; i <= dx; i++)
             p.drawLine(x0 + i * gw, y0, x0 + i * gw, y0 + dy * gh);
