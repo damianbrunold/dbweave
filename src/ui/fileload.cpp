@@ -663,6 +663,11 @@ void FhLoader::LoadViewGeneral(FfReader* _reader)
     int toptobottom = mainfrm->toptobottom ? 1 : 0;
     double fk = mainfrm->faktor_kette;
     double fs = mainfrm->faktor_schuss;
+    /*  Pack the current strongclr as the legacy did (RGB packed into
+        an int) so the field is round-tripable even if absent. */
+    int strongcolor = (mainfrm->strongclr.red() & 0xff)
+                      | ((mainfrm->strongclr.green() & 0xff) << 8)
+                      | ((mainfrm->strongclr.blue() & 0xff) << 16);
     BEGIN_LOAD_MAP
     BEGIN_FIELD_MAP
     _FIELD_MAP_INT("zoom", zoom, int)
@@ -674,6 +679,7 @@ void FhLoader::LoadViewGeneral(FfReader* _reader)
     FIELD_MAP_INT("viewhlines", viewhlines, int)
     FIELD_MAP_INT("righttoleft", righttoleft, int)
     FIELD_MAP_INT("toptobottom", toptobottom, int)
+    FIELD_MAP_INT("strongcolor", strongcolor, int)
     FIELD_MAP_DOUBLE("faktor_kette", fk)
     FIELD_MAP_DOUBLE("faktor_schuss", fs)
     DEFAULT_FIELD
@@ -689,6 +695,8 @@ void FhLoader::LoadViewGeneral(FfReader* _reader)
     mainfrm->faktor_schuss = float(fs);
     mainfrm->righttoleft = (righttoleft != 0);
     mainfrm->toptobottom = (toptobottom != 0);
+    mainfrm->strongclr
+        = QColor(strongcolor & 0xff, (strongcolor >> 8) & 0xff, (strongcolor >> 16) & 0xff);
     setChecked(mainfrm->ViewFarbpalette, viewpalette != 0);
     setChecked(mainfrm->ViewSchlagpatrone, viewpegplan != 0);
     setChecked(mainfrm->RappViewRapport, viewrapport != 0);
@@ -730,6 +738,8 @@ void FhLoader::LoadViewEinzug(FfReader* _reader)
     int viewtype = int(PUNKT);
     int hvisible = mainfrm->hvisible;
     int style = 1; /* 1 = EzMinimalZ -- legacy default */
+    int stronglinex = mainfrm->einzug.pos.strongline_x;
+    int strongliney = mainfrm->einzug.pos.strongline_y;
     BEGIN_LOAD_MAP
     BEGIN_FIELD_MAP
     _FIELD_MAP_INT("visible", visible, int)
@@ -737,6 +747,8 @@ void FhLoader::LoadViewEinzug(FfReader* _reader)
     FIELD_MAP_INT("viewtype", viewtype, int)
     FIELD_MAP_INT("hvisible", hvisible, int)
     FIELD_MAP_INT("style", style, int)
+    FIELD_MAP_INT("stronglinex", stronglinex, int)
+    FIELD_MAP_INT("strongliney", strongliney, int)
     DEFAULT_FIELD
     BEGIN_SECTION_MAP
     NO_SECTIONS
@@ -745,6 +757,8 @@ void FhLoader::LoadViewEinzug(FfReader* _reader)
     setChecked(mainfrm->ViewEinzug, visible != 0);
     mainfrm->einzugunten = (down != 0);
     mainfrm->einzug.darstellung = DARSTELLUNG(viewtype);
+    mainfrm->einzug.pos.strongline_x = stronglinex;
+    mainfrm->einzug.pos.strongline_y = strongliney;
     if (hvisible > 0)
         mainfrm->hvisible = hvisible;
     /*  style selects the einzug-rearrangement radio group. Map legacy
@@ -765,15 +779,21 @@ void FhLoader::LoadViewEinzug(FfReader* _reader)
 void FhLoader::LoadViewAufknuepfung(FfReader* _reader)
 {
     int viewtype = int(KREUZ);
+    int stronglinex = mainfrm->aufknuepfung.pos.strongline_x;
+    int strongliney = mainfrm->aufknuepfung.pos.strongline_y;
     BEGIN_LOAD_MAP
     BEGIN_FIELD_MAP
     _FIELD_MAP_INT("viewtype", viewtype, int)
+    FIELD_MAP_INT("stronglinex", stronglinex, int)
+    FIELD_MAP_INT("strongliney", strongliney, int)
     DEFAULT_FIELD
     BEGIN_SECTION_MAP
     NO_SECTIONS
     BEGIN_DEFAULT_MAP
     END_LOAD_MAP
     mainfrm->aufknuepfung.darstellung = DARSTELLUNG(viewtype);
+    mainfrm->aufknuepfung.pos.strongline_x = stronglinex;
+    mainfrm->aufknuepfung.pos.strongline_y = strongliney;
 }
 /*-----------------------------------------------------------------*/
 void FhLoader::LoadViewTrittfolge(FfReader* _reader)
@@ -783,6 +803,8 @@ void FhLoader::LoadViewTrittfolge(FfReader* _reader)
     int einzeltritt = 1;
     int wvisible = mainfrm->wvisible;
     int style = 1;
+    int stronglinex = mainfrm->trittfolge.pos.strongline_x;
+    int strongliney = mainfrm->trittfolge.pos.strongline_y;
     BEGIN_LOAD_MAP
     BEGIN_FIELD_MAP
     _FIELD_MAP_INT("visible", visible, int)
@@ -790,6 +812,8 @@ void FhLoader::LoadViewTrittfolge(FfReader* _reader)
     FIELD_MAP_INT("single", einzeltritt, int)
     FIELD_MAP_INT("wvisible", wvisible, int)
     FIELD_MAP_INT("style", style, int)
+    FIELD_MAP_INT("stronglinex", stronglinex, int)
+    FIELD_MAP_INT("strongliney", strongliney, int)
     DEFAULT_FIELD
     BEGIN_SECTION_MAP
     NO_SECTIONS
@@ -798,6 +822,8 @@ void FhLoader::LoadViewTrittfolge(FfReader* _reader)
     setChecked(mainfrm->ViewTrittfolge, visible != 0);
     mainfrm->trittfolge.darstellung = DARSTELLUNG(viewtype);
     mainfrm->trittfolge.einzeltritt = (einzeltritt != 0);
+    mainfrm->trittfolge.pos.strongline_x = stronglinex;
+    mainfrm->trittfolge.pos.strongline_y = strongliney;
     if (wvisible > 0)
         mainfrm->wvisible = wvisible;
     /*  Trittfolge-rearrangement radio group selector. */

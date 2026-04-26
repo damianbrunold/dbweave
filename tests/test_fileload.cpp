@@ -138,6 +138,17 @@ private slots:
         /*  Add a guide line so we cover the new hilfslinien round-trip. */
         DBWFRM->hlines.Add(HL_VERT, HL_LEFT, 7);
 
+        /*  Strongline / strongcolor: legacy persists these but the
+            port previously dropped them on save. Capture non-default
+            values so the round-trip catches a regression.            */
+        DBWFRM->einzug.pos.strongline_x = 8;
+        DBWFRM->einzug.pos.strongline_y = 6;
+        DBWFRM->aufknuepfung.pos.strongline_x = 5;
+        DBWFRM->aufknuepfung.pos.strongline_y = 7;
+        DBWFRM->trittfolge.pos.strongline_x = 3;
+        DBWFRM->trittfolge.pos.strongline_y = 9;
+        DBWFRM->strongclr = QColor(40, 80, 120);
+
         DBWFRM->filename = out;
         QVERIFY2(DBWFRM->Save(), "Save() returned false");
 
@@ -163,6 +174,14 @@ private slots:
         QCOMPARE((int)h->typ, (int)HL_VERT);
         QCOMPARE((int)h->feld, (int)HL_LEFT);
         QCOMPARE(h->pos, 7);
+
+        QCOMPARE(DBWFRM->einzug.pos.strongline_x, 8);
+        QCOMPARE(DBWFRM->einzug.pos.strongline_y, 6);
+        QCOMPARE(DBWFRM->aufknuepfung.pos.strongline_x, 5);
+        QCOMPARE(DBWFRM->aufknuepfung.pos.strongline_y, 7);
+        QCOMPARE(DBWFRM->trittfolge.pos.strongline_x, 3);
+        QCOMPARE(DBWFRM->trittfolge.pos.strongline_y, 9);
+        QCOMPARE(DBWFRM->strongclr, QColor(40, 80, 120));
     }
 
     void ratio_round_trips_non_unit_values()

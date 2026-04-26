@@ -194,23 +194,35 @@ bool TDBWFRM::Save()
         writer.WriteFieldInt("toptobottom", toptobottom ? 1 : 0);
         writer.WriteFieldDouble("faktor_kette", faktor_kette);
         writer.WriteFieldDouble("faktor_schuss", faktor_schuss);
+        /*  strongcolor: legacy stores it as an int RGB. Match that
+            packing so files written here interop with the legacy and
+            web apps. */
+        const int strongRGB = (strongclr.red() & 0xff) | ((strongclr.green() & 0xff) << 8)
+                              | ((strongclr.blue() & 0xff) << 16);
+        writer.WriteFieldInt("strongcolor", strongRGB);
         writer.EndSection();
 
         writer.BeginSection("einzug");
         writer.WriteFieldInt("visible", (ViewEinzug && ViewEinzug->isChecked()) ? 1 : 0);
         writer.WriteFieldInt("down", einzugunten ? 1 : 0);
         writer.WriteFieldInt("viewtype", int(einzug.darstellung));
+        writer.WriteFieldInt("stronglinex", einzug.pos.strongline_x);
+        writer.WriteFieldInt("strongliney", einzug.pos.strongline_y);
         writer.WriteFieldInt("hvisible", hvisible);
         writer.WriteFieldInt("style", styleIndex(ezActs, 8, 1));
         writer.EndSection();
 
         writer.BeginSection("aufknuepfung");
         writer.WriteFieldInt("viewtype", int(aufknuepfung.darstellung));
+        writer.WriteFieldInt("stronglinex", aufknuepfung.pos.strongline_x);
+        writer.WriteFieldInt("strongliney", aufknuepfung.pos.strongline_y);
         writer.EndSection();
 
         writer.BeginSection("trittfolge");
         writer.WriteFieldInt("visible", (ViewTrittfolge && ViewTrittfolge->isChecked()) ? 1 : 0);
         writer.WriteFieldInt("viewtype", int(trittfolge.darstellung));
+        writer.WriteFieldInt("stronglinex", trittfolge.pos.strongline_x);
+        writer.WriteFieldInt("strongliney", trittfolge.pos.strongline_y);
         writer.WriteFieldInt("single", trittfolge.einzeltritt ? 1 : 0);
         writer.WriteFieldInt("wvisible", wvisible);
         writer.WriteFieldInt("style", styleIndex(tfActs, 6, 1));
