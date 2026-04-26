@@ -155,7 +155,13 @@ void TDBWFRM::SteigungInc()
     }
     IncrementSteigung(selection.begin.i, selection.begin.j, selection.end.i, selection.end.j,
                       selection.feld);
-    if (selection.feld != GEWEBE)
+    /*  GEWEBE edits need RecalcAll so einzug/aufknuepfung/trittfolge
+        track the new gewebe content; otherwise DrawGewebe blanks
+        cells in columns/rows whose einzug/trittfolge is still empty.
+        Other-field edits use RecalcGewebe to derive gewebe instead. */
+    if (selection.feld == GEWEBE)
+        RecalcAll();
+    else
         RecalcGewebe();
     CalcRangeSchuesse();
     CalcRangeKette();
@@ -181,7 +187,9 @@ void TDBWFRM::SteigungDec()
     }
     DecrementSteigung(selection.begin.i, selection.begin.j, selection.end.i, selection.end.j,
                       selection.feld);
-    if (selection.feld != GEWEBE)
+    if (selection.feld == GEWEBE)
+        RecalcAll();
+    else
         RecalcGewebe();
     CalcRangeSchuesse();
     CalcRangeKette();

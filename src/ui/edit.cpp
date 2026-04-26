@@ -48,8 +48,18 @@
 #include <algorithm>
 #include <cstring>
 
-static void recalcRangesAndRapport(TDBWFRM* frm)
+/*  Post-edit fixup. For GEWEBE-edits, RecalcAll() rebuilds einzug /
+    aufknuepfung / trittfolge from the new gewebe -- without it the
+    blanking guard in DrawGewebe (empty einzug/trittfolge -> blank
+    cell) leaves new cells invisible, and stale einzug/trittfolge
+    entries cause range / rendering inconsistencies even when the
+    edit stays inside the existing kette/schuesse footprint.
+    For edits in other fields the per-branch RecalcGewebe() handles
+    the inverse direction. */
+static void recalcRangesAndRapport(TDBWFRM* frm, FELD _f = INVALID)
 {
+    if (_f == GEWEBE)
+        frm->RecalcAll();
     frm->CalcRangeKette();
     frm->CalcRangeSchuesse();
     frm->UpdateRapport();
@@ -156,32 +166,58 @@ void TDBWFRM::PasteSelection(bool _transparent)
     if (!s.startsWith(QLatin1String("dbw")))
         return;
 
-    const QByteArray raw = s.toLatin1();
-    const char* ptr = raw.constData();
-    /*  Skip "dbw\r\n" (5 bytes) and parse width/height. */
-    if (raw.size() < 16)
+    /*  Parse line-by-line so the format survives clipboard managers
+        that normalise CRLF to LF on round-trip (typical on Linux);
+        the previous fixed-offset arithmetic mis-parsed width/height
+        and ran the row pointer two bytes off-track when \r was
+        stripped. */
+    const QStringList lines = s.split(QChar('\n'));
+    if (lines.size() < 2)
         return;
-    const int x = std::atoi(ptr + 5);
-    const int y = std::atoi(ptr + 10);
-    if (x <= 0 || y <= 0)
+    const QString header = lines[1].trimmed(); /* "WWWW HHHH" */
+    const QStringList parts = header.split(QChar(' '), Qt::SkipEmptyParts);
+    if (parts.size() < 2)
         return;
-    ptr += 16; /* "dbw\r\n" + "WWWW HHHH\r\n" = 5 + 11 */
+    bool okW = false, okH = false;
+    const int x = parts[0].toInt(&okW);
+    const int y = parts[1].toInt(&okH);
+    if (!okW || !okH || x <= 0 || y <= 0)
+        return;
+    if (lines.size() < 2 + y)
+        return;
+    /*  Pre-compute Latin1-encoded row payloads, trimmed of any
+        trailing \r the clipboard preserved.                        */
+    QList<QByteArray> rows;
+    rows.reserve(y);
+    for (int r = 0; r < y; r++) {
+        QByteArray b = lines[2 + r].toLatin1();
+        if (b.endsWith('\r'))
+            b.chop(1);
+        rows.append(b);
+    }
+    auto rowPtr = [&](int r) -> const char* {
+        return r >= 0 && r < rows.size() ? rows[r].constData() : nullptr;
+    };
+    auto rowLen = [&](int r) -> int {
+        return r >= 0 && r < rows.size() ? rows[r].size() : 0;
+    };
 
     PT start;
     switch (kbd_field) {
     case GEWEBE: {
         for (int j = y - 1; j >= 0; j--) {
             const int jj = scroll_y2 + gewebe.kbd.j + j;
-            if (jj < Data->MAXY2) {
-                for (int i = 0; i < x; i++) {
+            const char* row = rowPtr(y - 1 - j);
+            const int rlen = rowLen(y - 1 - j);
+            if (jj < Data->MAXY2 && row) {
+                for (int i = 0; i < x && i < rlen; i++) {
                     const int ii = scroll_x1 + gewebe.kbd.i + i;
                     if (ii >= Data->MAXX1)
                         break;
-                    if (ptr[i] != 'k' || !_transparent)
-                        gewebe.feld.Set(ii, jj, char(ptr[i] - 'k'));
+                    if (row[i] != 'k' || !_transparent)
+                        gewebe.feld.Set(ii, jj, char(row[i] - 'k'));
                 }
             }
-            ptr += x + 2; /* row + "\r\n" */
         }
         start = PT(scroll_x1 + gewebe.kbd.i, scroll_y2 + gewebe.kbd.j);
         if (cursorhandler)
@@ -191,16 +227,17 @@ void TDBWFRM::PasteSelection(bool _transparent)
     case EINZUG: {
         for (int j = y - 1; j >= 0; j--) {
             const int jj = scroll_y1 + einzug.kbd.j + j;
-            if (jj < Data->MAXY2) {
-                for (int i = 0; i < x; i++) {
+            const char* row = rowPtr(y - 1 - j);
+            const int rlen = rowLen(y - 1 - j);
+            if (jj < Data->MAXY2 && row) {
+                for (int i = 0; i < x && i < rlen; i++) {
                     const int ii = scroll_x1 + einzug.kbd.i + i;
                     if (ii >= Data->MAXX1)
                         break;
-                    if (ptr[i] == 'l')
+                    if (row[i] == 'l')
                         einzug.feld.Set(ii, short(jj + 1));
                 }
             }
-            ptr += x + 2;
         }
         RecalcGewebe();
         start = PT(scroll_x1 + einzug.kbd.i, scroll_y1 + einzug.kbd.j);
@@ -211,16 +248,17 @@ void TDBWFRM::PasteSelection(bool _transparent)
     case TRITTFOLGE: {
         for (int j = y - 1; j >= 0; j--) {
             const int jj = scroll_y2 + trittfolge.kbd.j + j;
-            if (jj < Data->MAXY2) {
-                for (int i = 0; i < x; i++) {
+            const char* row = rowPtr(y - 1 - j);
+            const int rlen = rowLen(y - 1 - j);
+            if (jj < Data->MAXY2 && row) {
+                for (int i = 0; i < x && i < rlen; i++) {
                     const int ii = scroll_x2 + trittfolge.kbd.i + i;
                     if (ii >= Data->MAXX2)
                         break;
-                    if (ptr[i] != 'k' || !_transparent)
-                        trittfolge.feld.Set(ii, jj, char(ptr[i] - 'k'));
+                    if (row[i] != 'k' || !_transparent)
+                        trittfolge.feld.Set(ii, jj, char(row[i] - 'k'));
                 }
             }
-            ptr += x + 2;
         }
         RecalcGewebe();
         start = PT(scroll_x2 + trittfolge.kbd.i, scroll_y2 + trittfolge.kbd.j);
@@ -231,16 +269,17 @@ void TDBWFRM::PasteSelection(bool _transparent)
     case AUFKNUEPFUNG: {
         for (int j = y - 1; j >= 0; j--) {
             const int jj = scroll_y1 + aufknuepfung.kbd.j + j;
-            if (jj < Data->MAXY1) {
-                for (int i = 0; i < x; i++) {
+            const char* row = rowPtr(y - 1 - j);
+            const int rlen = rowLen(y - 1 - j);
+            if (jj < Data->MAXY1 && row) {
+                for (int i = 0; i < x && i < rlen; i++) {
                     const int ii = scroll_x2 + aufknuepfung.kbd.i + i;
                     if (ii >= Data->MAXX2)
                         break;
-                    if (ptr[i] != 'k' || !_transparent)
-                        aufknuepfung.feld.Set(ii, jj, char(ptr[i] - 'k'));
+                    if (row[i] != 'k' || !_transparent)
+                        aufknuepfung.feld.Set(ii, jj, char(row[i] - 'k'));
                 }
             }
-            ptr += x + 2;
         }
         RecalcGewebe();
         start = PT(scroll_x2 + aufknuepfung.kbd.i, scroll_y1 + aufknuepfung.kbd.j);
@@ -257,7 +296,7 @@ void TDBWFRM::PasteSelection(bool _transparent)
     selection.begin = start;
     selection.end = PT(start.i + x - 1, start.j + y - 1);
 
-    recalcRangesAndRapport(this);
+    recalcRangesAndRapport(this, selection.feld);
     SetModified();
     refresh();
     if (undo)
@@ -306,7 +345,7 @@ void TDBWFRM::DeleteSelection()
     default:
         break;
     }
-    recalcRangesAndRapport(this);
+    recalcRangesAndRapport(this, selection.feld);
     selection = savesel;
     SetModified();
     refresh();
@@ -352,14 +391,13 @@ void TDBWFRM::InvertSelection()
                 const char s = trittfolge.feld.Get(i, j);
                 trittfolge.feld.Set(i, j, char(s == 0 ? currentrange : -s));
             }
-        for (int j = selection.begin.j; j <= selection.end.j; j++)
         RecalcGewebe();
         break;
     }
     default:
         break;
     }
-    recalcRangesAndRapport(this);
+    recalcRangesAndRapport(this, selection.feld);
     selection = savesel;
     SetModified();
     refresh();
@@ -418,7 +456,7 @@ void TDBWFRM::MirrorHorzSelection()
     default:
         break;
     }
-    recalcRangesAndRapport(this);
+    recalcRangesAndRapport(this, selection.feld);
     selection = savesel;
     SetModified();
     refresh();
@@ -477,7 +515,7 @@ void TDBWFRM::MirrorVertSelection()
     default:
         break;
     }
-    recalcRangesAndRapport(this);
+    recalcRangesAndRapport(this, selection.feld);
     selection = savesel;
     SetModified();
     refresh();
@@ -542,7 +580,7 @@ void TDBWFRM::RotateSelection()
     default:
         break;
     }
-    recalcRangesAndRapport(this);
+    recalcRangesAndRapport(this, selection.feld);
     selection = savesel;
     SetModified();
     refresh();
@@ -619,7 +657,7 @@ void TDBWFRM::RollUpSelection()
     default:
         break;
     }
-    recalcRangesAndRapport(this);
+    recalcRangesAndRapport(this, selection.feld);
     selection = savesel;
     SetModified();
     refresh();
@@ -681,7 +719,7 @@ void TDBWFRM::RollDownSelection()
     default:
         break;
     }
-    recalcRangesAndRapport(this);
+    recalcRangesAndRapport(this, selection.feld);
     selection = savesel;
     SetModified();
     refresh();
@@ -740,7 +778,7 @@ void TDBWFRM::RollLeftSelection()
     default:
         break;
     }
-    recalcRangesAndRapport(this);
+    recalcRangesAndRapport(this, selection.feld);
     selection = savesel;
     SetModified();
     refresh();
@@ -799,7 +837,7 @@ void TDBWFRM::RollRightSelection()
     default:
         break;
     }
-    recalcRangesAndRapport(this);
+    recalcRangesAndRapport(this, selection.feld);
     selection = savesel;
     SetModified();
     refresh();
@@ -888,7 +926,7 @@ void TDBWFRM::CentralsymSelection()
     default:
         break;
     }
-    recalcRangesAndRapport(this);
+    recalcRangesAndRapport(this, selection.feld);
     selection = savesel;
     SetModified();
     refresh();
@@ -946,7 +984,7 @@ void TDBWFRM::SwitchRange(int _range)
     default:
         break;
     }
-    recalcRangesAndRapport(this);
+    recalcRangesAndRapport(this, selection.feld);
     currentrange = _range;
     selection = savesel;
     SetModified();
