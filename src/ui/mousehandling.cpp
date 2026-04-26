@@ -211,37 +211,54 @@ void TDBWFRM::handleCanvasMousePress(int _x, int _y, bool _shift, bool _ctrl)
         SetBlatteinzug(i);
         lastblatteinzugi = i;
         break;
-    case HLINEHORZ1:
-        /*  Horizontal bar above einzug/gewebe: clicks toggle a
-            VERTICAL guide line at column (i + scroll_x1) on the LEFT
-            side.                                                    */
-        if (hlines.GetLine(HL_VERT, HL_LEFT, i + scroll_x1))
-            hlines.Delete(hlines.GetLine(HL_VERT, HL_LEFT, i + scroll_x1));
+    /*  Hilfslinien sit between cells, not on them. HitCheck gives us
+        the cell index a click landed in (floor); for guide lines we
+        want the nearest cell boundary instead, so a click in the
+        right/lower half of a cell snaps to the next boundary.       */
+    case HLINEHORZ1: {
+        const int rel = righttoleft ? hlinehorz1.x0 + hlinehorz1.width - _x : _x - hlinehorz1.x0;
+        const int snap = (rel + hlinehorz1.gw / 2) / hlinehorz1.gw;
+        const int pos = snap + scroll_x1;
+        if (hlines.GetLine(HL_VERT, HL_LEFT, pos))
+            hlines.Delete(hlines.GetLine(HL_VERT, HL_LEFT, pos));
         else
-            hlines.Add(HL_VERT, HL_LEFT, i + scroll_x1);
+            hlines.Add(HL_VERT, HL_LEFT, pos);
         SetModified();
         break;
-    case HLINEHORZ2:
-        if (hlines.GetLine(HL_VERT, HL_RIGHT, i + scroll_x2))
-            hlines.Delete(hlines.GetLine(HL_VERT, HL_RIGHT, i + scroll_x2));
+    }
+    case HLINEHORZ2: {
+        const int rel = _x - hlinehorz2.x0;
+        const int snap = (rel + hlinehorz2.gw / 2) / hlinehorz2.gw;
+        const int pos = snap + scroll_x2;
+        if (hlines.GetLine(HL_VERT, HL_RIGHT, pos))
+            hlines.Delete(hlines.GetLine(HL_VERT, HL_RIGHT, pos));
         else
-            hlines.Add(HL_VERT, HL_RIGHT, i + scroll_x2);
+            hlines.Add(HL_VERT, HL_RIGHT, pos);
         SetModified();
         break;
-    case HLINEVERT1:
-        if (hlines.GetLine(HL_HORZ, HL_TOP, j + scroll_y1))
-            hlines.Delete(hlines.GetLine(HL_HORZ, HL_TOP, j + scroll_y1));
+    }
+    case HLINEVERT1: {
+        const int rel = toptobottom ? _y - hlinevert1.y0 : hlinevert1.y0 + hlinevert1.height - _y;
+        const int snap = (rel + hlinevert1.gh / 2) / hlinevert1.gh;
+        const int pos = snap + scroll_y1;
+        if (hlines.GetLine(HL_HORZ, HL_TOP, pos))
+            hlines.Delete(hlines.GetLine(HL_HORZ, HL_TOP, pos));
         else
-            hlines.Add(HL_HORZ, HL_TOP, j + scroll_y1);
+            hlines.Add(HL_HORZ, HL_TOP, pos);
         SetModified();
         break;
-    case HLINEVERT2:
-        if (hlines.GetLine(HL_HORZ, HL_BOTTOM, j + scroll_y2))
-            hlines.Delete(hlines.GetLine(HL_HORZ, HL_BOTTOM, j + scroll_y2));
+    }
+    case HLINEVERT2: {
+        const int rel = hlinevert2.y0 + hlinevert2.height - _y;
+        const int snap = (rel + hlinevert2.gh / 2) / hlinevert2.gh;
+        const int pos = snap + scroll_y2;
+        if (hlines.GetLine(HL_HORZ, HL_BOTTOM, pos))
+            hlines.Delete(hlines.GetLine(HL_HORZ, HL_BOTTOM, pos));
         else
-            hlines.Add(HL_HORZ, HL_BOTTOM, j + scroll_y2);
+            hlines.Add(HL_HORZ, HL_BOTTOM, pos);
         SetModified();
         break;
+    }
     default:
         break;
     }
