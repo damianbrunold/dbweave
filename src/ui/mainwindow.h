@@ -45,7 +45,9 @@ class EinzugRearrange;
 class CrCursorHandler;
 class FfFile;
 class PalettePanel;
-class QDockWidget;
+class QFrame;
+class QScrollArea;
+class QToolBar;
 
 class TDBWFRM : public QMainWindow
 {
@@ -212,11 +214,19 @@ public:
         parent-child ownership -- delete when the mainwindow dies. */
     PatternCanvas* pattern_canvas = nullptr;
 
-    /*  Dockable 16x16 palette-picker panel. Visible toggle lives
-        on the View menu + context menu.                         */
-    QDockWidget* paletteDock = nullptr;
+    /*  Right-hand side panel: palette (in scroll area) + range / tools
+        toolbars stacked vertically. Each strip is shown/hidden via the
+        corresponding View action; the panel itself collapses when all
+        children are hidden so the canvas can claim the space.        */
+    QFrame* sidePanel = nullptr;
+    QScrollArea* paletteScroll = nullptr;
     PalettePanel* palettePanel = nullptr;
+    QToolBar* rangeToolbar = nullptr;
+    QToolBar* toolsToolbar = nullptr;
     QAction* ViewFarbpalette = nullptr;
+    QAction* ViewRanges = nullptr;
+    QAction* ViewTools = nullptr;
+    void updateSidePanelVisibility();
 
     /*  Scratch buffers used by RcRecalcAll: xbuf[i] marks warp i
         as seen (non-empty) during RecalcEinzug; ybuf[j] does the

@@ -25,14 +25,14 @@
 #include "settings.h"
 #include "assert_compat.h"
 
-#include <QDockWidget>
-
 #include <cstring>
 
 #include <QActionGroup>
 #include <QApplication>
 #include <QDesktopServices>
 #include <QFileInfo>
+#include <QFrame>
+#include <QHBoxLayout>
 #include <QIcon>
 #include <QKeySequence>
 #include <QLabel>
@@ -40,12 +40,15 @@
 #include <QMenuBar>
 #include <QPainter>
 #include <QPixmap>
+#include <QScrollArea>
+#include <QScrollBar>
 #include <QStatusBar>
 #include <QStyle>
 #include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
 #include <QUrl>
+#include <QVBoxLayout>
 
 #include "rangecolors.h"
 #include "colors_compat.h"
@@ -222,27 +225,57 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     cursorhandler = CrCursorHandler::CreateInstance(this, Data);
     file = new FfFile();
 
-    /*  The pattern canvas is the central widget. Ownership is via Qt
-        parent-child; Qt will delete it with the window. */
+    /*  Central layout: pattern canvas on the left (stretching), a
+        fixed right-hand side panel on the right that hosts the palette
+        / range / tools strips. The previous QDockWidget setup let
+        users undock and lose the panels; this is intentionally
+        unmovable so the layout is predictable.                      */
     pattern_canvas = new PatternCanvas(this, this);
-    setCentralWidget(pattern_canvas);
+    QWidget* central = new QWidget(this);
+    auto* centralRow = new QHBoxLayout(central);
+    centralRow->setContentsMargins(0, 0, 0, 0);
+    centralRow->setSpacing(0);
+    centralRow->addWidget(pattern_canvas, /*stretch=*/1);
 
-    /*  Palette dock -- floats on the right by default. The
-        enclosing QDockWidget owns the panel; ViewFarbpalette is a
-        checkable QAction bound to toggleViewAction so the menu
-        state stays in sync with the dock's visibility. */
-    paletteDock = new QDockWidget(this);
-    paletteDock->setObjectName(QStringLiteral("paletteDock"));
-    registerLangWidget(paletteDock, QStringLiteral("Palette"), QStringLiteral("Palette"));
-    paletteDock->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable
-                             | QDockWidget::DockWidgetFloatable);
-    palettePanel = new PalettePanel(this, paletteDock);
-    paletteDock->setWidget(palettePanel);
-    addDockWidget(Qt::RightDockWidgetArea, paletteDock);
-    /*  Default hidden -- the View > Palette menu entry toggles it. */
-    paletteDock->hide();
-    ViewFarbpalette = paletteDock->toggleViewAction();
+    /*  Side panel: horizontal row laid out left-to-right as
+            [ range bar | tools bar | palette (full height) ]
+        Range and tools are top-aligned vertical toolbars so they
+        don't stretch; the palette claims the full vertical extent
+        and gets a scrollbar when the window is short.            */
+    sidePanel = new QFrame(central);
+    sidePanel->setFrameShape(QFrame::NoFrame);
+    auto* sideRow = new QHBoxLayout(sidePanel);
+    sideRow->setContentsMargins(2, 2, 2, 2);
+    sideRow->setSpacing(4);
+
+    /*  Palette inside a scroll area so a tall palette stays usable on
+        a short window. The palette widget itself is fixed-size, so
+        the scroll area gives a vertical scrollbar when the side panel
+        runs out of room.                                              */
+    palettePanel = new PalettePanel(this, sidePanel);
+    paletteScroll = new QScrollArea(sidePanel);
+    paletteScroll->setWidget(palettePanel);
+    paletteScroll->setWidgetResizable(false);
+    paletteScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    paletteScroll->setFrameShape(QFrame::NoFrame);
+    /*  Width = palette swatches + scrollbar gutter. */
+    const int paletteW
+        = palettePanel->sizeHint().width() + paletteScroll->verticalScrollBar()->sizeHint().width();
+    paletteScroll->setFixedWidth(paletteW);
+    /*  Palette is appended last (right-most) after the range / tools
+        toolbars are constructed below.                                */
+
+    /*  ViewFarbpalette: regular checkable action -- no dock to bind
+        a toggleViewAction to. Wired to show/hide the scroll area. */
+    ViewFarbpalette = new QAction(this);
+    ViewFarbpalette->setCheckable(true);
+    ViewFarbpalette->setChecked(false);
+    paletteScroll->hide();
     ViewFarbpalette->setText(QStringLiteral("&Palette"));
+    connect(ViewFarbpalette, &QAction::toggled, this, [this](bool on) {
+        paletteScroll->setVisible(on);
+        updateSidePanelVisibility();
+    });
 
     /*  Legacy menu structure -- see legacy/dbw3_form.dfm. Every
         caption, shortcut and icon mirrors the original VCL form so
@@ -663,9 +696,9 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     QAction* actZoomOut = menuAct(viewMenu, "Zoo&m out", "Ver&kleinern", "sb_zoomout", "Zoom out",
                                   "Verkleinert die Ansicht");
     actZoomOut->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_U));
-    /*  Toolbar toggles -- appended below once the corresponding
-        docks have been constructed. The toggleViewAction() of each
-        QDockWidget is a checkable QAction tied to its visibility. */
+    /*  Toolbar toggles -- appended below once the side-panel children
+        have been constructed; each is a checkable QAction wired to
+        show/hide its widget and re-evaluate side-panel visibility. */
     viewMenu->addSeparator();
     QAction* actOverview
         = menuAct(viewMenu, "Overv&iew", "Übe&rsicht", nullptr, "Enters an overview-mode",
@@ -1232,24 +1265,18 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     mainBar->addAction(actHighlight);
 
     /*  Range picker: nine checkable range buttons + three special
-        (L/B/U) buttons, hosted in a vertical QToolBar inside a
-        dockable panel on the right. Icon-only: a colour swatch per
-        numbered range, a bold letter per special range. Toggled via
-        the View menu.                                             */
-    QDockWidget* rangeDock = new QDockWidget(this);
-    rangeDock->setObjectName(QStringLiteral("rangeDock"));
-    registerLangWidget(rangeDock, QStringLiteral("Ranges"), QStringLiteral("Bereiche"));
-    rangeDock->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable
-                           | QDockWidget::DockWidgetFloatable);
-    QToolBar* rangeBar = new QToolBar(rangeDock);
+        (L/B/U) buttons, hosted in a vertical QToolBar pinned to the
+        side panel. Icon-only: a colour swatch per numbered range, a
+        bold letter per special range. Toggled via the View menu.    */
+    QToolBar* rangeBar = new QToolBar(sidePanel);
     rangeBar->setOrientation(Qt::Vertical);
     rangeBar->setIconSize(QSize(16, 16));
     rangeBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
     rangeBar->setMovable(false);
     rangeBar->setFloatable(false);
-    rangeDock->setWidget(rangeBar);
-    addDockWidget(Qt::RightDockWidgetArea, rangeDock);
-    rangeDock->hide();
+    sideRow->addWidget(rangeBar, /*stretch=*/0, Qt::AlignTop);
+    rangeBar->hide();
+    rangeToolbar = rangeBar;
     rangeGroup = new QActionGroup(this);
     rangeGroup->setExclusive(true);
     for (int r = 1; r <= 9; r++) {
@@ -1286,32 +1313,31 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     rangeAnbindungAction = addSpecial(ANBINDUNG, QStringLiteral("Binding (Anbindung)"));
     rangeAbbindungAction = addSpecial(ABBINDUNG, QStringLiteral("Unbinding (Abbindung)"));
     updateRangeDockIcons();
-    QAction* actViewRanges = rangeDock->toggleViewAction();
+    ViewRanges = new QAction(this);
+    QAction* actViewRanges = ViewRanges;
+    actViewRanges->setCheckable(true);
+    actViewRanges->setChecked(false);
     registerLang(actViewRanges, QStringLiteral("&Ranges"), QStringLiteral("&Bereiche"),
                  QStringLiteral("Toggles the ranges toolbar"),
                  QStringLiteral("Bereiche-Leiste sichtbar/unsichtbar"));
+    connect(actViewRanges, &QAction::toggled, this, [this, rangeBar](bool on) {
+        rangeBar->setVisible(on);
+        updateSidePanelVisibility();
+    });
     viewMenu->addAction(actViewRanges);
 
-    /*  Drawing tools -- icon-only vertical toolbar inside a dockable
-        panel on the right (matches the palette + ranges docks). The
-        legacy UI used a floating tool palette; the previous port put
-        the same tools on a top-level menu, which is now gone.
-        Toggle from the View menu. Tools are radio-checkable so the
-        active tool is visually highlighted.                        */
-    QDockWidget* toolsDock = new QDockWidget(this);
-    toolsDock->setObjectName(QStringLiteral("toolsDock"));
-    registerLangWidget(toolsDock, QStringLiteral("Tools"), QStringLiteral("Werkzeuge"));
-    toolsDock->setFeatures(QDockWidget::DockWidgetClosable | QDockWidget::DockWidgetMovable
-                           | QDockWidget::DockWidgetFloatable);
-    QToolBar* toolsBar = new QToolBar(toolsDock);
+    /*  Drawing tools -- icon-only vertical toolbar pinned to the side
+        panel below the range strip. Toggle from the View menu. Tools
+        are radio-checkable so the active tool is visually highlighted. */
+    QToolBar* toolsBar = new QToolBar(sidePanel);
     toolsBar->setOrientation(Qt::Vertical);
     toolsBar->setIconSize(QSize(16, 16));
     toolsBar->setToolButtonStyle(Qt::ToolButtonIconOnly);
     toolsBar->setMovable(false);
     toolsBar->setFloatable(false);
-    toolsDock->setWidget(toolsBar);
-    addDockWidget(Qt::RightDockWidgetArea, toolsDock);
-    toolsDock->hide();
+    sideRow->addWidget(toolsBar, /*stretch=*/0, Qt::AlignTop);
+    toolsBar->hide();
+    toolsToolbar = toolsBar;
     auto* toolGroup = new QActionGroup(this);
     toolGroup->setExclusive(true);
     auto addTool = [&](const QString& tip, const char* icon, TOOL _t) {
@@ -1331,15 +1357,31 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     addTool(QStringLiteral("Filled rectangle"), "tool_filledrectangle", TOOL_FILLEDRECTANGLE);
     addTool(QStringLiteral("Ellipse"), "tool_ellipse", TOOL_ELLIPSE);
     addTool(QStringLiteral("Filled ellipse"), "tool_filledellipse", TOOL_FILLEDELLIPSE);
-    QAction* actViewTools = toolsDock->toggleViewAction();
+    ViewTools = new QAction(this);
+    QAction* actViewTools = ViewTools;
+    actViewTools->setCheckable(true);
+    actViewTools->setChecked(false);
     registerLang(actViewTools, QStringLiteral("&Tools"), QStringLiteral("&Werkzeuge"),
                  QStringLiteral("Toggles the tools toolbar"),
                  QStringLiteral("Werkzeugleiste sichtbar/unsichtbar"));
+    connect(actViewTools, &QAction::toggled, this, [this, toolsBar](bool on) {
+        toolsBar->setVisible(on);
+        updateSidePanelVisibility();
+    });
     viewMenu->addAction(actViewTools);
     /*  Palette toggle lives on the &Color menu already but is handy
         in View too, alongside the other toolbar toggles.          */
     if (ViewFarbpalette)
         viewMenu->addAction(ViewFarbpalette);
+
+    /*  Append the palette as the rightmost item so toolbars render to
+        its left. The scroll area takes stretch=0 (its width is fixed)
+        but expands vertically because QHBoxLayout fills the row height
+        for items without an explicit alignment.                      */
+    sideRow->addWidget(paletteScroll, /*stretch=*/0);
+    centralRow->addWidget(sidePanel, /*stretch=*/0);
+    setCentralWidget(central);
+    updateSidePanelVisibility();
 
     /*  Status-bar panels (right-aligned permanent widgets). */
     sbField = new QLabel(this);
@@ -1416,6 +1458,18 @@ TDBWFRM::~TDBWFRM()
     delete bereichundo;
     bereichundo = nullptr;
     /*  QAction members are owned by `this` via QObject parenting. */
+}
+
+void TDBWFRM::updateSidePanelVisibility()
+{
+    if (!sidePanel)
+        return;
+    /*  Collapse the side panel when none of its children are visible
+        so the canvas reclaims the column. */
+    const bool any = (paletteScroll && paletteScroll->isVisibleTo(sidePanel))
+                     || (rangeToolbar && rangeToolbar->isVisibleTo(sidePanel))
+                     || (toolsToolbar && toolsToolbar->isVisibleTo(sidePanel));
+    sidePanel->setVisible(any);
 }
 
 void TDBWFRM::refresh()

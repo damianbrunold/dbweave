@@ -163,9 +163,17 @@ private slots:
         QCOMPARE(img.pixelColor(45, 35), bkg);
     }
 
-    void pattern_canvas_is_central_widget()
+    void pattern_canvas_is_in_central_layout()
     {
-        QVERIFY(DBWFRM->centralWidget() == DBWFRM->pattern_canvas);
+        /*  pattern_canvas is no longer the QMainWindow central widget
+            directly -- it sits in a QHBoxLayout next to the side panel
+            of palette / range / tools strips. Verify the canvas is
+            still a descendant of the central widget. */
+        QWidget* central = DBWFRM->centralWidget();
+        QVERIFY(central != nullptr);
+        QVERIFY(DBWFRM->pattern_canvas != nullptr);
+        QVERIFY(DBWFRM->pattern_canvas->isAncestorOf(central) == false);
+        QVERIFY(central->isAncestorOf(DBWFRM->pattern_canvas));
     }
 
     /*  -------- Einzug / Aufknuepfung / Trittfolge rendering --------

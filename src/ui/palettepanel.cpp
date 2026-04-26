@@ -19,7 +19,6 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPen>
-#include <QResizeEvent>
 
 #include <algorithm>
 
@@ -29,6 +28,10 @@ PalettePanel::PalettePanel(TDBWFRM* _frm, QWidget* _parent)
 {
     setFocusPolicy(Qt::StrongFocus);
     setAutoFillBackground(true);
+    /*  Fixed grid: COLS columns, ceil(N/COLS) rows. The widget is
+        sized to fit every swatch -- a parent QScrollArea handles the
+        case where the surrounding panel can't show all rows at once. */
+    setFixedSize(COLS * CELL, rows() * CELL);
 }
 
 int PalettePanel::entryCount() const
@@ -36,59 +39,31 @@ int PalettePanel::entryCount() const
     return MAX_PAL_ENTRY;
 }
 
-int PalettePanel::columnsFor(int _h) const
-{
-    const int n = entryCount();
-    if (_h < CELL)
-        return n; /* degenerate -- one row */
-    const int rowsFit = std::max(1, _h / CELL);
-    return (n + rowsFit - 1) / rowsFit;
-}
-
 int PalettePanel::columns() const
 {
-    return columnsFor(height());
+    return COLS;
 }
 
 int PalettePanel::rows() const
 {
-    const int cols = std::max(1, columns());
-    return (entryCount() + cols - 1) / cols;
+    return (entryCount() + COLS - 1) / COLS;
 }
 
 QSize PalettePanel::sizeHint() const
 {
-    /*  Prefer a single narrow column at the natural dock height --
-        the parent dock will clamp the actual height and the column
-        count adapts on resize.                                      */
-    return QSize(CELL, entryCount() * CELL);
+    return QSize(COLS * CELL, rows() * CELL);
 }
 
 QSize PalettePanel::minimumSizeHint() const
 {
-    return QSize(CELL, CELL * 8);
-}
-
-void PalettePanel::resizeEvent(QResizeEvent* _e)
-{
-    QWidget::resizeEvent(_e);
-    /*  columnsFor() sizes the column count from the current height, but
-        the dock width was previously left unconstrained -- so a tall,
-        narrow dock would compute 4 columns and clip the rightmost one.
-        Force the minimum width to match what the layout actually needs
-        so the dock widens to fit every column.                       */
-    const int needed = std::max(1, columnsFor(_e->size().height())) * CELL;
-    if (minimumWidth() != needed)
-        setMinimumWidth(needed);
-    update();
+    return sizeHint();
 }
 
 bool PalettePanel::cellAt(const QPoint& _pos, int& _idx) const
 {
-    const int cols = columns();
     const int r = _pos.y() / CELL;
     const int c = _pos.x() / CELL;
-    if (c < 0 || r < 0 || c >= cols)
+    if (c < 0 || r < 0 || c >= COLS)
         return false;
     const int i = c * rows() + r;
     if (i < 0 || i >= entryCount())
@@ -106,7 +81,6 @@ void PalettePanel::paintEvent(QPaintEvent* /*_e*/)
 
     p.fillRect(rect(), palette().color(QPalette::Button));
 
-    const int cols = columns();
     const int nrows = rows();
     const int n = entryCount();
 
@@ -138,7 +112,6 @@ void PalettePanel::paintEvent(QPaintEvent* /*_e*/)
         p.setPen(QPen(Qt::black, 1));
         p.drawRect(x + 4, y + 4, CELL - 9, CELL - 9);
     }
-    (void)cols;
 }
 
 void PalettePanel::mousePressEvent(QMouseEvent* _e)
@@ -161,7 +134,6 @@ void PalettePanel::keyPressEvent(QKeyEvent* _e)
 {
     const int n = entryCount();
     const int nrows = rows();
-    const int cols = std::max(1, columns());
     int sel = Data->color;
     int c = sel / nrows;
     int r = sel % nrows;
@@ -177,7 +149,7 @@ void PalettePanel::keyPressEvent(QKeyEvent* _e)
     case Qt::Key_Down:
         if (r < nrows - 1)
             ++r;
-        else if (c < cols - 1) {
+        else if (c < COLS - 1) {
             ++c;
             r = 0;
         }
@@ -187,7 +159,7 @@ void PalettePanel::keyPressEvent(QKeyEvent* _e)
             --c;
         break;
     case Qt::Key_Right:
-        if (c < cols - 1)
+        if (c < COLS - 1)
             ++c;
         break;
     default:

@@ -9,12 +9,12 @@
     (at your option) any later version.
 */
 
-/*  Palette swatch picker. Lays out Data->palette entries as a vertical
-    column of swatches by default; when the available height isn't
-    enough, the cells wrap into additional columns (2, 3, ...). The
-    currently-selected palette index gets a thick highlight outline.
-    Lives inside a QDockWidget on the right of TDBWFRM; toggled from
-    the View > Palette menu entry.                                  */
+/*  Palette swatch picker. Lays out Data->palette entries in a fixed
+    COLS x ceil(N/COLS) grid; total widget size is fixed so a parent
+    QScrollArea can scroll vertically when the surrounding panel is
+    too short. The currently-selected palette index gets a thick
+    highlight outline. Lives in the right-hand side panel of TDBWFRM;
+    toggled from the View > Palette menu entry.                      */
 
 #ifndef DBWEAVE_UI_PALETTEPANEL_H
 #define DBWEAVE_UI_PALETTEPANEL_H
@@ -38,17 +38,16 @@ protected:
     void paintEvent(QPaintEvent* _e) override;
     void mousePressEvent(QMouseEvent* _e) override;
     void keyPressEvent(QKeyEvent* _e) override;
-    void resizeEvent(QResizeEvent* _e) override;
 
 private:
     TDBWFRM* frm;
 
-    static constexpr int CELL = 18;  /* fixed swatch edge in px */
+    static constexpr int CELL = 18; /* swatch edge in px */
+    static constexpr int COLS = 4;  /* fixed column count */
 
-    int entryCount() const;       /* clamped to MAX_PAL_ENTRY */
-    int columnsFor(int _h) const; /* cols needed to fit N cells in height h */
-    int columns() const;          /* current column count from current height */
-    int rows() const;             /* rows in the current layout */
+    int entryCount() const; /* MAX_PAL_ENTRY */
+    int columns() const;    /* COLS */
+    int rows() const;       /* ceil(N/COLS) */
     bool cellAt(const QPoint& _pos, int& _idx) const;
 };
 

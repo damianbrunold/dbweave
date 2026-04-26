@@ -446,27 +446,32 @@ void TDBWFRM::closeEvent(QCloseEvent* _event)
 }
 
 /*-----------------------------------------------------------------*/
-/*  Window geometry / dock layout persistence. QSettings under the
-    "MainWindow" group captures:
-      - geometry  Qt opaque blob (position + size + maximized
-                  state + multi-screen offset).
-      - state     Qt opaque blob (toolbar / QDockWidget layout for
-                  palette / ranges / tools).
-    Both keys are absent on a first-time run; LoadWindowState
-    falls through to the caller-supplied default size.           */
+/*  Window geometry persistence. QSettings under the "MainWindow"
+    group stores Qt's opaque geometry blob (position + size +
+    maximized state + multi-screen offset). The previous "state" key
+    captured QDockWidget layout but the dockable side panels were
+    removed in favour of a fixed side column, so dock state is no
+    longer persisted. */
 bool TDBWFRM::LoadWindowState()
 {
     QSettings settings;
     settings.beginGroup(QStringLiteral("MainWindow"));
     const QByteArray geom = settings.value(QStringLiteral("geometry")).toByteArray();
-    const QByteArray state = settings.value(QStringLiteral("state")).toByteArray();
+    /*  Side-panel visibility. setChecked emits toggled which runs the
+        show/hide handler installed in the constructor, so the panels
+        appear without further plumbing. Defaults match a fresh launch
+        (everything hidden) when the keys are absent. */
+    const bool showPalette = settings.value(QStringLiteral("showPalette"), false).toBool();
+    const bool showRanges = settings.value(QStringLiteral("showRanges"), false).toBool();
+    const bool showTools = settings.value(QStringLiteral("showTools"), false).toBool();
     settings.endGroup();
-    bool any = false;
-    if (!geom.isEmpty() && restoreGeometry(geom))
-        any = true;
-    if (!state.isEmpty() && restoreState(state))
-        any = true;
-    return any;
+    if (ViewFarbpalette)
+        ViewFarbpalette->setChecked(showPalette);
+    if (ViewRanges)
+        ViewRanges->setChecked(showRanges);
+    if (ViewTools)
+        ViewTools->setChecked(showTools);
+    return !geom.isEmpty() && restoreGeometry(geom);
 }
 
 void TDBWFRM::SaveWindowState() const
@@ -474,7 +479,9 @@ void TDBWFRM::SaveWindowState() const
     QSettings settings;
     settings.beginGroup(QStringLiteral("MainWindow"));
     settings.setValue(QStringLiteral("geometry"), saveGeometry());
-    settings.setValue(QStringLiteral("state"), saveState());
+    settings.setValue(QStringLiteral("showPalette"), ViewFarbpalette && ViewFarbpalette->isChecked());
+    settings.setValue(QStringLiteral("showRanges"), ViewRanges && ViewRanges->isChecked());
+    settings.setValue(QStringLiteral("showTools"), ViewTools && ViewTools->isChecked());
     settings.endGroup();
 }
 
