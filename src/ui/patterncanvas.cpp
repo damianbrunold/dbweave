@@ -148,23 +148,39 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
         zi = 0;
     if (zi > 9)
         zi = 9;
-    /*  Weft/warp ratio: the larger of faktor_kette / faktor_schuss
-        keeps its axis at ZOOM_TABLE[zi]; the smaller-factor axis is
-        stretched by the ratio. Formula matches legacy dbw3_form.cpp
-        CalcGrid (lines 412-427). Result is non-square cells whenever
-        the two factors differ.                                       */
-    int gw_def = ZOOM_TABLE[zi];
-    int gh_def = ZOOM_TABLE[zi];
+    /*  Weft/warp ratio applies to the warp axis (kette) and weft axis
+        (schuss) but NOT to the shaft / treadle axes -- so aufknuepfung
+        and the treadle / shaft sides of trittfolge / einzug stay at
+        the base square cell size. Layout uses three pitches:
+          GW    = base (treadle horizontal: trittfolge.gw, aufknuepfung)
+          GH    = base (shaft vertical:    einzug.gh, aufknuepfung,
+                        kettfarben/blatteinzug heights)
+          GW_warp = warp horizontal (einzug.gw, gewebe.gw, kettfarben.gw,
+                                     blatteinzug.gw); equals GW unless
+                                     kett > schuss, then stretched.
+          GH_weft = weft vertical   (gewebe.gh, trittfolge.gh,
+                                     schussfarben.gh); equals GH unless
+                                     schuss > kett, then stretched.
+        Mirrors legacy printinit.cpp:CalcGrid which assigns the same
+        per-field pitches.                                            */
+    const int base = ZOOM_TABLE[zi];
+    int gw_warp_def = base;
+    int gh_weft_def = base;
     const float fk = frm->faktor_kette;
     const float fs = frm->faktor_schuss;
     if (fk > 0.0f && fs > 0.0f) {
         if (fs > fk)
-            gh_def = int(double(ZOOM_TABLE[zi]) * fs / fk);
+            gh_weft_def = int(double(base) * fs / fk);
         else if (fk > fs)
-            gw_def = int(double(ZOOM_TABLE[zi]) * fk / fs);
+            gw_warp_def = int(double(base) * fk / fs);
     }
-    const int GW = _gw > 0 ? _gw : gw_def;
-    const int GH = _gh > 0 ? _gh : gh_def;
+    const int GW = _gw > 0 ? _gw : base;
+    const int GH = _gh > 0 ? _gh : base;
+    /*  When a caller forces GW/GH (zoom override), scale the
+        warp/weft pitches by the same ratio so the override still
+        respects the aspect ratio. */
+    const int GW_warp = _gw > 0 ? (gw_warp_def * _gw + base / 2) / base : gw_warp_def;
+    const int GH_weft = _gh > 0 ? (gh_weft_def * _gh + base / 2) / base : gh_weft_def;
 
     constexpr int MARGIN = 10;
     constexpr int SB_SIZE = 16; /* thickness of a scrollbar channel */
@@ -255,8 +271,8 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
         kettfarben.feld.Get(i) with i > MAXX1-1 and paints whatever
         memory lies past the allocation. Legacy clamps the same way
         in RecalcDimensions.                                        */
-    const int ez_cells = std::max(0, std::min(ez_area_w / GW, Data ? Data->MAXX1 : 0));
-    const int colW = ez_cells * GW;
+    const int ez_cells = std::max(0, std::min(ez_area_w / GW_warp, Data ? Data->MAXX1 : 0));
+    const int colW = ez_cells * GW_warp;
     const int colX = MARGIN;
 
     /*  Vertical dividers between stacked strips. Legacy inserts a
@@ -298,29 +314,29 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
     /*  Cap the vertical extent at Data->MAXY2 so the schussfarben
         / gewebe row loops don't read past the backing
         schussfarben.feld.                                            */
-    const int tf_rows = std::max(0, std::min(tf_area_h / GH, Data ? Data->MAXY2 : 0));
-    const int gewebeH = tf_rows * GH;
+    const int tf_rows = std::max(0, std::min(tf_area_h / GH_weft, Data ? Data->MAXY2 : 0));
+    const int gewebeH = tf_rows * GH_weft;
 
-    frm->kettfarben.gw = GW;
+    frm->kettfarben.gw = GW_warp;
     frm->kettfarben.gh = GH;
     frm->kettfarben.pos.x0 = colX;
     frm->kettfarben.pos.width = showFarbe ? colW : 0;
     frm->kettfarben.pos.height = kettfarbenH;
 
-    frm->einzug.gw = GW;
+    frm->einzug.gw = GW_warp;
     frm->einzug.gh = GH;
     frm->einzug.pos.x0 = colX;
     frm->einzug.pos.width = showEinzug ? colW : 0;
     frm->einzug.pos.height = einzugH;
 
-    frm->blatteinzug.gw = GW;
+    frm->blatteinzug.gw = GW_warp;
     frm->blatteinzug.gh = GH;
     frm->blatteinzug.pos.x0 = colX;
     frm->blatteinzug.pos.width = showBlatteinzug ? colW : 0;
     frm->blatteinzug.pos.height = blatteinzugH;
 
-    frm->gewebe.gw = GW;
-    frm->gewebe.gh = GH;
+    frm->gewebe.gw = GW_warp;
+    frm->gewebe.gh = GH_weft;
     frm->gewebe.pos.x0 = colX;
     frm->gewebe.pos.width = colW;
     frm->gewebe.pos.height = gewebeH;
@@ -343,14 +359,14 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
         einzug), trittfolge below (aligned with gewebe),
         schussfarben further right (aligned with gewebe). */
     frm->trittfolge.gw = GW;
-    frm->trittfolge.gh = GH;
+    frm->trittfolge.gh = GH_weft;
     frm->trittfolge.pos.x0 = colX + colW + divider;
     frm->trittfolge.pos.y0 = frm->gewebe.pos.y0;
     frm->trittfolge.pos.width = trittfolgeW;
     frm->trittfolge.pos.height = showTrittfolge ? frm->gewebe.pos.height : 0;
 
     frm->schussfarben.gw = GW;
-    frm->schussfarben.gh = GH;
+    frm->schussfarben.gh = GH_weft;
     frm->schussfarben.pos.x0
         = frm->trittfolge.pos.x0 + frm->trittfolge.pos.width + (showFarbe ? divider : 0);
     frm->schussfarben.pos.y0 = frm->gewebe.pos.y0;
@@ -375,7 +391,7 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
         frm->hlinevert1.height = showEinzug ? frm->einzug.pos.height : 0;
 
         frm->hlinevert2.gw = BAR;
-        frm->hlinevert2.gh = GH;
+        frm->hlinevert2.gh = GH_weft;
         frm->hlinevert2.x0 = hlvX;
         frm->hlinevert2.y0 = frm->gewebe.pos.y0;
         frm->hlinevert2.width = BAR;
@@ -386,7 +402,7 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
 
         /*  Horizontal bars sit at the very top, above their
             respective columns.                                */
-        frm->hlinehorz1.gw = GW;
+        frm->hlinehorz1.gw = GW_warp;
         frm->hlinehorz1.gh = BAR;
         frm->hlinehorz1.x0 = frm->kettfarben.pos.x0;
         frm->hlinehorz1.y0 = MARGIN;
@@ -413,9 +429,9 @@ void PatternCanvas::recomputeLayout(int _gw, int _gh)
 
     /*  Clamp scroll offsets so the new viewport never shows past
         the data extent. */
-    const int gewebe_cols = frm->gewebe.pos.width / GW;
-    const int gewebe_rows = frm->gewebe.pos.height / GH;
-    const int einzug_cols = frm->einzug.pos.width / GW;
+    const int gewebe_cols = frm->gewebe.pos.width / GW_warp;
+    const int gewebe_rows = frm->gewebe.pos.height / GH_weft;
+    const int einzug_cols = frm->einzug.pos.width / GW_warp;
     const int ezaf_rows = frm->einzug.pos.height / GH;
     const int tf_cols = frm->trittfolge.pos.width / GW;
 
