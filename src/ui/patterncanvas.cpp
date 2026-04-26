@@ -25,6 +25,7 @@
 #include <QMouseEvent>
 #include <QKeyEvent>
 #include <QScrollBar>
+#include <QApplication>
 
 #include <algorithm>
 
@@ -645,6 +646,45 @@ void PatternCanvas::contextMenuEvent(QContextMenuEvent* _e)
 {
     frm->handleContextMenu(_e->globalPos());
     _e->accept();
+}
+
+void PatternCanvas::cancelPendingMouseState()
+{
+    if (dragKind != DragNone) {
+        dragKind = DragNone;
+        unsetCursor();
+    }
+    /*  Mirror handleCanvasMouseRelease's tail without dispatching any
+        Set* op -- we don't know if the user wanted the half-finished
+        click to take effect, and silently committing one on focus
+        loss would surprise more than it would help. */
+    if (frm->mousedown || frm->md_feld != INVALID || frm->tool_active) {
+        frm->mousedown = false;
+        frm->md_feld = INVALID;
+        frm->tool_active = false;
+        frm->lastfarbei = -1;
+        frm->lastfarbej = -1;
+        frm->lastblatteinzugi = -1;
+        frm->bSelectionCleared = false;
+        frm->md_ctrl = false;
+        frm->refresh();
+    }
+}
+
+void PatternCanvas::focusOutEvent(QFocusEvent* _e)
+{
+    cancelPendingMouseState();
+    QWidget::focusOutEvent(_e);
+}
+
+void PatternCanvas::leaveEvent(QEvent* _e)
+{
+    /*  Only cancel if no button is held: a legitimate drag past the
+        widget edge keeps the left button down and we want to ride it
+        out, not abort. */
+    if (!(QApplication::mouseButtons() & Qt::LeftButton))
+        cancelPendingMouseState();
+    QWidget::leaveEvent(_e);
 }
 
 void PatternCanvas::keyPressEvent(QKeyEvent* _e)

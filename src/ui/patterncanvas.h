@@ -59,8 +59,17 @@ protected:
     void mouseReleaseEvent(QMouseEvent* _e) override;
     void keyPressEvent(QKeyEvent* _e) override;
     void contextMenuEvent(QContextMenuEvent* _e) override;
+    /*  Defensive: a focus-out or pointer-leave between press and
+        release (window manager grab loss, modal popup stealing focus,
+        compositor hiccup) can swallow the matching mouse-release event.
+        Without this, dragKind / frm->mousedown stay set forever and
+        every subsequent click is interpreted as a continuing drag.   */
+    void focusOutEvent(QFocusEvent* _e) override;
+    void leaveEvent(QEvent* _e) override;
 
 private:
+    void cancelPendingMouseState();
+
     TDBWFRM* frm;
 
     /*  Four scrollbars matching legacy sb_horz1 / sb_horz2 / sb_vert1
