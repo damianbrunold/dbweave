@@ -16,6 +16,7 @@
 #include <QDialogButtonBox>
 #include <QGridLayout>
 #include <QMouseEvent>
+#include <QStyle>
 #include <QToolButton>
 #include <QVBoxLayout>
 
@@ -26,18 +27,22 @@ CursorDirDialog::CursorDirDialog(QWidget* _parent, CURSORDIRECTION _cd)
     setWindowTitle(LANG_STR("Cursor movement", "Cursorbewegung"));
     setModal(true);
 
-    auto makeBtn = [this](const QString& label) {
+    /*  Use Qt's platform-standard arrow icons; the previous Unicode
+        arrow glyphs depended on the system font's coverage and often
+        rendered as boxes or postage-stamp small. */
+    auto makeBtn = [this](QStyle::StandardPixmap sp) {
         auto* b = new QToolButton(this);
-        b->setText(label);
+        b->setIcon(style()->standardIcon(sp));
+        b->setIconSize(QSize(24, 24));
         b->setCheckable(true);
         b->setAutoRaise(false);
         b->setMinimumSize(48, 48);
         return b;
     };
-    cdUp = makeBtn(QStringLiteral("\xe2\x86\x91"));    /* ↑ */
-    cdDown = makeBtn(QStringLiteral("\xe2\x86\x93"));  /* ↓ */
-    cdLeft = makeBtn(QStringLiteral("\xe2\x86\x90"));  /* ← */
-    cdRight = makeBtn(QStringLiteral("\xe2\x86\x92")); /* → */
+    cdUp = makeBtn(QStyle::SP_ArrowUp);
+    cdDown = makeBtn(QStyle::SP_ArrowDown);
+    cdLeft = makeBtn(QStyle::SP_ArrowLeft);
+    cdRight = makeBtn(QStyle::SP_ArrowRight);
 
     cdUp->setChecked((_cd & CD_UP) != 0);
     cdDown->setChecked((_cd & CD_DOWN) != 0);
