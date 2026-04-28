@@ -393,15 +393,24 @@ FfToken* FfReader::GetToken()
 
         case SIGNATURE: {
             /*  First byte of the signature was already consumed ('@'),
-                second byte is in `ch`, the remainder must match
-                byte-for-byte. Buffer is sized from the compile-time
-                tail length so the Read() cannot overflow. */
-            static constexpr char SIG_TAIL[] = "bw3:file\r\n";
-            static constexpr size_t SIG_TAIL_LEN = sizeof(SIG_TAIL) - 1; /* excl. NUL */
-            char buff[SIG_TAIL_LEN];
-            file.Read(buff, static_cast<int>(SIG_TAIL_LEN));
-            if (ch == FF_SIGNATURE[1] && memcmp(buff, SIG_TAIL, SIG_TAIL_LEN) == 0)
-                token = new FfTokenSignature;
+                second byte is in `ch`. The body ("bw3:file") must
+                match byte-for-byte; the terminator may be CRLF (the
+                legacy writer's output) or just LF (textile-webapp
+                exports and any Unix-style writer).                  */
+            static constexpr char SIG_BODY[] = "bw3:file";
+            static constexpr size_t SIG_BODY_LEN = sizeof(SIG_BODY) - 1;
+            char buff[SIG_BODY_LEN];
+            file.Read(buff, static_cast<int>(SIG_BODY_LEN));
+            if (ch == FF_SIGNATURE[1] && memcmp(buff, SIG_BODY, SIG_BODY_LEN) == 0) {
+                const int term = file.Read();
+                if (term == '\n') {
+                    token = new FfTokenSignature;
+                } else if (term == '\r') {
+                    const int nl = file.Read();
+                    if (nl == '\n')
+                        token = new FfTokenSignature;
+                }
+            }
             state = EXIT;
             break;
         }

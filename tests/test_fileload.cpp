@@ -102,6 +102,17 @@ private slots:
         QVERIFY(DBWFRM->kette.b >= DBWFRM->kette.a + 2);
     }
 
+    void load_textile_export_sample()
+    {
+        const QString path = samplePath("textile-export.dbw");
+        QVERIFY(QFileInfo::exists(path));
+        DBWFRM->filename = path;
+        LOADSTAT stat = UNKNOWN_FAILURE;
+        const bool ok = DBWFRM->Load(stat, LOADALL);
+        QVERIFY2(ok, qPrintable(QStringLiteral("load failed, stat=%1").arg(int(stat))));
+        QCOMPARE(stat, FILE_LOADED);
+    }
+
     void is_free_schaft_reflects_loaded_einzug()
     {
         DBWFRM->filename = samplePath("satin.dbw");
