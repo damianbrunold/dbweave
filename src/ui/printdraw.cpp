@@ -151,6 +151,24 @@ void PrPrinter::PrPaintCell(DARSTELLUNG _d, int _x, int _y, int _xx, int _yy, TC
                              qcolFromTColor(_col));
         }
         break;
+
+    case HDASH:
+        canvas->drawLine(XSCALE(_x + dx), YSCALE((_y + _yy) / 2), XSCALE(_xx - dx + 1),
+                         YSCALE((_y + _yy) / 2));
+        canvas->drawLine(XSCALE(_x + dx), YSCALE((_y + _yy) / 2 + 1), XSCALE(_xx - dx + 1),
+                         YSCALE((_y + _yy) / 2 + 1));
+        break;
+
+    case PLUS:
+        canvas->drawLine(XSCALE((_x + _xx) / 2), YSCALE(_yy - dy), XSCALE((_x + _xx) / 2),
+                         YSCALE(_y + dy + 1));
+        canvas->drawLine(XSCALE((_x + _xx) / 2 + 1), YSCALE(_yy - dy), XSCALE((_x + _xx) / 2 + 1),
+                         YSCALE(_y + dy + 1));
+        canvas->drawLine(XSCALE(_x + dx), YSCALE((_y + _yy) / 2), XSCALE(_xx - dx + 1),
+                         YSCALE((_y + _yy) / 2));
+        canvas->drawLine(XSCALE(_x + dx), YSCALE((_y + _yy) / 2 + 1), XSCALE(_xx - dx + 1),
+                         YSCALE((_y + _yy) / 2 + 1));
+        break;
     }
 }
 

@@ -206,7 +206,18 @@ void PaintCell(QPainter& _p, DARSTELLUNG _darstellung, int _x, int _y, int _xx, 
 
     case NUMBER:
         if (_number >= 0) {
-            const int h = _fontHeight > 0 ? _fontHeight : 6;
+            /*  Default font height scales with the cell so 1-2 digit
+                shaft numbers remain legible across zoom levels. The
+                old fixed 6-px default was unreadable on a 20+ px
+                cell. Caller can still override via _fontHeight. */
+            int h = _fontHeight;
+            if (h <= 0) {
+                h = (size * 2) / 3;
+                if (h < 7)
+                    h = 7;
+                if (h > size - 4)
+                    h = size - 4;
+            }
             QFont f = _p.font();
             f.setPixelSize(h);
             _p.setFont(f);
@@ -217,5 +228,29 @@ void PaintCell(QPainter& _p, DARSTELLUNG _darstellung, int _x, int _y, int _xx, 
             fillBox(_p, _x + 2, _y + 2, _xx - 2, _yy - 2, _color);
         }
         break;
+
+    case HDASH: {
+        /*  Horizontal mirror of STRICH: a centred horizontal bar
+            spanning the cell width, even thickness scaled like
+            STRICH's vertical bar.                                  */
+        const int cy = (_y + _yy) / 2;
+        const int bar = dotFor(size);
+        const int top = barLeft(cy, bar);
+        fillBox(_p, _x + 2, top, _xx - 2, top + bar - 1, _color);
+        break;
+    }
+
+    case PLUS: {
+        /*  '+' = centred vertical bar (STRICH) + centred horizontal
+            bar (HDASH) sharing the cell midline.                   */
+        const int cx = (_x + _xx) / 2;
+        const int cy = (_y + _yy) / 2;
+        const int bar = dotFor(size);
+        const int left = barLeft(cx, bar);
+        const int top = barLeft(cy, bar);
+        fillBox(_p, left, _y + 2, left + bar - 1, _yy - 2, _color);
+        fillBox(_p, _x + 2, top, _xx - 2, top + bar - 1, _color);
+        break;
+    }
     }
 }

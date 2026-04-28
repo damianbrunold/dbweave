@@ -29,7 +29,12 @@ enum DARSTELLUNG {
     FALLEND,
     SMALLKREUZ,
     SMALLKREIS,
-    NUMBER
+    NUMBER,
+    /*  Two extra symbols introduced to match the web-based dbweave
+        editor. Append-only so saved files stay binary-compatible
+        (viewtype is persisted as the int value of this enum). */
+    HDASH, /* horizontal bar (mirror of STRICH along the diagonal) */
+    PLUS   /* '+' shape: centred vertical + horizontal stroke      */
 };
 /*-----------------------------------------------------------------*/
 /*  TOOL selects the behaviour of a mouse-drag on the gewebe canvas.

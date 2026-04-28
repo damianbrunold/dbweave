@@ -736,6 +736,7 @@ void FhLoader::LoadViewEinzug(FfReader* _reader)
     int visible = 1;
     int down = 0;
     int viewtype = int(PUNKT);
+    int viewtype2 = -1; /* absent sentinel -- writer only emits when HDASH/PLUS */
     int hvisible = mainfrm->hvisible;
     int style = 1; /* 1 = EzMinimalZ -- legacy default */
     int stronglinex = mainfrm->einzug.pos.strongline_x;
@@ -745,6 +746,7 @@ void FhLoader::LoadViewEinzug(FfReader* _reader)
     _FIELD_MAP_INT("visible", visible, int)
     FIELD_MAP_INT("down", down, int)
     FIELD_MAP_INT("viewtype", viewtype, int)
+    FIELD_MAP_INT("viewtype2", viewtype2, int)
     FIELD_MAP_INT("hvisible", hvisible, int)
     FIELD_MAP_INT("style", style, int)
     FIELD_MAP_INT("stronglinex", stronglinex, int)
@@ -756,6 +758,11 @@ void FhLoader::LoadViewEinzug(FfReader* _reader)
     END_LOAD_MAP
     setChecked(mainfrm->ViewEinzug, visible != 0);
     mainfrm->einzugunten = (down != 0);
+    /*  viewtype2 (if present and known) overrides the legacy-coerced
+        viewtype so HDASH/PLUS round-trip with full fidelity for apps
+        that recognise it. */
+    if (viewtype2 == HDASH || viewtype2 == PLUS)
+        viewtype = viewtype2;
     mainfrm->einzug.darstellung = DARSTELLUNG(viewtype);
     mainfrm->einzug.pos.strongline_x = stronglinex;
     mainfrm->einzug.pos.strongline_y = strongliney;
@@ -779,11 +786,13 @@ void FhLoader::LoadViewEinzug(FfReader* _reader)
 void FhLoader::LoadViewAufknuepfung(FfReader* _reader)
 {
     int viewtype = int(KREUZ);
+    int viewtype2 = -1;
     int stronglinex = mainfrm->aufknuepfung.pos.strongline_x;
     int strongliney = mainfrm->aufknuepfung.pos.strongline_y;
     BEGIN_LOAD_MAP
     BEGIN_FIELD_MAP
     _FIELD_MAP_INT("viewtype", viewtype, int)
+    FIELD_MAP_INT("viewtype2", viewtype2, int)
     FIELD_MAP_INT("stronglinex", stronglinex, int)
     FIELD_MAP_INT("strongliney", strongliney, int)
     DEFAULT_FIELD
@@ -791,6 +800,8 @@ void FhLoader::LoadViewAufknuepfung(FfReader* _reader)
     NO_SECTIONS
     BEGIN_DEFAULT_MAP
     END_LOAD_MAP
+    if (viewtype2 == HDASH || viewtype2 == PLUS)
+        viewtype = viewtype2;
     mainfrm->aufknuepfung.darstellung = DARSTELLUNG(viewtype);
     mainfrm->aufknuepfung.pos.strongline_x = stronglinex;
     mainfrm->aufknuepfung.pos.strongline_y = strongliney;
@@ -800,6 +811,7 @@ void FhLoader::LoadViewTrittfolge(FfReader* _reader)
 {
     int visible = 1;
     int viewtype = int(PUNKT);
+    int viewtype2 = -1;
     int einzeltritt = 1;
     int wvisible = mainfrm->wvisible;
     int style = 1;
@@ -809,6 +821,7 @@ void FhLoader::LoadViewTrittfolge(FfReader* _reader)
     BEGIN_FIELD_MAP
     _FIELD_MAP_INT("visible", visible, int)
     FIELD_MAP_INT("viewtype", viewtype, int)
+    FIELD_MAP_INT("viewtype2", viewtype2, int)
     FIELD_MAP_INT("single", einzeltritt, int)
     FIELD_MAP_INT("wvisible", wvisible, int)
     FIELD_MAP_INT("style", style, int)
@@ -820,6 +833,8 @@ void FhLoader::LoadViewTrittfolge(FfReader* _reader)
     BEGIN_DEFAULT_MAP
     END_LOAD_MAP
     setChecked(mainfrm->ViewTrittfolge, visible != 0);
+    if (viewtype2 == HDASH || viewtype2 == PLUS)
+        viewtype = viewtype2;
     mainfrm->trittfolge.darstellung = DARSTELLUNG(viewtype);
     mainfrm->trittfolge.einzeltritt = (einzeltritt != 0);
     mainfrm->trittfolge.pos.strongline_x = stronglinex;
@@ -843,14 +858,18 @@ void FhLoader::LoadViewTrittfolge(FfReader* _reader)
 void FhLoader::LoadViewSchlagpatrone(FfReader* _reader)
 {
     int viewtype = int(AUSGEFUELLT);
+    int viewtype2 = -1;
     BEGIN_LOAD_MAP
     BEGIN_FIELD_MAP
     _FIELD_MAP_INT("viewtype", viewtype, int)
+    FIELD_MAP_INT("viewtype2", viewtype2, int)
     DEFAULT_FIELD
     BEGIN_SECTION_MAP
     NO_SECTIONS
     BEGIN_DEFAULT_MAP
     END_LOAD_MAP
+    if (viewtype2 == HDASH || viewtype2 == PLUS)
+        viewtype = viewtype2;
     mainfrm->schlagpatronendarstellung = DARSTELLUNG(viewtype);
 }
 /*-----------------------------------------------------------------*/

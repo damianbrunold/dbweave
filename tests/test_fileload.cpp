@@ -5,11 +5,13 @@
 
 #include <QApplication>
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
 #include <QTemporaryDir>
 #include <QTest>
 
 #include "datamodule.h"
+#include "enums.h"
 #include "mainwindow.h"
 #include "hilfslinien.h"
 #include "loadoptions.h"
@@ -182,6 +184,59 @@ private slots:
         QCOMPARE(DBWFRM->trittfolge.pos.strongline_x, 3);
         QCOMPARE(DBWFRM->trittfolge.pos.strongline_y, 9);
         QCOMPARE(DBWFRM->strongclr, QColor(40, 80, 120));
+    }
+
+    void viewtype2_round_trips_extended_darstellung()
+    {
+        /*  HDASH/PLUS aren't part of legacy's 0..9 enum. Save writes a
+            legacy-compatible "viewtype" (coerced to STRICH/KREUZ) plus
+            "viewtype2" with the original value; load prefers
+            viewtype2 when present. Verify the round-trip preserves
+            the extended values, and that a file produced this way
+            still reads cleanly when only the legacy "viewtype" is
+            consulted (simulated by setting darstellung directly to
+            the coerced value on a re-load). */
+        QTemporaryDir tmp;
+        QVERIFY(tmp.isValid());
+        const QString out = tmp.filePath("viewtype2.dbw");
+
+        DBWFRM->filename = samplePath("satin.dbw");
+        LOADSTAT stat;
+        QVERIFY(DBWFRM->Load(stat, LOADALL));
+
+        DBWFRM->einzug.darstellung = HDASH;
+        DBWFRM->trittfolge.darstellung = PLUS;
+        DBWFRM->aufknuepfung.darstellung = HDASH;
+        DBWFRM->schlagpatronendarstellung = PLUS;
+
+        DBWFRM->filename = out;
+        QVERIFY(DBWFRM->Save());
+
+        delete DBWFRM;
+        delete Data;
+        Data = new TData();
+        DBWFRM = new TDBWFRM();
+        DBWFRM->filename = out;
+        QVERIFY(DBWFRM->Load(stat, LOADALL));
+        QCOMPARE(stat, FILE_LOADED);
+
+        QCOMPARE((int)DBWFRM->einzug.darstellung, (int)HDASH);
+        QCOMPARE((int)DBWFRM->trittfolge.darstellung, (int)PLUS);
+        QCOMPARE((int)DBWFRM->aufknuepfung.darstellung, (int)HDASH);
+        QCOMPARE((int)DBWFRM->schlagpatronendarstellung, (int)PLUS);
+
+        /*  Sanity-check the on-disk legacy field carries the coerced
+            value so a legacy reader sees STRICH/KREUZ rather than an
+            unrenderable enum value. */
+        QFile f(out);
+        QVERIFY(f.open(QIODevice::ReadOnly));
+        const QString text = QString::fromUtf8(f.readAll());
+        f.close();
+        QVERIFY(text.contains(QStringLiteral("\\einzug{")));
+        /*  Each field has both keys; legacy "viewtype" is the coerced
+            value (STRICH=1 for HDASH, KREUZ=2 for PLUS). */
+        QVERIFY(text.contains(QStringLiteral("viewtype2==10"))); /* HDASH */
+        QVERIFY(text.contains(QStringLiteral("viewtype2==11"))); /* PLUS  */
     }
 
     void ratio_round_trips_non_unit_values()

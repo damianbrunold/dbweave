@@ -20,8 +20,34 @@
 #include "hilfslinien.h"
 #include "properties.h"
 #include "blockmuster.h"
+#include "enums.h"
 
 #include <vector>
+
+namespace
+{
+/*  Map an extended DARSTELLUNG (HDASH/PLUS) to the closest legacy
+    value (0..9) so legacy and current-textile readers — which only
+    know 0..9 — render *something* visually similar instead of an
+    undefined cell. The full enum value is preserved separately in
+    the "viewtype2" field; readers that recognise it use it in
+    preference to "viewtype". */
+int legacyViewtype(int _v)
+{
+    if (_v == HDASH)
+        return STRICH;
+    if (_v == PLUS)
+        return KREUZ;
+    return _v;
+}
+
+void writeViewtype(FfWriter& _w, int _v)
+{
+    _w.WriteFieldInt("viewtype", legacyViewtype(_v));
+    if (_v == HDASH || _v == PLUS)
+        _w.WriteFieldInt("viewtype2", _v);
+}
+} /* namespace */
 
 /*  @dbw3:file format version tag. "0001" is the older 3.7- style;
     we always emit "0002". */
@@ -205,7 +231,7 @@ bool TDBWFRM::Save()
         writer.BeginSection("einzug");
         writer.WriteFieldInt("visible", (ViewEinzug && ViewEinzug->isChecked()) ? 1 : 0);
         writer.WriteFieldInt("down", einzugunten ? 1 : 0);
-        writer.WriteFieldInt("viewtype", int(einzug.darstellung));
+        writeViewtype(writer, int(einzug.darstellung));
         writer.WriteFieldInt("stronglinex", einzug.pos.strongline_x);
         writer.WriteFieldInt("strongliney", einzug.pos.strongline_y);
         writer.WriteFieldInt("hvisible", hvisible);
@@ -213,14 +239,14 @@ bool TDBWFRM::Save()
         writer.EndSection();
 
         writer.BeginSection("aufknuepfung");
-        writer.WriteFieldInt("viewtype", int(aufknuepfung.darstellung));
+        writeViewtype(writer, int(aufknuepfung.darstellung));
         writer.WriteFieldInt("stronglinex", aufknuepfung.pos.strongline_x);
         writer.WriteFieldInt("strongliney", aufknuepfung.pos.strongline_y);
         writer.EndSection();
 
         writer.BeginSection("trittfolge");
         writer.WriteFieldInt("visible", (ViewTrittfolge && ViewTrittfolge->isChecked()) ? 1 : 0);
-        writer.WriteFieldInt("viewtype", int(trittfolge.darstellung));
+        writeViewtype(writer, int(trittfolge.darstellung));
         writer.WriteFieldInt("stronglinex", trittfolge.pos.strongline_x);
         writer.WriteFieldInt("strongliney", trittfolge.pos.strongline_y);
         writer.WriteFieldInt("single", trittfolge.einzeltritt ? 1 : 0);
@@ -229,7 +255,7 @@ bool TDBWFRM::Save()
         writer.EndSection();
 
         writer.BeginSection("schlagpatrone");
-        writer.WriteFieldInt("viewtype", int(schlagpatronendarstellung));
+        writeViewtype(writer, int(schlagpatronendarstellung));
         writer.EndSection();
 
         writer.BeginSection("gewebe");

@@ -10,6 +10,7 @@
 */
 
 #include "xoptionsdialog.h"
+#include "enums.h"
 #include "language.h"
 
 #include <QCheckBox>
@@ -24,18 +25,40 @@
 
 void XOptionsDialog::loadCombo(QComboBox* _cb, bool _withNumber)
 {
+    /*  Each entry's userData carries the underlying DARSTELLUNG enum
+        value so we can omit "Number" from fields that don't support
+        it without shifting the indices of the entries below it. The
+        caller should write back via comboValue() / set via
+        setComboValue(). */
     _cb->clear();
-    _cb->addItem(LANG_STR("Filled", "Ausgefüllt"));
-    _cb->addItem(LANG_STR("Vertical", "Vertikal"));
-    _cb->addItem(LANG_STR("Cross", "Kreuz"));
-    _cb->addItem(LANG_STR("Point", "Punkt"));
-    _cb->addItem(LANG_STR("Circle", "Kreis"));
-    _cb->addItem(LANG_STR("Rising", "Steigend"));
-    _cb->addItem(LANG_STR("Falling", "Fallend"));
-    _cb->addItem(LANG_STR("Small cross", "Kleines Kreuz"));
-    _cb->addItem(LANG_STR("Small circle", "Kleiner Kreis"));
+    _cb->addItem(LANG_STR("Filled", "Ausgefüllt"), int(AUSGEFUELLT));
+    _cb->addItem(LANG_STR("Vertical", "Vertikal"), int(STRICH));
+    _cb->addItem(LANG_STR("Cross", "Kreuz"), int(KREUZ));
+    _cb->addItem(LANG_STR("Point", "Punkt"), int(PUNKT));
+    _cb->addItem(LANG_STR("Circle", "Kreis"), int(KREIS));
+    _cb->addItem(LANG_STR("Rising", "Steigend"), int(STEIGEND));
+    _cb->addItem(LANG_STR("Falling", "Fallend"), int(FALLEND));
+    _cb->addItem(LANG_STR("Small cross", "Kleines Kreuz"), int(SMALLKREUZ));
+    _cb->addItem(LANG_STR("Small circle", "Kleiner Kreis"), int(SMALLKREIS));
     if (_withNumber)
-        _cb->addItem(LANG_STR("Number", "Nummer"));
+        _cb->addItem(LANG_STR("Number", "Nummer"), int(NUMBER));
+    _cb->addItem(LANG_STR("Horizontal", "Horizontal"), int(HDASH));
+    _cb->addItem(LANG_STR("Plus", "Plus"), int(PLUS));
+}
+
+static void setComboValue(QComboBox* _cb, DARSTELLUNG _v)
+{
+    const int idx = _cb->findData(int(_v));
+    if (idx >= 0)
+        _cb->setCurrentIndex(idx);
+    else
+        _cb->setCurrentIndex(0); /* fall back to AUSGEFUELLT */
+}
+
+static DARSTELLUNG comboValue(QComboBox* _cb)
+{
+    const QVariant v = _cb->currentData();
+    return v.isValid() ? DARSTELLUNG(v.toInt()) : AUSGEFUELLT;
 }
 
 XOptionsDialog::XOptionsDialog(QWidget* _parent)
@@ -236,13 +259,13 @@ void TDBWFRM::ShowOptions(bool _global)
     else
         frm.RisingShed->setChecked(true);
     /*  Symbole */
-    frm.cbEinzug->setCurrentIndex(einzug.darstellung);
-    frm.cbAufknuepfung->setCurrentIndex(aufknuepfung.darstellung);
-    frm.cbTrittfolge->setCurrentIndex(trittfolge.darstellung);
-    frm.cbSchlagpatrone->setCurrentIndex(schlagpatronendarstellung);
-    frm.cbAushebung->setCurrentIndex(darst_aushebung);
-    frm.cbAnbindung->setCurrentIndex(darst_anbindung);
-    frm.cbAbbindung->setCurrentIndex(darst_abbindung);
+    setComboValue(frm.cbEinzug, einzug.darstellung);
+    setComboValue(frm.cbAufknuepfung, aufknuepfung.darstellung);
+    setComboValue(frm.cbTrittfolge, trittfolge.darstellung);
+    setComboValue(frm.cbSchlagpatrone, schlagpatronendarstellung);
+    setComboValue(frm.cbAushebung, darst_aushebung);
+    setComboValue(frm.cbAnbindung, darst_anbindung);
+    setComboValue(frm.cbAbbindung, darst_abbindung);
     /*  Ansicht */
     frm.EinzugUnten->setChecked(einzugunten);
     frm.RightToLeft->setChecked(righttoleft);
@@ -296,13 +319,13 @@ void TDBWFRM::ShowOptions(bool _global)
     }
 
     /*  Symbole */
-    einzug.darstellung = (DARSTELLUNG)frm.cbEinzug->currentIndex();
-    aufknuepfung.darstellung = (DARSTELLUNG)frm.cbAufknuepfung->currentIndex();
-    trittfolge.darstellung = (DARSTELLUNG)frm.cbTrittfolge->currentIndex();
-    schlagpatronendarstellung = (DARSTELLUNG)frm.cbSchlagpatrone->currentIndex();
-    darst_aushebung = (DARSTELLUNG)frm.cbAushebung->currentIndex();
-    darst_anbindung = (DARSTELLUNG)frm.cbAnbindung->currentIndex();
-    darst_abbindung = (DARSTELLUNG)frm.cbAbbindung->currentIndex();
+    einzug.darstellung = comboValue(frm.cbEinzug);
+    aufknuepfung.darstellung = comboValue(frm.cbAufknuepfung);
+    trittfolge.darstellung = comboValue(frm.cbTrittfolge);
+    schlagpatronendarstellung = comboValue(frm.cbSchlagpatrone);
+    darst_aushebung = comboValue(frm.cbAushebung);
+    darst_anbindung = comboValue(frm.cbAnbindung);
+    darst_abbindung = comboValue(frm.cbAbbindung);
     if (_global) {
         settings.SetCategory(QString("Display"));
         settings.Save(QString("Threading"), (int)einzug.darstellung);
