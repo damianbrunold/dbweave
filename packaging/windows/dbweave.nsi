@@ -46,6 +46,9 @@
 !define MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_VALUENAME "Install_Dir"
 !define MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_KEY "${APP_KEY}"
 !define MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_VALUENAME "InstallMode"
+; dbweave.exe is 64-bit; install per-machine into C:\Program Files,
+; not the 32-bit-installer default of C:\Program Files (x86).
+!define MULTIUSER_USE_PROGRAMFILES64
 
 ; ---- MUI2 styling -----------------------------------------------
 !define MUI_ICON                "${ICON}"
