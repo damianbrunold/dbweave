@@ -1,3 +1,9 @@
+configure_file(
+    "${CMAKE_SOURCE_DIR}/src/version.h.in"
+    "${CMAKE_BINARY_DIR}/generated/dbweave/version.h"
+    @ONLY
+)
+
 set(_dbweave_platform_sources "")
 if(WIN32)
     # Embed the application icon into dbweave.exe so Explorer, the
@@ -11,6 +17,10 @@ endif()
 qt_add_executable(dbweave
     main.cpp
     ${_dbweave_platform_sources}
+)
+
+target_include_directories(dbweave PRIVATE
+    "${CMAKE_BINARY_DIR}/generated/dbweave"
 )
 
 target_link_libraries(dbweave

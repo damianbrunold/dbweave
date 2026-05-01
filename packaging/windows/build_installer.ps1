@@ -62,9 +62,19 @@ if (Test-Path (Join-Path $Root 'dbw_handbuch.pdf'))  { Copy-Item (Join-Path $Roo
 
 Write-Host '==> makensis'
 New-Item -ItemType Directory -Force -Path $DistDir | Out-Null
+
+# Pull the version out of the top-level CMakeLists.txt so the
+# installer matches the in-app version without a second source of
+# truth. Mirrors the awk-based extraction in build_dmg.sh.
+$CMakeLists = Join-Path $Root 'CMakeLists.txt'
+$VersionMatch = Select-String -Path $CMakeLists -Pattern 'VERSION\s+(\d+\.\d+\.\d+)' | Select-Object -First 1
+if (-not $VersionMatch) { throw "Could not parse VERSION from $CMakeLists" }
+$AppVer = $VersionMatch.Matches[0].Groups[1].Value
+Write-Host "    APPVER=$AppVer"
+
 Push-Location (Join-Path $Root 'packaging\windows')
 try {
-    & makensis 'dbweave.nsi'
+    & makensis "/DAPPVER=$AppVer" 'dbweave.nsi'
     if ($LASTEXITCODE -ne 0) { throw 'makensis failed' }
     Move-Item -Force 'dbweave_setup.exe' $DistDir
 } finally {

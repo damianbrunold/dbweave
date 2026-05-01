@@ -1,0 +1,7 @@
+#pragma once
+
+// Generated from src/version.h.in by CMake. The single source of
+// truth is the project(... VERSION ...) line in the top-level
+// CMakeLists.txt -- everything else (the in-app version string,
+// the Windows installer, the macOS bundle) reads from there.
+#define DBWEAVE_VERSION_STRING "@PROJECT_VERSION@"

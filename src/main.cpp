@@ -26,11 +26,26 @@
 #include "loadoptions.h"
 #include "print.h"
 #include "settings.h"
+#include "version.h"
 
 #include <QPrinter>
 
+#include <cstdio>
+#include <cstring>
+
 int main(int argc, char* argv[])
 {
+    /*  --version short-circuits before any Qt setup so it stays
+        cheap and never touches the GUI subsystem. Handled by hand
+        rather than via QCommandLineParser to avoid disturbing the
+        legacy '/p <file>' silent-print syntax parsed below.        */
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--version") == 0) {
+            std::printf("DB-WEAVE %s\n", DBWEAVE_VERSION_STRING);
+            return 0;
+        }
+    }
+
     /*  The icons.qrc resource lives in the dbweave_ui static
         library, so its registrar isn't automatically pulled in by
         the linker. Force initialisation before any QIcon is built
@@ -103,7 +118,7 @@ int main(int argc, char* argv[])
     QApplication::setOrganizationName("Brunold Software");
     QApplication::setOrganizationDomain("brunoldsoftware.ch");
     QApplication::setApplicationName("DB-WEAVE");
-    QApplication::setApplicationVersion("0.1.0");
+    QApplication::setApplicationVersion(QStringLiteral(DBWEAVE_VERSION_STRING));
 
     /*  Application icon. Ship both the 16/32 legacy PNGs (extracted
         from DBW.ICO) and the modern SVG so Qt can pick the best

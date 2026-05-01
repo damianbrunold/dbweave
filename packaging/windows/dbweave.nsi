@@ -12,7 +12,14 @@
 
 !define APPNAME    "DB-WEAVE"
 !define COMPANY    "Brunold Software"
-!define APPVER     "0.1.0"
+; APPVER is supplied on the makensis command line by
+; build_installer.ps1 (which reads it out of the top-level
+; CMakeLists.txt -- the single source of truth for the project
+; version). The fallback below only fires when the .nsi is built
+; by hand without the helper script.
+!ifndef APPVER
+    !define APPVER "0.0.0"
+!endif
 !define EXE        "dbweave.exe"
 !define SRCDIR     "..\..\dist\windeployqt"
 
