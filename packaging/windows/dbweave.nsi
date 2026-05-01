@@ -1,77 +1,158 @@
-; DB-WEAVE Qt 6 port Windows installer (NSIS).
+; DB-WEAVE Qt 6 port Windows installer (NSIS, MUI2 + MultiUser).
 ;
-; Assumes dist/windeployqt/ has been populated by packaging/windows/
-; build_installer.ps1, which runs cmake --install, copies the built
-; executable, runs `windeployqt dbweave.exe`, and drops LICENSE +
-; the two PDFs alongside.
+; A single dual-mode installer: prompts at launch for per-user vs
+; per-machine. Per-user installs to %LOCALAPPDATA%\Programs\DB-WEAVE
+; (no UAC, HKCU); per-machine installs to %ProgramFiles%\DB-WEAVE
+; (UAC, HKLM). The previous version is auto-detected (in either
+; hive) and uninstalled silently before laying down new files, so
+; upgrades don't accumulate orphan Qt plugin DLLs.
 ;
-; Build with:
-;     makensis dbweave.nsi
+; Build:    makensis /DAPPVER=<x.y.z> dbweave.nsi
+; Output:   dbweave_setup.exe in the current directory.
 ;
-; Output: dbweave_setup.exe in the current directory.
+; Driven by packaging/windows/build_installer.ps1 which extracts
+; APPVER from the top-level CMakeLists.txt (single source of truth
+; for the project version) and stages dist/windeployqt/.
 
 !define APPNAME    "DB-WEAVE"
 !define COMPANY    "Brunold Software"
-; APPVER is supplied on the makensis command line by
-; build_installer.ps1 (which reads it out of the top-level
-; CMakeLists.txt -- the single source of truth for the project
-; version). The fallback below only fires when the .nsi is built
-; by hand without the helper script.
+!define EXE        "dbweave.exe"
+!define SRCDIR     "..\..\dist\windeployqt"
+!define ICON       "..\..\resources\windows\dbweave.ico"
+!define HOMEPAGE   "http://www.brunoldsoftware.ch"
+!define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}"
+!define APP_KEY    "Software\${COMPANY}\${APPNAME}"
+
 !ifndef APPVER
     !define APPVER "0.0.0"
 !endif
-!define EXE        "dbweave.exe"
-!define SRCDIR     "..\..\dist\windeployqt"
+
+; ---- MultiUser: pick per-user vs per-machine at launch -----------
+; "Highest" requests elevation only if the user picks per-machine;
+; per-user installs run unelevated. The installer writes its choice
+; under HKCU\Software\Brunold Software\DB-WEAVE\InstallMode so a
+; later run defaults to the same mode.
+!define MULTIUSER_EXECUTIONLEVEL Highest
+!define MULTIUSER_MUI
+!define MULTIUSER_INSTALLMODE_COMMANDLINE
+!define MULTIUSER_INSTALLMODE_INSTDIR "${APPNAME}"
+!define MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_KEY "${APP_KEY}"
+!define MULTIUSER_INSTALLMODE_INSTDIR_REGISTRY_VALUENAME "Install_Dir"
+!define MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_KEY "${APP_KEY}"
+!define MULTIUSER_INSTALLMODE_DEFAULT_REGISTRY_VALUENAME "InstallMode"
+
+; ---- MUI2 styling -----------------------------------------------
+!define MUI_ICON                "${ICON}"
+!define MUI_UNICON              "${ICON}"
+!define MUI_ABORTWARNING
+
+!include "MUI2.nsh"
+!include "MultiUser.nsh"
+!include "FileFunc.nsh"
+!include "LogicLib.nsh"
 
 Unicode true
-Name "${APPNAME}"
-OutFile "dbweave_setup.exe"
-InstallDir "$PROGRAMFILES64\${APPNAME}"
-InstallDirRegKey HKLM "Software\${COMPANY}\${APPNAME}" "Install_Dir"
-RequestExecutionLevel admin
+Name        "${APPNAME} ${APPVER}"
+OutFile     "dbweave_setup.exe"
 SetCompressor /SOLID lzma
+BrandingText "${APPNAME} ${APPVER}"
+
 VIProductVersion "${APPVER}.0"
 VIAddVersionKey "ProductName"     "${APPNAME}"
 VIAddVersionKey "CompanyName"     "${COMPANY}"
 VIAddVersionKey "FileDescription" "DB-WEAVE weaving pattern designer"
 VIAddVersionKey "FileVersion"     "${APPVER}"
+VIAddVersionKey "ProductVersion"  "${APPVER}"
 VIAddVersionKey "LegalCopyright"  "GPL v3 or later"
 
-Page directory
-Page instfiles
-UninstPage uninstConfirm
-UninstPage instfiles
+; ---- Pages -------------------------------------------------------
+; Minimal flow: install-mode picker, then progress. No welcome,
+; license, components or directory page; the install path is
+; fixed by MultiUser based on the chosen mode.
+!insertmacro MULTIUSER_PAGE_INSTALLMODE
+!insertmacro MUI_PAGE_INSTFILES
 
-; -------------------- install ------------------------------------
+!insertmacro MUI_UNPAGE_INSTFILES
 
-Section "${APPNAME}"
-    SectionIn RO
+!insertmacro MUI_LANGUAGE "English"
+!insertmacro MUI_LANGUAGE "German"
+
+; ---- Helpers -----------------------------------------------------
+
+; Detect a previous install in either hive, run its uninstaller
+; silently, then continue. _?=$0 keeps the uninstaller in place so
+; ExecWait actually waits for it -- without it, the uninstaller
+; copies itself to %TEMP% and returns immediately.
+Function .onInit
+    !insertmacro MULTIUSER_INIT
+
+    ReadRegStr $0 HKLM "${APP_KEY}" "Install_Dir"
+    StrCmp $0 "" tryHKCU
+    Goto haveOld
+tryHKCU:
+    ReadRegStr $0 HKCU "${APP_KEY}" "Install_Dir"
+    StrCmp $0 "" done
+haveOld:
+    IfFileExists "$0\uninstall.exe" 0 done
+    DetailPrint "Removing previous install at $0"
+    ExecWait '"$0\uninstall.exe" /S _?=$0'
+    Delete "$0\uninstall.exe"
+    RMDir  "$0"
+done:
+FunctionEnd
+
+Function un.onInit
+    !insertmacro MULTIUSER_UNINIT
+FunctionEnd
+
+; ---------- install ----------------------------------------------
+
+Section "-${APPNAME}"
     SetOutPath "$INSTDIR"
     ; Everything windeployqt assembled: the exe, its DLLs, the Qt
     ; plugins tree, plus docs.
     File /r "${SRCDIR}\*"
 
-    ; Registry anchor so the next install finds the existing dir.
-    WriteRegStr HKLM "Software\${COMPANY}\${APPNAME}" "Install_Dir" "$INSTDIR"
+    ; SHCTX is HKLM for per-machine, HKCU for per-user (set up by
+    ; MultiUser.nsh). Same logical key in both cases; only the
+    ; hive differs.
+    WriteRegStr SHCTX "${APP_KEY}" "Install_Dir" "$INSTDIR"
+    WriteRegStr SHCTX "${APP_KEY}" "InstallMode" "$MultiUser.InstallMode"
 
-    ; .dbw file association.
-    WriteRegStr HKCR ".dbw" "" "DBWEAVE.Pattern"
-    WriteRegStr HKCR "DBWEAVE.Pattern" "" "DB-WEAVE weaving pattern"
-    WriteRegStr HKCR "DBWEAVE.Pattern\DefaultIcon" "" "$INSTDIR\${EXE},0"
-    WriteRegStr HKCR "DBWEAVE.Pattern\shell\open\command" "" '"$INSTDIR\${EXE}" "%1"'
+    ; .dbw file association. Schema is intentionally unchanged from
+    ; the legacy installer; deeper shell integration (OpenWithProgids,
+    ; Applications\dbweave.exe, Default Apps Capabilities) is
+    ; deferred to a separate change.
+    WriteRegStr SHCTX "Software\Classes\.dbw"                               "" "DBWEAVE.Pattern"
+    WriteRegStr SHCTX "Software\Classes\DBWEAVE.Pattern"                    "" "DB-WEAVE weaving pattern"
+    WriteRegStr SHCTX "Software\Classes\DBWEAVE.Pattern\DefaultIcon"        "" "$INSTDIR\${EXE},0"
+    WriteRegStr SHCTX "Software\Classes\DBWEAVE.Pattern\shell\open\command" "" '"$INSTDIR\${EXE}" "%1"'
 
     ; Add/Remove Programs registration.
-    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "DisplayName"     "${APPNAME}"
-    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "DisplayVersion"  "${APPVER}"
-    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "Publisher"       "${COMPANY}"
-    WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "UninstallString" '"$INSTDIR\uninstall.exe"'
-    WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "NoModify" 1
-    WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "NoRepair" 1
+    WriteRegStr   SHCTX "${UNINST_KEY}" "DisplayName"          "${APPNAME}"
+    WriteRegStr   SHCTX "${UNINST_KEY}" "DisplayVersion"       "${APPVER}"
+    WriteRegStr   SHCTX "${UNINST_KEY}" "Publisher"            "${COMPANY}"
+    WriteRegStr   SHCTX "${UNINST_KEY}" "DisplayIcon"          "$INSTDIR\${EXE},0"
+    WriteRegStr   SHCTX "${UNINST_KEY}" "InstallLocation"      "$INSTDIR"
+    WriteRegStr   SHCTX "${UNINST_KEY}" "URLInfoAbout"         "${HOMEPAGE}"
+    WriteRegStr   SHCTX "${UNINST_KEY}" "UninstallString"      '"$INSTDIR\uninstall.exe"'
+    WriteRegStr   SHCTX "${UNINST_KEY}" "QuietUninstallString" '"$INSTDIR\uninstall.exe" /S'
+    WriteRegDWORD SHCTX "${UNINST_KEY}" "NoModify" 1
+    WriteRegDWORD SHCTX "${UNINST_KEY}" "NoRepair" 1
+
+    ; Show the "size on disk" column in Add/Remove Programs.
+    ; ${GetSize} returns KB in $0 (the /S=0K switch).
+    ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
+    WriteRegDWORD SHCTX "${UNINST_KEY}" "EstimatedSize" $0
+
     WriteUninstaller "$INSTDIR\uninstall.exe"
+
+    ; Tell Explorer the file-association table changed so the .dbw
+    ; icon appears immediately instead of after the next logon.
+    System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)'
 SectionEnd
 
-Section "Start Menu Shortcuts"
-    SetShellVarContext all
+Section "-Start Menu Shortcuts"
     CreateDirectory "$SMPROGRAMS\${APPNAME}"
     CreateShortCut  "$SMPROGRAMS\${APPNAME}\${APPNAME}.lnk"  "$INSTDIR\${EXE}"
     CreateShortCut  "$SMPROGRAMS\${APPNAME}\Uninstall.lnk"   "$INSTDIR\uninstall.exe"
@@ -83,19 +164,17 @@ Section "Start Menu Shortcuts"
     CreateShortCut  "$SMPROGRAMS\${APPNAME}\Handbuch.lnk"    "$INSTDIR\dbw_handbuch.pdf"
 SectionEnd
 
-Section "Desktop Shortcut"
-    SetShellVarContext all
+Section "-Desktop Shortcut"
     CreateShortCut "$DESKTOP\${APPNAME}.lnk" "$INSTDIR\${EXE}"
 SectionEnd
 
-; -------------------- uninstall ----------------------------------
+; ---------- uninstall --------------------------------------------
 
 Section "Uninstall"
-    SetShellVarContext all
-    DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}"
-    DeleteRegKey HKLM "Software\${COMPANY}\${APPNAME}"
-    DeleteRegKey HKCR ".dbw"
-    DeleteRegKey HKCR "DBWEAVE.Pattern"
+    DeleteRegKey SHCTX "${UNINST_KEY}"
+    DeleteRegKey SHCTX "${APP_KEY}"
+    DeleteRegKey SHCTX "Software\Classes\.dbw"
+    DeleteRegKey SHCTX "Software\Classes\DBWEAVE.Pattern"
 
     Delete "$DESKTOP\${APPNAME}.lnk"
     Delete "$SMPROGRAMS\${APPNAME}\*.lnk"
@@ -104,4 +183,6 @@ Section "Uninstall"
     ; windeployqt wrote many files. Blow away the install dir
     ; recursively; the user was warned on the UninstConfirm page.
     RMDir /r "$INSTDIR"
+
+    System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, i 0, i 0)'
 SectionEnd

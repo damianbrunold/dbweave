@@ -61,9 +61,23 @@ Prerequisites:
   `choco install ninja`).
 * NSIS 3.x (`choco install nsis`).
 
-Output: `dist\dbweave_setup.exe`. The installer writes the registry
-entries the legacy installer did (`.dbw` association, Add/Remove
-Programs, Start Menu + Desktop shortcuts).
+Output: `dist\dbweave_setup.exe`. A minimal single dual-mode
+installer (MUI2 + NSIS MultiUser): one page asks **per-user** vs
+**per-machine**, then it installs. No welcome, license, components
+or directory page; the install location is fixed by the chosen
+mode.
+
+* Per-user: installs to `%LOCALAPPDATA%\Programs\DB-WEAVE`, writes
+  to `HKCU`, no UAC prompt.
+* Per-machine: installs to `%ProgramFiles%\DB-WEAVE`, writes to
+  `HKLM`, triggers UAC.
+
+A previous install in either hive is auto-detected and uninstalled
+silently before files are laid down, so upgrades don't accumulate
+orphan Qt plugin DLLs. The installer/uninstaller and Add/Remove
+Programs entry use the DB-WEAVE icon, and ARP carries
+`DisplayIcon`, `URLInfoAbout`, `InstallLocation`, `EstimatedSize`,
+`QuietUninstallString`.
 
 ## macOS — `.dmg`
 
