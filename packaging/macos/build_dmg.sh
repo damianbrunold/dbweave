@@ -36,6 +36,7 @@ ARCH="$(uname -m)"
 
 mkdir -p "$BUILD_DIR" "$DIST_DIR"
 rm -rf "$STAGE_DIR"
+rm -f "$DIST_DIR"/DB-WEAVE-*.dmg
 
 echo "==> configure (no-loom=$NO_LOOM)"
 cmake -S "$SOURCE_DIR" -B "$BUILD_DIR" -G Ninja \
@@ -68,6 +69,17 @@ echo "==> macdeployqt"
 # end up alongside the app.
 macdeployqt "$APP_BUNDLE" -always-overwrite
 
+# Strip plugins whose parent framework isn't installed by Homebrew Qt
+# (qtpdf, qtvirtualkeyboard live in separate formulae). macdeployqt
+# deploys them anyway and emits unresolvable-rpath errors during the
+# step above; the app never loads them, so they're dead weight.
+# - libqpdf.dylib is the QPdf-based image-format reader; we produce
+#   PDF via QPdfWriter (QtGui) and QPrinter (QtPrintSupport), neither
+#   of which depends on QtPdf.
+# - qtvirtualkeyboard is the on-screen IME for touch devices.
+rm -f "$APP_BUNDLE/Contents/PlugIns/imageformats/libqpdf.dylib"
+rm -rf "$APP_BUNDLE/Contents/PlugIns/platforminputcontexts"
+
 # Copy docs next to the .app so the final disk image carries them.
 for f in LICENSE dbw_manual.pdf dbw_handbuch.pdf; do
     if [[ -f "$SOURCE_DIR/$f" ]]; then
@@ -80,9 +92,12 @@ if [[ -n "$SIGN_IDENT" ]]; then
     codesign --deep --force --options runtime --sign "$SIGN_IDENT" "$APP_BUNDLE"
 fi
 
-VERSION="$(awk -F'"' '/VERSION 0\.[0-9]/ { print $2; exit }' "$SOURCE_DIR/CMakeLists.txt" 2>/dev/null \
-           || awk '/project\(dbweave/,/LANGUAGES/' "$SOURCE_DIR/CMakeLists.txt" | awk '/VERSION/ { print $2; exit }')"
-VERSION="${VERSION:-0.1.0}"
+VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' \
+              "$APP_BUNDLE/Contents/Info.plist" 2>/dev/null || true)"
+if [[ -z "$VERSION" ]]; then
+    echo "error: could not read CFBundleShortVersionString from $APP_BUNDLE" >&2
+    exit 1
+fi
 DMG_NAME="DB-WEAVE-${VERSION}-${ARCH}.dmg"
 DMG_OUT="$DIST_DIR/$DMG_NAME"
 rm -f "$DMG_OUT"

@@ -55,16 +55,15 @@ if(APPLE)
         MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
         MACOSX_BUNDLE_ICON_FILE        "dbweave.icns"
     )
-    # Drop the docs + icon inside the .app so macdeployqt carries them into
-    # the .dmg automatically.
-    if(EXISTS "${CMAKE_SOURCE_DIR}/resources/macos/dbweave.icns")
-        target_sources(dbweave PRIVATE
-            "${CMAKE_SOURCE_DIR}/resources/macos/dbweave.icns")
-        set_source_files_properties(
-            "${CMAKE_SOURCE_DIR}/resources/macos/dbweave.icns"
-            PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
-    endif()
     install(TARGETS dbweave BUNDLE DESTINATION .)
+    # Install the bundle icon directly into Contents/Resources. Doing it as
+    # an install(FILES) rule (rather than target_sources +
+    # MACOSX_PACKAGE_LOCATION) is what reliably lands it inside the .app
+    # for the Ninja generator.
+    if(EXISTS "${CMAKE_SOURCE_DIR}/resources/macos/dbweave.icns")
+        install(FILES "${CMAKE_SOURCE_DIR}/resources/macos/dbweave.icns"
+                DESTINATION "dbweave.app/Contents/Resources")
+    endif()
 elseif(WIN32)
     install(TARGETS dbweave RUNTIME DESTINATION .)
 else()
