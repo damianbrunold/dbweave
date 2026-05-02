@@ -298,6 +298,40 @@ void TDBWFRM::FileOpen()
     refresh();
 }
 
+/*-----------------------------------------------------------------*/
+/*  OpenExternalFile -- load a path supplied by an external request
+    (Finder double-click, drop on the Dock icon, argv on launch).
+    Mirrors FileOpen() minus the dialog: AskSave gate, swap document,
+    refresh the view. macOS delivers Finder double-clicks as a
+    QFileOpenEvent after exec() starts, so this can run with the
+    window already visible.                                         */
+void TDBWFRM::OpenExternalFile(const QString& path)
+{
+    if (path.isEmpty() || !QFileInfo::exists(path))
+        return;
+    if (!AskSave())
+        return;
+    rememberDirFor("Pattern", path);
+
+    if (file && file->IsOpen())
+        file->Close();
+
+    filename = path;
+    LOADSTAT stat = UNKNOWN_FAILURE;
+    if (!Load(stat, LOADALL)) {
+        QMessageBox::warning(this, QStringLiteral("DB-WEAVE"),
+                             LANG_STR("Could not open '%1' (status %2).",
+                                      "'%1' konnte nicht geöffnet werden (Status %2).")
+                                 .arg(path)
+                                 .arg(int(stat)));
+        return;
+    }
+    AddToMRU(path);
+    SetModified(false);
+    ResetUndoToCurrentState();
+    refresh();
+}
+
 /*  Pick a pattern file and launch a separate DB-WEAVE process with
     it. The current document is left untouched -- no AskSave prompt,
     no state change in this window.                                 */

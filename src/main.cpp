@@ -10,7 +10,9 @@
 */
 
 #include <QApplication>
+#include <QEvent>
 #include <QFileInfo>
+#include <QFileOpenEvent>
 #include <QGuiApplication>
 #include <QIcon>
 #include <QLocale>
@@ -32,6 +34,37 @@
 
 #include <cstdio>
 #include <cstring>
+
+namespace {
+
+/*  Catches macOS QFileOpenEvent (Finder double-click on a .dbw file,
+    drop on the Dock icon, "Open With" from another app) and routes
+    the path to the main window. Buffers until DBWFRM exists for the
+    cold-launch case where the event could in principle arrive before
+    main() has constructed the window.                              */
+class DBWApp : public QApplication
+{
+public:
+    using QApplication::QApplication;
+
+    QString pendingPath;
+
+    bool event(QEvent* e) override
+    {
+        if (e->type() == QEvent::FileOpen) {
+            const QString path =
+                static_cast<QFileOpenEvent*>(e)->file();
+            if (DBWFRM)
+                DBWFRM->OpenExternalFile(path);
+            else
+                pendingPath = path;
+            return true;
+        }
+        return QApplication::event(e);
+    }
+};
+
+} // namespace
 
 int main(int argc, char* argv[])
 {
@@ -64,7 +97,7 @@ int main(int argc, char* argv[])
     QGuiApplication::setHighDpiScaleFactorRoundingPolicy(
         Qt::HighDpiScaleFactorRoundingPolicy::Round);
 
-    QApplication app(argc, argv);
+    DBWApp app(argc, argv);
 
     /*  Force the light color scheme unconditionally: the shipped menu
         and toolbar icons are drawn for a light background, so a
@@ -211,6 +244,16 @@ int main(int argc, char* argv[])
             }
         }
     }
+    /*  If a QFileOpenEvent landed during QApplication construction
+        (before DBWFRM existed), it was buffered. Drain it now. The
+        usual case is that the event arrives during exec() instead,
+        in which case DBWFRM is already set and OpenExternalFile is
+        called directly from the event handler.                     */
+    if (!app.pendingPath.isEmpty()) {
+        DBWFRM->OpenExternalFile(app.pendingPath);
+        app.pendingPath.clear();
+    }
+
     /*  Restore saved geometry + dock layout when available; fall
         back to a sensible default on first run.                   */
     if (!DBWFRM->LoadWindowState())

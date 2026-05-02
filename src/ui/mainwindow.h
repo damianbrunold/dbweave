@@ -742,6 +742,12 @@ public:
     void FileNewTemplateClick();
     void FileRevertClick();
 
+    /*  Load a path supplied externally (Finder double-click, drop on
+        the Dock icon, command-line argument). Same checked-load flow
+        as FileOpen() minus the file dialog: prompts about unsaved
+        changes first. No-op for an empty or non-existent path.       */
+    void OpenExternalFile(const QString& path);
+
     /*  Extras > Grundeinstellung presets. Flip the four darstellungen,
         right-to-left / top-to-bottom orientation, sinking-shed flag,
         einzug-unten flag and reed-threading visibility to one of
