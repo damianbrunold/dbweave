@@ -36,6 +36,17 @@ BUILD_DIR="$SOURCE_DIR/build-appimage"
 DIST_DIR="$SOURCE_DIR/dist"
 APPDIR="$BUILD_DIR/AppDir"
 
+# Pull the version out of the top-level CMakeLists.txt so the AppImage
+# filename matches the in-app version without a second source of truth.
+# linuxdeploy honours $VERSION when naming its output.
+VERSION="$(awk '/project\(dbweave/,/LANGUAGES/' "$SOURCE_DIR/CMakeLists.txt" \
+           | awk '/VERSION[[:space:]]+[0-9]/ { print $2; exit }')"
+if [[ -z "$VERSION" ]]; then
+    echo "could not parse VERSION from CMakeLists.txt" >&2
+    exit 1
+fi
+export VERSION
+
 mkdir -p "$BUILD_DIR" "$DIST_DIR"
 
 echo "==> configure (no-loom=$NO_LOOM)"
