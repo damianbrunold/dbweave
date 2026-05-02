@@ -25,6 +25,15 @@ RAW="$WORK/raw"
 SET="$WORK/dbweave.iconset"
 mkdir -p "$RAW" "$SET"
 
+# Crop to the inner 28x28 of the 32x32 pattern. The outermost rows and
+# columns of dbweave.svg are a sparse "selvage" -- decorative dots over
+# transparent gaps -- which read as a gray fringe once clipped to the
+# squircle. The inner block (cols 2..29, rows 1..28) has fully opaque
+# edges, so the clip lands on solid pixels. Done via a temp SVG with
+# the viewBox shifted so the shared source file stays untouched.
+TIGHT_SVG="$WORK/dbweave-tight.svg"
+sed 's|viewBox="0 0 32 32"|viewBox="2 1 28 28"|' "$SVG" > "$TIGHT_SVG"
+
 # (filename, pixel size) pairs covering the standard macOS icon set.
 sizes=(
     "icon_16x16.png 16"
@@ -42,7 +51,7 @@ sizes=(
 for entry in "${sizes[@]}"; do
     name="${entry% *}"
     size="${entry##* }"
-    sips -s format png -z "$size" "$size" "$SVG" --out "$RAW/$name" >/dev/null
+    sips -s format png -z "$size" "$size" "$TIGHT_SVG" --out "$RAW/$name" >/dev/null
 done
 
 swift - "$RAW" "$SET" <<'SWIFT_EOF'
@@ -87,6 +96,12 @@ for name in names where name.hasSuffix(".png") {
                        cornerWidth: radius, cornerHeight: radius,
                        transform: nil))
     ctx.clip()
+    // Fill the squircle with white before drawing the pattern. The
+    // dbweave SVG has transparent gaps inside the weave (the spaces
+    // between the threads); without this fill they pick up the dock
+    // background and read as a gray fringe at every gap.
+    ctx.setFillColor(red: 1, green: 1, blue: 1, alpha: 1)
+    ctx.fill(rect)
     ctx.draw(img, in: rect)
 
     guard let masked = ctx.makeImage() else { exit(1) }
