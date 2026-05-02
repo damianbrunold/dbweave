@@ -123,7 +123,14 @@ int main(int argc, char* argv[])
     /*  Application icon. Ship both the 16/32 legacy PNGs (extracted
         from DBW.ICO) and the modern SVG so Qt can pick the best
         match for the platform's chrome (window titlebar, task
-        switcher, dock).                                           */
+        switcher, dock).
+
+        Skipped on macOS: setWindowIcon() there calls
+        [NSApp setApplicationIconImage:], which would override the
+        bundle's CFBundleIconFile (the squircle-clipped .icns) for
+        the Dock while the app is running. macOS window titlebars
+        don't show app icons, so there's nothing to gain.          */
+#ifndef Q_OS_MACOS
     {
         QIcon appIcon;
         appIcon.addFile(QStringLiteral(":/icons/app/dbweave-16.png"), QSize(16, 16));
@@ -131,6 +138,7 @@ int main(int argc, char* argv[])
         appIcon.addFile(QStringLiteral(":/icons/app/dbweave.svg"));
         QApplication::setWindowIcon(appIcon);
     }
+#endif
 
     /*  Pick the UI language. Precedence matches legacy
         EnvOptionsDialog logic: an explicit preference saved under
