@@ -1190,8 +1190,8 @@ TDBWFRM::TDBWFRM(QWidget* parent)
     actHilfe->setShortcut(QKeySequence(Qt::Key_F1));
     connect(actHilfe, &QAction::triggered, this, [] {
         const QString url = (active_language == GE)
-                                ? QStringLiteral("https://www.brunoldsoftware.ch/hilfe")
-                                : QStringLiteral("https://www.brunoldsoftware.ch/help");
+                                ? QStringLiteral("https://www.brunoldsoftware.ch/dbweave/de/hilfe")
+                                : QStringLiteral("https://www.brunoldsoftware.ch/dbweave/en/help");
         QDesktopServices::openUrl(QUrl(url));
     });
     QAction* actBsoftOnline
