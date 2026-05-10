@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 project(dbweave
-    VERSION 6.0.0
+    VERSION 6.0.1
     DESCRIPTION "DB-WEAVE textile CAD/CAM (Qt 6 port)"
     LANGUAGES CXX
 )

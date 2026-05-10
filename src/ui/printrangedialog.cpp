@@ -26,8 +26,9 @@ static QGroupBox* makeRangeGroup(QWidget* _parent, const QString& _title, QSpinB
     auto* form = new QFormLayout(gb);
     _von = new QSpinBox(gb);
     _bis = new QSpinBox(gb);
-    _von->setRange(1, std::max(_max, 1));
-    _bis->setRange(1, std::max(_max, 1));
+    // Min 0 mirrors legacy: typing 0 in both Von and Bis suppresses the section.
+    _von->setRange(0, std::max(_max, 1));
+    _bis->setRange(0, std::max(_max, 1));
     const QString lblFrom = LANG_STR("From", "Von");
     const QString lblTo = LANG_STR("To", "Bis");
     form->addRow(lblFrom, _von);
@@ -76,11 +77,16 @@ PrintRangeDialog::PrintRangeDialog(QWidget* _parent, const SZ& _kette, int _maxK
 
 static SZ readRange(QSpinBox* _von, QSpinBox* _bis)
 {
+    // Legacy sentinel: 0 in both fields means "suppress this section".
+    if (_von->value() == 0 && _bis->value() == 0)
+        return SZ(-1, -1);
     SZ r;
     r.a = _von->value() - 1;
     r.b = _bis->value() - 1;
     if (r.b < r.a)
         std::swap(r.a, r.b);
+    if (r.a < 0)
+        r.a = 0;
     return r;
 }
 
