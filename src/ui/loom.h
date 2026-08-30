@@ -19,6 +19,7 @@
 #ifndef DBWEAVE_UI_LOOM_H
 #define DBWEAVE_UI_LOOM_H
 
+#include <QString>
 #include <cstdint>
 
 /*  Which loom the user selected. The two parallel-port interfaces
@@ -42,7 +43,18 @@ enum LOOMINTERFACE {
 enum WEAVE_STATUS { WEAVE_REPEAT, WEAVE_SUCCESS_NEXT, WEAVE_SUCCESS_PREV };
 
 struct INITDATA {
-    int port = 0;
+    /*  Platform-native device name as picked in the loom options
+        dialog -- "COM3", "/dev/ttyUSB0", "/dev/cu.usbserial-A1" ...
+        Legacy stored a 1..8 index into a PORT enum, which no longer
+        reaches the USB-serial adapters these looms hang off today;
+        TSTRGFRM::LoadSettings migrates the old integer setting. */
+    QString port;
+
+    /*  Raise DTR and RTS after opening. True reproduces the legacy
+        line state; Qt's Windows backend otherwise leaves RTS low.
+        Exposed as a checkbox because a handful of interface boxes
+        want the lines quiet. */
+    bool assertDtrRts = true;
 };
 
 /*-----------------------------------------------------------------*/

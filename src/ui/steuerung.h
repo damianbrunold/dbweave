@@ -23,8 +23,8 @@
 #include <cstdint>
 #include <memory>
 
-#include "dbw3_base.h"       /* Klammer, DARSTELLUNG */
-#include "loom.h"            /* LOOMINTERFACE, StWeaveController */
+#include "dbw3_base.h" /* Klammer, DARSTELLUNG */
+#include "loom.h"      /* LOOMINTERFACE, StWeaveController */
 
 class QAction;
 class QActionGroup;
@@ -134,16 +134,17 @@ public:
     /*  Canvas layout. Populated by CalcSizes; consumed by the
         drawing and mouse routines. Units: viewport pixels in the
         canvas widget's local coordinates.                          */
-    int maxi = 0;             /* visible gewebe columns            */
-    int maxj = 0;             /* visible rows (schuesse)           */
-    int trittCols = 0;        /* visible trittfolge cols (legacy tr -- renamed to avoid collision with QObject::tr) */
-    int x1 = 0;               /* column where schlagpatrone starts */
-    int klammerwidth = 0;     /* MAXKLAMMERN * 11 px               */
-    int top = 0;              /* canvas-local drawable top         */
-    int bottom = 0;           /* canvas-local drawable bottom-y    */
-    int left = 0;              /* canvas-local drawable left        */
-    int right = 0;             /* canvas-local drawable right       */
-    int dx = 0;                /* visual gap between gewebe / SP    */
+    int maxi = 0;         /* visible gewebe columns            */
+    int maxj = 0;         /* visible rows (schuesse)           */
+    int trittCols = 0;    /* visible trittfolge cols (legacy tr -- renamed to avoid collision with
+                             QObject::tr) */
+    int x1 = 0;           /* column where schlagpatrone starts */
+    int klammerwidth = 0; /* MAXKLAMMERN * 11 px               */
+    int top = 0;          /* canvas-local drawable top         */
+    int bottom = 0;       /* canvas-local drawable bottom-y    */
+    int left = 0;         /* canvas-local drawable left        */
+    int right = 0;        /* canvas-local drawable right       */
+    int dx = 0;           /* visual gap between gewebe / SP    */
 
 
     /*  View state. */
@@ -165,11 +166,13 @@ public:
     bool weaving = false;
     bool modified = false;
 
-    /*  Loom options. Populated by LoadSettings. `port` is a plain
-        int (1..8 mapping to COM1..COM8) so this header stays
-        buildable without the loom-only loomsettings.h; the
-        LoomOptionsDialog maps between enum and int at its edges. */
-    int port = 1; /* 1 == COM1 */
+    /*  Loom options. Populated by LoadSettings. `port` is the
+        platform-native device name ("COM3", "/dev/ttyUSB0", ...);
+        legacy stored a 1..8 index into its PORT enum, which
+        LoadSettings migrates. */
+    QString port;
+    bool assertDtrRts = true; /* raise DTR/RTS after opening       */
+    bool trace = false;       /* write a serial communication log  */
     LOOMINTERFACE intrf = intrf_dummy;
     bool reverse = false;   /* ReverseSchaft -- schaft order flip */
     bool backwards = false; /* WeaveBackwards -- weave direction  */
@@ -282,7 +285,6 @@ private:
     void DrawGewebeSimulation(int _i, int _j, int _x, int _y, int _xx, int _yy);
 
 public:
-
 private:
     void buildMenus();
     void buildToolbar();

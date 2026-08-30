@@ -3,6 +3,7 @@
 # hosts without Qt6SerialPort.
 
 add_library(dbweave_loom STATIC
+    loomlog.cpp
     serialport.cpp
     serialcontrollers.cpp
 )

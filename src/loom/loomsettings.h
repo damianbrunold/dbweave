@@ -16,8 +16,11 @@
 #ifndef DBWEAVE_LOOM_LOOMSETTINGS_H
 #define DBWEAVE_LOOM_LOOMSETTINGS_H
 
-enum PORT { P_NONE = 0, P_COM1 = 1, P_COM2, P_COM3, P_COM4, P_COM5, P_COM6, P_COM7, P_COM8 };
-enum LPT { LP_NONE = 0, LP_LPT1 = 1, LP_LPT2, LP_LPT3 };
+/*  Legacy combase.h also declared PORT (P_COM1..P_COM8) and LPT
+    enums. The port is now identified by its platform-native device
+    name instead -- a fixed COM1..COM8 list no longer reaches the
+    USB-serial adapters these looms hang off -- and the parallel-port
+    interfaces were never implemented, so both enums are gone. */
 enum PARITY { PA_NONE = 0, PA_ODD = 1, PA_EVEN = 2 };
 enum STOPBITS { SB_ONE = 0, SB_ONEFIVE = 1, SB_TWO = 2 };
 enum BAUDRATE { BR_1200 = 0, BR_2400 = 1, BR_4800 = 2, BR_9600 = 3, BR_14400 = 4 };

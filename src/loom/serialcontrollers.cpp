@@ -10,6 +10,7 @@
 */
 
 #include "serialcontrollers.h"
+#include "loomlog.h"
 #include "serialport.h"
 
 #include <QDeadlineTimer>
@@ -55,7 +56,13 @@ StSerialController::~StSerialController()
 
 bool StSerialController::Initialize(const INITDATA& _data)
 {
-    return StWeaveController::Initialize(_data);
+    if (!StWeaveController::Initialize(_data))
+        return false;
+    if (!serialport)
+        return false;
+    /*  Must be set before any subclass calls Open(). */
+    serialport->SetAssertLines(_data.assertDtrRts);
+    return true;
 }
 
 void StSerialController::Terminate()
@@ -71,7 +78,8 @@ bool StPatronicController::Initialize(const INITDATA& _data)
         return false;
     if (!serialport)
         return false;
-    if (!serialport->Open(PORT(_data.port), init_arm_patronic))
+    LoomLog::Write(QStringLiteral("patronic: initialize on %1").arg(_data.port));
+    if (!serialport->Open(_data.port, init_arm_patronic))
         return false;
 
     serialport->PurgeInput();
@@ -79,9 +87,11 @@ bool StPatronicController::Initialize(const INITDATA& _data)
     try {
         checkSuccess(true, true);
     } catch (...) {
+        LoomLog::Write(QStringLiteral("patronic: no handshake reply, giving up"));
         serialport->Close();
         return false;
     }
+    LoomLog::Write(QStringLiteral("patronic: initialized"));
     return true;
 }
 
@@ -93,8 +103,10 @@ bool StPatronicController::checkSuccess(bool _checkAbort, bool _timeout)
         if (_checkAbort)
             CheckAbort();
         ch = serialport->GetChar();
-        if (_timeout && deadline.hasExpired())
+        if (_timeout && deadline.hasExpired()) {
+            LoomLog::Write(QStringLiteral("patronic: timeout waiting for CR"));
             throw 0;
+        }
     } while (ch != '\r');
     ch = serialport->GetChar();
     serialport->PurgeInput();
@@ -108,6 +120,7 @@ bool StPatronicController::waitForAck()
         CheckAbort();
         ch = serialport->GetChar();
     } while (ch != 'Q' && ch != 'Z');
+    LoomLog::Write(QStringLiteral("patronic: ack '%1'").arg(QLatin1Char(ch)));
     serialport->PurgeInput();
     return ch == 'Q';
 }
@@ -141,9 +154,15 @@ WEAVE_STATUS StPatronicController::WeaveSchuss(std::uint32_t _shafts)
 void StPatronicController::Terminate()
 {
     if (serialport && serialport->IsOpen()) {
+        LoomLog::Write(QStringLiteral("patronic: terminating"));
         serialport->Send("M)D14.50K0\r");
+        /*  Legacy passed _timeout=FALSE here, so a loom that never
+            answered froze the application solid -- and with
+            _checkAbort=false this loop never pumps the event loop
+            either, leaving no way out at all. Terminate() runs on
+            every Stop, so bound it. */
         try {
-            checkSuccess(false, false);
+            checkSuccess(false, true);
         } catch (...) {
         }
         serialport->Close();
@@ -157,7 +176,8 @@ bool StPatronicIndirectController::Initialize(const INITDATA& _data)
         return false;
     if (!serialport)
         return false;
-    return serialport->Open(PORT(_data.port), init_arm_patronic);
+    LoomLog::Write(QStringLiteral("patronic-indirect: initialize on %1").arg(_data.port));
+    return serialport->Open(_data.port, init_arm_patronic);
 }
 
 bool StPatronicIndirectController::checkSuccess()
@@ -168,6 +188,7 @@ bool StPatronicIndirectController::checkSuccess()
         CheckAbort();
         ch = serialport->GetChar();
         if (deadline.hasExpired()) {
+            LoomLog::Write(QStringLiteral("patronic-indirect: timeout waiting for CR"));
             serialport->Close();
             throw 0;
         }
@@ -239,7 +260,8 @@ bool StDesignerController::Initialize(const INITDATA& _data)
         return false;
     if (!serialport)
         return false;
-    return serialport->Open(PORT(_data.port), init_arm_designer);
+    LoomLog::Write(QStringLiteral("designer: initialize on %1").arg(_data.port));
+    return serialport->Open(_data.port, init_arm_designer);
 }
 
 void StDesignerController::waitFachGeschlossen()
@@ -250,8 +272,10 @@ void StDesignerController::waitFachGeschlossen()
     do {
         CheckAbort();
         ch = serialport->GetChar();
-        if (deadline.hasExpired())
+        if (deadline.hasExpired()) {
+            LoomLog::Write(QStringLiteral("designer: timeout waiting for shed closed ('1')"));
             throw 0;
+        }
     } while (ch != '1');
 }
 
@@ -263,8 +287,10 @@ void StDesignerController::waitFachOffen()
     do {
         CheckAbort();
         ch = serialport->GetChar();
-        if (deadline.hasExpired())
+        if (deadline.hasExpired()) {
+            LoomLog::Write(QStringLiteral("designer: timeout waiting for shed open ('0')"));
             throw 0;
+        }
     } while (ch != '0');
 }
 
@@ -299,7 +325,9 @@ bool StSlipsController::Initialize(const INITDATA& _data)
     if (!serialport)
         return false;
     forward = true;
-    return serialport->Open(PORT(_data.port), init_slips);
+    LoomLog::Write(
+        QStringLiteral("slips: initialize on %1, %2 byte(s) per pick").arg(_data.port).arg(bytes));
+    return serialport->Open(_data.port, init_slips);
 }
 
 void StSlipsController::SetBytes(int _bytes)
@@ -423,7 +451,8 @@ bool StAvlCdIIIController::Initialize(const INITDATA& _data)
         return false;
     if (!serialport)
         return false;
-    if (!serialport->Open(PORT(_data.port), init_avlcdiii))
+    LoomLog::Write(QStringLiteral("avl-cdiii: initialize on %1").arg(_data.port));
+    if (!serialport->Open(_data.port, init_avlcdiii))
         return false;
 
     serialport->PurgeInput();
@@ -432,23 +461,29 @@ bool StAvlCdIIIController::Initialize(const INITDATA& _data)
     try {
         matchReply(0x7f, 0x03, true);
     } catch (...) {
+        LoomLog::Write(QStringLiteral("avl-cdiii: no reply to 0f 07, giving up"));
         serialport->Close();
         return false;
     }
     serialport->PurgeInput();
+    LoomLog::Write(QStringLiteral("avl-cdiii: initialized"));
     return true;
 }
 
 void StAvlCdIIIController::matchReply(int _r, bool _timeout)
 {
+    LoomLog::Write(QStringLiteral("avl-cdiii: match %1").arg(_r, 2, 16, QLatin1Char('0')));
     QDeadlineTimer deadline(TIMEOUT_MS);
     while (true) {
         CheckAbort();
         const int r = static_cast<unsigned char>(serialport->GetChar());
         if (r == _r)
             break;
-        if (_timeout && deadline.hasExpired())
+        if (_timeout && deadline.hasExpired()) {
+            LoomLog::Write(
+                QStringLiteral("avl-cdiii: timeout matching %1").arg(_r, 2, 16, QLatin1Char('0')));
             throw 0;
+        }
     }
 }
 
@@ -503,8 +538,9 @@ WEAVE_STATUS StAvlCdIIIController::WeaveSchuss(std::uint32_t _shafts)
 
 void StAvlCdIIIController::Terminate()
 {
-    serialport->PurgeInput();
     if (serialport && serialport->IsOpen()) {
+        serialport->PurgeInput();
+        LoomLog::Write(QStringLiteral("avl-cdiii: terminating"));
         char buff[3] = { 0x0f, 0x07, 0 };
         serialport->Send(buff, 2);
         try {

@@ -10,18 +10,28 @@
 */
 
 #include "serialport.h"
+#include "loomlog.h"
 
 #include <QSerialPort>
 #include <QThread>
 
-#if defined(Q_OS_WIN)
-#define DBW_COM_PREFIX "COM"
-#else
-/*  Linux/macOS: /dev/ttyS* is the classic 16550-style; the user
-    can edit to /dev/ttyUSB0 etc. before running. Real hardware on
-    modern machines is almost always a USB adapter. */
-#define DBW_COM_PREFIX "/dev/ttyS"
-#endif
+#include <algorithm>
+#include <cstring>
+
+/*  Legacy comutil.cpp transmitted one character at a time and slept
+    10 ms after each one. The loom controllers were tuned against
+    that pacing -- at 4800 baud it stretches a 15-byte Patronic
+    command from ~31 ms to ~150 ms and guarantees a gap before the
+    reply poll starts -- so it is reproduced here rather than
+    writing whole blocks. */
+static constexpr int SEND_CHAR_DELAY_MS = 10;
+
+/*  GetChar() was non-blocking in legacy (InputCount() ? ReadChar()
+    : '\0'). A 1 ms wait keeps that latency profile while still
+    letting Qt service the port's overlapped I/O -- some legacy
+    wait loops (StPatronicController::Terminate) never reach
+    CheckAbort() and so never pump the event loop themselves. */
+static constexpr int POLL_WAIT_MS = 1;
 
 SerialPort::SerialPort()
 {
@@ -36,27 +46,14 @@ SerialPort::~SerialPort()
 }
 
 /*-----------------------------------------------------------------*/
-QString SerialPort::portName(PORT _p)
-{
-    int n = int(_p) - int(P_COM1);
-    if (n < 0)
-        n = 0;
-#if defined(Q_OS_WIN)
-    return QStringLiteral(DBW_COM_PREFIX "%1").arg(n + 1);
-#else
-    return QStringLiteral(DBW_COM_PREFIX "%1").arg(n);
-#endif
-}
-
-/*-----------------------------------------------------------------*/
-bool SerialPort::Open(PORT _port, const PORTINIT& _init)
+bool SerialPort::Open(const QString& _portName, const PORTINIT& _init)
 {
     if (!port)
         return false;
     if (port->isOpen())
         return false;
 
-    port->setPortName(portName(_port));
+    port->setPortName(_portName);
 
     QSerialPort::BaudRate br = QSerialPort::Baud9600;
     switch (_init.baudrate) {
@@ -110,8 +107,41 @@ bool SerialPort::Open(PORT _port, const PORTINIT& _init)
 
     port->setFlowControl(QSerialPort::NoFlowControl);
 
-    if (!port->open(QIODevice::ReadWrite))
+    if (!port->open(QIODevice::ReadWrite)) {
+        LoomLog::Write(QStringLiteral("open %1 FAILED: %2").arg(_portName, port->errorString()));
         return false;
+    }
+
+    /*  Legacy TComPort left DTR and RTS in their default (asserted)
+        state. Qt's Windows backend unconditionally rewrites the DCB
+        to RTS_CONTROL_DISABLE whenever flow control is not hardware
+        handshaking, so RTS would sit low for the whole session --
+        invisible on Linux/macOS (the kernel raises both lines on
+        open) but fatal for any interface box that draws its enable
+        level or loop current off RTS. Restore the legacy state; the
+        user can turn it off from the loom options dialog if their
+        box wants the lines low. */
+    if (assertLines) {
+        const bool dtr = port->setDataTerminalReady(true);
+        const bool rts = port->setRequestToSend(true);
+        LoomLog::Write(QStringLiteral("asserted DTR=%1 RTS=%2")
+                           .arg(dtr ? QStringLiteral("ok") : QStringLiteral("refused"),
+                                rts ? QStringLiteral("ok") : QStringLiteral("refused")));
+    }
+
+    LoomLog::Write(QStringLiteral("open %1 ok: %2 baud, %3 data, %4 parity, %5 stop, "
+                                  "assert-lines=%6")
+                       .arg(_portName)
+                       .arg(int(br))
+                       .arg(_init.databits == DB_7 ? 7 : 8)
+                       .arg(_init.parity == PA_NONE   ? QStringLiteral("none")
+                            : _init.parity == PA_EVEN ? QStringLiteral("even")
+                                                      : QStringLiteral("odd"))
+                       .arg(_init.stopbits == SB_ONE       ? QStringLiteral("1")
+                            : _init.stopbits == SB_ONEFIVE ? QStringLiteral("1.5")
+                                                           : QStringLiteral("2"))
+                       .arg(assertLines ? 1 : 0));
+
     rxBuf.clear();
     return true;
 }
@@ -123,31 +153,44 @@ bool SerialPort::IsOpen() const
 
 void SerialPort::Close()
 {
-    if (port && port->isOpen())
+    if (port && port->isOpen()) {
         port->close();
+        LoomLog::Write(QStringLiteral("closed"));
+    }
     rxBuf.clear();
 }
 
 /*-----------------------------------------------------------------*/
 bool SerialPort::Send(const char* _buffer)
 {
-    if (!port || !port->isOpen() || !_buffer)
+    if (!_buffer)
         return false;
-    const QByteArray data(_buffer);
-    const qint64 written = port->write(data);
-    if (written != data.size())
-        return false;
-    return port->waitForBytesWritten(2000);
+    return Send(_buffer, int(std::strlen(_buffer)));
 }
 
 bool SerialPort::Send(const char* _buffer, int _length)
 {
     if (!port || !port->isOpen() || !_buffer)
         return false;
-    const qint64 written = port->write(_buffer, _length);
-    if (written != _length)
-        return false;
-    return port->waitForBytesWritten(2000);
+    if (_length <= 0)
+        return true;
+
+    LoomLog::WriteBytes(QStringLiteral("tx"), _buffer, _length);
+
+    /*  One character at a time with a 10 ms gap -- see
+        SEND_CHAR_DELAY_MS. waitForBytesWritten() forces each byte
+        out to the driver rather than letting Qt coalesce them in
+        its write buffer until the event loop next runs. */
+    for (int i = 0; i < _length; i++) {
+        if (port->write(_buffer + i, 1) != 1) {
+            LoomLog::Write(
+                QStringLiteral("tx FAILED at byte %1: %2").arg(i).arg(port->errorString()));
+            return false;
+        }
+        port->waitForBytesWritten(2000);
+        QThread::msleep(SEND_CHAR_DELAY_MS);
+    }
+    return true;
 }
 
 /*-----------------------------------------------------------------*/
@@ -168,7 +211,7 @@ bool SerialPort::Receive(char* _buffer, int _length)
 char SerialPort::GetChar()
 {
     if (rxBuf.isEmpty())
-        drainInto(50);
+        drainInto(POLL_WAIT_MS);
     if (rxBuf.isEmpty())
         return '\0';
     const char c = rxBuf.at(0);
@@ -178,6 +221,14 @@ char SerialPort::GetChar()
 
 void SerialPort::PurgeInput()
 {
+    if (LoomLog::IsEnabled()) {
+        /*  Anything still queued at purge time is data the protocol
+            deliberately threw away; log it, because a reply landing
+            just before a purge is one of the ways these handshakes
+            deadlock. */
+        if (!rxBuf.isEmpty())
+            LoomLog::WriteBytes(QStringLiteral("purge"), rxBuf.constData(), int(rxBuf.size()));
+    }
     rxBuf.clear();
     if (port && port->isOpen()) {
         port->clear(QSerialPort::Input);
@@ -190,9 +241,13 @@ void SerialPort::drainInto(int _waitMs)
     if (!port || !port->isOpen())
         return;
     /*  waitForReadyRead blocks until at least one byte is buffered
-        by the OS (or the timeout fires). */
+        by the OS (or the timeout fires). Kept short so this stays
+        a poll rather than a blocking read. */
     if (port->bytesAvailable() == 0)
         port->waitForReadyRead(_waitMs);
-    if (port->bytesAvailable() > 0)
-        rxBuf.append(port->readAll());
+    if (port->bytesAvailable() > 0) {
+        const QByteArray chunk = port->readAll();
+        LoomLog::WriteBytes(QStringLiteral("rx"), chunk.constData(), int(chunk.size()));
+        rxBuf.append(chunk);
+    }
 }

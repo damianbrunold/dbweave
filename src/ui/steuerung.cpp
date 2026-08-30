@@ -34,6 +34,10 @@
 
 #include <algorithm>
 
+#ifdef DBWEAVE_HAVE_LOOM
+#include "loomlog.h"
+#endif
+
 /*-----------------------------------------------------------------*/
 TSTRGFRM::TSTRGFRM(TDBWFRM* _main, QWidget* _parent)
     : QDialog(_parent)
@@ -153,10 +157,17 @@ void TSTRGFRM::buildMenus()
         LoomOptionsDialog dlg(this);
         dlg.setInterface(intrf);
         dlg.setPort(port);
+        dlg.setAssertDtrRts(assertDtrRts);
+        dlg.setTrace(trace);
         if (dlg.exec() == QDialog::Accepted) {
             LOOMINTERFACE oldIntrf = intrf;
             intrf = dlg.interf();
             port = dlg.port();
+            assertDtrRts = dlg.assertDtrRts();
+            trace = dlg.trace();
+#ifdef DBWEAVE_HAVE_LOOM
+            LoomLog::SetEnabled(trace);
+#endif
             SaveSettings();
             if (oldIntrf != intrf)
                 AllocInterface();
@@ -225,8 +236,8 @@ void TSTRGFRM::buildMenus()
 
     /*  --- &Position ------------------------------------------- */
     QMenu* posMenu = menubar->addMenu(LANG_STR("&Position", "&Position"));
-    actSetCurrentPos = posMenu->addAction(LANG_STR("&Set current position",
-                                                   "&Aktuelle Position setzen"));
+    actSetCurrentPos
+        = posMenu->addAction(LANG_STR("&Set current position", "&Aktuelle Position setzen"));
     actSetCurrentPos->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_S));
     connect(actSetCurrentPos, &QAction::triggered, this, [this] {
         StrgGotoDialog dlg(this);
@@ -246,8 +257,7 @@ void TSTRGFRM::buildMenus()
     actGotoLastPos = posMenu->addAction(LANG_STR("&Go to last position", "Zur &letzten Position"));
     actGotoLastPos->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_L));
     connect(actGotoLastPos, &QAction::triggered, this, [this] { GotoLastPosition(); });
-    QMenu* gotoMenu
-        = posMenu->addMenu(LANG_STR("Go to &klammer", "Zu &Klammer"));
+    QMenu* gotoMenu = posMenu->addMenu(LANG_STR("Go to &klammer", "Zu &Klammer"));
     for (int i = 0; i < MAXKLAMMERN; i++) {
         actGotoKlammer[i] = gotoMenu->addAction(QString::number(i + 1));
         actGotoKlammer[i]->setShortcut(QKeySequence(Qt::CTRL | (Qt::Key_1 + i)));
@@ -427,8 +437,7 @@ void TSTRGFRM::pullStateFromMain()
     if (actViewPatrone)
         actViewPatrone->setChecked(frm->GewebeNormal && frm->GewebeNormal->isChecked());
     if (actViewFarbeffekt)
-        actViewFarbeffekt->setChecked(frm->GewebeFarbeffekt
-                                      && frm->GewebeFarbeffekt->isChecked());
+        actViewFarbeffekt->setChecked(frm->GewebeFarbeffekt && frm->GewebeFarbeffekt->isChecked());
     if (actViewGewebesimulation)
         actViewGewebesimulation->setChecked(frm->GewebeSimulation
                                             && frm->GewebeSimulation->isChecked());
@@ -554,8 +563,7 @@ void TSTRGFRM::AutoScroll()
     /*  Keep weave_position at least one-tenth of the view away
         from either edge; if not, recentre on weave_position.     */
     const int onetenth = maxj / 10;
-    if (weave_position - scrolly > maxj - onetenth
-        || weave_position - scrolly < onetenth) {
+    if (weave_position - scrolly > maxj - onetenth || weave_position - scrolly < onetenth) {
         int ideal = weave_position - maxj / 2;
         if (ideal < 0)
             ideal = 0;
@@ -581,7 +589,8 @@ void TSTRGFRM::UpdateStatusbar()
             labKlammer->clear();
             labRepetition->clear();
         } else {
-            labPosition->setText(LANG_STR("Weft ", "Schuss ") + QString::number(weave_position + 1));
+            labPosition->setText(LANG_STR("Weft ", "Schuss ")
+                                 + QString::number(weave_position + 1));
             labKlammer->setText(LANG_STR("Klammer ", "Klammer ")
                                 + QString::number(weave_klammer + 1));
             labRepetition->setText(LANG_STR("Rep ", "Wdh. ") + QString::number(weave_repetition));
@@ -752,6 +761,25 @@ void TSTRGFRM::refresh()
 /*  Settings persistence. Stored under QSettings group "Loom" with
     the same key names as legacy Settings category "Loom" so the
     ported binary and the legacy binary share a registry section.  */
+namespace
+{
+
+/*  Maps a legacy PORT enum index (1..8 == COM1..COM8) to the
+    platform-native device name it used to mean, so a settings file
+    written by an older build keeps pointing at the same device. */
+QString legacyPortName(int _idx)
+{
+    const int n = _idx < 1 ? 1 : _idx;
+#if defined(Q_OS_WIN)
+    return QStringLiteral("COM%1").arg(n);
+#else
+    return QStringLiteral("/dev/ttyS%1").arg(n - 1);
+#endif
+}
+
+} /* namespace */
+
+/*-----------------------------------------------------------------*/
 void TSTRGFRM::LoadSettings()
 {
     QSettings s;
@@ -759,11 +787,23 @@ void TSTRGFRM::LoadSettings()
     intrf = LOOMINTERFACE(s.value(QStringLiteral("Interface"), int(intrf_arm_patronic)).toInt());
     /*  Reject deprecated Varpapuu (4) / LIPS (6) slots silently; the
         two parallel-port interfaces were never implemented.       */
-    if (intrf != intrf_dummy && intrf != intrf_arm_patronic
-        && intrf != intrf_arm_patronic_indirect && intrf != intrf_arm_designer
-        && intrf != intrf_slips && intrf != intrf_avl_cd_iii)
+    if (intrf != intrf_dummy && intrf != intrf_arm_patronic && intrf != intrf_arm_patronic_indirect
+        && intrf != intrf_arm_designer && intrf != intrf_slips && intrf != intrf_avl_cd_iii)
         intrf = intrf_arm_patronic;
-    port = s.value(QStringLiteral("Port"), 1).toInt();
+    /*  "Port" used to hold a 1..8 index into the legacy PORT enum
+        and now holds a device name. Migrate a numeric value once;
+        anything else is taken as a name verbatim. */
+    const QVariant pv = s.value(QStringLiteral("Port"));
+    bool numeric = false;
+    const int legacyIdx = pv.toString().toInt(&numeric);
+    if (!pv.isValid())
+        port = legacyPortName(1);
+    else if (numeric)
+        port = legacyPortName(legacyIdx);
+    else
+        port = pv.toString();
+    assertDtrRts = s.value(QStringLiteral("AssertDtrRts"), 1).toInt() != 0;
+    trace = s.value(QStringLiteral("Trace"), 0).toInt() != 0;
     loop = s.value(QStringLiteral("Endless"), 1).toInt() != 0;
     reverse = s.value(QStringLiteral("ShaftsReversed"), 0).toInt() != 0;
     int n = s.value(QStringLiteral("NumberOfShafts"), 24).toInt();
@@ -777,6 +817,10 @@ void TSTRGFRM::LoadSettings()
         }
     numberOfShafts = ok ? n : 24;
     s.endGroup();
+
+#ifdef DBWEAVE_HAVE_LOOM
+    LoomLog::SetEnabled(trace);
+#endif
 }
 
 void TSTRGFRM::SaveSettings() const
@@ -785,6 +829,8 @@ void TSTRGFRM::SaveSettings() const
     s.beginGroup(QStringLiteral("Loom"));
     s.setValue(QStringLiteral("Interface"), int(intrf));
     s.setValue(QStringLiteral("Port"), port);
+    s.setValue(QStringLiteral("AssertDtrRts"), assertDtrRts ? 1 : 0);
+    s.setValue(QStringLiteral("Trace"), trace ? 1 : 0);
     s.setValue(QStringLiteral("Endless"), loop ? 1 : 0);
     s.setValue(QStringLiteral("ShaftsReversed"), reverse ? 1 : 0);
     s.setValue(QStringLiteral("NumberOfShafts"), numberOfShafts);

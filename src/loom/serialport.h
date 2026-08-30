@@ -13,7 +13,24 @@
     SerialPort helper from comutil.h. Preserves the GetChar /
     PurgeInput / Send / Receive API so the ported controllers read
     and write to the port using the same idioms as the legacy
-    code.                                                         */
+    code.
+
+    Two legacy transport behaviours that the first Qt port dropped
+    are reinstated here because the loom controllers depend on
+    them:
+
+      - Send() paces the line one character at a time with a 10 ms
+        gap, exactly as legacy comutil.cpp did via TransmitChar +
+        Sleep(10).
+      - GetChar() polls rather than blocking; legacy read straight
+        out of TComPort's input queue and returned '\0' when it was
+        empty.
+
+    Open() additionally re-asserts DTR/RTS. Qt's Windows backend
+    forces RTS_CONTROL_DISABLE whenever flow control is not
+    hardware handshaking, which the Winsoft TComPort component
+    never did -- interfaces that take their enable level off RTS
+    see nothing without this.                                     */
 
 #ifndef DBWEAVE_LOOM_SERIAL_PORT_H
 #define DBWEAVE_LOOM_SERIAL_PORT_H
@@ -21,7 +38,7 @@
 #include <QByteArray>
 #include <QString>
 
-#include "loomsettings.h" /* PORT / PORTINIT enums */
+#include "loomsettings.h" /* PORTINIT */
 
 class QSerialPort;
 
@@ -31,16 +48,25 @@ public:
     SerialPort();
     ~SerialPort();
 
-    /*  Opens the given COM port with the supplied init block. The
-        PORT enum maps 1..8 → COM1..COM8 on Windows and /dev/ttyS0..
-        /dev/ttyS7 on Linux; the wrapper picks the platform-native
-        name. */
-    bool Open(PORT _port, const PORTINIT& _init);
+    /*  Opens the named device with the supplied init block.
+        _portName is the platform-native name as chosen in the loom
+        options dialog ("COM3", "/dev/ttyUSB0", "/dev/cu.usbserial-A1"
+        ...); QSerialPort takes care of the \\.\ prefixing that
+        Windows needs above COM9. */
+    bool Open(const QString& _portName, const PORTINIT& _init);
     bool IsOpen() const;
     void Close();
 
-    /*  NUL-terminated send. Blocks until all bytes are flushed or
-        a write error occurs. */
+    /*  Whether Open() should raise DTR and RTS once the device is
+        open. Defaults to true (the legacy line state). Must be set
+        before Open(). */
+    void SetAssertLines(bool _on)
+    {
+        assertLines = _on;
+    }
+
+    /*  NUL-terminated send. Paced at one character per
+        SEND_CHAR_DELAY_MS, like legacy. */
     bool Send(const char* _buffer);
     bool Send(const char* _buffer, int _length);
 
@@ -60,14 +86,11 @@ public:
 private:
     QSerialPort* port = nullptr;
     QByteArray rxBuf;
+    bool assertLines = true;
 
     /*  Pulls any available bytes from the OS into rxBuf, waiting
         up to _waitMs for the first byte. */
     void drainInto(int _waitMs);
-
-    /*  Resolve a PORT enum to a platform-native device name
-        (COM* on Windows, /dev/ttyS* or /dev/ttyUSB* on Linux). */
-    static QString portName(PORT _p);
 };
 
 #endif

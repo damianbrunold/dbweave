@@ -90,8 +90,7 @@ bool TSTRGFRM::AtBegin() const
             break;
         }
     }
-    return weave_klammer == klammer && weave_position == position
-        && weave_repetition == repetition;
+    return weave_klammer == klammer && weave_position == position && weave_repetition == repetition;
 }
 
 /*-----------------------------------------------------------------*/
@@ -209,8 +208,7 @@ void TSTRGFRM::PrevTritt()
 void TSTRGFRM::WeaveStartClick()
 {
     if (!IsValidWeavePosition()) {
-        const int r = QMessageBox::question(this,
-                                            LANG_STR("DB-WEAVE", "DB-WEAVE"),
+        const int r = QMessageBox::question(this, LANG_STR("DB-WEAVE", "DB-WEAVE"),
                                             LANG_STR("The current position is not valid for "
                                                      "any active klammer. Reset and continue?",
                                                      "Die aktuelle Position ist in keiner "
@@ -222,24 +220,37 @@ void TSTRGFRM::WeaveStartClick()
         UpdateStatusbar();
     }
     if (klammern[weave_klammer].repetitions == 0) {
-        QMessageBox::information(
-            this, LANG_STR("DB-WEAVE", "DB-WEAVE"),
-            LANG_STR("No klammer configured -- nothing to weave.",
-                     "Keine Klammer konfiguriert -- nichts zu weben."));
+        QMessageBox::information(this, LANG_STR("DB-WEAVE", "DB-WEAVE"),
+                                 LANG_STR("No klammer configured -- nothing to weave.",
+                                          "Keine Klammer konfiguriert -- nichts zu weben."));
         return;
     }
     if (!controller) {
-        QMessageBox::warning(this, LANG_STR("DB-WEAVE", "DB-WEAVE"),
-                             LANG_STR("Could not initialise the loom controller.",
-                                      "Der Webstuhl-Controller konnte nicht initialisiert werden."));
+        QMessageBox::warning(
+            this, LANG_STR("DB-WEAVE", "DB-WEAVE"),
+            LANG_STR("Could not initialise the loom controller.",
+                     "Der Webstuhl-Controller konnte nicht initialisiert werden."));
         return;
     }
     INITDATA init;
     init.port = port;
+    init.assertDtrRts = assertDtrRts;
     if (!controller->Initialize(init)) {
-        QMessageBox::warning(this, LANG_STR("DB-WEAVE", "DB-WEAVE"),
-                             LANG_STR("Could not talk to the loom.",
-                                      "Kommunikation mit dem Webstuhl fehlgeschlagen."));
+        /*  Name the port -- it is user-editable now, so a typo or an
+            unplugged adapter is a likely cause -- and point at the
+            trace log, which is the only diagnostic a user without
+            a second machine can send back.                          */
+        QMessageBox::warning(
+            this, LANG_STR("DB-WEAVE", "DB-WEAVE"),
+            LANG_STR("Could not talk to the loom on %1.\n\nCheck the port and cabling under "
+                     "Options > Loom. Enabling the communication log there records what was "
+                     "sent and received.",
+                     "Kommunikation mit dem Webstuhl auf %1 fehlgeschlagen.\n\nPrüfen Sie "
+                     "Anschluss und Verkabelung unter Optionen > Webstuhl. Das dort "
+                     "aktivierbare Kommunikationsprotokoll zeichnet auf, was gesendet und "
+                     "empfangen wurde.")
+                .arg(port.isEmpty() ? LANG_STR("(no port selected)", "(kein Anschluss gewählt)")
+                                    : port));
         return;
     }
 
@@ -369,9 +380,8 @@ void TSTRGFRM::Weben()
 
         count++;
         if (maxweave != 0 && count >= maxweave) {
-            QMessageBox::information(
-                this, LANG_STR("DB-WEAVE", "DB-WEAVE"),
-                LANG_STR("All picks sent.", "Alle Schüsse gesendet."));
+            QMessageBox::information(this, LANG_STR("DB-WEAVE", "DB-WEAVE"),
+                                     LANG_STR("All picks sent.", "Alle Schüsse gesendet."));
             weaving = false;
             return;
         }
