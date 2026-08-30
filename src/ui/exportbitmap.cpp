@@ -9,14 +9,18 @@
     (at your option) any later version.
 */
 
-/*  Pattern export — a simplified Qt port of legacy exportbitmap.cpp
-    DoExportBitmap. The legacy routine is a 650-line render that
-    reproduces the full screen layout on an off-screen bitmap with
-    every view-option toggle honoured (Simulation, Farbeffekt,
-    Hilfslinien, blatteinzug, colour strips, rapport markers). This
-    port covers the four core grids (einzug, aufknuepfung,
-    trittfolge, gewebe) rendered in the active darstellung — the
-    common case.
+/*  Pattern export — a Qt port of legacy exportbitmap.cpp
+    DoExportBitmap. Reproduces the on-screen editor layout on an
+    off-screen surface with the view-option toggles honoured: the four
+    core grids (einzug, aufknuepfung, trittfolge, gewebe) in the active
+    darstellung, plus the warp/weft colour bars (ViewFarbe), the reed
+    strip (ViewBlatteinzug), pattern-only mode (ViewOnlyGewebe) and the
+    rapport highlight (RappViewRapport / Inverserepeat). Hidden bands
+    collapse to nothing so the export matches what the editor shows;
+    computeBands() is the single source of truth for the geometry,
+    shared by patternPixelSize() (extent) and paintPattern() (drawing).
+    Guide lines (Hilfslinien) and the periodic strong grid lines are
+    not drawn. This mirrors the web textileplatform export.py render.
 
     The paintPattern() helper targets any QPaintDevice, so the same
     code drives raster output (PNG/JPEG) and vector output (SVG/PDF). */
@@ -54,6 +58,7 @@ static void applyRatio(const TDBWFRM* _frm, int _base, int& _gw, int& _gh)
 #include <QPageLayout>
 #include <QPageSize>
 #include <QPainter>
+#include <QPen>
 #include <QLocale>
 #include <QPdfWriter>
 #include <QSvgGenerator>
@@ -129,6 +134,107 @@ static QPageSize::PageSizeId preferredPageSize()
 }
 
 /*-----------------------------------------------------------------*/
+/*  Visible-band geometry -- the export analogue of the web
+    export.py::_bands and the print path's InitVisibility +
+    CalcDimensions. Bands the user has hidden collapse to zero and are
+    not drawn, so the export reflects exactly what the editor shows.
+    All offsets are in logical pixels (the QPainter window space).
+
+        [warp colour bar ..] [.................]
+        [einzug ...........] [gap] [aufknuepfung]
+        [reed .............] [.................]
+        [gewebe ...........] [gap] [trittfolge .] [weft colour bar]
+
+    einzugunten flips the vertical order (gewebe on top). */
+namespace
+{
+struct ExportBands {
+    int width = 0;
+    int height = 0;
+    int side_x = 0; // aufknuepfung / trittfolge column origin
+    int weft_x = 0; // weft colour bar column origin
+    int y_warpbar = 0;
+    int y_einzug = 0;
+    int y_reed = 0;
+    int y_gewebe = 0;
+    bool show_einzug = false;
+    bool show_tieup = false;
+    bool show_side = false;
+    bool show_reed = false;
+    bool show_warpbar = false;
+    bool show_weftbar = false;
+    bool pattern_only = false;
+};
+
+ExportBands computeBands(int _gw, int _gh, int _dx, int _dy, int _shafts, int _treadles,
+                         bool _einzugunten, bool _showFarbe, bool _showReed, bool _patternOnly)
+{
+    const int gw = _gw;
+    const int gh = _gh;
+
+    ExportBands b;
+    b.show_einzug = _shafts != 0;
+    b.show_side = _treadles != 0;
+    b.show_tieup = _shafts != 0 && _treadles != 0;
+    b.show_warpbar = _showFarbe && _dx > 0;
+    b.show_weftbar = _showFarbe && _dy > 0;
+    b.show_reed = _showReed && _dx > 0;
+    b.pattern_only = _patternOnly;
+
+    /*  Row-group heights (in cells). The gap between the threading and
+        the reed/gewebe is present only when the threading is shown; the
+        reed<->gewebe gap only when the reed is shown. */
+    const int warp_h = b.show_warpbar ? 1 : 0;
+    const int einz_h = b.show_einzug ? _shafts : 0;
+    const int reed_h = b.show_reed ? 1 : 0;
+    const int gap_h = b.show_einzug ? 1 : 0;
+    const int reed_gap_h = b.show_reed ? 1 : 0;
+
+    /*  Row groups, top to bottom. einzugunten puts the gewebe on top
+        and the threading (with its colour bar) below it. */
+    int cy = 0;
+    if (!_einzugunten) {
+        b.y_warpbar = cy * gh;
+        cy += warp_h;
+        b.y_einzug = cy * gh;
+        cy += einz_h + gap_h;
+        b.y_reed = cy * gh;
+        cy += reed_h + reed_gap_h;
+        b.y_gewebe = cy * gh;
+        cy += _dy;
+    } else {
+        b.y_gewebe = cy * gh;
+        cy += _dy + reed_gap_h;
+        b.y_reed = cy * gh;
+        cy += reed_h + gap_h;
+        b.y_einzug = cy * gh;
+        cy += einz_h;
+        b.y_warpbar = cy * gh;
+        cy += warp_h;
+    }
+    const int total_rows = cy;
+
+    /*  Column groups: main (dx) | gap | side pane | weft colour bar.
+        The one-cell gap separates the drawdown/threading from the
+        treadling/tie-up, and is present only when the side pane shows. */
+    const int side_w = b.show_side ? _treadles : 0;
+    const int weft_w = b.show_weftbar ? 1 : 0;
+    const int gap_w = b.show_side ? 1 : 0;
+    b.side_x = (_dx + gap_w) * gw;
+    b.weft_x = (_dx + gap_w + side_w) * gw;
+    const int total_cols = _dx + gap_w + side_w + weft_w;
+
+    b.width = gw * total_cols + 1;
+    b.height = gh * total_rows + 1;
+    if (b.width < 2 || b.height < 2) {
+        b.width = std::max(b.width, 32);
+        b.height = std::max(b.height, 32);
+    }
+    return b;
+}
+} // namespace
+
+/*-----------------------------------------------------------------*/
 void TDBWFRM::patternPixelSize(int& _w, int& _h, int _gw, int _gh, int& _shafts, int& _treadles)
 {
     _shafts = 0;
@@ -147,12 +253,12 @@ void TDBWFRM::patternPixelSize(int& _w, int& _h, int _gw, int _gh, int& _shafts,
                     if (_treadles < i + 1)
                         _treadles = i + 1;
     }
-    const int sdy = _shafts != 0 ? 1 : 0;
-    const int tdx = _treadles != 0 ? 1 : 0;
-    const int dx = kette.count();
-    const int dy = schuesse.count();
-    _w = _gw * (dx + tdx + _treadles) + 1;
-    _h = _gh * (dy + sdy + _shafts) + 1;
+    const ExportBands b = computeBands(_gw, _gh, kette.count(), schuesse.count(), _shafts,
+                                       _treadles, einzugunten, ViewFarbe && ViewFarbe->isChecked(),
+                                       ViewBlatteinzug && ViewBlatteinzug->isChecked(),
+                                       ViewOnlyGewebe && ViewOnlyGewebe->isChecked());
+    _w = b.width;
+    _h = b.height;
 }
 
 /*-----------------------------------------------------------------*/
@@ -162,11 +268,11 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
     const int gh = _gh;
     const int shafts = _shafts;
     const int treadles = _treadles;
-    const int sdy = shafts != 0 ? 1 : 0;
-    const int tdx = treadles != 0 ? 1 : 0;
     const int dx = kette.count();
     const int dy = schuesse.count();
-    const bool einzugunten = this->einzugunten;
+    const bool rtl = righttoleft;
+    const bool ttb = toptobottom;
+    const bool pegplan = ViewSchlagpatrone && ViewSchlagpatrone->isChecked();
 
     p.setRenderHint(QPainter::Antialiasing, false);
     /*  PaintCell() mutates the painter's brush as a side effect;
@@ -175,14 +281,34 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
         so the quadrant borders are strokes, not fills. */
     p.setBrush(Qt::NoBrush);
 
-    /*  Block Y origins. Standard layout puts einzug / aufknuepfung
-        at the top and gewebe / trittfolge below them; einzugunten
-        ("threading below pattern") swaps the two pairs. Total height
-        is unchanged either way -- only y0 of each block shifts.    */
-    const int einzug_y0 = einzugunten ? (dy + sdy) * gh : 0;
-    const int gewebe_y0 = einzugunten ? 0 : (shafts + sdy) * gh;
+    /*  Visible-band geometry -- the single source of truth shared with
+        patternPixelSize (see computeBands). Hidden bands collapse to
+        nothing, so the export matches exactly what the editor shows. */
+    const ExportBands b = computeBands(gw, gh, dx, dy, shafts, treadles, einzugunten,
+                                       ViewFarbe && ViewFarbe->isChecked(),
+                                       ViewBlatteinzug && ViewBlatteinzug->isChecked(),
+                                       ViewOnlyGewebe && ViewOnlyGewebe->isChecked());
+    const int einzug_y0 = b.y_einzug;
+    const int gewebe_y0 = b.y_gewebe;
     const int auf_y0 = einzug_y0;
     const int tritt_y0 = gewebe_y0;
+    const int side_x = b.side_x;
+
+    /*  Warp x-position of column i, honouring right-to-left. */
+    auto warpX = [&](int i) { return rtl ? (dx - i - 1) * gw : i * gw; };
+
+    /*  Grid lines + black outline for a one-row strip over the dx main
+        columns (shared by the warp colour bar and the reed strip). */
+    auto hstripGrid = [&](int y0) {
+        p.setPen(QColor(105, 105, 105));
+        for (int i = 0; i <= dx; i++)
+            p.drawLine(i * gw, y0, i * gw, y0 + gh);
+        p.drawLine(0, y0, dx * gw, y0);
+        p.drawLine(0, y0 + gh, dx * gw, y0 + gh);
+        p.setPen(Qt::black);
+        p.setBrush(Qt::NoBrush);
+        p.drawRect(0, y0, dx * gw, gh);
+    };
 
     /*  Draw one cell in either filled or symbol mode, matching the
         print path's "filled means filled" look: AUSGEFUELLT covers
@@ -196,17 +322,26 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
         Symbol darstellungen (KREUZ, PUNKT, STRICH, KREIS, ...) leave
         the background untouched so the image's white/transparent
         backdrop shows through instead of the editor's btnFace grey. */
-    auto paintExportCell = [&p](DARSTELLUNG _d, int _x, int _y, int _gw, int _gh,
-                                const QColor& _col) {
-        if (_d == AUSGEFUELLT) {
-            p.fillRect(_x, _y, _gw, _gh, _col);
-        } else {
-            PaintCell(p, _d, _x, _y, _x + _gw, _y + _gh, _col, /*_dontclear=*/true);
-        }
-    };
+    auto paintExportCell
+        = [&p](DARSTELLUNG _d, int _x, int _y, int _gw, int _gh, const QColor& _col) {
+              if (_d == AUSGEFUELLT) {
+                  p.fillRect(_x, _y, _gw, _gh, _col);
+              } else {
+                  PaintCell(p, _d, _x, _y, _x + _gw, _y + _gh, _col, /*_dontclear=*/true);
+              }
+          };
+
+    /*  Warp colour bar -- one row above (below, when einzugunten) the
+        threading, each warp thread filled in its palette colour. */
+    if (b.show_warpbar) {
+        const int y0 = b.y_warpbar;
+        for (int i = 0; i < dx; i++)
+            p.fillRect(warpX(i), y0, gw, gh, paletteColor(kettfarben.feld.Get(kette.a + i)));
+        hstripGrid(y0);
+    }
 
     /*  Einzug (top-left in standard layout, bottom-left in einzugunten). */
-    if (shafts != 0) {
+    if (b.show_einzug) {
         const int x0 = 0;
         const int y0 = einzug_y0;
         p.setPen(QColor(105, 105, 105));
@@ -214,13 +349,17 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
             p.drawLine(x0 + i * gw, y0, x0 + i * gw, y0 + shafts * gh);
         for (int j = 0; j <= shafts; j++)
             p.drawLine(x0, y0 + j * gh, x0 + dx * gw, y0 + j * gh);
-        for (int i = 0; i < dx; i++) {
-            const int s = einzug.feld.Get(kette.a + i);
-            if (s == 0)
-                continue;
-            const int x = righttoleft ? x0 + (dx - i - 1) * gw : x0 + i * gw;
-            const int y = toptobottom ? y0 + (s - 1) * gh : y0 + (shafts - s) * gh;
-            paintExportCell(einzug.darstellung, x, y, gw, gh, QColor(Qt::black));
+        /*  pattern_only (ViewOnlyGewebe) draws the grid frame but
+            suppresses the threading symbols -- mirrors PrintEinzug. */
+        if (!b.pattern_only) {
+            for (int i = 0; i < dx; i++) {
+                const int s = einzug.feld.Get(kette.a + i);
+                if (s == 0)
+                    continue;
+                const int x = warpX(i);
+                const int y = ttb ? y0 + (s - 1) * gh : y0 + (shafts - s) * gh;
+                paintExportCell(einzug.darstellung, x, y, gw, gh, QColor(Qt::black));
+            }
         }
         p.setPen(Qt::black);
         p.setBrush(Qt::NoBrush);
@@ -228,84 +367,122 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
     }
 
     /*  Aufknuepfung (top-right in standard layout, bottom-right in einzugunten). */
-    if (treadles != 0 && shafts != 0) {
-        const int x0 = (dx + tdx) * gw;
+    if (b.show_tieup) {
+        const int x0 = side_x;
         const int y0 = auf_y0;
         p.setPen(QColor(105, 105, 105));
         for (int i = 0; i <= treadles; i++)
             p.drawLine(x0 + i * gw, y0, x0 + i * gw, y0 + shafts * gh);
         for (int j = 0; j <= shafts; j++)
             p.drawLine(x0, y0 + j * gh, x0 + treadles * gw, y0 + j * gh);
-        const bool pegplan = ViewSchlagpatrone && ViewSchlagpatrone->isChecked();
         const DARSTELLUNG darst = pegplan ? AUSGEFUELLT : aufknuepfung.darstellung;
-        for (int j = 0; j < shafts; j++)
-            for (int i = 0; i < treadles; i++) {
-                const char s = aufknuepfung.feld.Get(i, j);
-                if (s <= 0)
-                    continue;
-                const int x = x0 + i * gw;
-                const int y = toptobottom ? y0 + j * gh : y0 + (shafts - j - 1) * gh;
-                /*  Special ranges are drawn with their per-range
-                    glyph (darst_aushebung / _anbindung / _abbindung)
-                    and, unlike the gewebe, no coloured background --
-                    matches legacy DrawAufknuepfung, which calls
-                    PaintCell with _col=black for these cells.       */
-                if (!pegplan && s == AUSHEBUNG) {
-                    paintExportCell(darst_aushebung, x, y, gw, gh, QColor(Qt::black));
-                } else if (!pegplan && s == ANBINDUNG) {
-                    paintExportCell(darst_anbindung, x, y, gw, gh, QColor(Qt::black));
-                } else if (!pegplan && s == ABBINDUNG) {
-                    paintExportCell(darst_abbindung, x, y, gw, gh, QColor(Qt::black));
-                } else {
-                    QColor col = QColor(Qt::black);
-                    if (s >= 1 && s <= 9)
-                        col = qcolorFromTColor(GetRangeColor(s));
-                    paintExportCell(darst, x, y, gw, gh, col);
+        if (!b.pattern_only) {
+            for (int j = 0; j < shafts; j++)
+                for (int i = 0; i < treadles; i++) {
+                    const char s = aufknuepfung.feld.Get(i, j);
+                    if (s <= 0)
+                        continue;
+                    const int x = x0 + i * gw;
+                    const int y = ttb ? y0 + j * gh : y0 + (shafts - j - 1) * gh;
+                    /*  Special ranges are drawn with their per-range
+                        glyph (darst_aushebung / _anbindung / _abbindung)
+                        and, unlike the gewebe, no coloured background --
+                        matches legacy DrawAufknuepfung, which calls
+                        PaintCell with _col=black for these cells.       */
+                    if (!pegplan && s == AUSHEBUNG) {
+                        paintExportCell(darst_aushebung, x, y, gw, gh, QColor(Qt::black));
+                    } else if (!pegplan && s == ANBINDUNG) {
+                        paintExportCell(darst_anbindung, x, y, gw, gh, QColor(Qt::black));
+                    } else if (!pegplan && s == ABBINDUNG) {
+                        paintExportCell(darst_abbindung, x, y, gw, gh, QColor(Qt::black));
+                    } else {
+                        QColor col = QColor(Qt::black);
+                        if (s >= 1 && s <= 9)
+                            col = qcolorFromTColor(GetRangeColor(s));
+                        paintExportCell(darst, x, y, gw, gh, col);
+                    }
                 }
-            }
+        }
         p.setPen(Qt::black);
         p.setBrush(Qt::NoBrush);
         p.drawRect(x0, y0, treadles * gw, shafts * gh);
     }
 
+    /*  Reed (Blatteinzug) -- one row above the gewebe; each warp column
+        is half-filled black (top half when threaded through the reed,
+        else bottom half). Mirrors PrintBlatteinzug. */
+    if (b.show_reed) {
+        const int y0 = b.y_reed;
+        const int half = gh / 2;
+        for (int i = 0; i < dx; i++) {
+            const int x = warpX(i);
+            if (blatteinzug.feld.Get(kette.a + i))
+                p.fillRect(x, y0, gw, half, QColor(Qt::black));
+            else
+                p.fillRect(x, y0 + gh - half, gw, half, QColor(Qt::black));
+        }
+        hstripGrid(y0);
+    }
+
     /*  Trittfolge (bottom-right in standard layout, top-right in einzugunten). */
-    if (treadles != 0) {
-        const int x0 = (dx + tdx) * gw;
+    if (b.show_side) {
+        const int x0 = side_x;
         const int y0 = tritt_y0;
         p.setPen(QColor(105, 105, 105));
         for (int i = 0; i <= treadles; i++)
             p.drawLine(x0 + i * gw, y0, x0 + i * gw, y0 + dy * gh);
         for (int j = 0; j <= dy; j++)
             p.drawLine(x0, y0 + j * gh, x0 + treadles * gw, y0 + j * gh);
-        const bool pegplan = ViewSchlagpatrone && ViewSchlagpatrone->isChecked();
         const DARSTELLUNG darst = pegplan ? schlagpatronendarstellung : trittfolge.darstellung;
-        for (int j = 0; j < dy; j++)
-            for (int i = 0; i < treadles; i++) {
-                const char s = trittfolge.feld.Get(i, schuesse.a + j);
-                if (s <= 0)
-                    continue;
-                const int x = x0 + i * gw;
-                const int y = y0 + (dy - j - 1) * gh;
-                /*  Special ranges in pegplan view use the dedicated
-                    glyphs (darst_aushebung / _anbindung / _abbindung)
-                    in plain black -- same rule as the aufknuepfung
-                    block above.                                     */
-                if (pegplan && s == AUSHEBUNG) {
-                    paintExportCell(darst_aushebung, x, y, gw, gh, QColor(Qt::black));
-                } else if (pegplan && s == ANBINDUNG) {
-                    paintExportCell(darst_anbindung, x, y, gw, gh, QColor(Qt::black));
-                } else if (pegplan && s == ABBINDUNG) {
-                    paintExportCell(darst_abbindung, x, y, gw, gh, QColor(Qt::black));
-                } else {
-                    QColor col = QColor(Qt::black);
-                    if (s >= 1 && s <= 9)
-                        col = qcolorFromTColor(GetRangeColor(s));
-                    paintExportCell(darst, x, y, gw, gh, col);
+        if (!b.pattern_only) {
+            for (int j = 0; j < dy; j++)
+                for (int i = 0; i < treadles; i++) {
+                    const char s = trittfolge.feld.Get(i, schuesse.a + j);
+                    if (s <= 0)
+                        continue;
+                    const int x = x0 + i * gw;
+                    const int y = y0 + (dy - j - 1) * gh;
+                    /*  Special ranges in pegplan view use the dedicated
+                        glyphs (darst_aushebung / _anbindung / _abbindung)
+                        in plain black -- same rule as the aufknuepfung
+                        block above.                                     */
+                    if (pegplan && s == AUSHEBUNG) {
+                        paintExportCell(darst_aushebung, x, y, gw, gh, QColor(Qt::black));
+                    } else if (pegplan && s == ANBINDUNG) {
+                        paintExportCell(darst_anbindung, x, y, gw, gh, QColor(Qt::black));
+                    } else if (pegplan && s == ABBINDUNG) {
+                        paintExportCell(darst_abbindung, x, y, gw, gh, QColor(Qt::black));
+                    } else {
+                        QColor col = QColor(Qt::black);
+                        if (s >= 1 && s <= 9)
+                            col = qcolorFromTColor(GetRangeColor(s));
+                        paintExportCell(darst, x, y, gw, gh, col);
+                    }
                 }
-            }
+        }
         p.setPen(Qt::black);
         p.setBrush(Qt::NoBrush);
         p.drawRect(x0, y0, treadles * gw, dy * gh);
+    }
+
+    /*  Weft colour bar -- one column right of the trittfolge (or the
+        gewebe, when the side pane is hidden), each weft thread filled in
+        its palette colour. */
+    if (b.show_weftbar) {
+        const int x0 = b.weft_x;
+        const int y0 = gewebe_y0;
+        for (int j = 0; j < dy; j++) {
+            const int y = y0 + (dy - j - 1) * gh;
+            p.fillRect(x0, y, gw, gh, paletteColor(schussfarben.feld.Get(schuesse.a + j)));
+        }
+        p.setPen(QColor(105, 105, 105));
+        for (int j = 0; j <= dy; j++)
+            p.drawLine(x0, y0 + j * gh, x0 + gw, y0 + j * gh);
+        p.drawLine(x0, y0, x0, y0 + dy * gh);
+        p.drawLine(x0 + gw, y0, x0 + gw, y0 + dy * gh);
+        p.setPen(Qt::black);
+        p.setBrush(Qt::NoBrush);
+        p.drawRect(x0, y0, gw, dy * gh);
     }
 
     /*  Gewebe (bottom-left in standard layout, top-left in einzugunten).
@@ -327,6 +504,8 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
         const bool none = GewebeNone && GewebeNone->isChecked();
         const bool farbeffekt = GewebeFarbeffekt && GewebeFarbeffekt->isChecked();
         const bool simulation = GewebeSimulation && GewebeSimulation->isChecked();
+        const bool rapportOn = RappViewRapport && RappViewRapport->isChecked();
+        const bool inv = Inverserepeat && Inverserepeat->isChecked();
         if (!none) {
             const int dw = std::max(1, gw / 5);
             const int dh = std::max(1, gh / 5);
@@ -335,13 +514,23 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
                     const char s = gewebe.feld.Get(i + kette.a, j + schuesse.a);
                     const int x = x0 + i * gw;
                     const int y = y0 + (dy - j - 1) * gh;
+                    /*  Rapport highlight takes precedence over the view
+                        mode (mirrors DrawGewebeRapport): in-rapport
+                        raised-warp cells are painted solid red, empty
+                        cells stay blank. Inverserepeat flips which side
+                        gets the red treatment.                        */
+                    if (rapportOn && (IsInRapport(i + kette.a, j + schuesse.a) != inv)) {
+                        if (s != ABBINDUNG && s > 0)
+                            p.fillRect(x, y, gw, gh, QColor(Qt::red));
+                        continue;
+                    }
                     if (farbeffekt) {
                         bool hebung = s > 0;
                         if (sinkingshed)
                             hebung = !hebung;
-                        const QColor col = hebung
-                            ? paletteColor(kettfarben.feld.Get(i + kette.a))
-                            : paletteColor(schussfarben.feld.Get(j + schuesse.a));
+                        const QColor col
+                            = hebung ? paletteColor(kettfarben.feld.Get(i + kette.a))
+                                     : paletteColor(schussfarben.feld.Get(j + schuesse.a));
                         p.fillRect(x, y, gw, gh, col);
                     } else if (simulation) {
                         const QColor kc = paletteColor(kettfarben.feld.Get(i + kette.a));
@@ -375,24 +564,24 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
                             when darst_aushebung != AUSGEFUELLT,
                             otherwise the GetRangeColor fallback.    */
                         if (darst_aushebung != AUSGEFUELLT) {
-                            PaintCell(p, darst_aushebung, x, y, x + gw, y + gh,
-                                      QColor(Qt::black), /*_dontclear=*/true);
+                            PaintCell(p, darst_aushebung, x, y, x + gw, y + gh, QColor(Qt::black),
+                                      /*_dontclear=*/true);
                         } else {
                             p.fillRect(x, y, gw, gh, qcolorFromTColor(GetRangeColor(s)));
                         }
                     } else if (s == ANBINDUNG) {
                         if (darst_anbindung != AUSGEFUELLT) {
                             p.fillRect(x, y, gw, gh, qcolorFromTColor(col_anbindung));
-                            PaintCell(p, darst_anbindung, x, y, x + gw, y + gh,
-                                      QColor(Qt::black), /*_dontclear=*/true);
+                            PaintCell(p, darst_anbindung, x, y, x + gw, y + gh, QColor(Qt::black),
+                                      /*_dontclear=*/true);
                         } else {
                             p.fillRect(x, y, gw, gh, qcolorFromTColor(GetRangeColor(s)));
                         }
                     } else if (s == ABBINDUNG) {
                         if (darst_abbindung != AUSGEFUELLT) {
                             p.fillRect(x, y, gw, gh, qcolorFromTColor(col_abbindung));
-                            PaintCell(p, darst_abbindung, x, y, x + gw, y + gh,
-                                      QColor(Qt::black), /*_dontclear=*/true);
+                            PaintCell(p, darst_abbindung, x, y, x + gw, y + gh, QColor(Qt::black),
+                                      /*_dontclear=*/true);
                         } else {
                             p.fillRect(x, y, gw, gh, qcolorFromTColor(GetRangeColor(s)));
                         }
@@ -411,6 +600,44 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
         p.setPen(Qt::black);
         p.setBrush(Qt::NoBrush);
         p.drawRect(x0, y0, dx * gw, dy * gh);
+
+        /*  Rapport extent markers -- red boundary lines around the
+            rapport rectangle, drawn over the einzug strip (verticals,
+            at the Kettrapport edges) and the trittfolge strip
+            (horizontals, at the Schussrapport edges). Mirrors the
+            on-screen DrawRapport; gated on band visibility so a hidden
+            strip gets no floating line. */
+        if (rapportOn) {
+            const int i1 = rapport.kr.a;
+            const int i2 = rapport.kr.b;
+            const int j1 = rapport.sr.a;
+            const int j2 = rapport.sr.b;
+            if (i2 >= i1 && j2 >= j1) {
+                QPen redpen(QColor(Qt::red));
+                redpen.setWidth(2);
+                p.setPen(redpen);
+                p.setBrush(Qt::NoBrush);
+                if (b.show_einzug) {
+                    const int xl = !rtl ? (i1 - kette.a) * gw : (dx - (i1 - kette.a)) * gw;
+                    const int xr = !rtl ? (i2 + 1 - kette.a) * gw : (dx - (i2 + 1 - kette.a)) * gw;
+                    p.drawLine(xl, einzug_y0, xl, einzug_y0 + shafts * gh);
+                    p.drawLine(xr, einzug_y0, xr, einzug_y0 + shafts * gh);
+                }
+                if (b.show_side) {
+                    const int xl = side_x;
+                    const int xr = side_x + treadles * gw;
+                    const int ytop = gewebe_y0 + (dy - (j2 + 1 - schuesse.a)) * gh;
+                    const int ybot = gewebe_y0 + (dy - (j1 - schuesse.a)) * gh;
+                    p.drawLine(xl, ytop, xr, ytop);
+                    p.drawLine(xl, ybot, xr, ybot);
+                }
+                /*  Re-stroke the gewebe outline the red overlay may
+                    have clipped. */
+                p.setPen(Qt::black);
+                p.setBrush(Qt::NoBrush);
+                p.drawRect(x0, y0, dx * gw, dy * gh);
+            }
+        }
     }
 }
 
