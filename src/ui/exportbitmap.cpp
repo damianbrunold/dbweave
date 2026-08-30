@@ -613,7 +613,7 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
             const int j1 = rapport.sr.a;
             const int j2 = rapport.sr.b;
             if (i2 >= i1 && j2 >= j1) {
-                QPen redpen(QColor(Qt::red));
+                QPen redpen{QColor(Qt::red)};
                 redpen.setWidth(2);
                 p.setPen(redpen);
                 p.setBrush(Qt::NoBrush);
