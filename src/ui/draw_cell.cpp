@@ -13,8 +13,10 @@
 
 #include <QBrush>
 #include <QFont>
+#include <QPaintEngine>
 #include <QPen>
 #include <QRect>
+#include <QRectF>
 #include <QString>
 
 /*  Coordinate conventions
@@ -29,6 +31,13 @@
     QPainter::fillRect(QRect, ...) and QPainter::drawEllipse(QRect).
     That means, for pixel X spanning cols A..B inclusive, the call is
     fillRect(QRect(A, Y, B - A + 1, ...)) and drawLine(A, Y, B, Y).
+
+    That convention is a raster one. On a vector device (PDF, SVG, a
+    printer) an integer coordinate is a geometric position and the
+    grid frame lines are strokes centred on it, so the same pixel box
+    covers [A-0.5, B+0.5]; FillPixelBox does that translation, which
+    is why every filled feature goes through it rather than calling
+    fillRect directly.
 
     All cell rendering intentionally disables antialiasing so output
     is deterministic across Qt minor versions and CPU architectures,
@@ -46,7 +55,7 @@ void line(QPainter& p, int x1, int y1, int x2, int y2)
 /*  Inclusive-inclusive pixel rect: fills pixels [x1, x2] x [y1, y2]. */
 void fillBox(QPainter& p, int x1, int y1, int x2, int y2, const QColor& c)
 {
-    p.fillRect(QRect(x1, y1, x2 - x1 + 1, y2 - y1 + 1), c);
+    FillPixelBox(p, x1, y1, x2, y2, c);
 }
 
 /*  Stroke thickness for line-based symbols (KREUZ, KREIS,
@@ -87,6 +96,40 @@ int barLeft(int _cx, int _w)
 }
 
 } // namespace
+
+bool IsVectorPainter(const QPainter& _p)
+{
+    const QPaintEngine* e = _p.paintEngine();
+    if (!e)
+        return false;
+    switch (e->type()) {
+    case QPaintEngine::Pdf:
+    case QPaintEngine::SVG:
+    case QPaintEngine::Picture:
+    case QPaintEngine::MacPrinter:
+    case QPaintEngine::Windows:
+        return true;
+    default:
+        return false;
+    }
+}
+
+void FillPixelBox(QPainter& _p, int _x1, int _y1, int _x2, int _y2, const QColor& _color)
+{
+    if (IsVectorPainter(_p)) {
+        /*  A vector device has no pixel grid: integer coordinates are
+            geometric positions and the frame lines a cell shares with
+            its neighbours are strokes centred on them, so pixel
+            [_x1, _x2] spans [_x1-0.5, _x2+0.5]. Taking the raster rect
+            literally would fill [_x1, _x2+1] instead -- the whole block
+            shifted half a pixel down and right, which reads as a
+            visibly smaller margin along the bottom and right edge of
+            every filled cell. */
+        _p.fillRect(QRectF(_x1 - 0.5, _y1 - 0.5, _x2 - _x1 + 1, _y2 - _y1 + 1), _color);
+        return;
+    }
+    _p.fillRect(QRect(_x1, _y1, _x2 - _x1 + 1, _y2 - _y1 + 1), _color);
+}
 
 void ClearCell(QPainter& _p, int _x, int _y, int _xx, int _yy, const QColor& _bkground)
 {

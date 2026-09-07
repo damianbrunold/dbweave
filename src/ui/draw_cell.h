@@ -34,6 +34,19 @@
 
 #include "enums.h" /* DARSTELLUNG */
 
+/*  True when the painter draws onto a vector device (PDF, SVG, a
+    printer) rather than a pixel grid. The two need different
+    coordinate handling: on a raster device an integer coordinate
+    names a whole pixel, on a vector one it names a geometric
+    position with the grid-frame strokes centred on it. */
+bool IsVectorPainter(const QPainter& _p);
+
+/*  Fill the pixel box [_x1, _x2] x [_y1, _y2], both ends inclusive.
+    On a vector device the box is mapped to the continuous span
+    [_x1-0.5, _x2+0.5] so it stays centred between the grid frame
+    lines instead of drifting half a pixel down and right. */
+void FillPixelBox(QPainter& _p, int _x1, int _y1, int _x2, int _y2, const QColor& _color);
+
 void ClearCell(QPainter& _p, int _x, int _y, int _xx, int _yy, const QColor& _bkground);
 
 void PaintCell(QPainter& _p, DARSTELLUNG _darstellung, int _x, int _y, int _xx, int _yy,

@@ -51,12 +51,14 @@ static void applyRatio(const TDBWFRM* _frm, int _base, int& _gw, int& _gh)
         _gw = int(double(_base) * fk / fs);
 }
 
+#include <QBrush>
 #include <QFile>
 #include <QFileInfo>
 #include <QImage>
 #include <QMessageBox>
 #include <QPageLayout>
 #include <QPageSize>
+#include <QPaintEngine>
 #include <QPainter>
 #include <QPen>
 #include <QLocale>
@@ -141,9 +143,10 @@ static QPageSize::PageSizeId preferredPageSize()
     All offsets are in logical pixels (the QPainter window space).
 
         [warp colour bar ..] [.................]
+        [..................] [.................]
         [einzug ...........] [gap] [aufknuepfung]
         [reed .............] [.................]
-        [gewebe ...........] [gap] [trittfolge .] [weft colour bar]
+        [gewebe ...........] [gap] [trittfolge .] [gap] [weft colours]
 
     einzugunten flips the vertical order (gewebe on top). */
 namespace
@@ -183,19 +186,24 @@ ExportBands computeBands(int _gw, int _gh, int _dx, int _dy, int _shafts, int _t
 
     /*  Row-group heights (in cells). The gap between the threading and
         the reed/gewebe is present only when the threading is shown; the
-        reed<->gewebe gap only when the reed is shown. */
+        reed<->gewebe gap only when the reed is shown. warp_gap_h keeps
+        the warp colour bar clear of the threading: legacy reserved two
+        rows for the bar (clry in legacy/exportbitmap.cpp) and the editor
+        layout puts a `divider` between kettfarben and einzug, so the bar
+        must not sit flush against it here either. */
     const int warp_h = b.show_warpbar ? 1 : 0;
     const int einz_h = b.show_einzug ? _shafts : 0;
     const int reed_h = b.show_reed ? 1 : 0;
     const int gap_h = b.show_einzug ? 1 : 0;
     const int reed_gap_h = b.show_reed ? 1 : 0;
+    const int warp_gap_h = b.show_warpbar ? 1 : 0;
 
     /*  Row groups, top to bottom. einzugunten puts the gewebe on top
         and the threading (with its colour bar) below it. */
     int cy = 0;
     if (!_einzugunten) {
         b.y_warpbar = cy * gh;
-        cy += warp_h;
+        cy += warp_h + warp_gap_h;
         b.y_einzug = cy * gh;
         cy += einz_h + gap_h;
         b.y_reed = cy * gh;
@@ -208,21 +216,24 @@ ExportBands computeBands(int _gw, int _gh, int _dx, int _dy, int _shafts, int _t
         b.y_reed = cy * gh;
         cy += reed_h + gap_h;
         b.y_einzug = cy * gh;
-        cy += einz_h;
+        cy += einz_h + warp_gap_h;
         b.y_warpbar = cy * gh;
         cy += warp_h;
     }
     const int total_rows = cy;
 
-    /*  Column groups: main (dx) | gap | side pane | weft colour bar.
-        The one-cell gap separates the drawdown/threading from the
-        treadling/tie-up, and is present only when the side pane shows. */
+    /*  Column groups: main (dx) | gap | side pane | gap | weft colours.
+        The first one-cell gap separates the drawdown/threading from the
+        treadling/tie-up and is present only when the side pane shows;
+        the second keeps the weft colour bar clear of the trittfolge,
+        mirroring legacy's clrx and the editor's schussfarben divider. */
     const int side_w = b.show_side ? _treadles : 0;
     const int weft_w = b.show_weftbar ? 1 : 0;
     const int gap_w = b.show_side ? 1 : 0;
+    const int weft_gap_w = b.show_weftbar ? 1 : 0;
     b.side_x = (_dx + gap_w) * gw;
-    b.weft_x = (_dx + gap_w + side_w) * gw;
-    const int total_cols = _dx + gap_w + side_w + weft_w;
+    b.weft_x = (_dx + gap_w + side_w + weft_gap_w) * gw;
+    const int total_cols = _dx + gap_w + side_w + weft_gap_w + weft_w;
 
     b.width = gw * total_cols + 1;
     b.height = gh * total_rows + 1;
@@ -310,25 +321,49 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
         p.drawRect(0, y0, dx * gw, gh);
     };
 
-    /*  Draw one cell in either filled or symbol mode, matching the
-        print path's "filled means filled" look: AUSGEFUELLT covers
-        the whole cell edge-to-edge (exactly gw x gh) so neighbouring
-        filled cells merge -- the right neighbour's left edge lands
-        on the shared grid line and overpaints it. Adding +1 here
-        would make each cell 1 logical unit wider than its footprint,
-        which is invisible at raster scale but produces obvious
-        overshoot once the PDF writer scales the geometry up to the
-        printable page.
-        Symbol darstellungen (KREUZ, PUNKT, STRICH, KREIS, ...) leave
-        the background untouched so the image's white/transparent
-        backdrop shows through instead of the editor's btnFace grey. */
+    /*  Vector output (PDF / SVG) antialiases each rectangle on its
+        own, so two blocks that merely share an edge each cover only
+        part of the pixel along the join and leave a pale hairline
+        between them -- right across the fabric in Farbeffekt, and
+        straight through the threads in Simulation. Outline the block
+        in its own colour with a cosmetic (width 0) pen: PDF renders
+        that as the thinnest line the device can draw, exactly one
+        device pixel at any zoom, which covers the seam without
+        changing the geometry. The raster engine lands on whole
+        pixels and needs none of this -- there a cosmetic pen would
+        just fatten the block by a pixel -- so it keeps fillRect. */
+    const bool vectorTarget = IsVectorPainter(p);
+    auto fillTile = [&p, vectorTarget](int _x, int _y, int _w, int _h, const QColor& _col) {
+        if (!vectorTarget) {
+            p.fillRect(_x, _y, _w, _h, _col);
+            return;
+        }
+        p.setPen(QPen(_col, 0));
+        p.setBrush(QBrush(_col));
+        p.drawRect(QRectF(_x, _y, _w, _h));
+        p.setBrush(Qt::NoBrush);
+    };
+
+    /*  Fill a cell's interior -- pixels [_x+1, _x+_w-1] x [_y+1,
+        _y+_h-1] -- leaving the shared grid frame visible. Same rect
+        DrawGewebeNormal uses for the anbindung / abbindung background
+        behind their symbol. */
+    auto fillInterior = [&p](int _x, int _y, int _w, int _h, const QColor& _col) {
+        FillPixelBox(p, _x + 1, _y + 1, _x + _w - 1, _y + _h - 1, _col);
+    };
+
+    /*  Draw one cell in either filled or symbol mode. Every
+        darstellung goes through PaintCell, AUSGEFUELLT included, so a
+        filled cell keeps the same margin to the grid frame that the
+        symbols leave and that the editor draws on screen -- filled
+        einzug / trittfolge / aufknuepfung cells read as separate
+        cells instead of merging into one solid block.
+        _dontclear keeps the background untouched so the image's
+        white backdrop shows through instead of the editor's btnFace
+        grey. */
     auto paintExportCell
         = [&p](DARSTELLUNG _d, int _x, int _y, int _gw, int _gh, const QColor& _col) {
-              if (_d == AUSGEFUELLT) {
-                  p.fillRect(_x, _y, _gw, _gh, _col);
-              } else {
-                  PaintCell(p, _d, _x, _y, _x + _gw, _y + _gh, _col, /*_dontclear=*/true);
-              }
+              PaintCell(p, _d, _x, _y, _x + _gw, _y + _gh, _col, /*_dontclear=*/true);
           };
 
     /*  Warp colour bar -- one row above (below, when einzugunten) the
@@ -336,7 +371,7 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
     if (b.show_warpbar) {
         const int y0 = b.y_warpbar;
         for (int i = 0; i < dx; i++)
-            p.fillRect(warpX(i), y0, gw, gh, paletteColor(kettfarben.feld.Get(kette.a + i)));
+            fillTile(warpX(i), y0, gw, gh, paletteColor(kettfarben.feld.Get(kette.a + i)));
         hstripGrid(y0);
     }
 
@@ -417,9 +452,9 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
         for (int i = 0; i < dx; i++) {
             const int x = warpX(i);
             if (blatteinzug.feld.Get(kette.a + i))
-                p.fillRect(x, y0, gw, half, QColor(Qt::black));
+                fillTile(x, y0, gw, half, QColor(Qt::black));
             else
-                p.fillRect(x, y0 + gh - half, gw, half, QColor(Qt::black));
+                fillTile(x, y0 + gh - half, gw, half, QColor(Qt::black));
         }
         hstripGrid(y0);
     }
@@ -473,7 +508,7 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
         const int y0 = gewebe_y0;
         for (int j = 0; j < dy; j++) {
             const int y = y0 + (dy - j - 1) * gh;
-            p.fillRect(x0, y, gw, gh, paletteColor(schussfarben.feld.Get(schuesse.a + j)));
+            fillTile(x0, y, gw, gh, paletteColor(schussfarben.feld.Get(schuesse.a + j)));
         }
         p.setPen(QColor(105, 105, 105));
         for (int j = 0; j <= dy; j++)
@@ -496,16 +531,50 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
     {
         const int x0 = 0;
         const int y0 = gewebe_y0;
-        p.setPen(QColor(105, 105, 105));
-        for (int i = 0; i <= dx; i++)
-            p.drawLine(x0 + i * gw, y0, x0 + i * gw, y0 + dy * gh);
-        for (int j = 0; j <= dy; j++)
-            p.drawLine(x0, y0 + j * gh, x0 + dx * gw, y0 + j * gh);
         const bool none = GewebeNone && GewebeNone->isChecked();
         const bool farbeffekt = GewebeFarbeffekt && GewebeFarbeffekt->isChecked();
         const bool simulation = GewebeSimulation && GewebeSimulation->isChecked();
         const bool rapportOn = RappViewRapport && RappViewRapport->isChecked();
         const bool inv = Inverserepeat && Inverserepeat->isChecked();
+
+        /*  A cell is blank when its warp column carries no threading
+            or its weft row no treadling -- nothing is woven there, so
+            it stays empty and keeps its grid (legacy skipped exactly
+            these in the export loop, and DrawGewebe blanks them on
+            screen). */
+        auto blankCell = [&](int _i, int _j) {
+            return IsEmptyEinzug(kette.a + _i) || IsEmptyTrittfolge(schuesse.a + _j);
+        };
+
+        /*  Which cells end up covered edge-to-edge by Farbeffekt /
+            Simulation, and so must NOT have a grid line under them --
+            the grid only survives as a seam through the woven surface.
+            Same rule the canvas applies in its rahmen post-pass
+            (patterncanvas.cpp): Simulation cells never get a grid,
+            Farbeffekt cells only with "Farbeffekt mit Raster", while
+            blank, rapport-red and Patrone cells always keep theirs. */
+        auto coveredCell = [&](int _i, int _j) {
+            if (none || blankCell(_i, _j))
+                return false;
+            if (rapportOn && (IsInRapport(kette.a + _i, schuesse.a + _j) != inv))
+                return false;
+            if (simulation)
+                return true;
+            return farbeffekt && !fewithraster;
+        };
+
+        /*  Patrone / Unsichtbar keep the plain grid under everything:
+            their cells are drawn inset, so the lines stay visible. The
+            covering modes get per-cell frames in a post-pass after the
+            content instead -- same split the canvas makes. */
+        const bool perCellGrid = !none && (farbeffekt || simulation);
+        if (!perCellGrid) {
+            p.setPen(QColor(105, 105, 105));
+            for (int i = 0; i <= dx; i++)
+                p.drawLine(x0 + i * gw, y0, x0 + i * gw, y0 + dy * gh);
+            for (int j = 0; j <= dy; j++)
+                p.drawLine(x0, y0 + j * gh, x0 + dx * gw, y0 + j * gh);
+        }
         if (!none) {
             const int dw = std::max(1, gw / 5);
             const int dh = std::max(1, gh / 5);
@@ -514,14 +583,21 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
                     const char s = gewebe.feld.Get(i + kette.a, j + schuesse.a);
                     const int x = x0 + i * gw;
                     const int y = y0 + (dy - j - 1) * gh;
+                    /*  Nothing is woven where the warp column has no
+                        threading or the weft row no treadling; leave
+                        those cells empty (their grid was drawn above)
+                        instead of flooding them with weft colour.   */
+                    if (blankCell(i, j))
+                        continue;
                     /*  Rapport highlight takes precedence over the view
                         mode (mirrors DrawGewebeRapport): in-rapport
-                        raised-warp cells are painted solid red, empty
-                        cells stay blank. Inverserepeat flips which side
-                        gets the red treatment.                        */
+                        raised-warp cells are painted red as a patrone,
+                        empty cells stay blank. Inverserepeat flips
+                        which side gets the red treatment.            */
                     if (rapportOn && (IsInRapport(i + kette.a, j + schuesse.a) != inv)) {
                         if (s != ABBINDUNG && s > 0)
-                            p.fillRect(x, y, gw, gh, QColor(Qt::red));
+                            PaintCell(p, AUSGEFUELLT, x, y, x + gw, y + gh, QColor(Qt::red),
+                                      /*_dontclear=*/true);
                         continue;
                     }
                     if (farbeffekt) {
@@ -531,7 +607,7 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
                         const QColor col
                             = hebung ? paletteColor(kettfarben.feld.Get(i + kette.a))
                                      : paletteColor(schussfarben.feld.Get(j + schuesse.a));
-                        p.fillRect(x, y, gw, gh, col);
+                        fillTile(x, y, gw, gh, col);
                     } else if (simulation) {
                         const QColor kc = paletteColor(kettfarben.feld.Get(i + kette.a));
                         const QColor sc = paletteColor(schussfarben.feld.Get(j + schuesse.a));
@@ -542,18 +618,18 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
                             /*  Warp on top: vertical warp strip in
                                 kettfarben, weft stubs peeking out left
                                 and right, shadow line on the right.   */
-                            p.fillRect(x + dw, y, gw - 2 * dw, gh, kc);
-                            p.fillRect(x, y + dh, dw, gh - 2 * dh, sc);
-                            p.fillRect(x + gw - dw, y + dh, dw, gh - 2 * dh, sc);
+                            fillTile(x + dw, y, gw - 2 * dw, gh, kc);
+                            fillTile(x, y + dh, dw, gh - 2 * dh, sc);
+                            fillTile(x + gw - dw, y + dh, dw, gh - 2 * dh, sc);
                             p.setPen(QColor(Qt::black));
                             p.drawLine(x + gw - dw, y + dh, x + gw - dw, y + gh - dh);
                         } else {
                             /*  Weft on top: horizontal weft strip in
                                 schussfarben, warp stubs top and bottom,
                                 shadow line along the bottom.           */
-                            p.fillRect(x, y + dh, gw, gh - 2 * dh, sc);
-                            p.fillRect(x + dw, y, gw - 2 * dw, dh, kc);
-                            p.fillRect(x + dw, y + gh - dh, gw - 2 * dw, dh, kc);
+                            fillTile(x, y + dh, gw, gh - 2 * dh, sc);
+                            fillTile(x + dw, y, gw - 2 * dw, dh, kc);
+                            fillTile(x + dw, y + gh - dh, gw - 2 * dw, dh, kc);
                             p.setPen(QColor(Qt::black));
                             p.drawLine(x + dw, y + gh - dh, x + gw - dw, y + gh - dh);
                         }
@@ -567,35 +643,53 @@ void TDBWFRM::paintPattern(QPainter& p, int _gw, int _gh, int _shafts, int _trea
                             PaintCell(p, darst_aushebung, x, y, x + gw, y + gh, QColor(Qt::black),
                                       /*_dontclear=*/true);
                         } else {
-                            p.fillRect(x, y, gw, gh, qcolorFromTColor(GetRangeColor(s)));
+                            paintExportCell(AUSGEFUELLT, x, y, gw, gh,
+                                            qcolorFromTColor(GetRangeColor(s)));
                         }
                     } else if (s == ANBINDUNG) {
                         if (darst_anbindung != AUSGEFUELLT) {
-                            p.fillRect(x, y, gw, gh, qcolorFromTColor(col_anbindung));
+                            fillInterior(x, y, gw, gh, qcolorFromTColor(col_anbindung));
                             PaintCell(p, darst_anbindung, x, y, x + gw, y + gh, QColor(Qt::black),
                                       /*_dontclear=*/true);
                         } else {
-                            p.fillRect(x, y, gw, gh, qcolorFromTColor(GetRangeColor(s)));
+                            paintExportCell(AUSGEFUELLT, x, y, gw, gh,
+                                            qcolorFromTColor(GetRangeColor(s)));
                         }
                     } else if (s == ABBINDUNG) {
                         if (darst_abbindung != AUSGEFUELLT) {
-                            p.fillRect(x, y, gw, gh, qcolorFromTColor(col_abbindung));
+                            fillInterior(x, y, gw, gh, qcolorFromTColor(col_abbindung));
                             PaintCell(p, darst_abbindung, x, y, x + gw, y + gh, QColor(Qt::black),
                                       /*_dontclear=*/true);
                         } else {
-                            p.fillRect(x, y, gw, gh, qcolorFromTColor(GetRangeColor(s)));
+                            paintExportCell(AUSGEFUELLT, x, y, gw, gh,
+                                            qcolorFromTColor(GetRangeColor(s)));
                         }
                     } else if (s > 0) {
-                        /*  Ranges 1..9: solid range colour, full cell. */
-                        const QColor col = qcolorFromTColor(GetRangeColor(s));
-                        /*  Fill the cell footprint exactly; the right
-                            / bottom neighbour's own fill covers the
-                            shared grid line. See paintExportCell above
-                            for why +1 would break PDF output.        */
-                        p.fillRect(x, y, gw, gh, col);
+                        /*  Ranges 1..9: range colour with the same
+                            margin to the grid frame the editor leaves
+                            (DrawGewebeNormal paints these through
+                            PaintCell(AUSGEFUELLT) too), so the patrone
+                            reads as separate cells rather than one
+                            solid block of colour.                    */
+                        paintExportCell(AUSGEFUELLT, x, y, gw, gh,
+                                        qcolorFromTColor(GetRangeColor(s)));
                     }
                 }
             }
+        }
+        if (perCellGrid) {
+            /*  Rahmen post-pass: frame every cell the fabric did not
+                cover, on top of the finished cells (a frame drawn
+                first would just be painted over by the cell fill --
+                which is what "Farbeffekt mit Raster" must not do). */
+            p.setPen(QColor(105, 105, 105));
+            p.setBrush(Qt::NoBrush);
+            for (int i = 0; i < dx; i++)
+                for (int j = 0; j < dy; j++) {
+                    if (coveredCell(i, j))
+                        continue;
+                    p.drawRect(x0 + i * gw, y0 + (dy - j - 1) * gh, gw, gh);
+                }
         }
         p.setPen(Qt::black);
         p.setBrush(Qt::NoBrush);
