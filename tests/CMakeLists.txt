@@ -130,6 +130,12 @@ qt_add_executable(test_trittfolge_ops
 target_link_libraries(test_trittfolge_ops PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test dbweave_ui)
 add_test(NAME trittfolge_ops COMMAND test_trittfolge_ops)
 
+qt_add_executable(test_lancierung
+    test_lancierung.cpp
+)
+target_link_libraries(test_lancierung PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Test dbweave_ui)
+add_test(NAME lancierung COMMAND test_lancierung)
+
 qt_add_executable(test_setops
     test_setops.cpp
 )

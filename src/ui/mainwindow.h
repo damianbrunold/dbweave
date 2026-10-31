@@ -565,6 +565,10 @@ public:
     void SwapSide();
     void KettLancierungClick();
     void SchussLancierungClick();
+    /*  The lancée itself, for the thread ratio vv (the six values of
+        EnterVVDialog); the ...Click slots ask for it. */
+    void KettLancierung(const int vv[6]);
+    void SchussLancierung(const int vv[6]);
 
     /*  Steigung ("slope") shifts each column of the selection by
         an increasing offset, producing a diagonal twist. Valid

@@ -32,6 +32,11 @@ class EinzugassistentDialog : public QDialog
 public:
     explicit EinzugassistentDialog(TDBWFRM* _frm, QWidget* _parent = nullptr);
 
+    /*  The two drafts, as accept() applies them (public for tests). */
+    void createGerade(int _firstKettfaden, int _firstSchaft, int _schaefte, bool _steigend);
+    void createAbgesetzt(int _firstKettfaden, int _firstSchaft, int _schaefte, int _gratlen,
+                         int _versatz);
+
 protected:
     void accept() override;
 
@@ -55,9 +60,6 @@ private:
     QSpinBox* abVersatz = nullptr;
 
     void recalc();
-    void createGerade(int _firstKettfaden, int _firstSchaft, int _schaefte, bool _steigend);
-    void createAbgesetzt(int _firstKettfaden, int _firstSchaft, int _schaefte, int _gratlen,
-                         int _versatz);
 };
 
 #endif

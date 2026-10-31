@@ -200,10 +200,17 @@ void TDBWFRM::KettLancierungClick()
     EnterVVDialog dlg(this);
     if (dlg.exec() != QDialog::Accepted)
         return;
+    int vv[6];
+    for (int k = 0; k < 6; k++)
+        vv[k] = dlg.value(k);
+    KettLancierung(vv);
+}
 
+void TDBWFRM::KettLancierung(const int _vv[6])
+{
     int vv[6], maxi = 0;
     for (int k = 0; k < 6; k++) {
-        vv[k] = dlg.value(k);
+        vv[k] = _vv[k];
         if (vv[k] != 0)
             maxi = k + 1;
     }
@@ -250,7 +257,10 @@ void TDBWFRM::KettLancierungClick()
     for (int i = a; i <= b; i++) {
         for (int j = 0; j < vv[idx]; j++) {
             buff[ii++] = i++;
-            if (ii >= needed || i - 1 > b)
+            /*  Stop after the range's last thread (i is past it now);
+                checking i - 1 > b copied thread b + 1 in place of the
+                inserted thread after an incomplete last run. */
+            if (ii >= needed || i > b)
                 break;
         }
         i--;
@@ -302,10 +312,17 @@ void TDBWFRM::SchussLancierungClick()
     EnterVVDialog dlg(this);
     if (dlg.exec() != QDialog::Accepted)
         return;
+    int vv[6];
+    for (int k = 0; k < 6; k++)
+        vv[k] = dlg.value(k);
+    SchussLancierung(vv);
+}
 
+void TDBWFRM::SchussLancierung(const int _vv[6])
+{
     int vv[6], maxi = 0;
     for (int k = 0; k < 6; k++) {
-        vv[k] = dlg.value(k);
+        vv[k] = _vv[k];
         if (vv[k] != 0)
             maxi = k + 1;
     }
@@ -352,7 +369,10 @@ void TDBWFRM::SchussLancierungClick()
     for (int i = a; i <= b; i++) {
         for (int j = 0; j < vv[idx]; j++) {
             buff[ii++] = i++;
-            if (ii >= needed || i - 1 > b)
+            /*  Stop after the range's last thread (i is past it now);
+                checking i - 1 > b copied thread b + 1 in place of the
+                inserted thread after an incomplete last run. */
+            if (ii >= needed || i > b)
                 break;
         }
         i--;

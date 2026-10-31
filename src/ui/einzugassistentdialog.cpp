@@ -135,8 +135,9 @@ void EinzugassistentDialog::createGerade(int _firstKettfaden, int _firstSchaft, 
         }
     } else {
         for (int i = _firstKettfaden - 1; i < _firstKettfaden - 1 + _schaefte; i++) {
-            short s = short(_firstSchaft + (_firstKettfaden - 1 + _schaefte - 1)
-                            - (i - (_firstKettfaden - 1)));
+            /*  Shafts _firstSchaft + _schaefte - 1 down to _firstSchaft
+                (the first warp number must not enter the shaft). */
+            short s = short(_firstSchaft + (_schaefte - 1) - (i - (_firstKettfaden - 1)));
             if (s >= Data->MAXY1)
                 frm->ExtendSchaefte();
             if (i >= Data->MAXX1)
